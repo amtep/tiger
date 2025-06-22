@@ -590,7 +590,11 @@ pub fn validate_effect_control(
     validate_effect_internal(caller, ListType::None, block, data, sc, &mut vd, tooltipped);
 
     #[cfg(feature = "ck3")]
-    if Game::is_ck3() && (caller == "send_interface_message" || caller == "send_interface_toast") {
+    if Game::is_ck3()
+        && (caller == "send_interface_message"
+            || caller == "send_interface_toast"
+            || caller == "send_interface_popup")
+    {
         // These are both scopes and $-parameters to set for the loca.
         // They are applied only to the following loca.
         let mut loca_sc = sc.clone();
