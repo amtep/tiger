@@ -211,7 +211,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Character.union(Scopes::MilitaryFormation), "num_units_in_battle", Scopes::Value),
     (Scopes::Character.union(Scopes::MilitaryFormation), "num_units_not_in_battle", Scopes::Value),
     (Scopes::Character, "num_units_share", Scopes::Value),
-    (Scopes::Country, "num_world_market_hub_trade_center_levels", Scopes::Value),
+    (Scopes::State, "num_world_market_hub_trade_center_levels", Scopes::Value),
     (Scopes::NewCombatUnit, "offense", Scopes::Value),
     (Scopes::Character, "opposing_commander", Scopes::Character),
     (Scopes::BattleSide, "opposite_battle_side", Scopes::BattleSide),
