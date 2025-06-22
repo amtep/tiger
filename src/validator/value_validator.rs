@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::fmt::{Debug, Display, Error, Formatter};
-#[cfg(any(feature = "ck3", feature = "vic3"))]
 use std::ops::{Bound, RangeBounds};
 use std::str::FromStr;
 
@@ -267,7 +266,7 @@ impl<'a> ValueValidator<'a> {
     }
 
     /// Expect the value to be an integer between `low` and `high` (inclusive).
-    #[cfg(feature = "ck3")]
+    #[allow(dead_code)]
     pub fn integer_range<R: RangeBounds<i64>>(&mut self, range: R) {
         if self.validated {
             return;

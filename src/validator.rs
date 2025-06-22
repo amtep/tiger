@@ -1160,7 +1160,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field in the block.
     /// Returns true iff the field is present.
     pub fn field_list_items(&mut self, name: &str, item: Item) -> bool {
-        let sev = self.max_severity;
+        let sev = Severity::Error.at_most(self.max_severity);
         self.field_validated_list(name, |token, data| {
             data.verify_exists_max_sev(item, token, sev);
         })
@@ -1172,7 +1172,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     #[allow(dead_code)]
     pub fn field_list_choice(&mut self, name: &str, choices: &[&str]) -> bool {
-        let sev = self.max_severity;
+        let sev = Severity::Error.at_most(self.max_severity);
         self.field_validated_list(name, |token, _| {
             if !choices.contains(&token.as_str()) {
                 let msg = format!("expected one of {}", choices.join(", "));

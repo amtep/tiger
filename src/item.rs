@@ -418,6 +418,10 @@ pub enum Item {
     #[cfg(feature = "vic3")] BuyPackage,
     #[cfg(feature = "vic3")] CanalType,
     #[cfg(feature = "vic3")] CharacterRole,
+    #[cfg(feature = "vic3")] CityBuildingVfx,
+    #[cfg(feature = "vic3")] CityCenterpiece,
+    #[cfg(feature = "vic3")] CityGraphicsType,
+    #[cfg(feature = "vic3")] CityVfx,
     #[cfg(feature = "vic3")] CombatUnit,
     #[cfg(feature = "vic3")] CombatUnitExperienceLevel,
     #[cfg(feature = "vic3")] CombatUnitGroup,
@@ -1370,6 +1374,14 @@ impl Item {
             Item::CanalType => "common/canals/",
             #[cfg(feature = "vic3")]
             Item::CharacterRole => "",
+            #[cfg(feature = "vic3")]
+            Item::CityBuildingVfx => "gfx/map/city_data/city_building_vfx/",
+            #[cfg(feature = "vic3")]
+            Item::CityCenterpiece => "gfx/map/city_data/city_centerpiece/",
+            #[cfg(feature = "vic3")]
+            Item::CityGraphicsType => "gfx/map/city_data/city_types/",
+            #[cfg(feature = "vic3")]
+            Item::CityVfx => "gfx/map/city_data/city_vfx/",
             #[cfg(feature = "vic3")]
             Item::CombatUnit => "common/combat_unit_types/",
             #[cfg(feature = "vic3")]

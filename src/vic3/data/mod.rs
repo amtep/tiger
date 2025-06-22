@@ -8,6 +8,7 @@ pub mod canals;
 pub mod character_interactions;
 pub mod character_templates;
 pub mod character_traits;
+pub mod city_data;
 pub mod cohesion;
 pub mod combat_units;
 pub mod commanders;
