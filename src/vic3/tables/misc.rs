@@ -163,7 +163,7 @@ pub const WARGOALS: &[&str] = &[
     "transfer_subject",
     "unification",
     "unification_leadership",
-    "war_reparations",
+    // war_reparations was removed in 1.9
 ];
 
 // LAST UPDATED VIC3 VERSION 1.3.6

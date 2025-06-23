@@ -999,6 +999,12 @@ impl Everything {
                         .push();
                 }
             }
+            #[cfg(feature = "vic3")]
+            Item::Wargoal if key == "war_reparations" => {
+                let msg = "wargoal `war_reparations` was removed in 1.9";
+                let info = "the new way is to use `enforce_treaty_article` with a `money_transfer` article";
+                err(ErrorKey::MissingItem).strong().msg(msg).info(info).loc(token).push();
+            }
             _ => {
                 if !self.item_exists(itype, key) {
                     let path = itype.path();
