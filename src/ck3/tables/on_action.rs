@@ -311,7 +311,7 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = artifact
 		owner = character
 		old_owner = character
-		old_primary = character
+		old_primary = landed_title
 	}
 	on_artifact_broken_through_decay = {
 		root = artifact
