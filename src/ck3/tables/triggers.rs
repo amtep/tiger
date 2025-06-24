@@ -2,6 +2,7 @@ use std::sync::LazyLock;
 
 use crate::ck3::tables::misc::{
     AGENT_SLOT_CONTRIBUTION_TYPE, GOVERNMENT_RULES, LEGEND_QUALITY, OUTBREAK_INTENSITIES,
+    TITLE_HISTORY_TYPES,
 };
 use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
@@ -1581,7 +1582,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Scopes::LandedTitle,
         "recent_history",
         Block(&[
-            ("?type", Item(Item::TitleHistoryType)),
+            ("?type", Choice(TITLE_HISTORY_TYPES)),
             ("?days", SetValue),
             ("?months", SetValue),
             ("?years", SetValue),

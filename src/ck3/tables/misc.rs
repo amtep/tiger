@@ -303,7 +303,15 @@ pub const TITLE_HISTORY_TYPES: &[&str] = &[
     "stepped_down",
     "appointment",
     "appointment_succession",
+    // undocumented
+    "migration",
 ];
+
+// LAST UPDATED CK3 VERSION 1.16
+// These are the types that can't be used in `create_title_and_vassal_change`.
+// Taken from an error.log message.
+pub const BANNED_TITLE_HISTORY_TYPES: &[&str] =
+    &["inheritance", "abdication", "appointment_succession"];
 
 // LAST UPDATED CK3 VERSION 1.12.1
 // Gathered from vanilla common/traits/

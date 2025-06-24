@@ -760,7 +760,6 @@ impl Everything {
             Item::Sound => self.valid_sound(key),
             Item::Title => self.titles.exists(key),
             Item::TitleHistory => self.title_history.exists(key),
-            Item::TitleHistoryType => TITLE_HISTORY_TYPES.contains(&key),
             Item::Trait => self.traits.exists(key),
             Item::TraitFlag => self.traits.flag_exists(key),
             Item::TraitTrack => self.traits.track_exists(key),

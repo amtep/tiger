@@ -1,6 +1,8 @@
 use crate::block::{Block, BV};
 use crate::ck3::data::legends::LegendChronicle;
-use crate::ck3::tables::misc::{LEGEND_QUALITY, OUTBREAK_INTENSITIES, TITLE_HISTORY_TYPES};
+use crate::ck3::tables::misc::{
+    BANNED_TITLE_HISTORY_TYPES, LEGEND_QUALITY, OUTBREAK_INTENSITIES, TITLE_HISTORY_TYPES,
+};
 use crate::ck3::validate::{
     validate_random_culture, validate_random_faith, validate_random_traits_list,
 };
@@ -9,7 +11,7 @@ use crate::desc::validate_desc;
 use crate::effect::{validate_effect, validate_effect_internal};
 use crate::effect_validation::validate_random_list;
 use crate::everything::Everything;
-use crate::helpers::TigerHashSet;
+use crate::helpers::{stringify_choices, stringify_list, TigerHashSet};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{err, warn, ErrorKey, Severity};
@@ -736,7 +738,24 @@ pub fn validate_create_title_and_vassal_change(
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("type");
-    vd.field_choice("type", TITLE_HISTORY_TYPES);
+    vd.req_field("save_scope_as");
+    if let Some(history_type) = vd.field_value("type") {
+        let valid_types: Vec<_> = TITLE_HISTORY_TYPES
+            .iter()
+            .filter(|t| !BANNED_TITLE_HISTORY_TYPES.contains(t))
+            .copied()
+            .collect();
+        if BANNED_TITLE_HISTORY_TYPES.contains(&history_type.as_str()) {
+            let msg = format!(
+                "types {} cannot be used from script",
+                stringify_list(BANNED_TITLE_HISTORY_TYPES)
+            );
+            let info = format!("choose_from {}", stringify_choices(&valid_types));
+            err(ErrorKey::Choice).msg(msg).info(info).loc(history_type).push();
+        } else {
+            vd.field_choice("type", &valid_types);
+        }
+    }
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
         sc.define_name_token(name.as_str(), Scopes::TitleAndVassalChange, name);
     }

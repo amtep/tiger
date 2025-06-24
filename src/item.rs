@@ -395,7 +395,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] TaxSlotType,
     #[cfg(feature = "ck3")] Title,
     #[cfg(feature = "ck3")] TitleHistory,
-    #[cfg(feature = "ck3")] TitleHistoryType,
     #[cfg(feature = "ck3")] Trait,
     #[cfg(feature = "ck3")] TraitCategory,
     #[cfg(feature = "ck3")] TraitFlag,
@@ -1331,8 +1330,6 @@ impl Item {
             Item::Title => "common/landed_titles/",
             #[cfg(feature = "ck3")]
             Item::TitleHistory => "history/titles/",
-            #[cfg(feature = "ck3")]
-            Item::TitleHistoryType => "",
             #[cfg(feature = "ck3")]
             Item::Trait => "common/traits/",
             #[cfg(feature = "ck3")]
