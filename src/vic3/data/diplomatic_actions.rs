@@ -201,8 +201,10 @@ fn validate_pact(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     vd.field_bool("junior_support_only_against_overlord"); // undocumented
 
     vd.field_item("subject_type", Item::SubjectType); // undocumented
+                                                      //
+    vd.field_choice("maintenance_paid_by", &["first_country", "second_country"]); // undocumented
+    vd.advice_field("recipient_pays_maintenance", "removed in 1.9.3");
 
-    vd.field_bool("recipient_pays_maintenance"); // undocumented
     vd.replaced_field(
         "recipient_gets_income_transfer",
         "renamed to second_country_gets_income_transfer",

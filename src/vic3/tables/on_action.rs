@@ -382,12 +382,13 @@ pub const ON_ACTION_SCOPES: &str = "
 	}
 	on_treaty_enforced = {
 		root = treaty
+                treaty_options = treaty_options
 	}
 	on_treaty_proposed = {
 		root = treaty
 	}
 	on_treaty_proposal_declined = {
-		root = country
+		root = treaty
 	}
 	on_country_released_as_company_subject = {
 		root = country
@@ -400,7 +401,10 @@ pub const ON_ACTION_SCOPES: &str = "
 	}
 	on_country_broke_treaty = on_country_withdrawn_from_treaty
 	on_treaty_dissolved = {
-		root = country
-		second_country = country
+		root = treaty
+	}
+	on_treaty_article_removed = {
+		root = treaty
+		article = treaty_article
 	}
 ";

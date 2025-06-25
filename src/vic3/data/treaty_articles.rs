@@ -70,7 +70,6 @@ impl DbKind for TreatyArticle {
             "can_be_renegotiated",
             "can_be_enforced",
             "causes_state_transfer",
-            "recipient_pays_maintenance",
         ];
         vd.field_list_choice("flags", flags);
 
@@ -79,7 +78,12 @@ impl DbKind for TreatyArticle {
             &["once_per_treaty", "once_per_side", "once_per_side_with_same_inputs"],
         );
 
-        vd.field_choice("maintenance_paid_by", &["target_country", "source_country"]);
+        if is_directed {
+            vd.req_field("maintenance_paid_by");
+            vd.field_choice("maintenance_paid_by", &["target_country", "source_country"]);
+        } else {
+            vd.ban_field("maintenance_paid_by", || "directed articles");
+        }
 
         let required_inputs = &[
             "quantity",
@@ -167,16 +171,17 @@ impl DbKind for TreatyArticle {
             sc.define_name("other_country", Scopes::Country, key);
             sc
         });
-        vd.field_trigger_builder("can_ratify", Tooltipped::Yes, |key| {
-            build_article_treaty_sc(key, is_directed)
-        });
-
-        // undocumented
         vd.multi_field_validated_block("requirement_to_maintain", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.field_trigger_builder("trigger", Tooltipped::No, |key| {
+            vd.field_trigger_builder("trigger", Tooltipped::Yes, |key| {
                 build_article_treaty_sc(key, is_directed)
             });
+            vd.field_trigger_builder("show_about_to_break_warning", Tooltipped::No, |key| {
+                build_article_treaty_sc(key, is_directed)
+            });
+        });
+        vd.field_trigger_builder("can_ratify", Tooltipped::Yes, |key| {
+            build_article_treaty_sc(key, is_directed)
         });
 
         for active in &["on_entry_into_force", "on_enforced"] {

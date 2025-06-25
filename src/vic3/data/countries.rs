@@ -161,6 +161,11 @@ impl DbKind for CountryFormation {
 
         vd.field_trigger_rooted("ai_will_do", Tooltipped::No, Scopes::Country);
         vd.field_trigger_rooted("possible", Tooltipped::Yes, Scopes::Country);
+
+        // undocumented
+
+        vd.field_integer("max_num_formation_candidates");
+        vd.field_trigger_rooted("can_be_formation_candidate", Tooltipped::No, Scopes::Country);
     }
 }
 

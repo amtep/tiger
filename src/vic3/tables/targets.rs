@@ -157,6 +157,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         Scopes::Market,
     ),
     (Scopes::Country, "market_capital", Scopes::State),
+    (Scopes::MarketGoods, "market_export_cap", Scopes::Value),
+    (Scopes::MarketGoods, "market_import_cap", Scopes::Value),
     (Scopes::State, "mass_migration_culture", Scopes::Culture),
     (Scopes::Country.union(Scopes::State), "migration_pull", Scopes::Value),
     (Scopes::Country, "military_expenses", Scopes::Value),
@@ -250,6 +252,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "power_bloc", Scopes::PowerBloc),
     (Scopes::PowerBloc, "power_bloc_leader", Scopes::Country),
     (Scopes::PowerBloc, "power_struggle_contender", Scopes::Country),
+    (Scopes::Country, "principal", Scopes::Value),
     (Scopes::Company, "prosperity", Scopes::Value),
     (Scopes::BattleSide, "province", Scopes::Province),
     (
@@ -314,6 +317,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Market, "trade_center", Scopes::State),
     (Scopes::Building, "training_rate", Scopes::Value),
     (Scopes::TreatyArticle, "treaty", Scopes::Treaty),
+    (Scopes::MarketGoods, "treaty_exports", Scopes::Value),
+    (Scopes::MarketGoods, "treaty_imports", Scopes::Value),
     // The input and output scopes for this are special cased
     (
         Scopes::Building
