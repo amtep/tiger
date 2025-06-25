@@ -80,7 +80,17 @@ pub fn update(current_version: &str, target_version: Option<&str>) -> Result<(),
                 }
                 updater.target_version_tag(&version);
             }
-            updater.build()?.update()?;
+
+            let release_update = updater.build()?;
+            match release_update.update()? {
+                self_update::Status::UpToDate(version) => {
+                    println!(); // output may not end with a newline
+                    println!("Already up to date with version: {}", version);
+                }
+                self_update::Status::Updated(version) => {
+                    println!("Successfully updated to version: {}", version);
+                }
+            }
 
             Ok(())
         } else {
