@@ -88,7 +88,7 @@ pub fn update(current_version: &str, target_version: Option<&str>) -> Result<(),
                     println!("Already up to date with version: {version}");
                 }
                 self_update::Status::Updated(version) => {
-                    println!("Successfully updated to version: {version}");
+                    println!("Updated to version: {version}");
                 }
             }
 
