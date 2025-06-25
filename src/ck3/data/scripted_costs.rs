@@ -26,11 +26,11 @@ impl DbKind for ScriptedCost {
         let mut sc = ScopeContext::new(Scopes::Character, key);
         match key.as_str() {
             "hybridize_culture" => {
-                sc.define_name("culture", Scopes::Culture, key)
+                sc.define_name("culture", Scopes::Culture, key);
             }
             "reforge_artifact" | "repair_artifact" => {
                 sc = ScopeContext::new(Scopes::None, key);
-                sc.define_name("artifact", Scopes::Artifact, key)
+                sc.define_name("artifact", Scopes::Artifact, key);
             }
             "travel_leader" => {
                 sc.define_name("speed_aptitude", Scopes::Value, key);
@@ -40,7 +40,7 @@ impl DbKind for ScriptedCost {
                 sc = ScopeContext::new(Scopes::Accolade, key);
             }
             "create_accolade" => {
-                sc.define_name("owner", Scopes::Character, key)
+                sc.define_name("owner", Scopes::Character, key);
             }
             "reassign_title_troops" => {
                 sc = ScopeContext::new(Scopes::LandedTitle, key);
