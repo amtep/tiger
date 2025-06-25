@@ -46,6 +46,9 @@ impl DbKind for ScriptedCost {
                 sc = ScopeContext::new(Scopes::LandedTitle, key);
                 sc.define_name("actor", Scopes::Character, key);
             }
+            "reform_culture_ethos" | "reform_culture_language" | "reform_culture_martial" => {
+                sc = ScopeContext::new(Scopes::Culture, key);
+            }
             _ => {
                 sc.set_strict_scopes(false);
             }
