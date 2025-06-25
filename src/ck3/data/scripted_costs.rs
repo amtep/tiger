@@ -24,18 +24,27 @@ impl ScriptedCost {
 impl DbKind for ScriptedCost {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut sc = ScopeContext::new(Scopes::Character, key);
-        if key.is("hybridize_culture") {
-            sc.define_name("culture", Scopes::Culture, key);
-        } else if key.is("reforge_artifact") || key.is("repair_artifact") {
-            sc = ScopeContext::new(Scopes::None, key);
-            sc.define_name("artifact", Scopes::Artifact, key);
-        } else if key.is("travel_leader") {
-            sc.define_name("speed_aptitude", Scopes::Value, key);
-            sc.define_name("safety_aptitude", Scopes::Value, key);
-        } else if key.is("deactivate_accolade") {
-            sc = ScopeContext::new(Scopes::Accolade, key);
-        } else if key.is("create_accolade") {
-            sc.define_name("owner", Scopes::Character, key);
+        match key.as_str() {
+            "hybridize_culture" => {
+                sc.define_name("culture", Scopes::Culture, key)
+            }
+            "reforge_artifact" | "repair_artifact" => {
+                sc = ScopeContext::new(Scopes::None, key);
+                sc.define_name("artifact", Scopes::Artifact, key)
+            }
+            "travel_leader" => {
+                sc.define_name("speed_aptitude", Scopes::Value, key);
+                sc.define_name("safety_aptitude", Scopes::Value, key);
+            }
+            "deactivate_accolade" => {
+                sc = ScopeContext::new(Scopes::Accolade, key);
+            }
+            "create_accolade" => {
+                sc.define_name("owner", Scopes::Character, key)
+            }
+            _ => {
+                sc.set_strict_scopes(false);
+            }
         }
 
         validate_cost(block, data, &mut sc);
