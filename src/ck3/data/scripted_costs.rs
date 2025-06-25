@@ -42,6 +42,10 @@ impl DbKind for ScriptedCost {
             "create_accolade" => {
                 sc.define_name("owner", Scopes::Character, key)
             }
+            "reassign_title_troops" => {
+                sc = ScopeContext::new(Scopes::LandedTitle, key);
+                sc.define_name("actor", Scopes::Character, key);
+            }
             _ => {
                 sc.set_strict_scopes(false);
             }
