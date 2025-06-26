@@ -315,6 +315,12 @@ pub fn validate_trigger_internal(
             }
         }
 
+        if caller == "weighted_calc_true_if" && data.get_trigger(key).is_some() {
+            let msg =
+                "scripted triggers don't work in `weighted_calc_true_if` (confirmed for 1.16)";
+            err(ErrorKey::Bugs).msg(msg).loc(key).push();
+        }
+
         side_effects |=
             validate_trigger_key_bv(key, cmp, bv, data, sc, tooltipped, negated, max_sev);
     });
@@ -1036,7 +1042,22 @@ fn match_trigger_bv(
                         }
                     }
                     for (_, block) in vd.integer_blocks() {
-                        side_effects |= validate_trigger(block, data, sc, tooltipped);
+                        let vd = Validator::new(block, data);
+                        side_effects |= validate_trigger_internal(
+                            &Lowercase::new_unchecked("weighted_calc_true_if"),
+                            ListType::None,
+                            block,
+                            data,
+                            sc,
+                            vd,
+                            tooltipped,
+                            false,
+                        );
+                        if block.num_items() > 1 {
+                            let msg = "`weighted_calc_true_if` accepts only one trigger per weight (confirmed for 1.16)";
+                            let info = "and no scripted triggers";
+                            err(ErrorKey::Bugs).msg(msg).info(info).loc(block).push();
+                        }
                     }
                 }
             } else if name.is("switch") {
