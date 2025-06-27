@@ -381,7 +381,7 @@ impl ScopeContext {
     /// Callers should probably check [`Self::is_strict()`] as well.
     pub fn is_name_defined(&mut self, name: &str) -> Option<Scopes> {
         if let Some(&idx) = self.names.get(name) {
-            #[allow(clippy::match_on_vec_items)] // invariant guarantees no panic
+            #[allow(clippy::indexing_slicing)] // invariant guarantees no panic
             Some(match self.named[idx] {
                 ScopeEntry::Scope(s, _) => s,
                 ScopeEntry::Backref(_) => unreachable!(),
@@ -716,7 +716,7 @@ impl ScopeContext {
     /// The `idx` must be an index from the `names` or `list_names` vectors.
     #[doc(hidden)]
     fn resolve_named(&self, idx: usize) -> (Scopes, &Reason) {
-        #[allow(clippy::match_on_vec_items)]
+        #[allow(clippy::indexing_slicing)]
         match self.named[idx] {
             ScopeEntry::Scope(s, ref reason) => (s, reason),
             ScopeEntry::Rootref => self.resolve_root(),
@@ -911,7 +911,7 @@ impl ScopeContext {
     #[doc(hidden)]
     fn expect_named(&mut self, mut idx: usize, scopes: Scopes, reason: &Reason) {
         loop {
-            #[allow(clippy::match_on_vec_items)]
+            #[allow(clippy::indexing_slicing)]
             match self.named[idx] {
                 ScopeEntry::Scope(_, _) => {
                     Self::expect_check(&mut self.named[idx], scopes, reason);
@@ -939,7 +939,7 @@ impl ScopeContext {
         report: &str,
     ) {
         loop {
-            #[allow(clippy::match_on_vec_items)]
+            #[allow(clippy::indexing_slicing)]
             match self.named[idx] {
                 ScopeEntry::Scope(_, _) => {
                     Self::expect_check3(&mut self.named[idx], scopes, reason, key, report);
