@@ -120,7 +120,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Character, "government_type", Scopes::GovernmentType),
     (Scopes::Faith, "great_holy_war", Scopes::GreatHolyWar),
     (Scopes::LandedTitle, "holder", Scopes::Character),
-    (Scopes::Character, "holding_type", Scopes::HoldingType),
+    (Scopes::Province, "holding_type", Scopes::HoldingType),
     (Scopes::HolyOrder, "holy_order_patron", Scopes::Character),
     (Scopes::Character, "home_court", Scopes::Character),
     (Scopes::Character, "host", Scopes::Character),
