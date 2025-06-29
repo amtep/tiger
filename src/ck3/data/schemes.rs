@@ -1,5 +1,5 @@
 use crate::block::Block;
-use crate::ck3::tables::misc::AGENT_SLOT_CONTRIBUTION_TYPE;
+use crate::ck3::tables::misc::{AGENT_SLOT_CONTRIBUTION_TYPE, AI_TARGETS};
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
@@ -96,8 +96,8 @@ impl DbKind for Scheme {
 
         vd.field_trigger("valid_agent", Tooltipped::No, &mut sc);
 
-        vd.field_list("agent_groups_owner_perspective"); // TODO
-        vd.field_list("agent_groups_target_character_perspective"); // TODO
+        vd.field_list_choice("agent_groups_owner_perspective", AI_TARGETS);
+        vd.field_list_choice("agent_groups_target_character_perspective", AI_TARGETS);
 
         vd.field_script_value("odds_prediction", &mut sc);
 
