@@ -1023,7 +1023,7 @@ impl<'a> Validator<'a> {
     /// with a key that is further away.
     ///
     /// Does not warn if it is an inline script value and the `desc` fields in it do not contain valid localizations.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(feature = "jomini")]
     pub fn field_script_value_rooted(&mut self, name: &str, scopes: Scopes) -> bool {
         self.field_check(name, |key, bv| {
             let mut sc = ScopeContext::new(scopes, key);

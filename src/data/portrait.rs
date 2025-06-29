@@ -369,8 +369,8 @@ pub fn validate_dna_modifiers(block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         vd.field_choice("mode", modes);
         vd.field_item("gene", Item::GeneCategory);
-        vd.field_numeric("x");
-        vd.field_numeric("y");
+        vd.field_script_value_rooted("x", Scopes::Character);
+        vd.field_script_value_rooted("y", Scopes::Character);
     });
     vd.multi_field_validated_block("accessory", |block, data| {
         let mut vd = Validator::new(block, data);
