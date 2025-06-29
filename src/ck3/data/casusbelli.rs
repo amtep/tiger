@@ -30,17 +30,23 @@ impl DbKind for CasusBelli {
         data.verify_exists(Item::Localization, key);
 
         let mut vd = Validator::new(block, data);
-        let mut sc = ScopeContext::new(Scopes::CasusBelli, key);
-        sc.define_name("attacker", Scopes::Character, key);
-        sc.define_name("defender", Scopes::Character, key);
-        // TODO: figure out when claimant is defined
-        sc.define_name("claimant", Scopes::Character, key);
-        // TODO: be more specific about when this list is defined
-        sc.define_list("target_titles", Scopes::LandedTitle, key);
+        let has_claimant = block.has_key("is_allowed_claim_title");
 
-        if block.has_key("is_allowed_claim_title") {
+        let sc_builder = |key: &Token| {
+            let mut sc = ScopeContext::new(Scopes::CasusBelli, key);
+            sc.define_name("attacker", Scopes::Character, key);
+            sc.define_name("defender", Scopes::Character, key);
+            // TODO: figure out when claimant is defined
             sc.define_name("claimant", Scopes::Character, key);
-        }
+            // TODO: be more specific about when this list is defined
+            sc.define_list("target_titles", Scopes::LandedTitle, key);
+            if has_claimant {
+                sc.define_name("claimant", Scopes::Character, key);
+            }
+            sc
+        };
+
+        let mut sc = sc_builder(key);
 
         vd.field_item("group", Item::CasusBelliGroup);
         let icon = vd.field_value("icon").unwrap_or(key);
@@ -84,11 +90,19 @@ impl DbKind for CasusBelli {
         vd.field_bool("imprisonment_by_attacker_give_war_score");
         vd.field_bool("imprisonment_by_defender_give_war_score");
 
+        let sc_effect_builder = |key: &Token| {
+            let mut sc = sc_builder(key);
+            sc.define_name("war", Scopes::War, key);
+            sc.define_list("attackers", Scopes::LandedTitle, key);
+            sc.define_list("defenders", Scopes::LandedTitle, key);
+            sc
+        };
+
         // TODO: check which are tooltipped
         for field in
             &["on_declaration", "on_victory", "on_white_peace", "on_defeat", "on_invalidated"]
         {
-            vd.field_effect(field, Tooltipped::No, &mut sc);
+            vd.field_effect_builder(field, Tooltipped::No, sc_effect_builder);
         }
 
         for field in
