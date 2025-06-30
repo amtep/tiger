@@ -631,13 +631,6 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = combat
 	}
 
-	on_scheme_opportunity_changed = {
-		root = scheme
-		scheme = scheme
-		old_value = value
-		new_value = value
-	}
-
 	on_become_independent_after_grant_title_at_vassal_limit = {
 		root = character
 		actor = character
