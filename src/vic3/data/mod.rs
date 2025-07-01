@@ -18,6 +18,7 @@ pub mod countries;
 pub mod cultures;
 pub mod decisions;
 pub mod decrees;
+pub mod dioramas;
 pub mod diplomatic_actions;
 pub mod diplomatic_catalysts;
 pub mod diplomatic_plays;

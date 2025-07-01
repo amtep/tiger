@@ -4,7 +4,7 @@ use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{err, ErrorKey};
+use crate::report::{err, warn, ErrorKey, Severity};
 use crate::scopes::Scopes;
 use crate::validator::Validator;
 
@@ -34,4 +34,29 @@ pub fn validate_treaty_article(block: &Block, data: &Everything, sc: &mut ScopeC
             }
         }
     });
+}
+
+pub fn validate_locators(vd: &mut Validator) -> Vec<&'static str> {
+    let mut locator_names = Vec::new();
+    vd.multi_field_validated_block("locator", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.set_max_severity(Severity::Warning);
+        vd.req_field("name");
+        if let Some(name) = vd.field_value("name") {
+            if let Some(other) = locator_names.iter().find(|n| n == &name) {
+                let msg = format!("duplicate locator name `{name}`");
+                warn(ErrorKey::DuplicateField)
+                    .msg(msg)
+                    .loc(name)
+                    .loc_msg(other, "previous locator")
+                    .push();
+            } else {
+                locator_names.push(name.clone());
+            }
+        }
+        vd.field_list_precise_numeric_exactly("position", 3);
+        vd.field_list_precise_numeric_exactly("rotation", 3);
+        vd.field_numeric("scale");
+    });
+    locator_names.into_iter().map(|n| n.as_str()).collect()
 }

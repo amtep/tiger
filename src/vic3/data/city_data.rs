@@ -8,6 +8,7 @@ use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::{Validator, ValueValidator};
+use crate::vic3::validate::validate_locators;
 
 #[derive(Clone, Debug)]
 pub struct CityBuildingVfx {}
@@ -82,27 +83,7 @@ impl DbKind for CityCenterpiece {
 
         vd.field_list_integers_exactly("grid_size", 2); // undocumented
 
-        let mut locator_names = Vec::new();
-        vd.multi_field_validated_block("locator", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.set_max_severity(Severity::Warning);
-            vd.req_field("name");
-            if let Some(name) = vd.field_value("name") {
-                if let Some(other) = locator_names.iter().find(|n| n == &name) {
-                    let msg = format!("duplicate locator name `{name}`");
-                    warn(ErrorKey::DuplicateField)
-                        .msg(msg)
-                        .loc(name)
-                        .loc_msg(other, "previous locator")
-                        .push();
-                } else {
-                    locator_names.push(name.clone());
-                }
-            }
-            vd.field_list_precise_numeric_exactly("position", 3);
-            vd.field_list_precise_numeric_exactly("rotation", 3);
-            vd.field_numeric("scale");
-        });
+        let locator_names = validate_locators(&mut vd);
 
         let mut composition_names = Vec::new();
         vd.field_validated_block("composition_group", |block, data| {
@@ -159,7 +140,6 @@ impl DbKind for CityCenterpiece {
             });
         });
 
-        let locator_names: Vec<_> = locator_names.into_iter().map(|n| n.as_str()).collect();
         let composition_names: Vec<_> = composition_names.into_iter().map(|n| n.as_str()).collect();
         vd.multi_field_validated_block("attach", |block, data| {
             let mut vd = Validator::new(block, data);

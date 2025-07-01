@@ -411,6 +411,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
     #[cfg(feature = "vic3")] Approval,
+    #[cfg(feature = "vic3")] ArmyDiorama,
     #[cfg(feature = "vic3")] Attitude,
     #[cfg(feature = "vic3")] BattleCondition,
     #[cfg(feature = "vic3")] BuildingGroup,
@@ -448,6 +449,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] DynamicTreatyName,
     #[cfg(feature = "vic3")] EventCategory,
     #[cfg(feature = "vic3")] FlagDefinition,
+    #[cfg(feature = "vic3")] FleetDiorama,
     #[cfg(feature = "vic3")] Goods,
     #[cfg(feature = "vic3")] GradientBorderSettings,
     #[cfg(feature = "vic3")] HarvestConditionType,
@@ -1361,6 +1363,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::Approval => "",
             #[cfg(feature = "vic3")]
+            Item::ArmyDiorama => "gfx/map/army_dioramas/",
+            #[cfg(feature = "vic3")]
             Item::Attitude => "",
             #[cfg(feature = "vic3")]
             Item::BattleCondition => "common/battle_conditions/",
@@ -1434,6 +1438,8 @@ impl Item {
             Item::EventCategory => "",
             #[cfg(feature = "vic3")]
             Item::FlagDefinition => "common/flag_definitions/",
+            #[cfg(feature = "vic3")]
+            Item::FleetDiorama => "gfx/map/fleet_dioramas/",
             #[cfg(feature = "vic3")]
             Item::Goods => "common/goods/",
             #[cfg(feature = "vic3")]
