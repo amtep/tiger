@@ -1,5 +1,6 @@
 pub mod acceptance;
 pub mod ai_strategies;
+pub mod air_graphics;
 pub mod alerts;
 pub mod battle_conditions;
 pub mod buildings;

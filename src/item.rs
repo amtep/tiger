@@ -407,6 +407,7 @@ pub enum Item {
     // Items specific to vic3
     #[cfg(feature = "vic3")] AcceptanceStatus,
     #[cfg(feature = "vic3")] AiStrategy,
+    #[cfg(feature = "vic3")] AirGraphics,
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
     #[cfg(feature = "vic3")] Approval,
@@ -1351,6 +1352,8 @@ impl Item {
             Item::AcceptanceStatus => "common/acceptance_statuses/",
             #[cfg(feature = "vic3")]
             Item::AiStrategy => "common/ai_strategies/",
+            #[cfg(feature = "vic3")]
+            Item::AirGraphics => "gfx/map/air_graphics/",
             #[cfg(feature = "vic3")]
             Item::Alert => "common/alert_types",
             #[cfg(feature = "vic3")]
