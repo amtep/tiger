@@ -27,8 +27,8 @@ static TRIGGER_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Trigger)>> = La
 /// See `triggers.log` from the game data dumps
 /// A key ends with '(' if it is the version that takes a parenthesized argument in script.
 const TRIGGER: &[(Scopes, &str, Trigger)] = &[
-    (Scopes::None, "active_lens", UncheckedValue), // no examples in vanilla
-    (Scopes::None, "active_lens_option", UncheckedValue), // no examples in vanilla
+    (Scopes::None, "active_lens", UncheckedTodo), // no examples in vanilla
+    (Scopes::None, "active_lens_option", UncheckedTodo), // no examples in vanilla
     // TODO: warn if this is in an any_ iterator and not at the end
     (Scopes::all_but_none(), "add_to_temporary_list", Special),
     (Scopes::Country, "additional_war_exhaustion", CompareValue),
@@ -306,7 +306,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "custom_tooltip", Special),
     (Scopes::None, "day_value", CompareValue),
     (Scopes::None, "daynight_value", CompareValue),
-    (Scopes::None, "debug_log", UncheckedValue),
+    (Scopes::None, "debug_log", UncheckedTodo),
     (Scopes::None, "debug_log_details", Boolean),
     (Scopes::Pop, "dependents", CompareValue),
     (Scopes::State, "devastation", CompareValue),
@@ -443,7 +443,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::State, "has_converting_pops", Boolean),
     (Scopes::Country, "has_convoys_being_sunk", Boolean),
     (Scopes::PoliticalMovement, "has_core_ideology", Boolean),
-    (Scopes::None, "has_cosmetic_dlc", UncheckedValue),
+    (Scopes::None, "has_cosmetic_dlc", UncheckedTodo),
     (Scopes::State, "has_cultural_community", Scope(Scopes::Culture)),
     (Scopes::Culture, "has_cultural_obsession", Item(Item::Goods)),
     (Scopes::Character, "has_culture", Scope(Scopes::Character.union(Scopes::Culture))),
@@ -485,7 +485,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_free_government_reform", Boolean),
     (Scopes::None, "has_game_rule", Item(Item::GameRuleSetting)),
     (Scopes::None, "has_game_started", Boolean),
-    (Scopes::None, "has_gameplay_dlc", UncheckedValue),
+    (Scopes::None, "has_gameplay_dlc", UncheckedTodo),
     (Scopes::Country, "has_global_highest_gdp", Boolean),
     (Scopes::Country, "has_global_highest_innovation", Boolean),
     (Scopes::None, "has_global_variable", Identifier("variable name")),
@@ -574,7 +574,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_possible_decisions", Boolean),
     (Scopes::State, "has_potential_resource", Item(Item::BuildingGroup)),
     (Scopes::MarketGoods.union(Scopes::StateGoods), "has_potential_supply", Boolean),
-    (Scopes::Country, "has_potential_to_form_country", UncheckedValue), // No examples in vanilla
+    (Scopes::Country, "has_potential_to_form_country", UncheckedTodo), // No examples in vanilla
     (Scopes::Country, "has_power_struggle", Boolean),
     (Scopes::PowerBloc, "has_principle", Scope(Scopes::PowerBlocPrinciple)),
     (Scopes::PowerBloc, "has_principle_group", Scope(Scopes::PowerBlocPrincipleGroup)),
@@ -606,7 +606,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Country,
         "has_technology_progress",
-        Block(&[("technology", UncheckedValue), ("progress", CompareValue)]),
+        Block(&[("technology", UncheckedTodo), ("progress", CompareValue)]),
     ),
     (
         Scopes::Country,
@@ -623,8 +623,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::Country, "has_treaty_port_in_market", Scope(Scopes::Market)),
     (Scopes::Country, "has_truce_with", Scope(Scopes::Country)),
-    (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "has_type", UncheckedTodo),
-    (Scopes::None, "has_unification_candidate", UncheckedValue), // No examples in vanilla
+    (
+        Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions),
+        "has_type",
+        Item(Item::TreatyArticle),
+    ),
+    (Scopes::None, "has_unification_candidate", UncheckedTodo), // No examples in vanilla
     (Scopes::NewCombatUnit, "has_unit_type", Scope(Scopes::CombatUnitType)),
     (Scopes::None, "has_variable", Identifier("variable name")),
     (Scopes::None, "has_variable_list", Identifier("list name")),
@@ -779,11 +783,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "is_junior_in_customs_union", Boolean),
     (Scopes::Theater, "is_land_theater", Boolean),
     (Scopes::State, "is_largest_state_in_region", Boolean),
-    (
-        Scopes::None,
-        "is_lens_open",
-        Block(&[("lens", UncheckedValue), ("?tab_name", UncheckedValue)]),
-    ),
+    (Scopes::None, "is_lens_open", Block(&[("lens", UncheckedTodo), ("?tab_name", UncheckedTodo)])),
     (Scopes::Country, "is_local_player", Boolean),
     (Scopes::Country, "is_losing_power_rank", Boolean),
     (Scopes::InterestGroup, "is_marginal", Boolean),
@@ -809,9 +809,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Scopes::None,
         "is_panel_open",
         Block(&[
-            ("?target", UncheckedValue),
-            ("?panel_name", UncheckedValue),
-            ("?tab_name", UncheckedValue),
+            ("?target", UncheckedTodo),
+            ("?panel_name", UncheckedTodo),
+            ("?tab_name", UncheckedTodo),
         ]),
     ),
     (Scopes::Party, "is_party", Scope(Scopes::Party)),
@@ -820,7 +820,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::PoliticalLobby, "is_political_lobby_type", Item(Item::PoliticalLobby)),
     (Scopes::PoliticalMovement, "is_political_movement_type", Item(Item::PoliticalMovement)),
     (Scopes::Pop, "is_pop_type", Item(Item::PopType)),
-    (Scopes::None, "is_popup_open", UncheckedValue),
+    (Scopes::None, "is_popup_open", UncheckedTodo),
     (Scopes::State, "is_potential_treaty_port", Scope(Scopes::Country)),
     (Scopes::Country, "is_power_bloc_leader", Boolean),
     (Scopes::InterestGroup, "is_powerful", Boolean),
@@ -840,7 +840,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Treaty.union(Scopes::TreatyOptions), "is_renegotiation", Boolean),
     (Scopes::Character, "is_repairing", Removed("1.6", "")),
     (Scopes::Country, "is_researching_technology", Special), // also accepts "any"
-    (Scopes::Country, "is_researching_technology_category", UncheckedValue), // No examples in vanilla
+    (Scopes::Country, "is_researching_technology_category", UncheckedTodo), // No examples in vanilla
     (
         Scopes::Country.union(Scopes::InterestGroup).union(Scopes::PoliticalMovement),
         "is_revolutionary",
@@ -851,7 +851,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "is_revolutionary_movement",
         Removed("1.8", "replaced with is_revolutionary"),
     ),
-    (Scopes::None, "is_rightclick_menu_open", UncheckedValue),
+    (Scopes::None, "is_rightclick_menu_open", UncheckedTodo),
     (Scopes::Character, "is_ruler", Boolean),
     (Scopes::InterestGroup, "is_same_interest_group_type", Scope(Scopes::InterestGroup)),
     (Scopes::LawType, "is_same_law_group_as", Scope(Scopes::LawType)),
@@ -922,9 +922,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::State, "is_treaty_port", Boolean),
     (Scopes::None, "is_tutorial_active", Boolean),
     (Scopes::None, "is_tutorial_lesson_active", Item(Item::TutorialLesson)),
-    (Scopes::None, "is_tutorial_lesson_chain_completed", UncheckedValue), // TODO
+    (Scopes::None, "is_tutorial_lesson_chain_completed", UncheckedTodo), // TODO
     (Scopes::None, "is_tutorial_lesson_completed", Item(Item::TutorialLesson)),
-    (Scopes::None, "is_tutorial_lesson_step_completed", UncheckedValue), // TODO
+    (Scopes::None, "is_tutorial_lesson_step_completed", UncheckedTodo), // TODO
     (Scopes::State, "is_under_colonization", Boolean),
     (Scopes::Building, "is_under_construction", Boolean),
     (Scopes::Country, "is_unification_candidate", Item(Item::CountryFormation)),

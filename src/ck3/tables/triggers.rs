@@ -258,7 +258,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             ("?target_faith", Scope(Scopes::Faith))
         ]),
     ),
-    (Scopes::None, "can_start_tutorial_lesson", UncheckedValue), // TODO
+    (Scopes::None, "can_start_tutorial_lesson", UncheckedTodo),
     (
         Scopes::LandedTitle,
         "can_title_create_faction",
@@ -355,8 +355,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::LandedTitle, "de_jure_drifting_towards", Scope(Scopes::LandedTitle)),
     (Scopes::Character, "death_reason", Item(Item::DeathReason)),
     (Scopes::Character, "debt_level", CompareValue),
-    (Scopes::None, "debug_log", UncheckedValue),
-    (Scopes::None, "debug_log_details", UncheckedValue),
+    (Scopes::None, "debug_log", UncheckedTodo),
+    (Scopes::None, "debug_log_details", UncheckedTodo),
     (Scopes::None, "debug_only", Boolean),
     (Scopes::War, "defender_war_score", CompareValue),
     (Scopes::TravelPlan, "departure_date", CompareValue),
@@ -687,11 +687,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Legend, "has_legend_chapter", ItemOrBlock(Item::LegendChapter, &[("name", Item(Item::LegendChapter)), ("?localization_key", Item(Item::Localization))])),
     (Scopes::Legend, "has_legend_chronicle", Item(Item::LegendChronicle)),
     (Scopes::Legend, "has_legend_county_modifier", Item(Item::Modifier)),
-    (Scopes::Legend, "has_legend_county_modifier_duration_remaining", UncheckedValue),
+    (Scopes::Legend, "has_legend_county_modifier_duration_remaining", UncheckedTodo),
     (Scopes::Legend, "has_legend_owner_modifier", Item(Item::Modifier)),
-    (Scopes::Legend, "has_legend_owner_modifier_duration_remaining", UncheckedValue),
+    (Scopes::Legend, "has_legend_owner_modifier_duration_remaining", UncheckedTodo),
     (Scopes::Legend, "has_legend_province_modifier", Item(Item::Modifier)),
-    (Scopes::Legend, "has_legend_province_modifier_duration_remaining", UncheckedValue),
+    (Scopes::Legend, "has_legend_province_modifier_duration_remaining", UncheckedTodo),
     (Scopes::Character, "has_legitimacy", Boolean),
     (Scopes::Character, "has_legitimacy_flag", Item(Item::LegitimacyFlag)),
     (Scopes::Character, "has_lifestyle", Item(Item::Lifestyle)),
@@ -862,7 +862,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::TravelPlan, "has_travel_option", Item(Item::TravelOption)),
     (Scopes::TravelPlan, "has_travel_plan_modifier", Item(Item::Modifier)),
-    (Scopes::TravelPlan, "has_travel_plan_modifier_duration_remaining", UncheckedValue),
+    (Scopes::TravelPlan, "has_travel_plan_modifier_duration_remaining", UncheckedTodo),
     (Scopes::Province, "has_travel_point_of_interest", Item(Item::PointOfInterest)),
     (Scopes::Character, "has_triggered_legend_seed", Item(Item::LegendSeed)),
     (Scopes::Character, "has_truce", Scope(Scopes::Character)),
@@ -1071,7 +1071,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_foreign_court_or_pool_guest", Boolean),
     (Scopes::Character, "is_foreign_court_or_pool_guest_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_from_ruler_designer", Boolean),
-    (Scopes::None, "is_game_view_open", UncheckedValue), // TODO
+    (Scopes::None, "is_game_view_open", UncheckedTodo),
     (Scopes::None, "is_gamestate_tutorial_active", Boolean),
     (Scopes::Character, "is_grandchild_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_grandparent_of", Scope(Scopes::Character)),
@@ -1234,7 +1234,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::LandedTitle, "is_title_created", Boolean),
     (Scopes::Regiment, "is_title_maa_regiment", Boolean),
     (Scopes::LandedTitle, "is_titular", Boolean),
-    (Scopes::None, "is_tooltip_with_name_open", UncheckedValue), // TODO
+    (Scopes::None, "is_tooltip_with_name_open", UncheckedTodo),
     (Scopes::Character, "is_travel_entourage_character", Boolean),
     (Scopes::Character, "is_travel_leader", Boolean),
     (Scopes::TravelPlan, "is_travel_with_domicile", Boolean),
@@ -1243,10 +1243,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_tributary_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_tributary_of_suzerain_or_above", Scope(Scopes::Character)),
     (Scopes::None, "is_tutorial_active", Boolean),
-    (Scopes::None, "is_tutorial_lesson_active", UncheckedValue), // TODO
-    (Scopes::None, "is_tutorial_lesson_chain_completed", UncheckedValue), // TODO
-    (Scopes::None, "is_tutorial_lesson_completed", UncheckedValue), // TODO
-    (Scopes::None, "is_tutorial_lesson_step_completed", UncheckedValue), // TODO
+    (Scopes::None, "is_tutorial_lesson_active", UncheckedTodo),
+    (Scopes::None, "is_tutorial_lesson_chain_completed", UncheckedTodo),
+    (Scopes::None, "is_tutorial_lesson_completed", UncheckedTodo),
+    (Scopes::None, "is_tutorial_lesson_step_completed", UncheckedTodo),
     (Scopes::Character, "is_twin_of", Scope(Scopes::Character)),
     (Scopes::Scheme, "is_type_basic", Boolean),
     (Scopes::Scheme, "is_type_secret", Boolean),
@@ -1269,10 +1269,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_vassal_or_below_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_visibly_fertile", Boolean),
     (Scopes::War, "is_war_leader", Scope(Scopes::Character)),
-    (Scopes::None, "is_war_overview_tab_open", UncheckedValue), // TODO
+    (Scopes::None, "is_war_overview_tab_open", UncheckedTodo),
     (Scopes::War, "is_white_peace_possible", Boolean),
     (Scopes::None, "is_widget_open", Removed("1.13", "replaced by is_widgetid_open")),
-    (Scopes::None, "is_widgetid_open", UncheckedValue), // TODO
+    (Scopes::None, "is_widgetid_open", UncheckedTodo),
     (
         Scopes::Character,
         "join_faction_chance",
