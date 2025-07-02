@@ -450,6 +450,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] EventCategory,
     #[cfg(feature = "vic3")] FlagDefinition,
     #[cfg(feature = "vic3")] FleetDiorama,
+    #[cfg(feature = "vic3")] FrontGraphics,
     #[cfg(feature = "vic3")] Goods,
     #[cfg(feature = "vic3")] GradientBorderSettings,
     #[cfg(feature = "vic3")] HarvestConditionType,
@@ -1440,6 +1441,8 @@ impl Item {
             Item::FlagDefinition => "common/flag_definitions/",
             #[cfg(feature = "vic3")]
             Item::FleetDiorama => "gfx/map/fleet_dioramas/",
+            #[cfg(feature = "vic3")]
+            Item::FrontGraphics => "gfx/map/borders/front_graphics/",
             #[cfg(feature = "vic3")]
             Item::Goods => "common/goods/",
             #[cfg(feature = "vic3")]
