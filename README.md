@@ -118,7 +118,7 @@ For `imperator-tiger`, run `cargo build --release -p imperator-tiger` in the pro
 
 ## Visual Studio Code extension
 
-User unLomTrois has made a [VS Code extension](https://github.com/unLomTrois/ck3tiger-for-vscode) for Tiger.
+User unLomTrois has made a [VS Code extension](https://github.com/unLomTrois/ck3tiger-for-vscode-2) for Tiger.
 It enables you to view the reports directly in the Problems tab.
 
 ## GitHub Action
