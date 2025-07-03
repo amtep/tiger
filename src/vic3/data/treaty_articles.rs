@@ -348,6 +348,7 @@ fn validate_ai(block: &Block, data: &Everything, required_inputs: &[Token], is_d
     vd.field_script_value_builder("contextual_accept_score", |key| {
         build_article_treaty_sc(key, is_directed)
     });
+    vd.field_script_value_builder("proposal_weight", |key| build_article_sc(key, is_directed));
 
     vd.field_script_value_builder("wargoal_score_multiplier", |key| {
         build_article_sc(key, is_directed)
