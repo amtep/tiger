@@ -197,6 +197,7 @@ bitflags! {
         #[cfg(feature = "vic3")] const TreatyOptions = 0x0000_0000_0100_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const TreatyArticleOptions = 0x0000_0000_0200_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const Treaty = 0x0000_0000_0400_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const BuildingGroup = 0x0000_0000_0800_0000_0000_0000_0000_0000;
 
         #[cfg(feature = "imperator")] const Area = 0x0001_0000;
         #[cfg(feature = "imperator")] const CountryCulture = 0x0002_0000;
@@ -311,7 +312,7 @@ pub enum ArgumentValue {
     /// The value must be the name of an item of the given item type.
     Item(Item),
     /// The value can be either a Scope or an Item
-    #[cfg(feature = "ck3")]
+    #[cfg(any(feature = "ck3", feature = "vic3"))]
     ScopeOrItem(Scopes, Item),
     /// The value can be a trait name or `trait|track`.
     #[cfg(feature = "ck3")]

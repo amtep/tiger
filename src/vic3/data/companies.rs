@@ -132,6 +132,7 @@ impl DbKind for CompanyCharterType {
         let mut sc = ScopeContext::new(Scopes::Company | Scopes::Country, key);
         vd.field_validated_block_sc("cooldown", &mut sc, validate_duration);
 
+        vd.field_trigger_rooted("possible", Tooltipped::No, Scopes::Company);
         vd.field_trigger_rooted("ai_possible", Tooltipped::No, Scopes::Company);
         vd.field_script_value_no_breakdown_rooted("ai_weight", Scopes::Company);
 
