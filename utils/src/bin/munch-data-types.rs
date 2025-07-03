@@ -405,6 +405,10 @@ fn main() -> Result<()> {
     if args.game == Game::Ck3 {
         new_global_functions.retain(|k, _| k.chars().any(char::is_uppercase));
     }
+    // Heuristic: they all start with concept_
+    if args.game == Game::Vic3 {
+        new_global_functions.retain(|k, _| !k.starts_with("concept_"));
+    }
 
     // Root seems to work as well as ROOT
     new_global_promotes
