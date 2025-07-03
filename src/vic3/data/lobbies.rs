@@ -39,6 +39,15 @@ impl DbKind for PoliticalLobby {
             sc
         }
 
+        // requirement_to_maintain is documented as having interest group scope,
+        // but it's actually country.
+        fn sc_rtm(key: &Token) -> ScopeContext {
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("target_country", Scopes::Country, key);
+            sc.define_name("political_lobby", Scopes::PoliticalLobby, key);
+            sc
+        }
+
         let mut vd = Validator::new(block, data);
 
         data.verify_exists(Item::Localization, key);
@@ -55,8 +64,8 @@ impl DbKind for PoliticalLobby {
 
         vd.field_validated_block("requirement_to_maintain", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.field_trigger_builder("trigger", Tooltipped::No, sc_with_lobby);
-            vd.field_effect_builder("on_failed", Tooltipped::No, sc_with_lobby);
+            vd.field_trigger_builder("trigger", Tooltipped::No, sc_rtm);
+            vd.field_effect_builder("on_failed", Tooltipped::No, sc_rtm);
             vd.field_item("swap_type_on_failed", Item::PoliticalLobby);
         });
 
