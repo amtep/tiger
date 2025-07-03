@@ -65,6 +65,7 @@ impl DbKind for PoliticalMovement {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("culture", Scopes::Culture, key);
             sc.define_name("religion", Scopes::Religion, key);
+            sc.define_name("interest_group", Scopes::InterestGroup, key);
             sc
         });
         vd.field_script_value_builder("character_support_weight", |key| {

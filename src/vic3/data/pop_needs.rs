@@ -27,6 +27,9 @@ impl DbKind for PopNeed {
 
         // TODO: verify that it's one of the goods in this PopNeed
         vd.field_item("default", Item::Goods);
+        vd.field_numeric("obsession_demand_min");
+        vd.field_numeric("obsession_demand_mult");
+        vd.field_numeric("prestige_goods_demand_increase");
         vd.multi_field_validated_block("entry", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_item("goods", Item::Goods);

@@ -98,6 +98,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::JournalEntry, "goal_value", Scopes::Value),
     (Scopes::MarketGoods.union(Scopes::StateGoods), "goods", Scopes::Goods),
     (Scopes::Country.union(Scopes::PoliticalMovement), "government_size", Scopes::Value),
+    (Scopes::Building.union(Scopes::BuildingType), "group", Scopes::BuildingGroup),
     (Scopes::Country, "heir", Scopes::Character),
     (Scopes::MilitaryFormation, "highest_ranked_commander", Scopes::Character),
     (Scopes::Character.union(Scopes::Pop), "home_country", Scopes::Country),
@@ -374,6 +375,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
     &[
         (Scopes::Country, "active_law", Scopes::Law, Item(Item::LawGroup)),
         (Scopes::Country, "ai_army_comparison", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::StrategicRegion, "ai_colonization_value", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Country, "ai_gdp_comparison", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Country, "ai_ideological_opinion", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Country, "ai_navy_comparison", Scopes::Value, Scope(Scopes::Country)),
@@ -390,6 +392,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::Front, "average_defense", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Front, "average_offense", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::State, "b", Scopes::Building, Item(Item::BuildingType)),
+        (Scopes::None, "bg", Scopes::BuildingGroup, Item(Item::BuildingGroup)),
         (Scopes::None, "bt", Scopes::BuildingType, Item(Item::BuildingType)),
         (Scopes::None, "c", Scopes::Country, Item(Item::Country)),
         (

@@ -1577,7 +1577,7 @@ fn validate_argument_internal(
             validate_target_ok_this(arg, data, sc, scope);
             sc.unstash_builder(stash);
         }
-        #[cfg(feature = "ck3")]
+        #[cfg(any(feature = "ck3", feature = "vic3"))]
         ArgumentValue::ScopeOrItem(scope, item) => {
             if !data.item_exists(item, arg.as_str()) {
                 let stash = sc.stash_builder();

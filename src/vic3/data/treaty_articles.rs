@@ -70,6 +70,9 @@ impl DbKind for TreatyArticle {
             "can_be_renegotiated",
             "can_be_enforced",
             "causes_state_transfer",
+            "friendly",
+            "giftable",
+            "hostile",
         ];
         vd.field_list_choice("flags", flags);
 
@@ -234,6 +237,7 @@ impl DbKind for TreatyArticle {
                 "control_own_capital",
                 "control_all_own_states",
                 "control_all_target_country_claims",
+                "control_any_target_incorporated_state",
             ];
             vd.field_choice("contestion_type", contestion_types);
 

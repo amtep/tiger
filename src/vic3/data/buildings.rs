@@ -140,6 +140,7 @@ impl DbKind for BuildingType {
         vd.field_trigger("can_build", Tooltipped::Yes, &mut state_sc);
         vd.field_trigger("can_build_government", Tooltipped::Yes, &mut state_sc);
         vd.field_trigger("can_build_private", Tooltipped::Yes, &mut state_sc);
+        vd.field_trigger_rooted("can_have_country_monopoly", Tooltipped::Yes, Scopes::Country);
 
         vd.field_integer("construction_points");
         vd.field_validated_block("construction_modifier", |block, data| {

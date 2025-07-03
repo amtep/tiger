@@ -379,6 +379,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
     ),
     (Scopes::Country, "gdp_per_capita_ranking", CompareValue),
+    (Scopes::Country, "gdp_ranking", CompareValue),
     (
         Scopes::Country,
         "goods_production_rank",
@@ -572,7 +573,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Pop, "has_pop_religion", Item(Item::Religion)),
     (Scopes::Country.union(Scopes::Market).union(Scopes::State), "has_port", Boolean),
     (Scopes::Country, "has_possible_decisions", Boolean),
-    (Scopes::State, "has_potential_resource", Item(Item::BuildingGroup)),
+    (
+        Scopes::State,
+        "has_potential_resource",
+        ScopeOrItem(Scopes::BuildingGroup, Item::BuildingGroup),
+    ),
     (Scopes::MarketGoods.union(Scopes::StateGoods), "has_potential_supply", Boolean),
     (Scopes::Country, "has_potential_to_form_country", UncheckedTodo), // No examples in vanilla
     (Scopes::Country, "has_power_struggle", Boolean),
@@ -685,6 +690,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Removed("removed in 1.5", "replaced with is_adjacent_to_country and is_adjacent_to_state"),
     ),
     (Scopes::Country, "is_adjacent_to_country", Scope(Scopes::Country)),
+    (Scopes::Market, "is_adjacent_to_market", Scope(Scopes::Market)),
     (Scopes::Country, "is_adjacent_to_state", Scope(Scopes::State)),
     (Scopes::Character, "is_advancing_on_front", Scope(Scopes::Front)),
     (Scopes::Country, "is_ai", Boolean),
@@ -716,6 +722,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "is_country_alive", Boolean),
     (Scopes::Country, "is_country_type", Item(Item::CountryType)),
     (Scopes::Character, "is_defender_in_battle", Boolean),
+    (
+        Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions),
+        "is_desired_by",
+        Scope(Scopes::Country),
+    ),
     (Scopes::DiplomaticPact, "is_diplomatic_action_type", Item(Item::DiplomaticAction)),
     (Scopes::DiplomaticCatalyst, "is_diplomatic_catalyst_type", Item(Item::DiplomaticCatalyst)),
     (Scopes::DiplomaticPact, "is_diplomatic_pact_in_danger", Boolean),
@@ -733,6 +744,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "is_enacting_law", Scope(Scopes::LawType)),
     (Scopes::Treaty, "is_enforced", Boolean),
     (Scopes::Treaty.union(Scopes::TreatyOptions), "is_equal_exchange", Boolean),
+    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_exchanging_obligations", Boolean),
     (Scopes::Country, "is_expanding_institution", Boolean),
     (Scopes::Character, "is_female", Boolean),
     (Scopes::MilitaryFormation, "is_fleet", Boolean),
@@ -742,6 +754,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::MilitaryFormation, "is_fully_mobilized", Boolean),
     (Scopes::None, "is_game_paused", Boolean),
     (Scopes::None, "is_gamestate_tutorial_active", Boolean),
+    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_giftable_to", Scope(Scopes::Country)),
     (Scopes::JournalEntry, "is_goal_complete", Boolean),
     (Scopes::Building, "is_government_funded", Boolean),
     (Scopes::Character, "is_heir", Boolean),
@@ -1630,6 +1643,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::None, "year", CompareValue),
     (Scopes::Character, "years_of_service", CompareValue),
+    (
+        Scopes::State,
+        "years_to_incorporate",
+        Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
+    ),
 ];
 
 #[inline]
@@ -1790,6 +1808,13 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (Scopes::War, "num_country_wounded", Scope(Scopes::Country), Scopes::Value),
         // TODO: check that the DiplomaticAction has a pact
         (Scopes::Country, "num_diplomatic_pacts", Item(Item::DiplomaticAction), Scopes::Value),
+        // TODO: "will return an error if used on building groups that are not level capped"
+        (
+            Scopes::State,
+            "num_potential_resources",
+            ScopeOrItem(Scopes::BuildingGroup, Item::BuildingGroup),
+            Scopes::Value,
+        ),
         (Scopes::Country, "pop_type_percent_country", Item(Item::PopType), Scopes::Value),
         (Scopes::State, "pop_type_percent_state", Item(Item::PopType), Scopes::Value),
         (Scopes::State, "population_by_culture", Scope(Scopes::Culture), Scopes::Value),
@@ -1931,5 +1956,6 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scope(Scopes::Country),
             Scopes::Value,
         ),
+        (Scopes::State, "years_to_incorporate", Scope(Scopes::Country), Scopes::Value),
     ]
 };
