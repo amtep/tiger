@@ -6,6 +6,7 @@ use crate::helpers::TigerHashSet;
 use crate::item::Item;
 use crate::report::{err, warn, ErrorKey, ErrorLoc};
 use crate::scopes::Scopes;
+use crate::script_value::validate_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_target;
@@ -292,9 +293,15 @@ pub fn validate_create_building(
     });
     vd.field_bool("subsidized");
     vd.field_numeric_range("reserves", 0.0..=1.0);
-    vd.field_validated_value("level", |_, mut vd| {
-        vd.maybe_is("arable_land");
-        vd.integer();
+    vd.field_validated_sc("level", sc, |bv, data, sc| match bv {
+        BV::Value(t) => {
+            _ = {
+                if !t.is("arable_land") {
+                    validate_script_value(bv, data, sc)
+                }
+            }
+        }
+        BV::Block(_) => _ = validate_script_value(bv, data, sc),
     });
     vd.field_validated_block("add_ownership", |block, data| {
         let mut vd = Validator::new(block, data);
