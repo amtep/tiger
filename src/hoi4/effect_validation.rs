@@ -53,6 +53,186 @@ pub fn validate_add_advisor_role(
     });
 }
 
+pub fn validate_add_ai_strategy(
+    _key: &Token,
+    block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.field_item("type", Item::AiStrategyType);
+    if let Some(strategy) = block.get_field_value("type") {
+        match strategy.as_str() {
+            "dont_defend_ally_borders"
+            | "declare_war"
+            | "invade"
+            | "equipment_market_trade_desire"
+            | "raid_target_country" => {
+                vd.req_field("id");
+                vd.field_target("id", sc, Scopes::Country);
+                vd.field_integer("value");
+            }
+            "force_concentration_front_factor"
+            | "force_concentration_target_weight"
+            | "front_control"
+            | "front_unit_request"
+            | "invasion_unit_request" => {
+                vd.multi_field_target("tag", sc, Scopes::Country);
+                vd.multi_field_item("state", Item::State);
+                vd.multi_field_item("strategic_region", Item::StrategicRegion);
+                vd.multi_field_item("area", Item::AiArea);
+                let sc_country = |key: &Token| {
+                    let mut sc = ScopeContext::new(Scopes::Country, key);
+                    sc.push_as_from(Scopes::Country, key);
+                    sc
+                };
+                vd.field_trigger_builder("country_trigger", Tooltipped::No, sc_country);
+                let sc_state = |key: &Token| {
+                    let mut sc = ScopeContext::new(Scopes::State, key);
+                    sc.push_as_from(Scopes::Country, key);
+                    sc.push_as_from(Scopes::Country, key);
+                    sc
+                };
+                vd.field_trigger_builder("state_trigger", Tooltipped::No, sc_state);
+                vd.field_numeric("ratio");
+                if strategy.is("front_control") {
+                    vd.field_integer("priority");
+                    vd.field_choice("ordertype", &["front", "invasion"]);
+                    vd.field_choice(
+                        "execution_type",
+                        &["careful", "balanced", "rush", "rush_weak"],
+                    );
+                    vd.field_bool("execute_order");
+                    vd.field_bool("manual_attack");
+                } else {
+                    vd.field_integer("value");
+                }
+            }
+            "put_unit_buffers" => {
+                vd.field_numeric("ratio");
+                vd.field_integer("order_id");
+                vd.field_list_items("states", Item::State);
+                vd.multi_field_item("area", Item::AiArea);
+                vd.field_bool("subtract_invasions_from_need");
+                vd.field_bool("subtract_fronts_from_need");
+            }
+            "avoid_starting_wars"
+            | "force_concentration_factor"
+            | "naval_invasion_supremacy_weight"
+            | "intelligence_agency_usable_factories"
+            | "equipment_market_spend_factories"
+            | "become_spymaster" => {
+                vd.field_integer("value");
+            }
+            "theatre_distribution_demand_increase" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::State);
+                vd.field_integer("value");
+            }
+            "intelligence_agency_branch_desire_factor" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::IntelligenceAgencyBranch);
+                vd.field_integer("value");
+            }
+            "operative_mission" => {
+                vd.field_item("mission", Item::Mission);
+                vd.field_target("mission_target", sc, Scopes::Country);
+                vd.multi_field_item("state", Item::State);
+                vd.field_integer("priority");
+                vd.field_integer("value");
+            }
+            "operative_operation" => {
+                vd.field_item("operation", Item::Operation);
+                vd.field_target("operation_target", sc, Scopes::Country);
+                vd.multi_field_item("state", Item::State);
+                vd.multi_field_item("region", Item::StrategicRegion);
+                vd.field_integer("priority");
+                vd.field_integer("value");
+            }
+            "build_building" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::Building);
+                // TODO: state id if state building, province id if province building
+                vd.field_integer("target");
+                vd.field_integer("value");
+            }
+            "building_target" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::Building);
+                vd.field_integer("value");
+            }
+            "equipment_production_factor"
+            | "equipment_production_surplus_management"
+            | "equipment_production_min_factories" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::EquipmentCategory);
+                vd.field_integer("value");
+            }
+            "equipment_production_min_factories_archetype"
+            | "equipment_market_for_sale_threshold"
+            | "equipment_market_for_sale_factor"
+            | "equipment_market_max_for_sale"
+            | "equipment_market_min_for_sale"
+            | "equipment_market_buying_threshold" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::Equipment);
+                vd.field_integer("value");
+            }
+            "equipment_market_buy" => {
+                vd.field_item("equipment_type", Item::Equipment);
+                vd.field_target("seller", sc, Scopes::Country);
+                vd.field_integer("value");
+            }
+            "research_tech" | "research_weight_factor" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::Technology);
+                vd.field_integer("value");
+            }
+            "unit_ratio" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::SubUnit);
+                vd.field_integer("value");
+            }
+            "land_xp_spend_priority" | "air_xp_spend_priority" | "navy_xp_spend_priority" => {
+                vd.req_field("id");
+                let mut choices = vec![
+                    "division_template",
+                    "unlock_doctrine",
+                    "equipment_variant",
+                    "upgrade_xp_cutoff",
+                ];
+                if strategy.is("land_xp_spend_priority") {
+                    choices.push("army_spirit");
+                } else if strategy.is("air_xp_spend_priority") {
+                    choices.push("air_spirit");
+                } else if strategy.is("navy_xp_spend_priority") {
+                    choices.push("navy_spirit");
+                }
+                vd.field_choice("id", &choices);
+                vd.field_integer("value");
+            }
+            "strategic_air_importance" => {
+                vd.req_field("id");
+                vd.field_item("id", Item::StrategicRegion);
+                vd.field_integer("value");
+            }
+            // undocumented
+            "befriend" | "alliance" | "antagonize" | "protect" | "conquer" => {
+                // TODO: figure out whether it's id or target. Vanilla uses both.
+                vd.field_target("id", sc, Scopes::Country);
+                vd.field_target("target", sc, Scopes::Country);
+                vd.field_integer("value");
+            }
+            _ => {
+                vd.field_value("id");
+                vd.field_integer("value");
+            }
+        }
+    }
+}
+
 pub fn validate_flag_name(name: &Token) {
     let v = name.split('@');
     #[allow(clippy::comparison_chain)]

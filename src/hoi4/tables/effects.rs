@@ -45,7 +45,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     ),
     (Scopes::Country, "add_ace", Vb(validate_add_ace)),
     (Scopes::Country.union(Scopes::Character), "add_advisor_role", Vb(validate_add_advisor_role)),
-    (Scopes::Country, "add_ai_strategy", UncheckedTodo),
+    (Scopes::Country, "add_ai_strategy", Vb(validate_add_ai_strategy)),
     (Scopes::Character, "add_attack", Value),
     (Scopes::Country, "add_autonomy_ratio", UncheckedTodo),
     (Scopes::Country, "add_autonomy_score", UncheckedTodo),

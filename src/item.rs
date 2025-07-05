@@ -158,6 +158,8 @@ pub enum Item {
     WidgetName,
 
     // Items shared by more than one game
+    #[cfg(any(feature = "vic3", feature = "hoi4"))]
+    AiStrategy,
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     Building,
     #[cfg(any(feature = "ck3", feature = "hoi4"))]
@@ -406,7 +408,6 @@ pub enum Item {
 
     // Items specific to vic3
     #[cfg(feature = "vic3")] AcceptanceStatus,
-    #[cfg(feature = "vic3")] AiStrategy,
     #[cfg(feature = "vic3")] AirGraphics,
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
@@ -559,8 +560,9 @@ pub enum Item {
     #[cfg(feature = "hoi4")] Acclimatation,
     #[cfg(feature = "hoi4")] AceModifier,
     #[cfg(feature = "hoi4")] AdjacencyRule,
-    #[cfg(feature = "hoi4")] AdvisorSlot,
+    #[cfg(feature = "hoi4")] AiArea,
     #[cfg(feature = "hoi4")] AiStrategyType,
+    #[cfg(feature = "hoi4")] AdvisorSlot,
     #[cfg(feature = "hoi4")] CharacterIdeaToken,
     #[cfg(feature = "hoi4")] CombatTacticPhase,
     #[cfg(feature = "hoi4")] Continent,
@@ -588,6 +590,8 @@ pub enum Item {
     #[cfg(feature = "hoi4")] IndustrialOrgBonusWeight,
     #[cfg(feature = "hoi4")] IndustrialOrgPolicy,
     #[cfg(feature = "hoi4")] IndustrialOrgTrait,
+    #[cfg(feature = "hoi4")] IntelligenceAgencyBranch,
+    #[cfg(feature = "hoi4")] IntelligenceAgencyUpgrade,
     #[cfg(feature = "hoi4")] MusicAsset,
     #[cfg(feature = "hoi4")] NationalFocus,
     #[cfg(feature = "hoi4")] NationalFocusStyle,
@@ -848,6 +852,13 @@ impl Item {
             Item::TriggerLocalization => "common/trigger_localization/",
             Item::WidgetName => "gui/",
 
+            #[cfg(any(feature = "vic3", feature = "hoi4"))]
+            Item::AiStrategy => match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/ai_strategies/",
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => "common/ai_strategy/",
+            },
             #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
             Item::Building => "common/buildings/",
             #[cfg(any(feature = "ck3", feature = "hoi4"))]
@@ -1354,8 +1365,6 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::AcceptanceStatus => "common/acceptance_statuses/",
             #[cfg(feature = "vic3")]
-            Item::AiStrategy => "common/ai_strategies/",
-            #[cfg(feature = "vic3")]
             Item::AirGraphics => "gfx/map/air_graphics/",
             #[cfg(feature = "vic3")]
             Item::Alert => "common/alert_types",
@@ -1659,6 +1668,8 @@ impl Item {
             #[cfg(feature = "hoi4")]
             Item::AdvisorSlot => "common/script_enums.txt",
             #[cfg(feature = "hoi4")]
+            Item::AiArea => "common/ai_areas/",
+            #[cfg(feature = "hoi4")]
             Item::AiStrategyType => "common/ai_strategy/_documentation.md",
             #[cfg(feature = "hoi4")]
             Item::CharacterIdeaToken => "common/characters/",
@@ -1716,6 +1727,10 @@ impl Item {
             Item::IndustrialOrgPolicy => "common/military_industrial_organization/policies/",
             #[cfg(feature = "hoi4")]
             Item::IndustrialOrgTrait => "common/military_industrial_organization/organizations/",
+            #[cfg(feature = "hoi4")]
+            Item::IntelligenceAgencyBranch => "common/intelligence_agency_upgrades/",
+            #[cfg(feature = "hoi4")]
+            Item::IntelligenceAgencyUpgrade => "common/intelligence_agency_upgrades/",
             #[cfg(feature = "hoi4")]
             Item::MusicAsset => "music/",
             #[cfg(feature = "hoi4")]
