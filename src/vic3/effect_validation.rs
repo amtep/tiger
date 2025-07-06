@@ -295,13 +295,13 @@ pub fn validate_create_building(
     vd.field_numeric_range("reserves", 0.0..=1.0);
     vd.field_validated_sc("level", sc, |bv, data, sc| match bv {
         BV::Value(t) => {
-            _ = {
+            () = {
                 if !t.is("arable_land") {
-                    validate_script_value(bv, data, sc)
+                    validate_script_value(bv, data, sc);
                 }
             }
         }
-        BV::Block(_) => _ = validate_script_value(bv, data, sc),
+        BV::Block(_) => () = validate_script_value(bv, data, sc),
     });
     vd.field_validated_block("add_ownership", |block, data| {
         let mut vd = Validator::new(block, data);
