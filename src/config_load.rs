@@ -278,10 +278,8 @@ fn load_keys_array(array_block: &Block) -> Option<FilterRule> {
     }
 }
 fn load_files_array(array_block: &Block) -> Option<FilterRule> {
-    let files: Vec<_> = array_block
-        .iter_values_warn()
-        .filter_map(FilterRule::file_from_token)
-        .collect();
+    let files: Vec<_> =
+        array_block.iter_values_warn().filter_map(FilterRule::file_from_token).collect();
     if files.is_empty() {
         None
     } else {

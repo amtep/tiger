@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use glob::Pattern;
+use std::path::PathBuf;
 
 use crate::block::Comparator;
 
@@ -114,11 +114,10 @@ impl FilterRule {
                 Comparator::AtMost => report.confidence <= *level,
             },
             FilterRule::Key(key) => report.key == *key,
-            FilterRule::File(pattern) => {
-                report.pointers.iter().any(|pointer|
-                    pattern.matches_path(pointer.loc.pathname())
-                    || pointer.loc.pathname().starts_with(PathBuf::from(pattern.as_str())))
-            }
+            FilterRule::File(pattern) => report.pointers.iter().any(|pointer| {
+                pattern.matches_path(pointer.loc.pathname())
+                    || pointer.loc.pathname().starts_with(PathBuf::from(pattern.as_str()))
+            }),
             FilterRule::Text(s) => {
                 report.msg.to_ascii_lowercase().contains(&s.to_ascii_lowercase())
             }
@@ -131,14 +130,17 @@ impl FilterRule {
             Err(e) => {
                 err(ErrorKey::Config)
                     .msg("Expected valid file path or glob pattern")
-                    .loc_msg({
-                        let mut loc = token.into_loc();
-                        loc.column += u32::try_from(e.pos).unwrap_or(0);
-                        loc
-                    }, e.msg)
+                    .loc_msg(
+                        {
+                            let mut loc = token.into_loc();
+                            loc.column += u32::try_from(e.pos).unwrap_or(0);
+                            loc
+                        },
+                        e.msg,
+                    )
                     .push();
                 None
-            },
+            }
         }
     }
 }
