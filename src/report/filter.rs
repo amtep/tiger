@@ -1,10 +1,12 @@
 use std::path::PathBuf;
+use glob::Pattern;
 
 use crate::block::Comparator;
 
 use crate::fileset::FileKind;
-use crate::report::{Confidence, ErrorKey, LogReport, Severity};
+use crate::report::{err, Confidence, ErrorKey, ErrorLoc, LogReport, Severity};
 use crate::token::Loc;
+use crate::Token;
 
 /// Determines whether a given Report should be printed.
 /// If a report is matched by both the blacklist and the whitelist, it will not be printed.
@@ -82,7 +84,7 @@ pub enum FilterRule {
     /// The report's `ErrorKey` must be the listed key for the report to match the rule.
     Key(ErrorKey),
     /// The report's pointers must contain the given file for the report to match the rule.
-    File(PathBuf),
+    File(Pattern),
     /// The report's msg must contain the given text for the report to match the rule.
     Text(String),
 }
@@ -112,12 +114,31 @@ impl FilterRule {
                 Comparator::AtMost => report.confidence <= *level,
             },
             FilterRule::Key(key) => report.key == *key,
-            FilterRule::File(path) => {
-                report.pointers.iter().any(|pointer| pointer.loc.pathname().starts_with(path))
+            FilterRule::File(pattern) => {
+                report.pointers.iter().any(|pointer|
+                    pattern.matches_path(pointer.loc.pathname())
+                    || pointer.loc.pathname().starts_with(PathBuf::from(pattern.as_str())))
             }
             FilterRule::Text(s) => {
                 report.msg.to_ascii_lowercase().contains(&s.to_ascii_lowercase())
             }
+        }
+    }
+    pub fn file_from_token(token: &Token) -> Option<FilterRule> {
+        let pattern = Pattern::new(token.as_str());
+        match pattern {
+            Ok(p) => Some(FilterRule::File(p)),
+            Err(e) => {
+                err(ErrorKey::Config)
+                    .msg("Expected valid file path or glob pattern")
+                    .loc_msg({
+                        let mut loc = token.into_loc();
+                        loc.column += u32::try_from(e.pos).unwrap_or(0);
+                        loc
+                    }, e.msg)
+                    .push();
+                None
+            },
         }
     }
 }

@@ -280,7 +280,7 @@ fn load_keys_array(array_block: &Block) -> Option<FilterRule> {
 fn load_files_array(array_block: &Block) -> Option<FilterRule> {
     let files: Vec<_> = array_block
         .iter_values_warn()
-        .map(|token| FilterRule::File(PathBuf::from(token.as_str())))
+        .filter_map(FilterRule::file_from_token)
         .collect();
     if files.is_empty() {
         None
@@ -374,7 +374,7 @@ fn load_rule_file(value: &BV) -> Option<FilterRule> {
             ).loc(value).push();
             None
         }
-        BV::Value(token) => Some(FilterRule::File(PathBuf::from(token.as_str()))),
+        BV::Value(token) => FilterRule::file_from_token(token),
     }
 }
 

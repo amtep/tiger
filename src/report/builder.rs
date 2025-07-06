@@ -104,7 +104,6 @@ impl ReportBuilderStage2 {
         }
     }
 
-    #[cfg(feature = "ck3")]
     pub fn loc_msg<E: ErrorLoc, S: Into<String>>(self, eloc: E, msg: S) -> ReportBuilderStage3 {
         let length = eloc.loc_length();
         ReportBuilderStage3 {
