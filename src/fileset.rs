@@ -318,7 +318,7 @@ impl Fileset {
                     add_loaded_mod_root(label);
                     self.loaded_mods.push(loaded_mod);
                 } else {
-                    bail!("could not load secondary mod from config; missing valid `modfile` or `workshop_modfile` field");
+                    bail!("could not load secondary mod from config; missing valid `modfile` or `workshop_id` field");
                 }
             } else if Game::is_vic3() {
                 #[cfg(feature = "vic3")]
@@ -731,7 +731,7 @@ fn get_modfile(
         if let Some(workshop_id) = block.get_field_value("workshop_id") {
             match paradox_dir {
                 Some(p) => path = Some(p.join(format!("mod/ugc_{workshop_id}.mod"))),
-                None => eprintln!("workshop_modfile defined, but could not find workshop"),
+                None => eprintln!("workshop_id defined, but could not find paradox directory"),
             }
         }
     }
@@ -758,9 +758,9 @@ fn get_mod(
         }
     }
     if path.is_none() {
-        if let Some(workshop_modfile) = block.get_field_value("workshop_id") {
+        if let Some(workshop_id) = block.get_field_value("workshop_id") {
             match workshop_dir {
-                Some(w) => path = Some(w.join(workshop_modfile.as_str())),
+                Some(w) => path = Some(w.join(workshop_id.as_str())),
                 None => eprintln!("workshop_id defined, but could not find workshop"),
             }
         }
