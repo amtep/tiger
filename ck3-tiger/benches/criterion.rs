@@ -58,6 +58,8 @@ fn bench_mod(vanilla_dir: &str, modfile: &ModFile) {
     let mut everything = Everything::new(
         None,
         Some(Path::new(vanilla_dir)),
+        None,
+        None,
         &modfile.modpath(),
         modfile.replace_paths(),
     )

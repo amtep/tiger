@@ -10,7 +10,9 @@ use tiger_lib::ModFile;
 use tiger_lib::ModMetadata;
 use tiger_lib::{emit_reports, set_output_file, Everything};
 
-use crate::gamedir::{find_game_directory_steam, find_paradox_directory};
+use crate::gamedir::{
+    find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
+};
 use crate::GameConsts;
 
 /// Run the automatic version of the tiger application.
@@ -32,6 +34,7 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
     eprintln!("!! Currently it's inaccurate anyway because it's in beta state.");
 
     let game = find_game_directory_steam(app_id).context("Cannot find the game directory.")?;
+    let workshop = find_workshop_directory_steam(app_id).ok();
     eprintln!("Using {name_short} directory: {}", game.display());
     let sig = game.clone().join(signature_file);
     if !sig.is_file() {
@@ -48,7 +51,14 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
     entries.sort_by_key(DirEntry::file_name);
 
     if entries.len() == 1 {
-        validate_mod(name_short, &game, &entries[0].path(), &pdxlogs)?;
+        validate_mod(
+            name_short,
+            &game,
+            workshop.as_deref(),
+            Some(&pdx),
+            &entries[0].path(),
+            &pdxlogs,
+        )?;
     } else if entries.is_empty() {
         bail!("Did not find any mods to validate.");
     } else {
@@ -80,7 +90,14 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
                 };
                 if modnr < entries.len() {
                     eprintln!();
-                    validate_mod(name_short, &game, &entries[modnr].path(), &pdxlogs)?;
+                    validate_mod(
+                        name_short,
+                        &game,
+                        workshop.as_deref(),
+                        Some(&pdx),
+                        &entries[modnr].path(),
+                        &pdxlogs,
+                    )?;
                     return Ok(());
                 }
             } else {
@@ -96,6 +113,8 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
 fn validate_mod(
     name_short: &'static str,
     game: &Path,
+    workshop: Option<&Path>,
+    paradox: Option<&Path>,
     modpath: &Path,
     logdir: &Path,
 ) -> Result<()> {
@@ -125,12 +144,20 @@ fn validate_mod(
 
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     {
-        everything = Everything::new(None, Some(game), modpath, modfile.replace_paths())?;
+        everything =
+            Everything::new(None, Some(game), workshop, paradox, modpath, modfile.replace_paths())?;
     }
     #[cfg(feature = "vic3")]
     {
         let metadata = ModMetadata::read(modpath)?;
-        everything = Everything::new(None, Some(game), modpath, metadata.replace_paths())?;
+        everything = Everything::new(
+            None,
+            Some(game),
+            workshop,
+            paradox,
+            modpath,
+            metadata.replace_paths(),
+        )?;
     }
 
     // Unfortunately have to disable the colors by default because

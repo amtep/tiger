@@ -23,6 +23,16 @@ pub fn find_game_directory_steam(steam_app_id: u32) -> Result<PathBuf> {
     }
 }
 
+pub fn find_workshop_directory_steam(steam_app_id: u32) -> Result<PathBuf> {
+    let steamdir = SteamDir::locate()?;
+    Ok({
+        let mut path = steamdir.path().to_path_buf();
+        path.push("steamapps/workshop/content");
+        path.push(steam_app_id.to_string());
+        path
+    })
+}
+
 pub fn find_paradox_directory(dir_under: &Path) -> Option<PathBuf> {
     if let Some(home) = home_dir() {
         for try_dir in &[PDX_LINUX, PDX_MAC, PDX_WINDOWS] {

@@ -278,7 +278,12 @@ impl Fileset {
         }
     }
 
-    pub fn config(&mut self, config: Block) -> Result<()> {
+    pub fn config(
+        &mut self,
+        config: Block,
+        #[allow(unused_variables)] workshop_dir: Option<&Path>,
+        #[allow(unused_variables)] paradox_dir: Option<&Path>,
+    ) -> Result<()> {
         let config_path = config.loc.fullpath();
         for block in config.get_field_blocks("load_mod") {
             let mod_idx;
@@ -291,13 +296,10 @@ impl Fileset {
             let default_label = || format!("MOD{mod_idx}");
             let label =
                 block.get_field_value("label").map_or_else(default_label, ToString::to_string);
+
             if Game::is_ck3() || Game::is_imperator() || Game::is_hoi4() {
                 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-                if let Some(path) = block.get_field_value("modfile") {
-                    let path = config_path
-                        .parent()
-                        .unwrap() // SAFETY: known to be for a file in a directory
-                        .join(path.as_str());
+                if let Some(path) = get_modfile(&label, config_path, block, paradox_dir) {
                     let modfile = ModFile::read(&path)?;
                     eprintln!(
                         "Loading secondary mod {label} from: {}{}",
@@ -316,15 +318,11 @@ impl Fileset {
                     add_loaded_mod_root(label);
                     self.loaded_mods.push(loaded_mod);
                 } else {
-                    bail!("could not load secondary mod from config; missing `modfile` field");
+                    bail!("could not load secondary mod from config; missing valid `modfile` or `workshop_id` field");
                 }
             } else if Game::is_vic3() {
                 #[cfg(feature = "vic3")]
-                if let Some(path) = block.get_field_value("mod") {
-                    let pathdir = config_path
-                        .parent()
-                        .unwrap() // SAFETY: known to be for a file in a directory
-                        .join(path.as_str());
+                if let Some(pathdir) = get_mod(&label, config_path, block, workshop_dir) {
                     if let Ok(metadata) = ModMetadata::read(&pathdir) {
                         eprintln!(
                             "Loading secondary mod {label} from: {}{}",
@@ -342,7 +340,7 @@ impl Fileset {
                         bail!("does not look like a mod dir: {}", pathdir.display());
                     }
                 } else {
-                    bail!("could not load secondary mod from config; missing `mod` field");
+                    bail!("could not load secondary mod from config; missing valid `mod` or `workshop_id` field");
                 }
             }
         }
@@ -708,4 +706,64 @@ impl Fileset {
             warn_header(ErrorKey::UnusedFile, "");
         }
     }
+}
+
+#[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
+fn get_modfile(
+    label: &String,
+    config_path: &Path,
+    block: &Block,
+    paradox_dir: Option<&Path>,
+) -> Option<PathBuf> {
+    let mut path: Option<PathBuf> = None;
+    if let Some(modfile) = block.get_field_value("modfile") {
+        let modfile_path = config_path
+            .parent()
+            .unwrap() // SAFETY: known to be for a file in a directory
+            .join(modfile.as_str());
+        if modfile_path.exists() {
+            path = Some(modfile_path);
+        } else {
+            eprintln!("Could not find mod {label} at: {}", modfile_path.display());
+        }
+    }
+    if path.is_none() {
+        if let Some(workshop_id) = block.get_field_value("workshop_id") {
+            match paradox_dir {
+                Some(p) => path = Some(p.join(format!("mod/ugc_{workshop_id}.mod"))),
+                None => eprintln!("workshop_id defined, but could not find paradox directory"),
+            }
+        }
+    }
+    path
+}
+
+#[cfg(feature = "vic3")]
+fn get_mod(
+    label: &String,
+    config_path: &Path,
+    block: &Block,
+    workshop_dir: Option<&Path>,
+) -> Option<PathBuf> {
+    let mut path: Option<PathBuf> = None;
+    if let Some(modfile) = block.get_field_value("mod") {
+        let mod_path = config_path
+            .parent()
+            .unwrap() // SAFETY: known to be for a file in a directory
+            .join(modfile.as_str());
+        if mod_path.exists() {
+            path = Some(mod_path);
+        } else {
+            eprintln!("Could not find mod {label} at: {}", mod_path.display());
+        }
+    }
+    if path.is_none() {
+        if let Some(workshop_id) = block.get_field_value("workshop_id") {
+            match workshop_dir {
+                Some(w) => path = Some(w.join(workshop_id.as_str())),
+                None => eprintln!("workshop_id defined, but could not find workshop"),
+            }
+        }
+    }
+    path
 }

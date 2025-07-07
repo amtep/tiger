@@ -57,7 +57,7 @@ fn bench_multiple(c: &mut Criterion) {
 
 fn bench_mod(vanilla_dir: &str, modpath: &Path) {
     let mut everything =
-        Everything::new(None, Some(Path::new(vanilla_dir)), modpath, vec![]).unwrap();
+        Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![]).unwrap();
     everything.load_all();
     everything.validate_all();
     everything.check_rivers();
