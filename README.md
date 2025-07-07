@@ -149,8 +149,12 @@ You can remove those reports from the output in either of two ways:
 
 ## Command-line options
 
+The various path options are only needed if Tiger can't find the paths on its own.
+
 * `--game` *PATH* Path to the game main directory
 * `--config` *PATH* Path to the custom `.conf` file
+* `--workshop` *PATH* Path to the Steam workshop directory (only for Vic3)
+* `--paradox` *PATH* Path to the Paradox game directory (not for Vic3)
 * `--show-vanilla` Show errors in the base game script code as well as the mod's
 * `--show-mods` Show errors in secondary loaded mods as well as the main mod
 * `--json` Output the reports in JSON format
