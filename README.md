@@ -104,7 +104,7 @@ imperator-tiger <i>path/to/your/mod</i> ><i>filename</i>
 
 ## How to configure
 
-You can place a file `ck3-tiger.conf` (or `vic3-tiger.conf` or `imperator.conf`) in your mod directory. You can use it to select which languages to check localizations for, and to suppress messages about things you don't want to fix.
+You can place a file `ck3-tiger.conf` (or `vic3-tiger.conf` or `imperator.conf`) in your mod's directory. You can use it to select which languages to check localizations for, and to suppress messages about things you don't want to fix.
 
 There is a sample [`ck3-tiger.conf`](ck3-tiger.conf) file, [`vic3-tiger.conf`](vic3-tiger.conf) file, and [`imperator-tiger.conf`](imperator-tiger.conf) file in the release, with an explanation of what goes in it. There is also a [guide](filter.md).
 
