@@ -278,7 +278,12 @@ impl Fileset {
         }
     }
 
-    pub fn config(&mut self, config: Block, workshop_dir: Option<&Path>) -> Result<()> {
+    pub fn config(
+        &mut self,
+        config: Block,
+        #[allow(unused_variables)] workshop_dir: Option<&Path>,
+        #[allow(unused_variables)] paradox_dir: Option<&Path>,
+    ) -> Result<()> {
         let config_path = config.loc.fullpath();
         for block in config.get_field_blocks("load_mod") {
             let mod_idx;
@@ -294,7 +299,7 @@ impl Fileset {
 
             if Game::is_ck3() || Game::is_imperator() || Game::is_hoi4() {
                 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-                if let Some(path) = get_modfile(&label, config_path, block, workshop_dir) {
+                if let Some(path) = get_modfile(&label, config_path, block, paradox_dir) {
                     let modfile = ModFile::read(&path)?;
                     eprintln!(
                         "Loading secondary mod {label} from: {}{}",
@@ -708,7 +713,7 @@ fn get_modfile(
     label: &String,
     config_path: &Path,
     block: &Block,
-    workshop_dir: Option<&Path>,
+    paradox_dir: Option<&Path>,
 ) -> Option<PathBuf> {
     let mut path: Option<PathBuf> = None;
     if let Some(modfile) = block.get_field_value("modfile") {
@@ -723,9 +728,9 @@ fn get_modfile(
         }
     }
     if path.is_none() {
-        if let Some(workshop_modfile) = block.get_field_value("workshop_modfile") {
-            match workshop_dir {
-                Some(w) => path = Some(w.join(workshop_modfile.as_str())),
+        if let Some(workshop_id) = block.get_field_value("workshop_id") {
+            match paradox_dir {
+                Some(p) => path = Some(p.join(format!("mod/ugc_{workshop_id}.mod"))),
                 None => eprintln!("workshop_modfile defined, but could not find workshop"),
             }
         }

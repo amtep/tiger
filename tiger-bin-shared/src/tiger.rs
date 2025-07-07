@@ -11,7 +11,9 @@ use tiger_lib::{
     validate_config_file, Everything,
 };
 
-use crate::gamedir::{find_game_directory_steam, find_workshop_directory_steam};
+use crate::gamedir::{
+    find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
+};
 use crate::update::update;
 use crate::GameConsts;
 
@@ -49,9 +51,14 @@ struct ValidateArgs {
     #[clap(long)]
     /// Path to game main directory.
     game: Option<PathBuf>,
-    #[clap(long)]
+    #[cfg_attr(not(feature = "vic3"), clap(skip))]
+    #[cfg_attr(feature = "vic3", clap(long))]
     /// Path to game workshop directory.
     workshop: Option<PathBuf>,
+    #[cfg_attr(not(any(feature = "ck3", feature = "imperator", feature = "hoi4")), clap(skip))]
+    #[cfg_attr(any(feature = "ck3", feature = "imperator", feature = "hoi4"), clap(long))]
+    /// Path to paradox directory
+    paradox: Option<PathBuf>,
     /// Path to custom .conf file.
     #[clap(long)]
     config: Option<PathBuf>,
@@ -91,7 +98,8 @@ pub fn run(
 ) -> Result<()> {
     use clap::{CommandFactory, FromArgMatches};
 
-    let &GameConsts { name, name_short, version, app_id, signature_file, .. } = game_consts;
+    let &GameConsts { name, name_short, version, app_id, signature_file, paradox_dir } =
+        game_consts;
 
     let matches = Cli::command().version(current_version).name(bin_name).get_matches();
     let cli = Cli::from_arg_matches(&matches).map_err(|err| err.exit()).unwrap();
@@ -119,6 +127,9 @@ pub fn run(
             }
             if args.workshop.is_none() {
                 args.workshop = find_workshop_directory_steam(app_id).ok();
+            }
+            if args.paradox.is_none() {
+                args.paradox = find_paradox_directory(&PathBuf::from(paradox_dir));
             }
             if let Some(ref mut game) = args.game {
                 eprintln!("Using {name_short} directory: {}", game.display());
@@ -191,6 +202,7 @@ pub fn run(
                     args.config.as_deref(),
                     args.game.as_deref(),
                     args.workshop.as_deref(),
+                    args.paradox.as_deref(),
                     &modpath,
                     modfile.replace_paths(),
                 )?;
@@ -204,6 +216,7 @@ pub fn run(
                     args.config.as_deref(),
                     args.game.as_deref(),
                     args.workshop.as_deref(),
+                    args.paradox.as_deref(),
                     &args.modpath,
                     metadata.replace_paths(),
                 )?;

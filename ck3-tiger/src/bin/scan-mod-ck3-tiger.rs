@@ -42,7 +42,8 @@ fn main() -> Result<()> {
     }
     eprintln!("Using mod directory: {}", modpath.display());
 
-    let mut everything = Everything::new(None, None, None, &modpath, modfile.replace_paths())?;
+    let mut everything =
+        Everything::new(None, None, None, None, &modpath, modfile.replace_paths())?;
 
     everything.load_all();
 

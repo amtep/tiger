@@ -12,7 +12,7 @@ fn check_mod_helper(modname: &str) -> Vec<LogReport> {
     let mod_root = PathBuf::from(format!("tests/files/{}", modname));
 
     let mut everything =
-        Everything::new(None, Some(&vanilla_dir), None, &mod_root, Vec::new()).unwrap();
+        Everything::new(None, Some(&vanilla_dir), None, None, &mod_root, Vec::new()).unwrap();
     everything.load_all();
     everything.validate_all();
 

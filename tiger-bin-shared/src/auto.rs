@@ -51,7 +51,14 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
     entries.sort_by_key(DirEntry::file_name);
 
     if entries.len() == 1 {
-        validate_mod(name_short, &game, workshop.as_deref(), &entries[0].path(), &pdxlogs)?;
+        validate_mod(
+            name_short,
+            &game,
+            workshop.as_deref(),
+            Some(&pdx),
+            &entries[0].path(),
+            &pdxlogs,
+        )?;
     } else if entries.is_empty() {
         bail!("Did not find any mods to validate.");
     } else {
@@ -87,6 +94,7 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
                         name_short,
                         &game,
                         workshop.as_deref(),
+                        Some(&pdx),
                         &entries[modnr].path(),
                         &pdxlogs,
                     )?;
@@ -106,6 +114,7 @@ fn validate_mod(
     name_short: &'static str,
     game: &Path,
     workshop: Option<&Path>,
+    paradox: Option<&Path>,
     modpath: &Path,
     logdir: &Path,
 ) -> Result<()> {
@@ -135,13 +144,20 @@ fn validate_mod(
 
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     {
-        everything = Everything::new(None, Some(game), workshop, modpath, modfile.replace_paths())?;
+        everything =
+            Everything::new(None, Some(game), workshop, paradox, modpath, modfile.replace_paths())?;
     }
     #[cfg(feature = "vic3")]
     {
         let metadata = ModMetadata::read(modpath)?;
-        everything =
-            Everything::new(None, Some(game), workshop, modpath, metadata.replace_paths())?;
+        everything = Everything::new(
+            None,
+            Some(game),
+            workshop,
+            paradox,
+            modpath,
+            metadata.replace_paths(),
+        )?;
     }
 
     // Unfortunately have to disable the colors by default because
