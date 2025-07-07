@@ -109,12 +109,13 @@ You can add a key trigger like so:
 
 ### File
 
-You can target files and folders. Reports that mention the file will be matched by this trigger.
+You can target files, folders, and glob patterns. Reports that mention the file will be matched by this trigger.
 
 Example:
 
 - `file = common/` This matches any report that mentions a file inside the `common/` directory.
 - `file = history/characters/afar.txt` This matches any report that mentions that specific file.
+- `file = "localization/**/afar_l_*.yml"` This matches any report that mentions a file which matches the pattern.
 
 ### Text
 
