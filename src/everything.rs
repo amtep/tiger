@@ -236,6 +236,7 @@ impl Everything {
     pub fn new(
         config_filepath: Option<&Path>,
         vanilla_dir: Option<&Path>,
+        workshop_dir: Option<&Path>,
         mod_root: &Path,
         replace_paths: Vec<PathBuf>,
     ) -> Result<Self> {
@@ -264,7 +265,7 @@ impl Everything {
             Block::new(Loc::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
         };
 
-        fileset.config(config.clone())?;
+        fileset.config(config.clone(), workshop_dir)?;
 
         fileset.scan_all()?;
         fileset.finalize();

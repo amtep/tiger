@@ -11,7 +11,7 @@ use tiger_lib::{
     validate_config_file, Everything,
 };
 
-use crate::gamedir::find_game_directory_steam;
+use crate::gamedir::{find_game_directory_steam, find_workshop_directory_steam};
 use crate::update::update;
 use crate::GameConsts;
 
@@ -49,6 +49,9 @@ struct ValidateArgs {
     #[clap(long)]
     /// Path to game main directory.
     game: Option<PathBuf>,
+    #[clap(long)]
+    /// Path to game workshop directory.
+    workshop: Option<PathBuf>,
     /// Path to custom .conf file.
     #[clap(long)]
     config: Option<PathBuf>,
@@ -113,6 +116,9 @@ pub fn run(
 
             if args.game.is_none() {
                 args.game = find_game_directory_steam(app_id).ok();
+            }
+            if args.workshop.is_none() {
+                args.workshop = find_workshop_directory_steam(app_id).ok();
             }
             if let Some(ref mut game) = args.game {
                 eprintln!("Using {name_short} directory: {}", game.display());
@@ -184,6 +190,7 @@ pub fn run(
                 everything = Everything::new(
                     args.config.as_deref(),
                     args.game.as_deref(),
+                    args.workshop.as_deref(),
                     &modpath,
                     modfile.replace_paths(),
                 )?;
@@ -196,6 +203,7 @@ pub fn run(
                 everything = Everything::new(
                     args.config.as_deref(),
                     args.game.as_deref(),
+                    args.workshop.as_deref(),
                     &args.modpath,
                     metadata.replace_paths(),
                 )?;
