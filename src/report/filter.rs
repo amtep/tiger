@@ -1,5 +1,5 @@
 use glob::Pattern;
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::block::Comparator;
 
@@ -116,7 +116,7 @@ impl FilterRule {
             FilterRule::Key(key) => report.key == *key,
             FilterRule::File(pattern) => report.pointers.iter().any(|pointer| {
                 pattern.matches_path(pointer.loc.pathname())
-                    || pointer.loc.pathname().starts_with(PathBuf::from(pattern.as_str()))
+                    || pointer.loc.pathname().starts_with(Path::new(pattern.as_str()))
             }),
             FilterRule::Text(s) => {
                 report.msg.to_ascii_lowercase().contains(&s.to_ascii_lowercase())
