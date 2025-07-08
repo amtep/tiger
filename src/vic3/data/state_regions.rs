@@ -33,7 +33,7 @@ impl DbKind for StateRegion {
         vd.field_list_items("provinces", Item::Province);
         vd.field_list_items("prime_land", Item::Province);
         vd.field_list_items("impassable", Item::Province);
-        vd.field_list_items("traits", Item::StateTrait);
+        vd.multi_field_list_items("traits", Item::StateTrait);
 
         // TODO: verify that they're all there? except "port" for non-coastal state regions.
         for hub in &["city", "port", "mine", "farm", "wood"] {

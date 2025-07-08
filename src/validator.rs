@@ -1191,7 +1191,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_validated_list`], but expect any number of `name` fields in the block.
-    #[cfg(any(feature = "ck3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "hoi4", feature = "vic3"))]
     pub fn multi_field_validated_list<F>(&mut self, name: &str, mut f: F) -> bool
     where
         F: FnMut(&Token, &Everything),
@@ -1206,7 +1206,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_list_items`], but expect any number of `name` fields in the block.
-    #[cfg(any(feature = "ck3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "hoi4", feature = "vic3"))]
     pub fn multi_field_list_items(&mut self, name: &str, item: Item) -> bool {
         let sev = self.max_severity;
         self.multi_field_validated_list(name, |token, data| {
