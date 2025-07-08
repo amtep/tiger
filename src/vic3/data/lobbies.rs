@@ -28,7 +28,7 @@ impl DbKind for PoliticalLobby {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         fn sc_no_lobby(key: &Token) -> ScopeContext {
             let mut sc = ScopeContext::new(Scopes::InterestGroup, key);
-            sc.define_name("country", Scopes::Country, key);
+            // sc.define_name("country", Scopes::Country, key); // Docs lie about this scope existing (1.9.6)
             sc.define_name("target_country", Scopes::Country, key);
             sc
         }
@@ -43,6 +43,14 @@ impl DbKind for PoliticalLobby {
         // but it's actually country.
         fn sc_rtm(key: &Token) -> ScopeContext {
             let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("target_country", Scopes::Country, key);
+            sc.define_name("political_lobby", Scopes::PoliticalLobby, key);
+            sc
+        }
+
+        fn sc_jw(key: &Token) -> ScopeContext {
+            let mut sc = ScopeContext::new(Scopes::InterestGroup, key);
+            sc.define_name("country", Scopes::Country, key);
             sc.define_name("target_country", Scopes::Country, key);
             sc.define_name("political_lobby", Scopes::PoliticalLobby, key);
             sc
@@ -84,13 +92,9 @@ impl DbKind for PoliticalLobby {
         vd.field_validated_list("appeasement_factors_pro", appeasement_factors_validation);
         vd.field_validated_list("appeasement_factors_anti", appeasement_factors_validation);
 
-        vd.field_trigger_rooted(
-            "available_for_interest_group",
-            Tooltipped::No,
-            Scopes::InterestGroup,
-        );
+        vd.field_trigger_builder("available_for_interest_group", Tooltipped::No, sc_no_lobby);
 
-        vd.field_script_value_no_breakdown_builder("join_weight", sc_with_lobby);
+        vd.field_script_value_no_breakdown_builder("join_weight", sc_jw);
     }
 }
 
