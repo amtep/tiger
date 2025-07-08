@@ -586,16 +586,10 @@ impl Iterator for Lexer<'_> {
                     self.close_block_ignores();
                     if self.brace_depth > 0 {
                         self.brace_depth -= 1;
-                    }
-                    if self.loc.column == 1 && self.brace_depth > 0 {
-                        let msg = "possible brace error";
-                        let info = "This closing brace is at the start of the line but does not close a top-level block.";
-                        warn(ErrorKey::BracePlacement)
-                            .weak()
-                            .msg(msg)
-                            .info(info)
-                            .loc(self.loc)
-                            .push();
+                    } else {
+                        let msg = "Mismatched braces";
+                        let info = "This closing brace does not close any block";
+                        warn(ErrorKey::BraceError).msg(msg).info(info).loc(self.loc).push();
                     }
                     let token = Token::from_static_str("}", self.loc);
                     self.consume();
