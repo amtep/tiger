@@ -6,6 +6,7 @@ use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
+use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -68,7 +69,13 @@ impl DbKind for JournalEntry {
         vd.field_localization("custom_on_completion_header", &mut sc);
         vd.field_localization("custom_on_failure_header", &mut sc);
 
-        vd.field_integer("timeout");
+        vd.field_script_value("timeout", &mut sc);
+        if let Some(token) = block.get_field_value("timeout") {
+            if token.is("0") {
+                let msg = "as of 1.9.5, a timeout of 0 will close the journal entry immediately";
+                err(ErrorKey::Logic).msg(msg).loc(token).push();
+            }
+        }
         vd.field_effect("on_timeout", Tooltipped::Yes, &mut sc);
 
         vd.field_list_items("modifiers_while_active", Item::Modifier);
