@@ -70,7 +70,7 @@ impl DbKind for PoliticalLobby {
         vd.field_trigger_builder("can_create", Tooltipped::No, sc_no_lobby);
         vd.field_effect_builder("on_created", Tooltipped::No, sc_with_lobby);
 
-        vd.field_validated_block("requirement_to_maintain", |block, data| {
+        vd.multi_field_validated_block("requirement_to_maintain", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_trigger_builder("trigger", Tooltipped::No, sc_rtm);
             vd.field_effect_builder("on_failed", Tooltipped::No, sc_rtm);
