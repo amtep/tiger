@@ -159,7 +159,7 @@ impl DbKind for TreatyArticle {
         }
 
         for modifier in &["source_modifier", "target_modifier", "mutual_modifier"] {
-            vd.field_validated_block(modifier, |block, data| {
+            vd.multi_field_validated_block(modifier, |block, data| {
                 let vd = Validator::new(block, data);
                 validate_modifs(block, data, ModifKinds::all(), vd);
             });
