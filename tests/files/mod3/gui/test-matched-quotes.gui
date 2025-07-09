@@ -1,0 +1,13 @@
+container = {
+    raw_text = "#D Current tax_jurisdiction: [TaxSlot.GetName]#!"
+    raw_text = "???"
+    onclick = "[GetScriptedGui('sgui_gate_window_execute_research').Execute(GuiScope
+                .SetRoot(Country.MakeScope)
+                .AddScope('technology', Technology.MakeScope)
+                .AddScope('cost', MakeScopeValue(Technology.GetCost(Country.Self)))
+                .End
+            )]"
+    onclick = "[Execute( WarGoal.ToggleIsPressedInPotentialPeaceDeal( GetPlayer.Self ) )]"
+    onclick = "[Execute( WarGoal.ToggleIsPressedInPotentialPeaceDeal( GetPlayer
+                      .Self ) )]"
+}

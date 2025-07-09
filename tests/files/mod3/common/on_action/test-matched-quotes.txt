@@ -1,0 +1,25 @@
+﻿# This file should produce no warnings
+yearly_playable_pulse = {
+    effect = {
+        debug_log = ""
+        debug_log = "
+        "
+        mock_effect = {
+            parameter = "
+                debug_log = \"\"
+            "
+        }
+        mock_effect = { parameter = "" }
+        mock_effect_2 = { param1 = "" param2 = "" }
+        if = {
+            limit = {
+                "opinion(
+                    liege
+                )" > 0
+                "opinion(liege)" > 0 "opinion(liege)" > 0
+                0 < "opinion(liege)" 0 < "opinion(liege)"
+                "opinion(liege)">0
+            }
+        }
+    }
+}

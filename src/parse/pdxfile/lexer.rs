@@ -441,41 +441,55 @@ impl Iterator for Lexer<'_> {
                     self.apply_line_ignores();
                     let start_i = i;
                     let start_loc = self.loc;
+                    let mut prev_char = c;
                     self.consume();
-                    let mut warn_linebreaks = true;
                     let mut escaped = false;
                     let mut id = self.start_cob();
                     while let Some((i, c)) = self.peek() {
-                        if c == '[' && i == start_i + 1 {
-                            // A string that starts with `"[` is a datatype expression which might
-                            // be broken into multiple lines for readability.
-                            warn_linebreaks = false;
-                        }
-
                         if c == '\n' {
                             if Game::is_hoi4() {
                                 // In Hoi4, a newline always terminates a string.
                                 let msg = "quoted string not closed";
-                                warn(ErrorKey::ParseError).msg(msg).loc(self.loc).push();
+                                let info = "reached end of line";
+                                warn(ErrorKey::ParseError).msg(msg).info(info).loc(self.loc).push();
                                 self.consume();
                                 let token = id.take_to_token();
                                 return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                             }
                             id.add_char(c);
-                            if warn_linebreaks {
-                                // Warn, but continue parsing the string.
-                                let msg = "quoted string not closed";
-                                warn(ErrorKey::ParseError).weak().msg(msg).loc(self.loc).push();
-                            }
                             self.consume();
-                        } else if Game::is_hoi4() && c == '\\' && !escaped {
+                        } else if c == '\\' && !escaped {
                             self.consume();
                             id.make_owned();
                             escaped = true;
                             continue;
                         } else if c == '"' && !escaped {
                             let token = id.take_to_token();
+                            let close_loc = self.loc;
                             self.consume();
+
+                            let next_char = self.peek();
+                            if
+                            // previous character indicates potential open
+                            (   prev_char.is_ascii_whitespace()
+                                        || prev_char.is_comparator_end_char()
+                                    )
+                                    // next character does not indicate it's a close
+                                    // '#' could be an end of line comment, or the start of a format string.
+                                    // Without additional context it's not safe to rely on, as it being parsed as a comment
+                                    // when it's intended to be a format string will silence any further errors on that line.
+                                    && !next_char.is_some_and(|(_, nc)| nc.is_ascii_whitespace() || nc.is_comparator_char() || nc == '}')
+                            {
+                                let msg = "quoted string not closed";
+                                let info = "Matching close quote looks like it was intended to open. If this is a false positive, consider adding whitespace after the close quote.";
+                                warn(ErrorKey::ParseError)
+                                    .weak()
+                                    .msg(msg)
+                                    .loc(start_loc)
+                                    .loc_msg(close_loc, info)
+                                    .push();
+                            }
+
                             return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                         } else {
                             if Game::is_hoi4() && i - start_i == 255 {
@@ -491,10 +505,12 @@ impl Iterator for Lexer<'_> {
                             id.add_char(c);
                             self.consume();
                         }
+                        prev_char = c;
                         escaped = false;
                     }
                     let msg = "quoted string not closed";
-                    err(ErrorKey::ParseError).msg(msg).loc(start_loc).push();
+                    let info = "reached end of file";
+                    err(ErrorKey::ParseError).msg(msg).info(info).loc(start_loc).push();
                     let token = if matches!(id, Cob::Uninit) {
                         Token::from_static_str("", self.loc)
                     } else {

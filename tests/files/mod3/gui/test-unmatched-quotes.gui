@@ -1,0 +1,4 @@
+container = {
+    onclick = "[Execute( WarGoal.ToggleIsPressedInPotentialPeaceDeal( GetPlayer.Self ) )]
+    visible = "[IsValid( WarGoal.ToggleIsPressedInPotentialPeaceDeal( GetPlayer.Self ) )]"
+}

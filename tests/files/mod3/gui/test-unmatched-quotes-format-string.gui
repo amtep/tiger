@@ -1,0 +1,4 @@
+container = {
+    raw_text = "[Diarchy.GetPowerLevel]
+    raw_text = "#D Current tax_jurisdiction: [TaxSlot.GetName]#!"
+}

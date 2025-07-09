@@ -1,0 +1,6 @@
+﻿yearly_playable_pulse = {
+    effect = {
+        debug_log = "
+        debug_log = ""
+    }
+}

@@ -242,6 +242,8 @@ trait CharExt {
     fn is_local_value_char(self) -> bool;
     /// Can the char be part of a [`Comparator`]?
     fn is_comparator_char(self) -> bool;
+    /// Can the char be the last charatern in a [`Comparator`]?
+    fn is_comparator_end_char(self) -> bool;
 }
 
 impl CharExt for char {
@@ -258,6 +260,10 @@ impl CharExt for char {
     }
 
     fn is_comparator_char(self) -> bool {
-        matches!(self, '<' | '>' | '!' | '=' | '?')
+        self.is_comparator_end_char() || matches!(self, '!')
+    }
+
+    fn is_comparator_end_char(self) -> bool {
+        matches!(self, '<' | '>' | '=' | '?')
     }
 }

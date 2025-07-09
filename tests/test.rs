@@ -47,6 +47,39 @@ fn take_report(vec: &mut Vec<LogReport>, pathname: &str, msg: &str) -> Option<Lo
     None
 }
 
+fn take_report_pointer(
+    vec: &mut Vec<LogReport>,
+    pathname: &str,
+    msg: &str,
+    line: u32,
+    column: u32,
+) -> Option<LogReport> {
+    for (i, report) in vec.iter().enumerate() {
+        if report.msg == msg
+            && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
+            && report.pointers[0].loc.line == line
+            && report.pointers[0].loc.column == column
+        {
+            let result = (*report).clone();
+            vec.remove(i);
+            return Some(result);
+        }
+    }
+    None
+}
+
+fn ignore_reports(vec: &mut Vec<LogReport>, pathname: &str) {
+    let mut i = 0;
+    while i < vec.len() {
+        let report = &vec[i];
+        if report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
+            vec.remove(i);
+        } else {
+            i += 1;
+        }
+    }
+}
+
 #[test]
 fn test_mod1() {
     let mut reports = check_mod_helper("mod1");
@@ -155,6 +188,57 @@ fn test_mod2() {
     let report =
         take_report(&mut reports, lists, "`courtier_parent` expects scope:child to be set");
     report.expect("scope check for scripted lists");
+
+    dbg!(&reports);
+    assert!(reports.is_empty());
+}
+
+#[test]
+fn test_mod3() {
+    let mut reports = check_mod_helper("mod3");
+
+    let single_unmatched = "common/on_action/test-single-unmatched-quote.txt";
+    let report =
+        take_report_pointer(&mut reports, single_unmatched, "quoted string not closed", 3, 21);
+    report.expect("single unmatched quote test");
+    ignore_reports(&mut reports, single_unmatched);
+
+    let um_rhs_m_rhs = "common/on_action/test-unmatched-rhs-matched-rhs.txt";
+    let report = take_report_pointer(&mut reports, um_rhs_m_rhs, "quoted string not closed", 3, 21);
+    report.expect("unmatched rhs matched rhs test");
+    ignore_reports(&mut reports, um_rhs_m_rhs);
+
+    let um_rhs_m_lhs = "common/on_action/test-unmatched-rhs-matched-lhs.txt";
+    let report = take_report_pointer(&mut reports, um_rhs_m_lhs, "quoted string not closed", 5, 21);
+    report.expect("unmatched rhs matched lhs test");
+    ignore_reports(&mut reports, um_rhs_m_lhs);
+
+    let um_lhs_m_lhs = "common/on_action/test-unmatched-lhs-matched-lhs.txt";
+    let report = take_report_pointer(&mut reports, um_lhs_m_lhs, "quoted string not closed", 5, 17);
+    report.expect("unmatched lhs matched lhs test");
+    ignore_reports(&mut reports, um_lhs_m_lhs);
+
+    let um_lhs_m_rhs = "common/on_action/test-unmatched-lhs-matched-rhs.txt";
+    let report = take_report_pointer(&mut reports, um_lhs_m_rhs, "quoted string not closed", 5, 17);
+    report.expect("unmatched lhs matched rhs test");
+    ignore_reports(&mut reports, um_lhs_m_rhs);
+
+    let gui_matched = "gui/test-matched-quotes.gui";
+    let report = take_report(&mut reports, gui_matched, "quoted string not closed");
+    assert!(dbg!(report).is_none());
+    ignore_reports(&mut reports, gui_matched);
+
+    let gui_unmatched = "gui/test-unmatched-quotes.gui";
+    let report =
+        take_report_pointer(&mut reports, gui_unmatched, "quoted string not closed", 2, 15);
+    report.expect("unmatched quote gui test");
+    ignore_reports(&mut reports, gui_unmatched);
+
+    let gui_unmatched_format = "gui/test-unmatched-quotes-format-string.gui";
+    let report =
+        take_report_pointer(&mut reports, gui_unmatched_format, "quoted string not closed", 2, 16);
+    report.expect("unmatched quote format string gui test");
+    ignore_reports(&mut reports, gui_unmatched_format);
 
     dbg!(&reports);
     assert!(reports.is_empty());
