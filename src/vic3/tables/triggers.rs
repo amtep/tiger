@@ -271,7 +271,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target", Scope(Scopes::Culture)), ("value", CompareValue)]),
     ),
     (
-        Scopes::Country,
+        Scopes::State,
         "cultural_acceptance_delta",
         Block(&[("target", Scope(Scopes::Culture)), ("value", CompareValue)]),
     ),
@@ -1707,7 +1707,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::Value,
         ),
         (Scopes::Country, "cultural_acceptance_base", Scope(Scopes::Culture), Scopes::Value),
-        (Scopes::Country, "cultural_acceptance_delta", Scope(Scopes::Culture), Scopes::Value),
+        (Scopes::State, "cultural_acceptance_delta", Scope(Scopes::Culture), Scopes::Value),
         (Scopes::Country, "culture_percent_country", Item(Item::Culture), Scopes::Value),
         (Scopes::State, "culture_percent_state", Item(Item::Culture), Scopes::Value),
         (Scopes::Culture, "culture_secession_progress", Scope(Scopes::Country), Scopes::Value),
