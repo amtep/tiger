@@ -419,7 +419,12 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::None, "i", Scopes::Ideology, Item(Item::Ideology)),
         (Scopes::None, "identity", Scopes::PowerBlocIdentity, Item(Item::PowerBlocIdentity)),
         (Scopes::None, "ideology", Scopes::Ideology, Item(Item::Ideology)), // TODO difference with i:
-        (Scopes::Country, "ig", Scopes::InterestGroup, Item(Item::InterestGroup)),
+        (
+            Scopes::Country.union(Scopes::PoliticalMovement),
+            "ig",
+            Scopes::InterestGroup,
+            Item(Item::InterestGroup),
+        ),
         (Scopes::None, "ig_trait", Scopes::InterestGroupTrait, Item(Item::InterestGroupTrait)),
         (Scopes::None, "ig_type", Scopes::InterestGroupType, Item(Item::InterestGroup)),
         (Scopes::None, "infamy_threshold", Scopes::Value, Item(Item::InfamyThreshold)),
