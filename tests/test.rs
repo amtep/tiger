@@ -234,10 +234,10 @@ fn test_mod3() {
     report.expect("unmatched quote gui test");
     ignore_reports(&mut reports, gui_unmatched);
 
-    let gui_unmatched_format = "gui/test-unmatched-quotes.gui";
+    let gui_unmatched_format = "gui/test-unmatched-quotes-format-string.gui";
     let report =
         take_report_pointer(&mut reports, gui_unmatched_format, "quoted string not closed", 2, 16);
-    report.expect("unmatched quote gui test");
+    report.expect("unmatched quote format string gui test");
     ignore_reports(&mut reports, gui_unmatched_format);
 
     dbg!(&reports);

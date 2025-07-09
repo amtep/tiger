@@ -488,6 +488,33 @@ impl Iterator for Lexer<'_> {
                                     .loc_msg(self.loc, loc_msg)
                                     .push();
                             }
+                            // else {
+                            //     // Look for signs that this was intended to be an opening quote
+                            //     while let Some((_, c)) = self.peek() {
+                            //         if c == '\n'
+                            //             || c == '#'
+                            //             || c == '}'
+                            //             || c.is_comparator_char()
+                            //             || c == '"'
+                            //             || c.is_id_char()
+                            //         {
+                            //             // Looks like a closing quote
+                            //             break;
+                            //         }
+                            //         if c.is_ascii_whitespace() {
+                            //             // These would get discarded when searching for the next token anyway
+                            //             self.consume();
+                            //         } else {
+                            //             let msg = "quoted string not closed";
+                            //             warn(ErrorKey::ParseError)
+                            //                 .weak()
+                            //                 .msg(msg)
+                            //                 .loc(start_loc)
+                            //                 .push();
+                            //             break;
+                            //         }
+                            //     }
+                            // }
 
                             return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                         } else {
