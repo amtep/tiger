@@ -203,17 +203,17 @@ fn test_mod3() {
     report.expect("single unmatched quote test");
     ignore_reports(&mut reports, single_unmatched);
 
-    let after_comparitor = "common/on_action/test-unmatched-matched-effect.txt";
+    let after_comparator = "common/on_action/test-unmatched-matched-effect.txt";
     let report =
-        take_report_pointer(&mut reports, after_comparitor, "quoted string not closed", 3, 21);
+        take_report_pointer(&mut reports, after_comparator, "quoted string not closed", 3, 21);
     report.expect("unmatched quote matched after comparitor test");
-    ignore_reports(&mut reports, after_comparitor);
+    ignore_reports(&mut reports, after_comparator);
 
-    let before_comparitor = "common/on_action/test-unmatched-matched-trigger.txt";
+    let before_comparator = "common/on_action/test-unmatched-matched-trigger.txt";
     let report =
-        take_report_pointer(&mut reports, before_comparitor, "quoted string not closed", 5, 21);
+        take_report_pointer(&mut reports, before_comparator, "quoted string not closed", 5, 21);
     report.expect("unmatched quote matched before comparitor test");
-    ignore_reports(&mut reports, before_comparitor);
+    ignore_reports(&mut reports, before_comparator);
 
     dbg!(&reports);
     assert!(reports.is_empty());
