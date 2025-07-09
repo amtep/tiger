@@ -465,6 +465,7 @@ impl Iterator for Lexer<'_> {
                             continue;
                         } else if c == '"' && !escaped {
                             let token = id.take_to_token();
+                            let close_loc = self.loc;
                             self.consume();
 
                             let next_char = self.peek();
@@ -480,41 +481,14 @@ impl Iterator for Lexer<'_> {
                                     && !next_char.is_some_and(|(_, nc)| nc.is_ascii_whitespace() || nc.is_comparator_char() || nc == '}')
                             {
                                 let msg = "quoted string not closed";
-                                let loc_msg = "Matching close quote looks like it was intended to open. If this is a false positive, consider adding whitespace after the close quote.";
+                                let info = "Matching close quote looks like it was intended to open. If this is a false positive, consider adding whitespace after the close quote.";
                                 warn(ErrorKey::ParseError)
                                     .weak()
                                     .msg(msg)
                                     .loc(start_loc)
-                                    .loc_msg(self.loc, loc_msg)
+                                    .loc_msg(close_loc, info)
                                     .push();
                             }
-                            // else {
-                            //     // Look for signs that this was intended to be an opening quote
-                            //     while let Some((_, c)) = self.peek() {
-                            //         if c == '\n'
-                            //             || c == '#'
-                            //             || c == '}'
-                            //             || c.is_comparator_char()
-                            //             || c == '"'
-                            //             || c.is_id_char()
-                            //         {
-                            //             // Looks like a closing quote
-                            //             break;
-                            //         }
-                            //         if c.is_ascii_whitespace() {
-                            //             // These would get discarded when searching for the next token anyway
-                            //             self.consume();
-                            //         } else {
-                            //             let msg = "quoted string not closed";
-                            //             warn(ErrorKey::ParseError)
-                            //                 .weak()
-                            //                 .msg(msg)
-                            //                 .loc(start_loc)
-                            //                 .push();
-                            //             break;
-                            //         }
-                            //     }
-                            // }
 
                             return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                         } else {
