@@ -18,6 +18,7 @@ yearly_playable_pulse = {
                 )" > 0
                 "opinion(liege)" > 0 "opinion(liege)" > 0
                 0 < "opinion(liege)" 0 < "opinion(liege)"
+                "opinion(liege)">0
             }
         }
     }

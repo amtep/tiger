@@ -203,17 +203,42 @@ fn test_mod3() {
     report.expect("single unmatched quote test");
     ignore_reports(&mut reports, single_unmatched);
 
-    let after_comparator = "common/on_action/test-unmatched-matched-effect.txt";
-    let report =
-        take_report_pointer(&mut reports, after_comparator, "quoted string not closed", 3, 21);
-    report.expect("unmatched quote matched after comparitor test");
-    ignore_reports(&mut reports, after_comparator);
+    let um_rhs_m_rhs = "common/on_action/test-unmatched-rhs-matched-rhs.txt";
+    let report = take_report_pointer(&mut reports, um_rhs_m_rhs, "quoted string not closed", 3, 21);
+    report.expect("unmatched rhs matched rhs test");
+    ignore_reports(&mut reports, um_rhs_m_rhs);
 
-    let before_comparator = "common/on_action/test-unmatched-matched-trigger.txt";
+    let um_rhs_m_lhs = "common/on_action/test-unmatched-rhs-matched-lhs.txt";
+    let report = take_report_pointer(&mut reports, um_rhs_m_lhs, "quoted string not closed", 5, 21);
+    report.expect("unmatched rhs matched lhs test");
+    ignore_reports(&mut reports, um_rhs_m_lhs);
+
+    let um_lhs_m_lhs = "common/on_action/test-unmatched-lhs-matched-lhs.txt";
+    let report = take_report_pointer(&mut reports, um_lhs_m_lhs, "quoted string not closed", 5, 17);
+    report.expect("unmatched lhs matched lhs test");
+    ignore_reports(&mut reports, um_lhs_m_lhs);
+
+    let um_lhs_m_rhs = "common/on_action/test-unmatched-lhs-matched-rhs.txt";
+    let report = take_report_pointer(&mut reports, um_lhs_m_rhs, "quoted string not closed", 5, 17);
+    report.expect("unmatched lhs matched rhs test");
+    ignore_reports(&mut reports, um_lhs_m_rhs);
+
+    let gui_matched = "gui/test-matched-quotes.gui";
+    let report = take_report(&mut reports, gui_matched, "quoted string not closed");
+    assert!(dbg!(report).is_none());
+    ignore_reports(&mut reports, gui_matched);
+
+    let gui_unmatched = "gui/test-unmatched-quotes.gui";
     let report =
-        take_report_pointer(&mut reports, before_comparator, "quoted string not closed", 5, 21);
-    report.expect("unmatched quote matched before comparitor test");
-    ignore_reports(&mut reports, before_comparator);
+        take_report_pointer(&mut reports, gui_unmatched, "quoted string not closed", 2, 15);
+    report.expect("unmatched quote gui test");
+    ignore_reports(&mut reports, gui_unmatched);
+
+    let gui_unmatched_format = "gui/test-unmatched-quotes.gui";
+    let report =
+        take_report_pointer(&mut reports, gui_unmatched_format, "quoted string not closed", 2, 16);
+    report.expect("unmatched quote gui test");
+    ignore_reports(&mut reports, gui_unmatched_format);
 
     dbg!(&reports);
     assert!(reports.is_empty());

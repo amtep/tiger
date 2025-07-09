@@ -441,36 +441,17 @@ impl Iterator for Lexer<'_> {
                     self.apply_line_ignores();
                     let start_i = i;
                     let start_loc = self.loc;
+                    let mut prev_char = c;
                     self.consume();
-                    let mut expect_open = false;
-                    let mut expect_immediate_close = false;
-                    let mut immediate_close_warn = false;
                     let mut escaped = false;
                     let mut id = self.start_cob();
                     while let Some((i, c)) = self.peek() {
-                        if c.is_comparator_char() {
-                            // This is a sign that we could be on an intended RHS
-                            expect_open = true;
-                        } else if !c.is_ascii_whitespace() && c != '"' {
-                            expect_open = false;
-                        }
-
-                        if c == ')' {
-                            // Whitespace is not allowed after the closing broce of a quoted trigger
-                            // We should expect to close the quote on the next character or warn
-                            expect_immediate_close = true;
-                        } else if expect_immediate_close && c.is_ascii_whitespace() {
-                            immediate_close_warn = true;
-                        } else if !c.is_ascii_whitespace() && c != '"' {
-                            expect_immediate_close = false;
-                            immediate_close_warn = false;
-                        }
-
                         if c == '\n' {
                             if Game::is_hoi4() {
                                 // In Hoi4, a newline always terminates a string.
                                 let msg = "quoted string not closed";
-                                warn(ErrorKey::ParseError).msg(msg).loc(self.loc).push();
+                                let info = "reached end of line";
+                                warn(ErrorKey::ParseError).msg(msg).info(info).loc(self.loc).push();
                                 self.consume();
                                 let token = id.take_to_token();
                                 return Some(Ok((start_i, Lexeme::General(token), i + 1)));
@@ -486,10 +467,26 @@ impl Iterator for Lexer<'_> {
                             let token = id.take_to_token();
                             self.consume();
 
-                            // Previous characters indicate that this could have been intended to be an opening quote
-                            if expect_open || immediate_close_warn {
+                            let next_char = self.peek();
+                            if
+                            // previous character indicates potential open
+                            (   prev_char.is_ascii_whitespace()
+                                        || prev_char.is_comparator_end_char()
+                                    )
+                                    // next character does not indicate it's a close
+                                    // '#' could be an end of line comment, or the start of a format string.
+                                    // Without additional context it's not safe to rely on, as it being parsed as a comment
+                                    // when it's intended to be a format string will silence any further errors on that line.
+                                    && !next_char.is_some_and(|(_, nc)| nc.is_ascii_whitespace() || nc.is_comparator_char() || nc == '}')
+                            {
                                 let msg = "quoted string not closed";
-                                warn(ErrorKey::ParseError).weak().msg(msg).loc(start_loc).push();
+                                let loc_msg = "Matching close quote looks like it was intended to open. If this is a false positive, consider adding whitespace after the close quote.";
+                                warn(ErrorKey::ParseError)
+                                    .weak()
+                                    .msg(msg)
+                                    .loc(start_loc)
+                                    .loc_msg(self.loc, loc_msg)
+                                    .push();
                             }
 
                             return Some(Ok((start_i, Lexeme::General(token), i + 1)));
@@ -507,10 +504,12 @@ impl Iterator for Lexer<'_> {
                             id.add_char(c);
                             self.consume();
                         }
+                        prev_char = c;
                         escaped = false;
                     }
                     let msg = "quoted string not closed";
-                    err(ErrorKey::ParseError).msg(msg).loc(start_loc).push();
+                    let info = "reached end of file";
+                    err(ErrorKey::ParseError).msg(msg).info(info).loc(start_loc).push();
                     let token = if matches!(id, Cob::Uninit) {
                         Token::from_static_str("", self.loc)
                     } else {
