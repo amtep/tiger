@@ -1,0 +1,11 @@
+﻿# This file should produce no warnings
+name_list_bedouin = {
+    cadet_dynasty_names = {
+        { "dynnp_al-" "dynn_Zawayhi" }
+        { "dynnp_al-" Zawayhi }
+        { 
+            "dynnp_al-" # comment
+            "dynn_Riyahdid"
+        }
+    }
+}

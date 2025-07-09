@@ -47,6 +47,39 @@ fn take_report(vec: &mut Vec<LogReport>, pathname: &str, msg: &str) -> Option<Lo
     None
 }
 
+fn take_report_pointer(
+    vec: &mut Vec<LogReport>,
+    pathname: &str,
+    msg: &str,
+    line: u32,
+    column: u32,
+) -> Option<LogReport> {
+    for (i, report) in vec.iter().enumerate() {
+        if report.msg == msg
+            && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
+            && report.pointers[0].loc.line == line
+            && report.pointers[0].loc.column == column
+        {
+            let result = (*report).clone();
+            vec.remove(i);
+            return Some(result);
+        }
+    }
+    None
+}
+
+fn ignore_reports(vec: &mut Vec<LogReport>, pathname: &str) {
+    let mut i = 0;
+    while i < vec.len() {
+        let report = &vec[i];
+        if report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
+            vec.remove(i);
+        } else {
+            i += 1;
+        }
+    }
+}
+
 #[test]
 fn test_mod1() {
     let mut reports = check_mod_helper("mod1");
@@ -155,6 +188,32 @@ fn test_mod2() {
     let report =
         take_report(&mut reports, lists, "`courtier_parent` expects scope:child to be set");
     report.expect("scope check for scripted lists");
+
+    dbg!(&reports);
+    assert!(reports.is_empty());
+}
+
+#[test]
+fn test_mod3() {
+    let mut reports = check_mod_helper("mod3");
+
+    let single_unmatched = "common/on_action/test-single-unmatched-quote.txt";
+    let report =
+        take_report_pointer(&mut reports, single_unmatched, "quoted string not closed", 3, 21);
+    report.expect("single unmatched quote test");
+    ignore_reports(&mut reports, single_unmatched);
+
+    let after_comparitor = "common/on_action/test-unmatched-matched-effect.txt";
+    let report =
+        take_report_pointer(&mut reports, after_comparitor, "quoted string not closed", 3, 21);
+    report.expect("unmatched quote matched after comparitor test");
+    ignore_reports(&mut reports, after_comparitor);
+
+    let before_comparitor = "common/on_action/test-unmatched-matched-trigger.txt";
+    let report =
+        take_report_pointer(&mut reports, before_comparitor, "quoted string not closed", 5, 21);
+    report.expect("unmatched quote matched before comparitor test");
+    ignore_reports(&mut reports, before_comparitor);
 
     dbg!(&reports);
     assert!(reports.is_empty());

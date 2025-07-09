@@ -442,14 +442,28 @@ impl Iterator for Lexer<'_> {
                     let start_i = i;
                     let start_loc = self.loc;
                     self.consume();
-                    let mut warn_linebreaks = true;
+                    let mut expect_open = false;
+                    let mut expect_immediate_close = false;
+                    let mut immediate_close_warn = false;
                     let mut escaped = false;
                     let mut id = self.start_cob();
                     while let Some((i, c)) = self.peek() {
-                        if c == '[' && i == start_i + 1 {
-                            // A string that starts with `"[` is a datatype expression which might
-                            // be broken into multiple lines for readability.
-                            warn_linebreaks = false;
+                        if c.is_comparator_char() {
+                            // This is a sign that we could be on an intended RHS
+                            expect_open = true;
+                        } else if !c.is_ascii_whitespace() && c != '"' {
+                            expect_open = false;
+                        }
+
+                        if c == ')' {
+                            // Whitespace is not allowed after the closing broce of a quoted trigger
+                            // We should expect to close the quote on the next character or warn
+                            expect_immediate_close = true;
+                        } else if expect_immediate_close && c.is_ascii_whitespace() {
+                            immediate_close_warn = true;
+                        } else if !c.is_ascii_whitespace() && c != '"' {
+                            expect_immediate_close = false;
+                            immediate_close_warn = false;
                         }
 
                         if c == '\n' {
@@ -462,13 +476,8 @@ impl Iterator for Lexer<'_> {
                                 return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                             }
                             id.add_char(c);
-                            if warn_linebreaks {
-                                // Warn, but continue parsing the string.
-                                let msg = "quoted string not closed";
-                                warn(ErrorKey::ParseError).weak().msg(msg).loc(self.loc).push();
-                            }
                             self.consume();
-                        } else if Game::is_hoi4() && c == '\\' && !escaped {
+                        } else if c == '\\' && !escaped {
                             self.consume();
                             id.make_owned();
                             escaped = true;
@@ -476,6 +485,13 @@ impl Iterator for Lexer<'_> {
                         } else if c == '"' && !escaped {
                             let token = id.take_to_token();
                             self.consume();
+
+                            // Previous characters indicate that this could have been intended to be an opening quote
+                            if expect_open || immediate_close_warn {
+                                let msg = "quoted string not closed";
+                                warn(ErrorKey::ParseError).weak().msg(msg).loc(start_loc).push();
+                            }
+
                             return Some(Ok((start_i, Lexeme::General(token), i + 1)));
                         } else {
                             if Game::is_hoi4() && i - start_i == 255 {

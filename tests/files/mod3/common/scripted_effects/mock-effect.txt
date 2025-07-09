@@ -1,0 +1,8 @@
+﻿mock_effect = {
+    $parameter$
+}
+
+mock_effect_2 = {
+    $param1$
+    $param2$
+}

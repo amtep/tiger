@@ -1,0 +1,10 @@
+﻿yearly_playable_pulse = {
+    effect = {
+        if = {
+            limit = {
+                0 < "opinion(liege)
+                "opinion(liege)" > 0
+            }
+        }
+    }
+}
