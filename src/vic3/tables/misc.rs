@@ -29,8 +29,9 @@ pub const EVENT_CATEGORIES: &[&str] = &["enactment", "revolution"];
 // LAST UPDATED VIC3 VERSION 1.3.6
 pub const APPROVALS: &[&str] = &["angry", "unhappy", "neutral", "happy", "loyal"];
 
-// LAST UPDATED VIC3 VERSION 1.7.1
+// LAST UPDATED VIC3 VERSION 1.9.6
 pub const ATTITUDES: &[&str] = &[
+    "aloof",
     "antagonistic",
     "belligerent",
     "cautious",
