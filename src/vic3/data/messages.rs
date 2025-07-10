@@ -43,11 +43,7 @@ impl DbKind for Message {
 
         vd.field_integer("days");
 
-        if block.field_value_is("notification_type", "popup") {
-            vd.field_value("popup_name"); // TODO: find out what is allowed here
-        } else {
-            vd.ban_field("popup_name", || "`notification_type = popup`");
-        }
+        vd.field_item("popup_name", Item::WidgetName); // Maps to notification_popup
 
         vd.field_item("on_created_soundeffect", Item::Sound);
         vd.field_choice("color", &["bad", "neutral", "good"]);
