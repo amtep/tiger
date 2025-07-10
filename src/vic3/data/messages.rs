@@ -43,7 +43,9 @@ impl DbKind for Message {
 
         vd.field_integer("days");
 
-        vd.field_item("popup_name", Item::WidgetName); // Maps to notification_popup
+        // Notification type can be changed in settings, so this field is useful for all types.
+        // The value refers to one of the notification_popup widgets in gui/popups.gui
+        vd.field_item("popup_name", Item::WidgetName);
 
         vd.field_item("on_created_soundeffect", Item::Sound);
         vd.field_choice("color", &["bad", "neutral", "good"]);
