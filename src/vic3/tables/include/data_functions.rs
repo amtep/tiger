@@ -8386,6 +8386,8 @@
     ("IsFromNodeVirtual", Vic3(ModifierNodeGraphLine), Args::Args(&[]), bool),
     ("IsFromNodeVirtual", Vic3(TechTreeLine), Args::Args(&[]), bool),
     ("IsFromNodeVirtual", Vic3(TickTaskGraphLine), Args::Args(&[]), bool),
+    ("IsFrozenFor", Vic3(Treaty), Args::Args(&[DType(Unknown)]), bool),
+    ("IsFrozenForBothCountries", Vic3(Treaty), Args::Args(&[]), bool),
     ("IsFullFilterSet", Vic3(JominiServerBrowserGui), Args::Args(&[]), bool),
     ("IsFullyDefeated", Vic3(MilitaryFormation), Args::Args(&[]), bool),
     ("IsFullyMobilized", Vic3(CombatUnit), Args::Args(&[]), bool),

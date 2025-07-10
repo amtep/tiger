@@ -218,6 +218,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "construction_queue_num_queued_private_levels", CompareValue),
     (Scopes::Country, "construction_queue_private_duration", CompareValue),
     (Scopes::StateRegion, "contains_capital_of", ScopeOrItem(Scopes::Country, Item::Country)),
+    (Scopes::State, "controls_treaty_port_province", Boolean),
     (Scopes::Character, "could_support_political_movement", Scope(Scopes::PoliticalMovement)),
     (
         Scopes::Country,
