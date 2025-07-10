@@ -585,7 +585,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::PowerBloc, "has_principle", Scope(Scopes::PowerBlocPrinciple)),
     (Scopes::PowerBloc, "has_principle_group", Scope(Scopes::PowerBlocPrincipleGroup)),
     (Scopes::None, "has_reached_end_date", Boolean),
-    (Scopes::Character, "has_religion", Scope(Scopes::Religion)),
+    (Scopes::Character, "has_religion", ScopeOrItem(Scopes::Religion, Item::Religion)),
     (Scopes::Religion, "has_religious_taboo", Item(Item::Goods)),
     (Scopes::Country, "has_researchable_technology", Boolean),
     (Scopes::Country, "has_revolution", Boolean),
