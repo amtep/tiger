@@ -124,7 +124,7 @@ impl DbKind for LawType {
         vd.field_trigger_rooted("ai_will_do", Tooltipped::No, Scopes::Country);
         vd.field_script_value_no_breakdown_builder("ai_enact_weight_modifier", |key| {
             let mut sc = ScopeContext::new(Scopes::Country, key);
-            sc.define_name("law", Scopes::LawType, key);
+            sc.define_name("law", Scopes::Law, key);
             sc
         });
 
