@@ -31,7 +31,7 @@ static SCOPE_EFFECT_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Effect)>> 
 // See `effects.log` from the game data dumps
 const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::InterestGroup, "abandon_revolution", Boolean),
-    (Scopes::State, "activate_building", Item(Item::BuildingType)),
+    (Scopes::State, "activate_building", Vb(validate_activate_building)),
     (Scopes::Country, "activate_law", Scope(Scopes::LawType)),
     (
         Scopes::Country.union(Scopes::State),
@@ -203,7 +203,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "custom_description_no_bullet", Control),
     (Scopes::None, "custom_label", ControlOrLabel),
     (Scopes::None, "custom_tooltip", ControlOrLabel),
-    (Scopes::State, "deactivate_building", Item(Item::BuildingType)),
+    (Scopes::State, "deactivate_building", Vb(validate_activate_building)),
     (Scopes::Country, "deactivate_law", Scope(Scopes::LawType)),
     (Scopes::Country, "deactivate_parties", Yes),
     (Scopes::None, "debug_log", UncheckedTodo),

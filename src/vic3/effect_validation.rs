@@ -1130,3 +1130,14 @@ pub fn validate_tariff_level(
     vd.field_target("goods", sc, Scopes::Goods);
     vd.field_choice("level", TARIFF_LEVELS);
 }
+
+pub fn validate_activate_building(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    _sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.multi_field_item("building", Item::BuildingType);
+}
