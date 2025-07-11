@@ -259,11 +259,13 @@ impl CharExt for char {
         self.is_ascii_alphanumeric() || self == '_'
     }
 
+    // Comparator list for reference
+    // <, <=, =, !=, >, >=, ?=
     fn is_comparator_char(self) -> bool {
-        self.is_comparator_end_char() || matches!(self, '!')
+        self.is_comparator_end_char() || matches!(self, '!' | '?')
     }
 
     fn is_comparator_end_char(self) -> bool {
-        matches!(self, '<' | '>' | '=' | '?')
+        matches!(self, '<' | '>' | '=')
     }
 }
