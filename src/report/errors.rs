@@ -2,10 +2,10 @@
 
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::cmp::Ordering;
+use std::cmp::{min_by, Ordering};
 use std::fs::read;
 use std::io::Write;
-use std::iter::once;
+use std::iter::{empty, once};
 use std::mem::take;
 use std::ops::{Bound, RangeBounds};
 use std::path::PathBuf;
@@ -25,7 +25,19 @@ use crate::report::{
     ErrorKey, FilterRule, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle,
     OutputStyle, PointedMessage,
 };
+use crate::set;
 use crate::token::{leak, Loc};
+
+/// Error types that should be logged once when consolidating reports
+static LOG_ONCE: LazyLock<TigerHashSet<ErrorKey>> = LazyLock::new(|| {
+    set!([
+        ErrorKey::MissingFile,
+        ErrorKey::MissingItem,
+        ErrorKey::MissingLocalization,
+        ErrorKey::MissingPerspective,
+        ErrorKey::MissingSound,
+    ])
+});
 
 static ERRORS: LazyLock<Mutex<Errors>> = LazyLock::new(|| Mutex::new(Errors::default()));
 
@@ -42,6 +54,7 @@ pub struct Errors<'a> {
 
     /// Determines whether a report should be printed.
     pub(crate) filter: ReportFilter,
+
     /// Output color and style configuration.
     pub(crate) styles: OutputStyle,
 
@@ -104,26 +117,50 @@ impl Errors<'_> {
     }
 
     /// Extract the stored reports, sort them, and return them as a vector.
-    pub fn flatten_reports(&self) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>)> {
+    pub fn flatten_reports(
+        &self,
+        consolidate: bool,
+    ) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>, usize)> {
         let mut reports: Vec<_> = self
             .storage
             .iter()
             .flat_map(|(report, occurrences)| -> Box<dyn Iterator<Item = _>> {
-                let iterator =
+                let mut iterator =
                     occurrences.iter().filter(|pointers| !self.should_ignore(report, pointers));
                 match report.style {
                     LogReportStyle::Full => {
-                        Box::new(iterator.map(move |pointers| (report, Cow::Borrowed(pointers))))
+                        if consolidate && LOG_ONCE.contains(&report.key) {
+                            if let Some(initial) = iterator.next() {
+                                let (pointers, additional_count) = iterator.fold(
+                                    (initial, 0usize),
+                                    |(first_occurrence, count), e| {
+                                        (
+                                            min_by(first_occurrence, e, |a, b| {
+                                                a.iter().map(|e| e.loc).cmp(b.iter().map(|e| e.loc))
+                                            }),
+                                            count + 1,
+                                        )
+                                    },
+                                );
+                                Box::new(once((report, Cow::Borrowed(pointers), additional_count)))
+                            } else {
+                                Box::new(empty())
+                            }
+                        } else {
+                            Box::new(
+                                iterator.map(move |pointers| (report, Cow::Borrowed(pointers), 0)),
+                            )
+                        }
                     }
                     LogReportStyle::Abbreviated => {
                         let mut pointers: Vec<_> = iterator.map(|o| o[0].clone()).collect();
                         pointers.sort_unstable_by_key(|p| p.loc);
-                        Box::new(once((report, Cow::Owned(pointers))))
+                        Box::new(once((report, Cow::Owned(pointers), 0)))
                     }
                 }
             })
             .collect();
-        reports.sort_unstable_by(|(a, ap), (b, bp)| {
+        reports.sort_unstable_by(|(a, ap, _), (b, bp, _)| {
             // Severity in descending order
             let mut cmp = b.severity.cmp(&a.severity);
             if cmp != Ordering::Equal {
@@ -153,12 +190,12 @@ impl Errors<'_> {
     /// readability and occasionally gets changed to improve that.
     ///
     /// Reports matched by `#tiger-ignore` directives will not be printed.
-    pub fn emit_reports<O: Write + Send>(&mut self, output: &mut O, json: bool) {
-        let reports = self.flatten_reports();
+    pub fn emit_reports<O: Write + Send>(&mut self, output: &mut O, json: bool, consolidate: bool) {
+        let reports = self.flatten_reports(consolidate);
         if json {
             _ = writeln!(output, "[");
             let mut first = true;
-            for (report, pointers) in &reports {
+            for (report, pointers, _) in &reports {
                 if !first {
                     _ = writeln!(output, ",");
                 }
@@ -167,8 +204,8 @@ impl Errors<'_> {
             }
             _ = writeln!(output, "\n]");
         } else {
-            for (report, pointers) in &reports {
-                log_report(self, output, report, pointers);
+            for (report, pointers, additional) in &reports {
+                log_report(self, output, report, pointers, *additional);
             }
         }
         self.storage.clear();
@@ -305,8 +342,8 @@ pub fn will_maybe_log<E: ErrorLoc>(eloc: E, key: ErrorKey) -> bool {
 ///
 /// Note that the default output format is not stable across versions. It is meant for human
 /// readability and occasionally gets changed to improve that.
-pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool) {
-    Errors::get_mut().emit_reports(output, json);
+pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool, consolidate: bool) {
+    Errors::get_mut().emit_reports(output, json, consolidate);
 }
 
 /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].

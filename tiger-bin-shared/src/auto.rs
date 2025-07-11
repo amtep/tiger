@@ -165,13 +165,12 @@ fn validate_mod(
     // The colors can be enabled again in the config file.
     everything.load_output_settings(false);
     everything.load_config_filtering_rules();
-    emit_reports(&mut output, false);
+    emit_reports(&mut output, false, false);
 
     everything.load_all();
     everything.validate_all();
     everything.check_rivers();
-
-    emit_reports(&mut output, false);
+    emit_reports(&mut output, false, false);
 
     // Properly dropping `everything` takes a noticeable amount of time, and we're exiting anyway.
     forget(everything);

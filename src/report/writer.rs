@@ -21,6 +21,7 @@ pub fn log_report<O: Write + Send>(
     output: &mut O,
     report: &LogReportMetadata,
     pointers: &LogReportPointers,
+    additional: usize,
 ) {
     let indentation = pointer_indentation(pointers);
     // Log error lvl and message:
@@ -37,6 +38,10 @@ pub fn log_report<O: Write + Send>(
     // Log the info line, if one exists.
     if let Some(info) = &report.info {
         log_line_info(errors, output, indentation, info);
+    }
+    // Log the additional count, if it's more than zero
+    if additional > 0 {
+        log_count(errors, output, indentation, additional);
     }
     // Write a blank line to visually separate reports:
     _ = writeln!(output);
@@ -92,6 +97,17 @@ fn log_line_info<O: Write + Send>(errors: &Errors, output: &mut O, indentation: 
         errors.styles.style(Styled::Info).paint(info.to_string()),
     ];
     _ = writeln!(output, "{}", ANSIStrings(line_info));
+}
+
+/// Log the additional number of this error that were found in other locations
+fn log_count<O: Write + Send>(errors: &Errors, output: &mut O, indentation: usize, count: usize) {
+    let line_count: &[ANSIString<'static>] = &[
+        errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
+        errors.styles.style(Styled::Location).paint("-->"),
+        errors.styles.style(Styled::Default).paint(" "),
+        errors.styles.style(Styled::Location).paint(format!("and {count} other locations")),
+    ];
+    _ = writeln!(output, "{}", ANSIStrings(line_count));
 }
 
 /// Log the line containing the location's mod name and filename.
