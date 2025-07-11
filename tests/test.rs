@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
-use std::usize;
 
 use tiger_lib::{take_reports, Everything, LogReport};
 
