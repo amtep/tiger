@@ -10,7 +10,9 @@ use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validate::{validate_ai_chance, validate_duration, ListType};
+use crate::validate::{
+    validate_ai_chance, validate_duration, validate_modifiers_with_base, ListType,
+};
 use crate::validator::Validator;
 use crate::vic3::tables::misc::EVENT_CATEGORIES;
 
@@ -52,6 +54,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     vd.field_item("dlc", Item::Dlc);
 
     vd.field_trigger("trigger", Tooltipped::No, sc);
+    vd.field_validated_block_sc("weight_multiplier", sc, validate_modifiers_with_base);
     vd.field_effect("immediate", tooltipped_immediate, sc);
 
     vd.multi_field_validated_block("event_image", |block, data| {
