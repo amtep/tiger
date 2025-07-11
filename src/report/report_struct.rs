@@ -34,6 +34,16 @@ impl LogReport {
     pub fn indentation(&self) -> usize {
         self.pointers.iter().map(|pointer| pointer.loc.line.to_string().len()).max().unwrap_or(0)
     }
+
+    /// Tests if the two reports are equal, ignoring their locations
+    pub fn eq_locless(&self, other: &LogReport) -> bool {
+        //dbg!(self, other);
+        self.severity == other.severity
+            && self.confidence == other.confidence
+            && self.key == other.key
+            && self.msg == other.msg
+            && self.info.as_deref() == other.info.as_deref()
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

@@ -13,7 +13,7 @@ const SPACES_PER_TAB: usize = 4;
 const MAX_IDLE_SPACE: usize = 16;
 
 /// Log the report.
-pub fn log_report(errors: &mut Errors, report: &LogReport) {
+pub fn log_report(errors: &mut Errors, report: &LogReport, count: usize) {
     // Log error lvl and message:
     log_line_title(errors, report);
 
@@ -33,6 +33,10 @@ pub fn log_report(errors: &mut Errors, report: &LogReport) {
     // Log the info line, if one exists.
     if let Some(info) = &report.info {
         log_line_info(errors, report.indentation(), info);
+    }
+    // Log the additional count, if it's more than zero
+    if count > 0 {
+        log_count(errors, report.indentation(), count);
     }
     // Write a blank line to visually separate reports:
     _ = writeln!(errors.output.borrow_mut());
@@ -87,6 +91,17 @@ fn log_line_info(errors: &Errors, indentation: usize, info: &str) {
         errors.styles.style(Styled::Info).paint(info.to_string()),
     ];
     _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_info));
+}
+
+/// Log the additional number of this error that were found in other locations
+fn log_count(errors: &Errors, indentation: usize, count: usize) {
+    let line_count: &[ANSIString<'static>] = &[
+        errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
+        errors.styles.style(Styled::Location).paint("-->"),
+        errors.styles.style(Styled::Default).paint(" "),
+        errors.styles.style(Styled::Location).paint(format!("And {count} other locations")),
+    ];
+    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_count));
 }
 
 /// Log the line containing the location's mod name and filename.
