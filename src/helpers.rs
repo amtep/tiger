@@ -13,6 +13,13 @@ use crate::token::Token;
 pub type TigerHashMap<K, V> = HashMap<K, V>;
 pub type TigerHashSet<T> = HashSet<T>;
 
+#[macro_export]
+macro_rules! set {
+    ( $x:expr ) => {
+        ahash::AHashSet::from($x).into()
+    };
+}
+
 /// Warns about a redefinition of a database item
 pub fn dup_error(key: &Token, other: &Token, id: &str) {
     warn(ErrorKey::DuplicateItem)

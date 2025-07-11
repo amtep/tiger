@@ -2,7 +2,7 @@ use std::io::stdout;
 use std::{mem::forget, path::PathBuf};
 
 use anyhow::{bail, Result};
-use clap::{Args, Parser, Subcommand};
+use clap::{error::ErrorKind, Args, Parser, Subcommand};
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use tiger_lib::ModFile;
 #[cfg(feature = "vic3")]
@@ -73,6 +73,9 @@ struct ValidateArgs {
     /// Output the reports in JSON format
     #[clap(long)]
     json: bool,
+    /// Consolidate certain repeated errors
+    #[clap(long, short)]
+    consolidate: bool,
     /// Warn about items that are defined but unused
     #[clap(long)]
     unused: bool,
@@ -114,6 +117,16 @@ pub fn run(
         }
         None => {
             let mut args = cli.validate_args.unwrap();
+
+            if args.json && args.consolidate {
+                Cli::command()
+                    .error(
+                        ErrorKind::ArgumentConflict,
+                        "Can't use report consolidation with JSON output.",
+                    )
+                    .exit();
+            }
+
             #[cfg(windows)]
             if !args.no_color {
                 let _ = ansiterm::enable_ansi_support()
@@ -246,7 +259,7 @@ pub fn run(
             let mut output = stdout();
 
             if !args.json {
-                emit_reports(&mut output, false);
+                emit_reports(&mut output, false, args.consolidate);
             }
 
             // We must apply the --no-color flag AFTER loading and applying the config,
@@ -275,7 +288,7 @@ pub fn run(
                 everything.check_unused();
             }
 
-            emit_reports(&mut output, args.json);
+            emit_reports(&mut output, args.json, args.consolidate);
 
             // Properly dropping `everything` takes a noticeable amount of time, and we're exiting anyway.
             forget(everything);

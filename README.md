@@ -158,6 +158,7 @@ The various path options are only needed if Tiger can't find the paths on its ow
 * `--show-vanilla` Show errors in the base game script code as well as the mod's
 * `--show-mods` Show errors in secondary loaded mods as well as the main mod
 * `--json` Output the reports in JSON format
+* `--consolidate` Log only the first occurrence of certain errors (such as missing items)
 * `--unused` Warn about items that are defined but unused (not yet accurate)
 * `--no-color` Omit color from the output
 * `--suppress` *PATH* Load a JSON file of reports to remove from the output (see section above)
