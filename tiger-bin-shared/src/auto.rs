@@ -31,7 +31,6 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
 
     eprintln!("This validator was made for {name} version {version}.");
     eprintln!("If you are using a newer version of {name}, it may be inaccurate.");
-    eprintln!("!! Currently it's inaccurate anyway because it's in beta state.");
 
     let game = find_game_directory_steam(app_id).context("Cannot find the game directory.")?;
     let workshop = find_workshop_directory_steam(app_id).ok();

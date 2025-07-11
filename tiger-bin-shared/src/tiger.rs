@@ -120,7 +120,6 @@ pub fn run(
 
             eprintln!("This validator was made for {name} version {version}.");
             eprintln!("If you are using a newer version of {name}, it may be inaccurate.");
-            eprintln!("!! Currently it's inaccurate anyway because it's in beta state.");
 
             if args.game.is_none() {
                 args.game = find_game_directory_steam(app_id).ok();
