@@ -16,6 +16,8 @@ pub const DLC_FEATURES_VIC3: &[&str] = &[
     "mp1_treaties",
     "mp1_charter_companies",
     "mp1_cosmetics",
+    "mp1_monopolies",
+    "mp1_prestige_goods",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
