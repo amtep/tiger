@@ -1,6 +1,7 @@
 container = {
     raw_text = "#D Current tax_jurisdiction: [TaxSlot.GetName]#!"
     raw_text = "???"
+    raw_text = "==="
     onclick = "[GetScriptedGui('sgui_gate_window_execute_research').Execute(GuiScope
                 .SetRoot(Country.MakeScope)
                 .AddScope('technology', Technology.MakeScope)
