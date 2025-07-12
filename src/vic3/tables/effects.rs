@@ -341,8 +341,16 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     // Not knowing the state at compile time means the localizations can't be checked.
     (Scopes::State, "set_hub_names", UncheckedTodo),
     (Scopes::Character, "set_ideology", Scope(Scopes::Ideology)),
-    (Scopes::InterestGroup, "set_ig_bolstering", Removed("1.8", "")),
-    (Scopes::InterestGroup, "set_ig_suppression", Removed("1.8", "")),
+    (
+        Scopes::InterestGroup,
+        "set_ig_bolstering",
+        Removed("1.8", "see `set_bolstering` for political movements"),
+    ),
+    (
+        Scopes::InterestGroup,
+        "set_ig_suppression",
+        Removed("1.8", "see `set_suppression` for political movements"),
+    ),
     (Scopes::InterestGroup, "set_ig_trait", Scope(Scopes::InterestGroupTrait)),
     (Scopes::Country, "set_immune_to_revolutions", Boolean),
     (Scopes::Country, "set_import_tariff_level", Vb(validate_tariff_level)),
