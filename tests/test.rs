@@ -5,7 +5,7 @@ use tiger_lib::{take_reports, Everything, LogReport};
 
 static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
-fn check_mod_helper(modname: &str) -> Vec<LogReport> {
+fn check_mod_helper(modname: &str) -> Vec<(LogReport, usize)> {
     let _guard = TEST_MUTEX.lock().unwrap();
 
     let vanilla_dir = PathBuf::from("tests/files/ck3");
@@ -20,11 +20,11 @@ fn check_mod_helper(modname: &str) -> Vec<LogReport> {
 }
 
 fn take_report_contains(
-    vec: &mut Vec<LogReport>,
+    vec: &mut Vec<(LogReport, usize)>,
     pathname: &str,
     msg_contains: &str,
 ) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
+    for (i, (report, _)) in vec.iter().enumerate() {
         if report.msg.contains(msg_contains)
             && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
         {
@@ -36,8 +36,8 @@ fn take_report_contains(
     None
 }
 
-fn take_report(vec: &mut Vec<LogReport>, pathname: &str, msg: &str) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
+fn take_report(vec: &mut Vec<(LogReport, usize)>, pathname: &str, msg: &str) -> Option<LogReport> {
+    for (i, (report, _)) in vec.iter().enumerate() {
         if report.msg == msg && report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
             let result = (*report).clone();
             vec.remove(i);
@@ -48,13 +48,13 @@ fn take_report(vec: &mut Vec<LogReport>, pathname: &str, msg: &str) -> Option<Lo
 }
 
 fn take_report_pointer(
-    vec: &mut Vec<LogReport>,
+    vec: &mut Vec<(LogReport, usize)>,
     pathname: &str,
     msg: &str,
     line: u32,
     column: u32,
 ) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
+    for (i, (report, _)) in vec.iter().enumerate() {
         if report.msg == msg
             && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
             && report.pointers[0].loc.line == line
@@ -68,10 +68,10 @@ fn take_report_pointer(
     None
 }
 
-fn ignore_reports(vec: &mut Vec<LogReport>, pathname: &str) {
+fn ignore_reports(vec: &mut Vec<(LogReport, usize)>, pathname: &str) {
     let mut i = 0;
     while i < vec.len() {
-        let report = &vec[i];
+        let (report, _) = &vec[i];
         if report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
             vec.remove(i);
         } else {

@@ -12,7 +12,7 @@ use std::sync::{LazyLock, Mutex, MutexGuard};
 use anyhow::Result;
 use encoding_rs::{UTF_8, WINDOWS_1252};
 
-use crate::helpers::{TigerHashMap, TigerHashSet};
+use crate::helpers::TigerHashMap;
 use crate::macros::MACRO_MAP;
 use crate::parse::ignore::IgnoreFilter;
 use crate::report::error_loc::ErrorLoc;
@@ -39,6 +39,8 @@ pub struct Errors {
 
     /// Determines whether a report should be printed.
     pub(crate) filter: ReportFilter,
+    /// Determines whether an error type should be reported multiple times
+    pub(crate) log_once: Vec<ErrorKey>,
     /// Output color and style configuration.
     pub(crate) styles: OutputStyle,
 
@@ -50,7 +52,7 @@ pub struct Errors {
     /// All reports that passed the checks, stored here to be sorted before being emitted all at once.
     /// The "abbreviated" reports don't participate in this. They are still emitted immediately.
     /// It's a `HashSet` because duplicate reports are fairly common due to macro expansion and other revalidations.
-    storage: TigerHashSet<LogReport>,
+    storage: TigerHashMap<LogReport, usize>,
 }
 
 impl Default for Errors {
@@ -61,8 +63,9 @@ impl Default for Errors {
             loaded_dlcs_labels: Vec::default(),
             cache: Cache::default(),
             filter: ReportFilter::default(),
+            log_once: Vec::default(),
             styles: OutputStyle::default(),
-            storage: TigerHashSet::default(),
+            storage: TigerHashMap::default(),
             suppress: TigerHashMap::default(),
             ignore: TigerHashMap::default(),
         }
@@ -106,13 +109,28 @@ impl Errors {
         false
     }
 
+    fn should_log_once(&mut self, report: &LogReport) -> bool {
+        if self.log_once.contains(&report.key) {
+            for (stored_report, count) in &mut self.storage {
+                if stored_report.eq_locless(report) {
+                    *count += 1;
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// Perform some checks to see whether the report should actually be logged.
     /// If yes, it will add it to the storage.
     fn push_report(&mut self, report: LogReport) {
-        if !self.filter.should_print_report(&report) || self.should_suppress(&report) {
+        if !self.filter.should_print_report(&report)
+            || self.should_suppress(&report)
+            || self.should_log_once(&report)
+        {
             return;
         }
-        self.storage.insert(report);
+        self.storage.insert(report, 0);
     }
 
     /// Immediately log a single-line report about this error.
@@ -140,9 +158,9 @@ impl Errors {
 
     /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].
     /// The stored reports will be left empty.
-    pub fn take_reports(&mut self) -> Vec<LogReport> {
-        let mut reports: Vec<LogReport> = take(&mut self.storage).into_iter().collect();
-        reports.sort_unstable_by(|a, b| {
+    pub fn take_reports(&mut self) -> Vec<(LogReport, usize)> {
+        let mut reports: Vec<(LogReport, usize)> = take(&mut self.storage).into_iter().collect();
+        reports.sort_unstable_by(|(a, _), (b, _)| {
             // Severity in descending order
             let mut cmp = b.severity.cmp(&a.severity);
             if cmp != Ordering::Equal {
@@ -187,7 +205,7 @@ impl Errors {
         if json {
             _ = writeln!(self.output.get_mut(), "[");
             let mut first = true;
-            for report in &reports {
+            for (report, _) in &reports {
                 if self.should_ignore(report) {
                     continue;
                 }
@@ -199,11 +217,11 @@ impl Errors {
             }
             _ = writeln!(self.output.get_mut(), "\n]");
         } else {
-            for report in &reports {
+            for (report, count) in &reports {
                 if self.should_ignore(report) {
                     continue;
                 }
-                log_report(self, report);
+                log_report(self, report, *count);
             }
         }
     }
@@ -349,7 +367,7 @@ pub fn emit_reports(json: bool) {
 
 /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].
 /// The stored reports will be left empty.
-pub fn take_reports() -> Vec<LogReport> {
+pub fn take_reports() -> Vec<(LogReport, usize)> {
     Errors::get_mut().take_reports()
 }
 
@@ -418,4 +436,15 @@ pub fn set_show_loaded_mods(v: bool) {
 /// Configure the error reporter to only show errors that match this [`FilterRule`].
 pub(crate) fn set_predicate(predicate: FilterRule) {
     Errors::get_mut().filter.predicate = predicate;
+}
+
+pub fn set_log_once_defaults() {
+    Errors::get_mut().log_once = vec![
+        // All instances of something missing are solved by adding the thing
+        ErrorKey::MissingFile,
+        ErrorKey::MissingItem,
+        ErrorKey::MissingLocalization,
+        ErrorKey::MissingPerspective,
+        ErrorKey::MissingSound,
+    ];
 }

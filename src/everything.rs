@@ -35,7 +35,7 @@ use crate::ck3::data::{
 };
 #[cfg(feature = "ck3")]
 use crate::ck3::tables::misc::*;
-use crate::config_load::{check_for_legacy_ignore, load_filter};
+use crate::config_load::{check_for_legacy_ignore, load_filter, load_log_once};
 use crate::context::ScopeContext;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use crate::data::data_binding::DataBindings;
@@ -354,6 +354,7 @@ impl Everything {
     pub fn load_config_filtering_rules(&self) {
         check_for_legacy_ignore(&self.config);
         load_filter(&self.config);
+        load_log_once(&self.config);
     }
 
     /// Load the `OutputStyle` settings from the config.

@@ -10,8 +10,8 @@ use strum::IntoEnumIterator;
 use crate::block::{Block, BlockItem, Comparator, Eq::*, Field, BV};
 use crate::helpers::stringify_list;
 use crate::report::{
-    err, set_predicate, set_show_loaded_mods, set_show_vanilla, Confidence, ErrorKey, ErrorLoc,
-    FilterRule, PointedMessage, Severity,
+    err, set_log_once_defaults, set_predicate, set_show_loaded_mods, set_show_vanilla, Confidence,
+    ErrorKey, ErrorLoc, FilterRule, PointedMessage, Severity,
 };
 
 /// Checks for legacy ignore blocks (that no longer work) and report an error if they are present.
@@ -74,6 +74,17 @@ pub fn load_filter(config: &Block) {
             set_predicate(FilterRule::default());
         }
     }
+}
+
+pub fn load_log_once(config: &Block) {
+    assert_one_key("log_once", config);
+    // TODO
+    // if let Some(load_once) = config.get_field_block("log_once") {
+
+    // }
+    // else {
+    set_log_once_defaults();
+    // }
 }
 
 /// Load a vector of rules from the given block.
