@@ -30,14 +30,14 @@ impl DbKind for Alert {
 
         let loca = format!("alert_{key}_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
-        let loca = format!("alert_{key}_desc");
-        data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("alert_{key}_hint");
         data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("alert_{key}_action");
         data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("{key}_setting_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
+        let loca = format!("alert_{key}_desc");
+        data.localization.suggest(&loca, key);
 
         vd.req_field("script_context");
         let mut sc = ScopeContext::new(Scopes::None, key);
