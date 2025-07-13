@@ -39,47 +39,47 @@ bitflags! {
     #[rustfmt::skip] // table looks better with cfg on same line
     pub struct ModifKinds: u32 {
         // ModifKinds used by more than one game
-        const Character = 0x0001;
+        const Character = 1<<0;
         #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
-        const Country = 0x0002;
+        const Country = 1<<1;
         #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
-        const State = 0x0004;
+        const State = 1<<2;
         #[cfg(any(feature = "ck3", feature = "imperator"))]
-        const Province = 0x0008;
+        const Province = 1<<3;
 
-        #[cfg(feature = "ck3")] const County = 0x0010;
-        #[cfg(feature = "ck3")] const Terrain = 0x0020;
-        #[cfg(feature = "ck3")] const Culture = 0x0040;
-        #[cfg(feature = "ck3")] const Scheme = 0x0080;
-        #[cfg(feature = "ck3")] const TravelPlan = 0x0100;
+        #[cfg(feature = "ck3")] const County = 1<<4;
+        #[cfg(feature = "ck3")] const Terrain = 1<<5;
+        #[cfg(feature = "ck3")] const Culture = 1<<6;
+        #[cfg(feature = "ck3")] const Scheme = 1<<7;
+        #[cfg(feature = "ck3")] const TravelPlan = 1<<8;
 
-        #[cfg(feature = "vic3")] const Battle = 0x0010;
-        #[cfg(feature = "vic3")] const Building = 0x0020;
-        #[cfg(feature = "vic3")] const InterestGroup = 0x0040;
-        #[cfg(feature = "vic3")] const Market = 0x0080;
-        #[cfg(feature = "vic3")] const PoliticalMovement = 0x0100;
-        #[cfg(feature = "vic3")] const Tariff = 0x0200;
-        #[cfg(feature = "vic3")] const Tax = 0x0400;
-        #[cfg(feature = "vic3")] const Unit = 0x0800;
-        #[cfg(feature = "vic3")] const Goods = 0x1000;
-        #[cfg(feature = "vic3")] const MilitaryFormation = 0x2000;
-        #[cfg(feature = "vic3")] const PowerBloc = 0x4000;
+        #[cfg(feature = "vic3")] const Battle = 1<<4;
+        #[cfg(feature = "vic3")] const Building = 1<<5;
+        #[cfg(feature = "vic3")] const InterestGroup = 1<<6;
+        #[cfg(feature = "vic3")] const Market = 1<<7;
+        #[cfg(feature = "vic3")] const PoliticalMovement = 1<<8;
+        #[cfg(feature = "vic3")] const Tariff = 1<<9;
+        #[cfg(feature = "vic3")] const Tax = 1<<10;
+        #[cfg(feature = "vic3")] const Unit = 1<<11;
+        #[cfg(feature = "vic3")] const Goods = 1<<12;
+        #[cfg(feature = "vic3")] const MilitaryFormation = 1<<13;
+        #[cfg(feature = "vic3")] const PowerBloc = 1<<14;
 
-        #[cfg(feature = "hoi4")] const Aggressive = 0x0010;
-        #[cfg(feature = "hoi4")] const Ai = 0x0020;
-        #[cfg(feature = "hoi4")] const Air = 0x0040;
-        #[cfg(feature = "hoi4")] const Army = 0x0080;
-        #[cfg(feature = "hoi4")] const Autonomy = 0x0100;
-        #[cfg(feature = "hoi4")] const Defensive = 0x0200;
-        #[cfg(feature = "hoi4")] const GovernmentInExile = 0x0400;
-        #[cfg(feature = "hoi4")] const IntelligenceAgency = 0x0800;
-        #[cfg(feature = "hoi4")] const MilitaryAdvancements = 0x1000;
-        #[cfg(feature = "hoi4")] const Naval = 0x2000;
-        #[cfg(feature = "hoi4")] const Peace = 0x4000;
-        #[cfg(feature = "hoi4")] const Politics = 0x8000;
-        #[cfg(feature = "hoi4")] const Scientist = 0x0001_0000;
-        #[cfg(feature = "hoi4")] const UnitLeader = 0x0002_0000;
-        #[cfg(feature = "hoi4")] const WarProduction = 0x0004_0000;
+        #[cfg(feature = "hoi4")] const Aggressive = 1<<4;
+        #[cfg(feature = "hoi4")] const Ai = 1<<5;
+        #[cfg(feature = "hoi4")] const Air = 1<<6;
+        #[cfg(feature = "hoi4")] const Army = 1<<7;
+        #[cfg(feature = "hoi4")] const Autonomy = 1<<8;
+        #[cfg(feature = "hoi4")] const Defensive = 1<<9;
+        #[cfg(feature = "hoi4")] const GovernmentInExile = 1<<10;
+        #[cfg(feature = "hoi4")] const IntelligenceAgency = 1<<11;
+        #[cfg(feature = "hoi4")] const MilitaryAdvancements = 1<<12;
+        #[cfg(feature = "hoi4")] const Naval = 1<<13;
+        #[cfg(feature = "hoi4")] const Peace = 1<<14;
+        #[cfg(feature = "hoi4")] const Politics = 1<<15;
+        #[cfg(feature = "hoi4")] const Scientist = 1<<16;
+        #[cfg(feature = "hoi4")] const UnitLeader = 1<<17;
+        #[cfg(feature = "hoi4")] const WarProduction = 1<<18;
     }
 }
 
