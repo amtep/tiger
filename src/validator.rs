@@ -357,7 +357,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field in the block.
     /// `kind` is the kind of identifier expected here (for display to the user).
     /// Returns the field's value if the field is present.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(feature = "jomini")]
     pub fn field_identifier_or_flag(
         &mut self,
         name: &str,
@@ -1081,7 +1081,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_script_value`], but it can accept a literal `flag:something` value as well as a script value.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(feature = "jomini")]
     pub fn field_script_value_or_flag(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         self.field_check(name, |_, bv| {
             // TODO: pass max_severity value down

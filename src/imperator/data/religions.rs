@@ -33,7 +33,12 @@ impl DbKind for Religion {
         vd.req_field("color");
         vd.req_field("religion_category");
 
-        vd.field_choice("religion_category", &["prophets", "pantheon", "firetemples", "sages"]);
+        if let Some(category) = vd.field_value("religion_category") {
+            let loca = format!("religion_category_{category}");
+            data.verify_exists_implied(Item::Localization, &loca, key);
+            // TODO: figure out religion_pantheon_ loca
+        }
+        vd.field_bool("is_monotheistic");
         vd.field_bool("can_deify_ruler");
         vd.field_value("sacrifice_icon");
         vd.field_item("sacrifice_sound", Item::Sound);

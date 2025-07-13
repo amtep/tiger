@@ -402,3 +402,18 @@ pub fn validate_great_work_construction(
     vd.field_choice("locator", &["primary_great_work", "secondary_great_work", "great_work"]);
     vd.field_bool("is_ancient");
 }
+
+pub fn validate_war_score_value(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.req_field("local_var");
+    vd.field_target("target", sc, Scopes::Country);
+    // TODO: when local variables are tracked, also track this one
+    vd.field_value("local_var");
+}

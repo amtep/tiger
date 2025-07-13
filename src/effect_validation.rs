@@ -192,7 +192,7 @@ pub fn validate_save_scope(
 }
 
 /// A specific validator for the `save_scope_value` effect.
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(feature = "jomini")]
 pub fn validate_save_scope_value(
     _key: &Token,
     _block: &Block,

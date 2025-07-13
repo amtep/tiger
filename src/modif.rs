@@ -46,40 +46,44 @@ bitflags! {
         const State = 1<<2;
         #[cfg(any(feature = "ck3", feature = "imperator"))]
         const Province = 1<<3;
+        #[cfg(any(feature = "vic3", feature = "imperator"))]
+        const Unit = 1<<4;
 
-        #[cfg(feature = "ck3")] const County = 1<<4;
-        #[cfg(feature = "ck3")] const Terrain = 1<<5;
-        #[cfg(feature = "ck3")] const Culture = 1<<6;
-        #[cfg(feature = "ck3")] const Scheme = 1<<7;
-        #[cfg(feature = "ck3")] const TravelPlan = 1<<8;
+        #[cfg(feature = "ck3")] const County = 1<<5;
+        #[cfg(feature = "ck3")] const Terrain = 1<<6;
+        #[cfg(feature = "ck3")] const Culture = 1<<7;
+        #[cfg(feature = "ck3")] const Scheme = 1<<8;
+        #[cfg(feature = "ck3")] const TravelPlan = 1<<9;
 
-        #[cfg(feature = "vic3")] const Battle = 1<<4;
-        #[cfg(feature = "vic3")] const Building = 1<<5;
-        #[cfg(feature = "vic3")] const InterestGroup = 1<<6;
-        #[cfg(feature = "vic3")] const Market = 1<<7;
-        #[cfg(feature = "vic3")] const PoliticalMovement = 1<<8;
-        #[cfg(feature = "vic3")] const Tariff = 1<<9;
-        #[cfg(feature = "vic3")] const Tax = 1<<10;
-        #[cfg(feature = "vic3")] const Unit = 1<<11;
+        #[cfg(feature = "vic3")] const Battle = 1<<5;
+        #[cfg(feature = "vic3")] const Building = 1<<6;
+        #[cfg(feature = "vic3")] const InterestGroup = 1<<7;
+        #[cfg(feature = "vic3")] const Market = 1<<8;
+        #[cfg(feature = "vic3")] const PoliticalMovement = 1<<9;
+        #[cfg(feature = "vic3")] const Tariff = 1<<10;
+        #[cfg(feature = "vic3")] const Tax = 1<<11;
         #[cfg(feature = "vic3")] const Goods = 1<<12;
         #[cfg(feature = "vic3")] const MilitaryFormation = 1<<13;
         #[cfg(feature = "vic3")] const PowerBloc = 1<<14;
 
-        #[cfg(feature = "hoi4")] const Aggressive = 1<<4;
-        #[cfg(feature = "hoi4")] const Ai = 1<<5;
-        #[cfg(feature = "hoi4")] const Air = 1<<6;
-        #[cfg(feature = "hoi4")] const Army = 1<<7;
-        #[cfg(feature = "hoi4")] const Autonomy = 1<<8;
-        #[cfg(feature = "hoi4")] const Defensive = 1<<9;
-        #[cfg(feature = "hoi4")] const GovernmentInExile = 1<<10;
-        #[cfg(feature = "hoi4")] const IntelligenceAgency = 1<<11;
-        #[cfg(feature = "hoi4")] const MilitaryAdvancements = 1<<12;
-        #[cfg(feature = "hoi4")] const Naval = 1<<13;
-        #[cfg(feature = "hoi4")] const Peace = 1<<14;
-        #[cfg(feature = "hoi4")] const Politics = 1<<15;
-        #[cfg(feature = "hoi4")] const Scientist = 1<<16;
-        #[cfg(feature = "hoi4")] const UnitLeader = 1<<17;
-        #[cfg(feature = "hoi4")] const WarProduction = 1<<18;
+        #[cfg(feature = "imperator")] const Legion = 1<<5;
+        #[cfg(feature = "imperator")] const CountryCulture = 1<<6;
+
+        #[cfg(feature = "hoi4")] const Aggressive = 1<<5;
+        #[cfg(feature = "hoi4")] const Ai = 1<<6;
+        #[cfg(feature = "hoi4")] const Air = 1<<7;
+        #[cfg(feature = "hoi4")] const Army = 1<<8;
+        #[cfg(feature = "hoi4")] const Autonomy = 1<<9;
+        #[cfg(feature = "hoi4")] const Defensive = 1<<10;
+        #[cfg(feature = "hoi4")] const GovernmentInExile = 1<<11;
+        #[cfg(feature = "hoi4")] const IntelligenceAgency = 1<<12;
+        #[cfg(feature = "hoi4")] const MilitaryAdvancements = 1<<13;
+        #[cfg(feature = "hoi4")] const Naval = 1<<14;
+        #[cfg(feature = "hoi4")] const Peace = 1<<15;
+        #[cfg(feature = "hoi4")] const Politics = 1<<16;
+        #[cfg(feature = "hoi4")] const Scientist = 1<<17;
+        #[cfg(feature = "hoi4")] const UnitLeader = 1<<18;
+        #[cfg(feature = "hoi4")] const WarProduction = 1<<19;
     }
 }
 
@@ -196,13 +200,14 @@ pub fn validate_modifs<'a>(
     });
 }
 
-#[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
 pub fn verify_modif_exists(key: &Token, data: &Everything, kinds: ModifKinds, sev: Severity) {
     let lookup_modif = match Game::game() {
         #[cfg(feature = "ck3")]
         Game::Ck3 => crate::ck3::tables::modifs::lookup_modif,
         #[cfg(feature = "vic3")]
         Game::Vic3 => crate::vic3::tables::modifs::lookup_modif,
+        #[cfg(feature = "imperator")]
+        Game::Imperator => crate::imperator::tables::modifs::lookup_modif,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::modifs::lookup_modif,
     };

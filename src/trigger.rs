@@ -22,7 +22,7 @@ use crate::hoi4::effect_validation::validate_flag_name;
 use crate::hoi4::variables::validate_variable;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "imperator"))]
 use crate::modif::{verify_modif_exists, ModifKinds};
 use crate::report::{err, fatal, tips, warn, ErrorKey, Severity};
 use crate::scopes::{
@@ -1597,7 +1597,7 @@ fn validate_argument_internal(
                 sc.unstash_builder(stash);
             }
         }
-        #[cfg(feature = "vic3")]
+        #[cfg(any(feature = "vic3", feature = "imperator"))]
         ArgumentValue::Modif => {
             // TODO: deduce the ModifKinds from the `this` scope
             verify_modif_exists(arg, data, ModifKinds::all(), Severity::Warning);

@@ -16,5 +16,14 @@ pub fn display_fmt(mk: ModifKinds, f: &mut Formatter) -> Result<(), std::fmt::Er
     if mk.contains(ModifKinds::State) {
         vec.push("state");
     }
+    if mk.contains(ModifKinds::Unit) {
+        vec.push("unit");
+    }
+    if mk.contains(ModifKinds::Legion) {
+        vec.push("legion");
+    }
+    if mk.contains(ModifKinds::CountryCulture) {
+        vec.push("country culture");
+    }
     write!(f, "{}", vec.join(", "))
 }

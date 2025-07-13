@@ -62,6 +62,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Legion, "legion_unit", Scopes::Unit),
     (Scopes::Region, "neighbor_region", Scopes::Region),
     (Scopes::Region, "region_area", Scopes::Area),
+    (Scopes::Region, "region_governorship", Scopes::Governorship),
     (Scopes::Region, "region_province", Scopes::Province),
     (Scopes::Region, "region_province_including_unownable", Scopes::Province),
     (Scopes::Region, "region_state", Scopes::State),

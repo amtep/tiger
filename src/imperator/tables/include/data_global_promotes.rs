@@ -27,6 +27,7 @@
     ("GetCultureGroup", Args::Args(&[IType(Item::CultureGroup)]), Imperator(CultureGroup)),
     ("GetDeityDefinition", Args::Args(&[IType(Item::Deity)]), Imperator(Deity)),
     ("GetDiplomaticStance", Args::Args(&[IType(Item::DiplomaticStance)]), Imperator(DiplomaticStance)),
+    ("GetGlobalVariable", Args::Args(&[DType(Unknown)]), Scope),
     ("GetHeritage", Args::Args(&[IType(Item::Heritage)]), Imperator(Heritage)),
     ("GetInvention", Args::Args(&[IType(Item::Invention)]), Imperator(Invention)),
     ("GetLegionDistinction", Args::Args(&[IType(Item::LegionDistinction)]), Imperator(Distinction)),

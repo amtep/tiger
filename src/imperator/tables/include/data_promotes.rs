@@ -30,6 +30,7 @@
     ("AccessVariable", Imperator(VariableInspectorEntry), Args::Unknown, Imperator(VariableInspectorVariable)),
     ("AccessVariableLists", Imperator(EventTargetSetupContext), Args::Unknown, Imperator(VariableListStore)),
     ("AccessVariables", Imperator(EventTargetSetupContext), Args::Unknown, Imperator(VariableStore)),
+    ("AddList", TopScope, Args::Unknown, TopScope),
     ("AddScope", TopScope, Args::Unknown, TopScope),
     ("Amount", Imperator(BrushSettings), Args::Unknown, Imperator(BrushFloat)),
     ("AreaDefinition", Scope, Args::Unknown, Imperator(Area)),

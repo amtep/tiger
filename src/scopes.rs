@@ -318,7 +318,7 @@ pub enum ArgumentValue {
     #[cfg(feature = "ck3")]
     TraitTrack,
     /// The value must be the name of a modif
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "imperator"))]
     Modif,
     /// The value must be a single word
     #[cfg(any(feature = "vic3", feature = "ck3"))]

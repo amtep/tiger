@@ -204,6 +204,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::None, "flag", Scopes::Flag, UncheckedValue),
         (Scopes::None, "global_var", Scopes::all(), UncheckedValue),
         (Scopes::None, "local_var", Scopes::all(), UncheckedValue),
+        (Scopes::None, "modifier", Scopes::Value, Modif), // TODO: check input scopes
         (Scopes::None, "p", Scopes::Province, UncheckedValue),
         (Scopes::None, "religion", Scopes::Religion, Item(Item::Religion)),
         (Scopes::None, "scope", Scopes::all(), UncheckedValue),
