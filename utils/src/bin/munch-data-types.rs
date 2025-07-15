@@ -366,6 +366,38 @@ fn parse_datafunction(
     }
 }
 
+fn fill_in_functions(
+    promotes: &HashMap<String, NonGlobal>,
+    functions: &mut HashMap<String, NonGlobal>,
+) {
+    for (name, function) in functions.iter_mut() {
+        if let Some(promote) = promotes.get(name) {
+            if function.rtype == "Unknown"
+                && promote.rtype != "Unknown"
+                && function.args == promote.args
+            {
+                function.rtype.clone_from(&promote.rtype);
+            }
+        }
+    }
+}
+
+fn fill_in_global_functions(
+    promotes: &HashMap<String, Global>,
+    functions: &mut HashMap<String, Global>,
+) {
+    for (name, function) in functions.iter_mut() {
+        if let Some(promote) = promotes.get(name) {
+            if function.rtype == "Unknown"
+                && promote.rtype != "Unknown"
+                && function.args == promote.args
+            {
+                function.rtype.clone_from(&promote.rtype);
+            }
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let args = Cli::parse();
 
@@ -418,6 +450,9 @@ fn main() -> Result<()> {
     merge_globals(&mut global_functions, new_global_functions);
     merge_nonglobals(&mut promotes, new_promotes);
     merge_nonglobals(&mut functions, new_functions);
+
+    fill_in_functions(&promotes, &mut functions);
+    fill_in_global_functions(&global_promotes, &mut global_functions);
 
     write_types(new_types, args.out.join("datatypes.rs"), args.game)?;
     write_globals(global_promotes, args.out.join("data_global_promotes.rs"))?;
