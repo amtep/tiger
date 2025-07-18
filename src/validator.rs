@@ -1879,7 +1879,6 @@ impl<'a> Validator<'a> {
         for Field(key, cmp, bv) in self.block.iter_fields() {
             self.expect_eq_qeq(key, *cmp);
             if !self.known_fields.contains(&key.as_str()) {
-                self.known_fields.push(key.as_str());
                 f(key, bv);
             }
         }
@@ -1893,7 +1892,6 @@ impl<'a> Validator<'a> {
             if let Some(block) = bv.get_block() {
                 self.expect_eq_qeq(key, *cmp);
                 if !self.known_fields.contains(&key.as_str()) {
-                    self.known_fields.push(key.as_str());
                     f(key, block);
                 }
             }
@@ -1908,7 +1906,6 @@ impl<'a> Validator<'a> {
             if let Some(value) = bv.get_value() {
                 self.expect_eq_qeq(key, *cmp);
                 if !self.known_fields.contains(&key.as_str()) {
-                    self.known_fields.push(key.as_str());
                     f(key, value);
                 }
             }
