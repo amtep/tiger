@@ -22,6 +22,7 @@ pub use crate::everything::Everything;
 pub use crate::fileset::FileKind;
 pub use crate::game::Game;
 pub use crate::item::Item;
+pub use crate::launcher_settings::get_version_from_launcher;
 #[cfg(feature = "vic3")]
 pub use crate::mod_metadata::ModMetadata;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
@@ -60,6 +61,7 @@ mod game;
 mod gui;
 mod helpers;
 mod item;
+mod launcher_settings;
 mod lowercase;
 mod macros;
 #[cfg(feature = "vic3")]

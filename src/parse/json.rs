@@ -17,6 +17,7 @@ enum State {
     Neutral,
     QString,
     Id,
+    Number,
 }
 
 struct ParseLevel {
@@ -181,6 +182,10 @@ fn parse(blockloc: Loc, content: &str) -> Block {
                     token_start = loc;
                     current_id.push(c);
                     state = State::Id;
+                } else if c.is_ascii_digit() {
+                    token_start = loc;
+                    current_id.push(c);
+                    state = State::Number;
                 } else if c == ':' {
                     parser.colon(loc);
                 } else if c == ',' {
@@ -244,6 +249,34 @@ fn parse(blockloc: Loc, content: &str) -> Block {
                     current_id.push(c);
                 }
             }
+            State::Number => {
+                if c.is_ascii_digit() || c == '.' {
+                    current_id.push(c);
+                } else {
+                    let token = Token::new(&take(&mut current_id), token_start);
+                    parser.token(token);
+                    state = State::Neutral;
+                    if c.is_ascii_whitespace() {
+                    } else if c == '"' {
+                        token_start = loc;
+                        state = State::QString;
+                    } else if c == ':' {
+                        parser.colon(loc);
+                    } else if c == ',' {
+                        parser.comma(loc);
+                    } else if c == '{' {
+                        parser.open_bracket(loc, '{');
+                    } else if c == '}' {
+                        parser.close_bracket(loc, '}');
+                    } else if c == '[' {
+                        parser.open_bracket(loc, '[');
+                    } else if c == ']' {
+                        parser.close_bracket(loc, ']');
+                    } else {
+                        Parser::unknown_char(c, loc);
+                    }
+                }
+            }
         }
 
         if c == '\n' {
@@ -270,6 +303,10 @@ fn parse(blockloc: Loc, content: &str) -> Block {
                 let info = "expected only true or false";
                 warn(ErrorKey::ParseError).msg(msg).info(info).loc(token).push();
             }
+        }
+        State::Number => {
+            let token = Token::new(&current_id, token_start);
+            parser.token(token);
         }
         State::Neutral => (),
     }

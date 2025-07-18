@@ -7,14 +7,15 @@ use tiger_lib::ModFile;
 #[cfg(feature = "vic3")]
 use tiger_lib::ModMetadata;
 use tiger_lib::{
-    disable_ansi_colors, emit_reports, set_show_loaded_mods, set_show_vanilla, suppress_from_json,
-    validate_config_file, Everything,
+    disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
+    set_show_vanilla, suppress_from_json, validate_config_file, Everything,
 };
 
 use crate::gamedir::{
     find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
 };
 use crate::update::update;
+use crate::version::warn_versions;
 use crate::GameConsts;
 
 #[derive(Parser)]
@@ -118,9 +119,6 @@ pub fn run(
                     .map_err(|_| eprintln!("Failed to enable ANSI support for Windows10 users. Continuing probably without colored output."));
             }
 
-            eprintln!("This validator was made for {name} version {version}.");
-            eprintln!("If you are using a newer version of {name}, it may be inaccurate.");
-
             if args.game.is_none() {
                 args.game = find_game_directory_steam(app_id).ok();
             }
@@ -148,6 +146,23 @@ pub fn run(
                 }
             } else {
                 bail!("Cannot find {name_short} directory. Please supply it as the --game option.");
+            }
+
+            if let Some(ref game_dir) = args.game {
+                if let Ok(launcher_game_version) = get_version_from_launcher(game_dir) {
+                    if warn_versions(name, version, &launcher_game_version).is_err() {
+                        eprintln!("Tiger was made for {name} version {version}.");
+                        eprintln!(
+                            "Comparing this to the game's version {launcher_game_version} failed."
+                        );
+                        eprintln!(
+                            "If you are using a newer version of {name}, it may be inaccurate."
+                        );
+                    }
+                } else {
+                    eprintln!("Tiger was made for {name} version {version}.");
+                    eprintln!("If you are using a newer version of {name}, it may be inaccurate.");
+                }
             }
 
             args.config = validate_config_file(args.config);

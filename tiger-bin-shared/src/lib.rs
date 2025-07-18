@@ -2,6 +2,7 @@ mod auto;
 mod gamedir;
 mod tiger;
 mod update;
+mod version;
 
 /// String constants associated with the game being verified.
 #[allow(missing_copy_implementations)]
