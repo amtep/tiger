@@ -1777,29 +1777,36 @@ pub enum Trigger {
 pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
     match (Game::game(), scope_trigger(name, data)) {
         #[cfg(feature = "ck3")]
-        (Game::Ck3, Some((
-            s,
-            Trigger::CompareValue
-            | Trigger::CompareValueWarnEq
-            | Trigger::CompareDate
-            | Trigger::SetValue
-            | Trigger::CompareValueOrBlock(_)
-            | Trigger::CompareChoice(_),
-        ))) => Some(s),
+        (
+            Game::Ck3,
+            Some((
+                s,
+                Trigger::CompareValue
+                | Trigger::CompareValueWarnEq
+                | Trigger::CompareDate
+                | Trigger::SetValue
+                | Trigger::CompareValueOrBlock(_)
+                | Trigger::CompareChoice(_),
+            )),
+        ) => Some(s),
         #[cfg(feature = "vic3")]
-        (Game::Vic3, Some((
-            s,
-            Trigger::CompareValue
-            | Trigger::CompareDate
-            | Trigger::ItemOrCompareValue(_)
-            | Trigger::CompareChoice(_),
-        ))) => Some(s),
+        (
+            Game::Vic3,
+            Some((
+                s,
+                Trigger::CompareValue
+                | Trigger::CompareDate
+                | Trigger::ItemOrCompareValue(_)
+                | Trigger::CompareChoice(_),
+            )),
+        ) => Some(s),
         #[cfg(feature = "imperator")]
         (Game::Imperator, Some((s, Trigger::CompareValue | Trigger::CompareDate))) => Some(s),
         #[cfg(feature = "hoi4")]
-        (Game::Hoi4, Some((s, Trigger::CompareValue | Trigger::CompareValueWarnEq | Trigger::CompareDate))) => {
-            Some(s)
-        }
+        (
+            Game::Hoi4,
+            Some((s, Trigger::CompareValue | Trigger::CompareValueWarnEq | Trigger::CompareDate)),
+        ) => Some(s),
         _ => std::option::Option::None,
     }
 }
