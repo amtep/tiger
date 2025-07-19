@@ -1692,7 +1692,7 @@ impl<'a> Validator<'a> {
 
     /// If `name` is present in the block, emit a low-severity warning together with the helpful message `msg`.
     /// This is for harmless but unneeded fields.
-    #[cfg(not(feature = "imperator"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
     pub fn advice_field(&mut self, name: &str, msg: &str) {
         if let Some(key) = self.block.get_key(name) {
             self.known_fields.push(key.as_str());

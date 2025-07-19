@@ -1292,6 +1292,8 @@ impl Everything {
                 Game::Vic3 => &crate::vic3::tables::sounds::SOUNDS_SET,
                 #[cfg(feature = "imperator")]
                 Game::Imperator => &crate::imperator::tables::sounds::SOUNDS_SET,
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => unimplemented!(),
             };
             sounds_set.contains(&Lowercase::new(name))
         }

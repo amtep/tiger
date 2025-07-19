@@ -397,6 +397,8 @@ where
                 // TODO: what is the correct scope here?
                 sc = ScopeContext::new(Scopes::Country, key);
             }
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => unimplemented!(),
         }
         vd.multi_field_validated_block("trigger", |block, data| {
             validate_trigger_max_sev(block, data, &mut sc, Tooltipped::No, Severity::Warning);
