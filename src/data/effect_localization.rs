@@ -56,6 +56,8 @@ impl EffectLocalization {
                 let msg = "missing `_past` perspective";
                 warn(ErrorKey::MissingPerspective).msg(msg).loc(caller).loc_msg(key, "here").push();
             }
+            #[cfg(feature = "hoi4")]
+            Tooltipped::Inner => unimplemented!(),
         }
     }
 }

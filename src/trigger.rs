@@ -724,7 +724,7 @@ fn match_trigger_bv(
     // True iff it's probably a mistake if the comparator is Comparator::Equals
     #[cfg(any(feature = "ck3", feature = "hoi4"))]
     let mut warn_if_eq = false;
-    #[cfg(any(feature = "imperator", feature = "vic3"))]
+    #[cfg(not(any(feature = "ck3", feature = "hoi4")))]
     let warn_if_eq = false;
 
     match trigger {
@@ -1775,31 +1775,38 @@ pub enum Trigger {
 /// This function checks if the trigger is one that can be used at the end of a scope chain on the
 /// right-hand side of a comparator.
 pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
-    match scope_trigger(name, data) {
+    match (Game::game(), scope_trigger(name, data)) {
         #[cfg(feature = "ck3")]
-        Some((
-            s,
-            Trigger::CompareValue
-            | Trigger::CompareValueWarnEq
-            | Trigger::CompareDate
-            | Trigger::SetValue
-            | Trigger::CompareValueOrBlock(_)
-            | Trigger::CompareChoice(_),
-        )) => Some(s),
+        (
+            Game::Ck3,
+            Some((
+                s,
+                Trigger::CompareValue
+                | Trigger::CompareValueWarnEq
+                | Trigger::CompareDate
+                | Trigger::SetValue
+                | Trigger::CompareValueOrBlock(_)
+                | Trigger::CompareChoice(_),
+            )),
+        ) => Some(s),
         #[cfg(feature = "vic3")]
-        Some((
-            s,
-            Trigger::CompareValue
-            | Trigger::CompareDate
-            | Trigger::ItemOrCompareValue(_)
-            | Trigger::CompareChoice(_),
-        )) => Some(s),
+        (
+            Game::Vic3,
+            Some((
+                s,
+                Trigger::CompareValue
+                | Trigger::CompareDate
+                | Trigger::ItemOrCompareValue(_)
+                | Trigger::CompareChoice(_),
+            )),
+        ) => Some(s),
         #[cfg(feature = "imperator")]
-        Some((s, Trigger::CompareValue | Trigger::CompareDate)) => Some(s),
+        (Game::Imperator, Some((s, Trigger::CompareValue | Trigger::CompareDate))) => Some(s),
         #[cfg(feature = "hoi4")]
-        Some((s, Trigger::CompareValue | Trigger::CompareValueWarnEq | Trigger::CompareDate)) => {
-            Some(s)
-        }
+        (
+            Game::Hoi4,
+            Some((s, Trigger::CompareValue | Trigger::CompareValueWarnEq | Trigger::CompareDate)),
+        ) => Some(s),
         _ => std::option::Option::None,
     }
 }

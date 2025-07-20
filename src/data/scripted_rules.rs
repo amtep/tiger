@@ -64,6 +64,10 @@ static SCRIPTED_RULE_SCOPES_MAP: LazyLock<TigerHashMap<&'static str, ScriptedRul
             Game::Ck3 => crate::ck3::tables::rules::SCRIPTED_RULES,
             #[cfg(feature = "vic3")]
             Game::Vic3 => crate::vic3::tables::rules::SCRIPTED_RULES,
+            #[cfg(feature = "imperator")]
+            Game::Imperator => unimplemented!(),
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => unimplemented!(),
         };
         build_scripted_rule_hashmap(rules)
     });

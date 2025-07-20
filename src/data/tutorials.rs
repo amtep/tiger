@@ -205,5 +205,9 @@ fn game_tutorial_scope() -> Scopes {
         Game::Ck3 => Scopes::Character,
         #[cfg(feature = "vic3")]
         Game::Vic3 => Scopes::Country,
+        #[cfg(feature = "imperator")]
+        Game::Imperator => unimplemented!(),
+        #[cfg(feature = "hoi4")]
+        Game::Hoi4 => unimplemented!(),
     }
 }

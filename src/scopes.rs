@@ -61,6 +61,8 @@ bitflags! {
         const State = 0x0000_1000;
         #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
         const War = 0x0000_2000;
+        #[cfg(any(feature = "vic3", feature = "hoi4"))]
+        const StrategicRegion = 0x0000_4000;
 
         // Scope types for CK3
         #[cfg(feature = "ck3")] const Accolade = 0x0001_0000;
@@ -161,7 +163,7 @@ bitflags! {
         #[cfg(feature = "vic3")] const ShippingLanes = 0x0008_0000_0000_0000;
         #[cfg(feature = "vic3")] const StateRegion = 0x0010_0000_0000_0000;
         #[cfg(feature = "vic3")] const StateTrait = 0x0020_0000_0000_0000;
-        #[cfg(feature = "vic3")] const StrategicRegion = 0x0040_0000_0000_0000;
+        // Available bitflag 0x0040_0000_0000_0000;
         #[cfg(feature = "vic3")] const Technology = 0x0080_0000_0000_0000;
         #[cfg(feature = "vic3")] const TechnologyStatus = 0x0100_0000_0000_0000;
         #[cfg(feature = "vic3")] const Theater = 0x0200_0000_0000_0000;
@@ -223,7 +225,7 @@ bitflags! {
         #[cfg(feature = "hoi4")] const PurchaseContract = 0x0020_0000;
         #[cfg(feature = "hoi4")] const RaidInstance = 0x0040_0000;
         #[cfg(feature = "hoi4")] const SpecialProject = 0x0080_0000;
-        #[cfg(feature = "hoi4")] const StrategicRegion = 0x0100_0000;
+        // Available bitflag 0x0100_0000;
         // These two "combined" ones represent the odd scopes created for events.
         #[cfg(feature = "hoi4")] const CombinedCountryAndState = 0x0200_0000;
         #[cfg(feature = "hoi4")] const CombinedCountryAndCharacter = 0x0400_0000;

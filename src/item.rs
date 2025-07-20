@@ -708,6 +708,8 @@ impl Item {
                 Game::Vic3 => "common/cultures/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/cultures/",
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => unreachable!(),
             },
             #[cfg(feature = "jomini")]
             Item::CustomLocalization => "common/customizable_localization/",
@@ -755,6 +757,8 @@ impl Item {
                 Game::Vic3 => "common/government_types/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/governments/",
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => unreachable!(),
             },
             Item::GuiLayer => "gui/",
             Item::GuiTemplate => "gui/",
@@ -816,6 +820,8 @@ impl Item {
                 Game::Vic3 => "common/religions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/religions/",
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => unreachable!(),
             },
             Item::ScriptedEffect => "common/scripted_effects/",
             Item::ScriptedGui => "common/scripted_guis/",
@@ -858,6 +864,8 @@ impl Item {
                 Game::Vic3 => "common/ai_strategies/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/ai_strategy/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
             Item::Building => "common/buildings/",
@@ -867,6 +875,8 @@ impl Item {
                 Game::Ck3 => "history/characters/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/characters/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::CharacterTemplate => match Game::game() {
@@ -874,6 +884,8 @@ impl Item {
                 Game::Ck3 => "common/scripted_character_templates/",
                 #[cfg(feature = "vic3")]
                 Game::Vic3 => "common/character_templates/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "vic3", feature = "imperator"))]
             Item::CharacterTrait => match Game::game() {
@@ -881,6 +893,8 @@ impl Item {
                 Game::Vic3 => "common/character_traits/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/traits/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "imperator", feature = "hoi4"))]
             Item::CombatTactic => match Game::game() {
@@ -888,6 +902,8 @@ impl Item {
                 Game::Imperator => "common/combat_tactics/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/combat_tactics.txt", // TODO HOI4
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
             Item::Country => match Game::game() {
@@ -897,6 +913,8 @@ impl Item {
                 Game::Imperator => "setup/countries/countries.txt",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/countries/", // TODO HOI4
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "ck3", feature = "imperator"))]
             Item::DeathReason => "common/deathreasons/",
@@ -918,6 +936,8 @@ impl Item {
                 Game::Imperator => "common/laws/",
                 #[cfg(feature = "vic3")]
                 Game::Vic3 => "common/law_groups/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::Message => "common/messages",
@@ -927,6 +947,8 @@ impl Item {
                 Game::Imperator => "common/missions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/script_enums.txt",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "vic3", feature = "imperator"))]
             Item::PopType => "common/pop_types/",
@@ -936,6 +958,8 @@ impl Item {
                 Game::Ck3 => "map_data/geographical_regions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "map_data/regions.txt",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "vic3", feature = "hoi4"))]
             Item::StrategicRegion => match Game::game() {
@@ -943,6 +967,8 @@ impl Item {
                 Game::Vic3 => "common/strategic_regions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "map/strategicregions/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "vic3", feature = "imperator"))]
             Item::SubjectType => "common/subject_types/",
@@ -952,6 +978,8 @@ impl Item {
                 Game::Vic3 => "common/technology/technologies/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/technologies/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::TutorialLesson => "common/tutorial_lessons",
@@ -965,6 +993,8 @@ impl Item {
                 Game::Vic3 => "",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/wargoals",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
             },
 
             #[cfg(feature = "ck3")]
