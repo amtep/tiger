@@ -652,15 +652,12 @@ impl<'a> ValueParser<'a> {
 
     fn parse_markup(&mut self) {
         let loc = self.loc;
-        let mut text = "#".to_string();
         self.next_char(); // skip the #
         if self.peek() == Some('#') {
             // double # means a literal #
             self.next_char();
-            // text already contains the #
-            self.value.push(LocaValue::Text(Token::new(&text, loc)));
+            self.value.push(LocaValue::Text(Token::from_static_str("#", loc)));
         } else if self.peek() == Some('!') {
-            text.push('!');
             self.next_char();
             self.value.push(LocaValue::MarkupEnd);
         } else {
@@ -670,6 +667,7 @@ impl<'a> ValueParser<'a> {
             // #font:TitleFont
             // #tooltippable;positive_value;TOOLTIP:expedition_progress_explanation_tt
             // #TOOLTIP:GAME_TRAIT,lifestyle_physician,[GetNullCharacter]
+            // #tooltip:[Party.GetTooltipTag]|[InterestGroup.GetTooltipTag],INTEREST_GROUP_AFFILIATION_BREAKDOWN
             enum State {
                 InKey(String),
                 InValue(String, String, Loc, usize),
@@ -718,9 +716,15 @@ impl<'a> ValueParser<'a> {
                                 warn(ErrorKey::Markup).msg(msg).loc(self.loc).push();
                                 self.value.push(LocaValue::Error);
                             }
-                        } else if c == '.' || c == ',' || c.is_alphanumeric() || c == '_' {
+                        } else if c == '.'
+                            || c == ','
+                            || c.is_alphanumeric()
+                            || c == '_'
+                            || c == '|'
+                        {
                             // . and , are freely allowed in markup values because with #tooltip
                             // the value might be a loca key.
+                            // | is allowed because in some tooltips it separates components of the tooltip tag
                             value.push(c);
                         } else if c == '[' {
                             // Generating part of the markup with a code block is valid.
@@ -735,7 +739,6 @@ impl<'a> ValueParser<'a> {
                 }
                 if !consumed {
                     self.next_char();
-                    text.push(c);
                 }
             }
             // Clean up leftover state at end
