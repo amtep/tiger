@@ -88,16 +88,15 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
 
     vd.field_target("placement", sc, Scopes::Country | Scopes::State | Scopes::StateRegion);
 
-    vd.field_item_or_target("minor_left_icon", sc, Item::File, Scopes::Country | Scopes::Character);
-    vd.field_item_or_target(
-        "minor_right_icon",
-        sc,
-        Item::File,
-        Scopes::Country | Scopes::Character,
-    );
-    vd.field_item_or_target("left_icon", sc, Item::File, Scopes::Country | Scopes::Character);
-    vd.field_item_or_target("right_icon", sc, Item::File, Scopes::Country | Scopes::Character);
-    vd.field_item_or_target("center_icon", sc, Item::File, Scopes::Country | Scopes::Character);
+    // Which scope types are accepted in these icons depends on the gui files,
+    // which may be modded so we can't be certain.
+    // In principle, any scope that supports GetIcon in the datatype functions can work,
+    // and that's approximately all of them.
+    vd.field_item_or_target("minor_left_icon", sc, Item::File, Scopes::all_but_none());
+    vd.field_item_or_target("minor_right_icon", sc, Item::File, Scopes::all_but_none());
+    vd.field_item_or_target("left_icon", sc, Item::File, Scopes::all_but_none());
+    vd.field_item_or_target("right_icon", sc, Item::File, Scopes::all_but_none());
+    vd.field_item_or_target("center_icon", sc, Item::File, Scopes::all_but_none());
 
     if !hidden {
         vd.req_field("option");
