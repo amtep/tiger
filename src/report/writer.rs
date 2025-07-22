@@ -132,6 +132,10 @@ fn log_line_carets(
     spaces: usize,
     severity: Severity,
 ) {
+    if pointer.length == 0 {
+        return;
+    }
+
     let mut spacing = String::new();
     for c in line.chars().take((pointer.loc.column as usize).saturating_sub(removed + 1)) {
         // There might still be tabs in the non-leading space
@@ -157,7 +161,7 @@ fn log_line_carets(
         errors.styles.style(Styled::Tag(severity, true)).paint(format!(
             "{:^^width$}",
             "",
-            width = pointer.length.max(1)
+            width = pointer.length
         )),
         errors.styles.style(Styled::Default).paint(" "),
         errors

@@ -7,7 +7,7 @@ use crate::validator::ValueValidator;
 /// This trait lets the error reporting functions accept a variety of things as the error locator.
 pub trait ErrorLoc {
     fn loc_length(&self) -> usize {
-        0
+        1
     }
     fn into_loc(self) -> Loc;
 }
