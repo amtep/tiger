@@ -267,10 +267,12 @@ pub fn run(
             if args.pod {
                 everything.check_pod();
             }
-            emit_reports(args.json);
+
             if args.unused {
                 everything.check_unused();
             }
+
+            emit_reports(args.json);
 
             // Properly dropping `everything` takes a noticeable amount of time, and we're exiting anyway.
             forget(everything);

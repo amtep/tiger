@@ -5,7 +5,7 @@
 //!   without pointers, which would lead to panics.
 
 use crate::report::{
-    log, report_struct::LogReportPointers, Confidence, ErrorKey, ErrorLoc, LogReportMetadata,
+    log, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, LogReportStyle,
     PointedMessage, Severity,
 };
 
@@ -97,9 +97,9 @@ impl ReportBuilderStage2 {
         self
     }
 
-    pub fn loc<E: ErrorLoc>(self, eloc: E) -> ReportBuilderStage3 {
+    pub fn loc<E: ErrorLoc>(self, eloc: E) -> ReportBuilderFull {
         let length = eloc.loc_length();
-        ReportBuilderStage3 {
+        ReportBuilderFull {
             stage1: self.stage1,
             msg: self.msg,
             info: self.info,
@@ -107,9 +107,9 @@ impl ReportBuilderStage2 {
         }
     }
 
-    pub fn loc_msg<E: ErrorLoc, S: Into<String>>(self, eloc: E, msg: S) -> ReportBuilderStage3 {
+    pub fn loc_msg<E: ErrorLoc, S: Into<String>>(self, eloc: E, msg: S) -> ReportBuilderFull {
         let length = eloc.loc_length();
-        ReportBuilderStage3 {
+        ReportBuilderFull {
             stage1: self.stage1,
             msg: self.msg,
             info: self.info,
@@ -117,21 +117,30 @@ impl ReportBuilderStage2 {
         }
     }
 
-    pub fn pointers(self, pointers: LogReportPointers) -> ReportBuilderStage3 {
-        ReportBuilderStage3 { stage1: self.stage1, msg: self.msg, info: self.info, pointers }
+    pub fn pointers(self, pointers: LogReportPointers) -> ReportBuilderFull {
+        ReportBuilderFull { stage1: self.stage1, msg: self.msg, info: self.info, pointers }
+    }
+
+    pub fn abbreviated<E: ErrorLoc>(self, eloc: E) -> ReportBuilderAbbreviated {
+        ReportBuilderAbbreviated {
+            stage1: self.stage1,
+            msg: self.msg,
+            info: self.info,
+            pointers: vec![PointedMessage { loc: eloc.into_loc(), length: 0, msg: None }],
+        }
     }
 }
 
 #[derive(Debug)]
 #[must_use]
-pub struct ReportBuilderStage3 {
+pub struct ReportBuilderFull {
     stage1: ReportBuilderStage1,
     msg: String,
     info: Option<String>,
     pointers: LogReportPointers,
 }
 
-impl ReportBuilderStage3 {
+impl ReportBuilderFull {
     pub fn loc_msg<E: ErrorLoc, S: Into<String>>(mut self, eloc: E, msg: S) -> Self {
         let length = eloc.loc_length();
         self.pointers.push(PointedMessage { loc: eloc.into_loc(), length, msg: Some(msg.into()) });
@@ -157,6 +166,37 @@ impl ReportBuilderStage3 {
                 confidence: self.stage1.2,
                 msg: self.msg,
                 info: self.info,
+                style: LogReportStyle::Full,
+            },
+            self.pointers,
+        )
+    }
+    /// Build the report and push it to be printed.
+    pub fn push(self) {
+        log(self.build());
+    }
+}
+
+#[derive(Debug)]
+#[must_use]
+pub struct ReportBuilderAbbreviated {
+    stage1: ReportBuilderStage1,
+    msg: String,
+    info: Option<String>,
+    pointers: LogReportPointers,
+}
+
+impl ReportBuilderAbbreviated {
+    /// Build the report and return it.
+    pub fn build(self) -> (LogReportMetadata, LogReportPointers) {
+        (
+            LogReportMetadata {
+                key: self.stage1.0,
+                severity: self.stage1.1,
+                confidence: self.stage1.2,
+                msg: self.msg,
+                info: self.info,
+                style: LogReportStyle::Abbreviated,
             },
             self.pointers,
         )

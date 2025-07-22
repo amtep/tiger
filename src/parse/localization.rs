@@ -61,7 +61,7 @@ impl LocaParser {
                 chars.next();
             }
         } else {
-            warn(ErrorKey::Encoding).msg("Expected UTF-8 BOM encoding").loc(loc).push();
+            warn(ErrorKey::Encoding).msg("Expected UTF-8 BOM encoding").abbreviated(loc).push();
         }
 
         // From here on we are reporting on file content
