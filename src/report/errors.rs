@@ -71,7 +71,7 @@ impl Default for Errors<'_> {
 }
 
 impl Errors<'_> {
-    fn should_suppress(&mut self, report: &LogReport) -> bool {
+    fn should_suppress(&self, report: &LogReport) -> bool {
         let key = SuppressionKey { key: report.key, message: Cow::Borrowed(&report.msg) };
         if let Some(v) = self.suppress.get(&key) {
             for suppression in v {
@@ -209,7 +209,7 @@ impl Errors<'_> {
     }
 
     pub fn store_source_file(&mut self, fullpath: PathBuf, source: &'static str) {
-        self.cache.filecache.insert(fullpath, source);
+        self.cache.filecache.borrow_mut().insert(fullpath, source);
     }
 
     /// Get a mutable lock on the global ERRORS struct.
@@ -236,26 +236,29 @@ impl Errors<'_> {
 pub(crate) struct Cache {
     /// Files that have been read in to get the lines where errors occurred.
     /// Cached here to avoid duplicate I/O and UTF-8 parsing.
-    filecache: TigerHashMap<PathBuf, &'static str>,
+    filecache: RefCell<TigerHashMap<PathBuf, &'static str>>,
 
     /// Files that have been linesplit, cached to avoid doing that work again
-    linecache: TigerHashMap<PathBuf, Vec<&'static str>>,
+    linecache: RefCell<TigerHashMap<PathBuf, Vec<&'static str>>>,
 }
 
 impl Cache {
     /// Fetch the contents of a single line from a script file.
-    pub(crate) fn get_line(&mut self, loc: Loc) -> Option<&'static str> {
+    pub(crate) fn get_line(&self, loc: Loc) -> Option<&'static str> {
+        let mut filecache = self.filecache.borrow_mut();
+        let mut linecache = self.linecache.borrow_mut();
+
         if loc.line == 0 {
             return None;
         }
         let fullpath = loc.fullpath();
-        if let Some(lines) = self.linecache.get(fullpath) {
+        if let Some(lines) = linecache.get(fullpath) {
             return lines.get(loc.line as usize - 1).copied();
         }
-        if let Some(contents) = self.filecache.get(fullpath) {
+        if let Some(contents) = filecache.get(fullpath) {
             let lines: Vec<_> = contents.lines().collect();
             let line = lines.get(loc.line as usize - 1).copied();
-            self.linecache.insert(fullpath.to_path_buf(), lines);
+            linecache.insert(fullpath.to_path_buf(), lines);
             return line;
         }
         let bytes = read(fullpath).ok()?;
@@ -266,11 +269,11 @@ impl Cache {
             (_, _, true) => WINDOWS_1252.decode(&bytes).0,
         };
         let contents = leak(contents.into_owned());
-        self.filecache.insert(fullpath.to_path_buf(), contents);
+        filecache.insert(fullpath.to_path_buf(), contents);
 
         let lines: Vec<_> = contents.lines().collect();
         let line = lines.get(loc.line as usize - 1).copied();
-        self.linecache.insert(fullpath.to_path_buf(), lines);
+        linecache.insert(fullpath.to_path_buf(), lines);
         line
     }
 }
