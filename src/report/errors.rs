@@ -103,7 +103,7 @@ impl Errors<'_> {
         self.storage.entry(report).or_default().insert(pointers);
     }
 
-    /// Extract the stored reports, sort them, and return them as a vector of ([`LogReport`],Vec<[`PointedMessage`]>).
+    /// Extract the stored reports, sort them, and return them as a vector.
     pub fn flatten_reports(&self) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>)> {
         let mut reports: Vec<_> = self
             .storage

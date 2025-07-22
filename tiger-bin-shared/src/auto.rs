@@ -137,7 +137,7 @@ fn validate_mod(
     let output_filename =
         format!("{name_short}-tiger-{}.log", modpath.file_name().unwrap().to_string_lossy());
     let output_file = &logdir.join(output_filename);
-    let mut output = Box::new(File::create(output_file)?);
+    let mut output = File::create(output_file)?;
     eprintln!("Writing error reports to {} ...", output_file.display());
     eprintln!("This will take a few seconds.");
 
