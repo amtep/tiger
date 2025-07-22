@@ -37,14 +37,22 @@ struct LocaParser {
 }
 
 impl LocaParser {
-    fn new(mut loc: Loc, content: &'static str, lang: Language) -> Self {
+    fn new(entry: &FileEntry, content: &'static str, lang: Language) -> Self {
         let mut chars = content.chars().peekable();
         let mut offset = 0;
+
+        let mut loc = Loc::from(entry);
+        // loc.line == 0 making this a whole file report
+        loc.column = 1; // From our perspective the BOM is a character and needs to be included in column offset
+
         if chars.peek() == Some(&'\u{feff}') {
             offset += '\u{feff}'.len_utf8();
             loc.column += 1;
             chars.next();
+
             if chars.peek() == Some(&'\u{feff}') {
+                // Second BOM is file content, not header, and should be reported with line number
+                loc.line = 1;
                 let msg = "double BOM in localization file";
                 let info = "This will make the game engine skip the whole file.";
                 warn(ErrorKey::Encoding).strong().msg(msg).info(info).loc(loc).push();
@@ -55,6 +63,10 @@ impl LocaParser {
         } else {
             warn(ErrorKey::Encoding).msg("Expected UTF-8 BOM encoding").loc(loc).push();
         }
+
+        // From here on we are reporting on file content
+        loc.line = 1;
+
         LocaParser {
             loc,
             offset,
@@ -904,10 +916,7 @@ impl Iterator for LocaReader {
 }
 
 pub fn parse_loca(entry: &FileEntry, content: String, lang: Language) -> LocaReader {
-    let mut loc = Loc::from(entry);
-    loc.line = 1;
-    loc.column = 1;
     let content = leak(content);
-    let parser = LocaParser::new(loc, content, lang);
+    let parser = LocaParser::new(entry, content, lang);
     LocaReader { parser }
 }
