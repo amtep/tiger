@@ -175,7 +175,7 @@ fn log_line_carets(
     _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_carets));
 }
 
-pub(crate) fn kind_tag(errors: &Errors, kind: FileKind) -> &str {
+pub(crate) fn kind_tag<'a>(errors: &'a Errors<'a>, kind: FileKind) -> &'a str {
     match kind {
         FileKind::Internal => "Internal",
         FileKind::Clausewitz => "Clausewitz",

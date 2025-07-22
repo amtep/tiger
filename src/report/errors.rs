@@ -1,5 +1,6 @@
 //! Collect error reports and then write them out.
 
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fs::{read, File};
@@ -26,7 +27,7 @@ use crate::token::{leak, Loc};
 static ERRORS: LazyLock<Mutex<Errors>> = LazyLock::new(|| Mutex::new(Errors::default()));
 
 #[allow(missing_debug_implementations)]
-pub struct Errors {
+pub struct Errors<'a> {
     pub(crate) output: RefCell<Box<dyn Write + Send>>,
 
     /// Extra loaded mods' error tags.
@@ -42,7 +43,7 @@ pub struct Errors {
     /// Output color and style configuration.
     pub(crate) styles: OutputStyle,
 
-    pub(crate) suppress: TigerHashMap<SuppressionKey, Vec<Suppression>>,
+    pub(crate) suppress: TigerHashMap<SuppressionKey<'a>, Vec<Suppression>>,
     // The range is decomposed into its start and end bounds in order to
     // avoid dyn shenanigans with the RangeBounds trait.
     ignore: TigerHashMap<PathBuf, Vec<IgnoreEntry>>,
@@ -53,7 +54,7 @@ pub struct Errors {
     storage: TigerHashSet<LogReport>,
 }
 
-impl Default for Errors {
+impl Default for Errors<'_> {
     fn default() -> Self {
         Errors {
             output: RefCell::new(Box::new(stdout())),
@@ -69,10 +70,9 @@ impl Default for Errors {
     }
 }
 
-impl Errors {
+impl Errors<'_> {
     fn should_suppress(&mut self, report: &LogReport) -> bool {
-        // TODO: see if this can be done without cloning
-        let key = SuppressionKey { key: report.key, message: report.msg.clone() };
+        let key = SuppressionKey { key: report.key, message: Cow::Borrowed(&report.msg) };
         if let Some(v) = self.suppress.get(&key) {
             for suppression in v {
                 if suppression.len() != report.pointers.len() {
@@ -216,7 +216,7 @@ impl Errors {
     ///
     /// # Panics
     /// May panic when the mutex has been poisoned by another thread.
-    pub fn get_mut() -> MutexGuard<'static, Errors> {
+    pub fn get_mut() -> MutexGuard<'static, Errors<'static>> {
         ERRORS.lock().unwrap()
     }
 
@@ -227,7 +227,7 @@ impl Errors {
     ///
     /// # Panics
     /// May panic when the mutex has been poisoned by another thread.
-    pub fn get() -> MutexGuard<'static, Errors> {
+    pub fn get() -> MutexGuard<'static, Errors<'static>> {
         ERRORS.lock().unwrap()
     }
 }

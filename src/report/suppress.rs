@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -9,9 +10,9 @@ use crate::report::errors::Errors;
 use crate::report::ErrorKey;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SuppressionKey {
+pub struct SuppressionKey<'a> {
     pub key: ErrorKey,
-    pub message: String,
+    pub message: Cow<'a, str>,
 }
 
 pub type Suppression = Vec<SuppressionLocation>;
@@ -35,7 +36,10 @@ pub fn suppress_from_json(fullpath: &Path) -> Result<()> {
     let reports: Vec<JsonReport> = serde_json::from_str(&read_to_string(fullpath)?)?;
     let mut suppress: TigerHashMap<SuppressionKey, Vec<Suppression>> = TigerHashMap::default();
     for JsonReport { key, message, locations } in reports {
-        suppress.entry(SuppressionKey { key, message }).or_default().push(locations);
+        suppress
+            .entry(SuppressionKey { key, message: Cow::Owned(message) })
+            .or_default()
+            .push(locations);
     }
     Errors::get_mut().suppress = suppress;
     Ok(())
