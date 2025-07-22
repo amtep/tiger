@@ -56,7 +56,7 @@ pub struct Errors<'a> {
     storage: TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
 }
 
-impl<'a> Errors<'_> {
+impl Errors<'_> {
     fn should_suppress(&self, report: &LogReportMetadata, pointers: &LogReportPointers) -> bool {
         let key = SuppressionKey { key: report.key, message: Cow::Borrowed(&report.msg) };
         if let Some(v) = self.suppress.get(&key) {
@@ -104,11 +104,9 @@ impl<'a> Errors<'_> {
     }
 
     /// Extract the stored reports, sort them, and return them as a vector of ([`LogReport`],Vec<[`PointedMessage`]>).
-    pub fn flatten_reports(
-        &self,
-        report_store: &'a TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
-    ) -> Vec<(&'a LogReportMetadata, Cow<'a, LogReportPointers>)> {
-        let mut reports: Vec<_> = report_store
+    pub fn flatten_reports(&self) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>)> {
+        let mut reports: Vec<_> = self
+            .storage
             .iter()
             .flat_map(|(report, occurrences)| -> Box<dyn Iterator<Item = _>> {
                 let iterator =
@@ -156,8 +154,7 @@ impl<'a> Errors<'_> {
     ///
     /// Reports matched by `#tiger-ignore` directives will not be printed.
     pub fn emit_reports<O: Write + Send>(&mut self, output: &mut O, json: bool) {
-        let storage = take(&mut self.storage);
-        let reports = self.flatten_reports(&storage);
+        let reports = self.flatten_reports();
         if json {
             _ = writeln!(output, "[");
             let mut first = true;
@@ -174,6 +171,7 @@ impl<'a> Errors<'_> {
                 log_report(self, output, report, pointers);
             }
         }
+        self.storage.clear();
     }
 
     pub fn store_source_file(&mut self, fullpath: PathBuf, source: &'static str) {
