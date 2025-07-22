@@ -5,7 +5,8 @@ use crate::fileset::FileKind;
 use crate::game::Game;
 use crate::report::errors::Errors;
 use crate::report::output_style::Styled;
-use crate::report::{LogReport, PointedMessage, Severity};
+use crate::report::report_struct::pointer_indentation;
+use crate::report::{LogReportMetadata, LogReportPointers, PointedMessage, Severity};
 
 /// Source lines printed in the output have leading tab characters replaced by this number of spaces.
 const SPACES_PER_TAB: usize = 4;
@@ -13,14 +14,13 @@ const SPACES_PER_TAB: usize = 4;
 const MAX_IDLE_SPACE: usize = 16;
 
 /// Log the report.
-pub fn log_report(errors: &mut Errors, report: &LogReport) {
-    let indentation = report.indentation();
-
+pub fn log_report(errors: &mut Errors, report: &LogReportMetadata, pointers: &LogReportPointers) {
+    let indentation = pointer_indentation(pointers);
     // Log error lvl and message:
     log_line_title(errors, report);
 
     // Log the pointers:
-    let iterator = report.pointers.iter();
+    let iterator = pointers.iter();
     let mut previous = None;
     for pointer in iterator {
         log_pointer(errors, previous, pointer, indentation, report.severity);
@@ -59,7 +59,7 @@ fn log_pointer(
 }
 
 /// Log the first line of a report, containing the severity level and the error message.
-fn log_line_title(errors: &Errors, report: &LogReport) {
+fn log_line_title(errors: &Errors, report: &LogReportMetadata) {
     let line: &[ANSIString<'static>] = &[
         errors
             .styles

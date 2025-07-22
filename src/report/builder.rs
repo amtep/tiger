@@ -4,7 +4,10 @@
 //! - The user is forced to add at least one pointer, making it impossible to create a report
 //!   without pointers, which would lead to panics.
 
-use crate::report::{log, Confidence, ErrorKey, ErrorLoc, LogReport, PointedMessage, Severity};
+use crate::report::{
+    log, report_struct::LogReportPointers, Confidence, ErrorKey, ErrorLoc, LogReportMetadata,
+    PointedMessage, Severity,
+};
 
 // =================================================================================================
 // =============== Starting points:
@@ -114,7 +117,7 @@ impl ReportBuilderStage2 {
         }
     }
 
-    pub fn pointers(self, pointers: Vec<PointedMessage>) -> ReportBuilderStage3 {
+    pub fn pointers(self, pointers: LogReportPointers) -> ReportBuilderStage3 {
         ReportBuilderStage3 { stage1: self.stage1, msg: self.msg, info: self.info, pointers }
     }
 }
@@ -125,7 +128,7 @@ pub struct ReportBuilderStage3 {
     stage1: ReportBuilderStage1,
     msg: String,
     info: Option<String>,
-    pointers: Vec<PointedMessage>,
+    pointers: LogReportPointers,
 }
 
 impl ReportBuilderStage3 {
@@ -146,16 +149,17 @@ impl ReportBuilderStage3 {
         self
     }
     /// Build the report and return it.
-    /// Build the report and return it.
-    pub fn build(self) -> LogReport {
-        LogReport {
-            key: self.stage1.0,
-            severity: self.stage1.1,
-            confidence: self.stage1.2,
-            msg: self.msg,
-            info: self.info,
-            pointers: self.pointers,
-        }
+    pub fn build(self) -> (LogReportMetadata, LogReportPointers) {
+        (
+            LogReportMetadata {
+                key: self.stage1.0,
+                severity: self.stage1.1,
+                confidence: self.stage1.2,
+                msg: self.msg,
+                info: self.info,
+            },
+            self.pointers,
+        )
     }
     /// Build the report and push it to be printed.
     pub fn push(self) {

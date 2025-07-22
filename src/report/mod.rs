@@ -6,7 +6,9 @@ pub(crate) use error_loc::ErrorLoc;
 pub use errors::*;
 pub(crate) use filter::FilterRule;
 pub(crate) use output_style::OutputStyle;
-pub use report_struct::{Confidence, LogReport, PointedMessage, Severity};
+pub use report_struct::{
+    Confidence, LogReportMetadata, LogReportPointers, PointedMessage, Severity,
+};
 pub use suppress::suppress_from_json;
 
 mod builder;

@@ -4,7 +4,9 @@ use std::path::Path;
 use crate::block::Comparator;
 
 use crate::fileset::FileKind;
-use crate::report::{err, Confidence, ErrorKey, ErrorLoc, LogReport, Severity};
+use crate::report::{
+    err, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, Severity,
+};
 use crate::token::Loc;
 use crate::Token;
 
@@ -26,21 +28,25 @@ impl ReportFilter {
     /// - Its Severity or Confidence level is too low.
     /// - It's from vanilla or a loaded mod and the program is configured to ignore those locations.
     /// - The filter has a trigger, and the report doesn't match it.
-    pub fn should_print_report(&self, report: &LogReport) -> bool {
+    pub fn should_print_report(
+        &self,
+        report: &LogReportMetadata,
+        pointers: &LogReportPointers,
+    ) -> bool {
         if report.key == ErrorKey::Config {
             // Any errors concerning the Config should be easy to fix and will fundamentally
             // undermine the operation of the application. They must always be printed.
             return true;
         }
         // If every single Loc in the chain is out of scope, the report is out of scope.
-        let out_of_scope = report.pointers.iter().map(|p| &p.loc).all(|loc| {
+        let out_of_scope = pointers.iter().map(|p| &p.loc).all(|loc| {
             (loc.kind.counts_as_vanilla() && !self.show_vanilla)
                 || (matches!(loc.kind, FileKind::LoadedMod(_)) && !self.show_loaded_mods)
         });
         if out_of_scope {
             return false;
         }
-        self.predicate.apply(report)
+        self.predicate.apply(report, pointers)
     }
 
     /// TODO: Check the filter rules to be more sure.
@@ -90,13 +96,17 @@ pub enum FilterRule {
 }
 
 impl FilterRule {
-    fn apply(&self, report: &LogReport) -> bool {
+    fn apply(&self, report: &LogReportMetadata, pointers: &LogReportPointers) -> bool {
         match self {
             FilterRule::Tautology => true,
             FilterRule::Contradiction => false,
-            FilterRule::Conjunction(children) => children.iter().all(|child| child.apply(report)),
-            FilterRule::Disjunction(children) => children.iter().any(|child| child.apply(report)),
-            FilterRule::Negation(child) => !child.apply(report),
+            FilterRule::Conjunction(children) => {
+                children.iter().all(|child| child.apply(report, pointers))
+            }
+            FilterRule::Disjunction(children) => {
+                children.iter().any(|child| child.apply(report, pointers))
+            }
+            FilterRule::Negation(child) => !child.apply(report, pointers),
             FilterRule::Severity(comparator, level) => match comparator {
                 Comparator::Equals(_) => report.severity == *level,
                 Comparator::NotEquals => report.severity != *level,
@@ -114,7 +124,7 @@ impl FilterRule {
                 Comparator::AtMost => report.confidence <= *level,
             },
             FilterRule::Key(key) => report.key == *key,
-            FilterRule::File(pattern) => report.pointers.iter().any(|pointer| {
+            FilterRule::File(pattern) => pointers.iter().any(|pointer| {
                 pattern.matches_path(pointer.loc.pathname())
                     || pointer.loc.pathname().starts_with(Path::new(pattern.as_str()))
             }),

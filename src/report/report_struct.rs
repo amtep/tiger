@@ -4,9 +4,11 @@ use strum_macros::{Display, EnumIter, EnumString, IntoStaticStr};
 use crate::report::ErrorKey;
 use crate::token::Loc;
 
+pub type LogReport = (LogReportMetadata, LogReportPointers);
+
 /// Describes a report about a potentially problematic situation that can be logged.
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct LogReport {
+pub struct LogReportMetadata {
     /// Used for choosing output colors and for filtering reports.
     pub severity: Severity,
     /// Mostly used for filtering reports.
@@ -17,15 +19,6 @@ pub struct LogReport {
     pub msg: String,
     /// Optional info message to be printed at the end.
     pub info: Option<String>,
-    /// Should contain one or more elements.
-    pub pointers: Vec<PointedMessage>,
-}
-
-impl LogReport {
-    /// Returns the length of the longest line number.
-    pub fn indentation(&self) -> usize {
-        self.pointers.iter().map(|pointer| pointer.loc.line.to_string().len()).max().unwrap_or(0)
-    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -48,6 +41,13 @@ impl PointedMessage {
     pub fn new(loc: Loc) -> Self {
         Self { loc, msg: None, length: 0 }
     }
+}
+
+/// Should contain one or more elements.
+pub type LogReportPointers = Vec<PointedMessage>;
+
+pub fn pointer_indentation(pointers: &LogReportPointers) -> usize {
+    pointers.iter().map(|pointer| pointer.loc.line.to_string().len()).max().unwrap_or(0)
 }
 
 /// Determines the output colour.

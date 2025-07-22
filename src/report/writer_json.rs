@@ -2,12 +2,15 @@ use serde_json::json;
 
 use crate::report::errors::Errors;
 use crate::report::writer::kind_tag;
-use crate::report::LogReport;
+use crate::report::{LogReportMetadata, LogReportPointers};
 
 /// Log the report in JSON format.
-pub fn log_report_json(errors: &mut Errors, report: &LogReport) {
-    let pointers: Vec<_> = report
-        .pointers
+pub fn log_report_json(
+    errors: &mut Errors,
+    report: &LogReportMetadata,
+    pointers: &LogReportPointers,
+) {
+    let pointers: Vec<_> = pointers
         .iter()
         .map(|pointer| {
             let path = pointer.loc.pathname();

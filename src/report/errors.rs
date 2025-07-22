@@ -18,10 +18,13 @@ use crate::macros::MACRO_MAP;
 use crate::parse::ignore::IgnoreFilter;
 use crate::report::error_loc::ErrorLoc;
 use crate::report::filter::ReportFilter;
+use crate::report::report_struct::LogReport;
 use crate::report::suppress::{Suppression, SuppressionKey};
 use crate::report::writer::log_report;
 use crate::report::writer_json::log_report_json;
-use crate::report::{ErrorKey, FilterRule, LogReport, OutputStyle, PointedMessage};
+use crate::report::{
+    ErrorKey, FilterRule, LogReportMetadata, LogReportPointers, OutputStyle, PointedMessage,
+};
 use crate::token::{leak, Loc};
 
 static ERRORS: LazyLock<Mutex<Errors>> = LazyLock::new(|| Mutex::new(Errors::default()));
@@ -51,7 +54,7 @@ pub struct Errors<'a> {
     /// All reports that passed the checks, stored here to be sorted before being emitted all at once.
     /// The "abbreviated" reports don't participate in this. They are still emitted immediately.
     /// It's a `HashSet` because duplicate reports are fairly common due to macro expansion and other revalidations.
-    storage: TigerHashSet<LogReport>,
+    storage: TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
 }
 
 impl Default for Errors<'_> {
@@ -63,22 +66,22 @@ impl Default for Errors<'_> {
             cache: Cache::default(),
             filter: ReportFilter::default(),
             styles: OutputStyle::default(),
-            storage: TigerHashSet::default(),
+            storage: TigerHashMap::default(),
             suppress: TigerHashMap::default(),
             ignore: TigerHashMap::default(),
         }
     }
 }
 
-impl Errors<'_> {
-    fn should_suppress(&self, report: &LogReport) -> bool {
+impl<'a> Errors<'_> {
+    fn should_suppress(&self, report: &LogReportMetadata, pointers: &LogReportPointers) -> bool {
         let key = SuppressionKey { key: report.key, message: Cow::Borrowed(&report.msg) };
         if let Some(v) = self.suppress.get(&key) {
             for suppression in v {
-                if suppression.len() != report.pointers.len() {
+                if suppression.len() != pointers.len() {
                     continue;
                 }
-                for (s, p) in suppression.iter().zip(report.pointers.iter()) {
+                for (s, p) in suppression.iter().zip(pointers.iter()) {
                     if s.path == p.loc.pathname().to_string_lossy()
                         && s.tag == p.msg
                         && s.line.as_deref() == self.cache.get_line(p.loc)
@@ -91,8 +94,8 @@ impl Errors<'_> {
         false
     }
 
-    fn should_ignore(&self, report: &LogReport) -> bool {
-        for p in &report.pointers {
+    fn should_ignore(&self, report: &LogReportMetadata, pointers: &LogReportPointers) -> bool {
+        for p in pointers {
             if let Some(vec) = self.ignore.get(p.loc.pathname()) {
                 for entry in vec {
                     if (entry.start, entry.end).contains(&p.loc.line)
@@ -108,11 +111,13 @@ impl Errors<'_> {
 
     /// Perform some checks to see whether the report should actually be logged.
     /// If yes, it will add it to the storage.
-    fn push_report(&mut self, report: LogReport) {
-        if !self.filter.should_print_report(&report) || self.should_suppress(&report) {
+    fn push_report(&mut self, report: LogReportMetadata, pointers: LogReportPointers) {
+        if !self.filter.should_print_report(&report, &pointers)
+            || self.should_suppress(&report, &pointers)
+        {
             return;
         }
-        self.storage.insert(report);
+        self.storage.entry(report).or_default().insert(pointers);
     }
 
     /// Immediately log a single-line report about this error.
@@ -138,11 +143,17 @@ impl Errors<'_> {
         _ = writeln!(self.output.get_mut(), "{msg}");
     }
 
-    /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].
-    /// The stored reports will be left empty.
-    pub fn take_reports(&mut self) -> Vec<LogReport> {
-        let mut reports: Vec<LogReport> = take(&mut self.storage).into_iter().collect();
-        reports.sort_unstable_by(|a, b| {
+    /// Extract the stored reports, sort them, and return them as a vector of ([`LogReport`],Vec<[`PointedMessage`]>).
+    pub fn flatten_reports(
+        report_store: &'a TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
+    ) -> Vec<(&'a LogReportMetadata, Cow<'a, LogReportPointers>)> {
+        let mut reports: Vec<_> = report_store
+            .iter()
+            .flat_map(|(report, occurrences)| {
+                occurrences.iter().map(move |pointers| (report, Cow::Borrowed(pointers)))
+            })
+            .collect();
+        reports.sort_unstable_by(|(a, ap), (b, bp)| {
             // Severity in descending order
             let mut cmp = b.severity.cmp(&a.severity);
             if cmp != Ordering::Equal {
@@ -154,7 +165,7 @@ impl Errors<'_> {
                 return cmp;
             }
             // If severity and confidence are the same, order by loc.
-            cmp = a.pointers.iter().map(|e| e.loc).cmp(b.pointers.iter().map(|e| e.loc));
+            cmp = ap.iter().map(|e| e.loc).cmp(bp.iter().map(|e| e.loc));
             // Fallback: order by message text.
             if cmp == Ordering::Equal {
                 cmp = a.msg.cmp(&b.msg);
@@ -173,27 +184,28 @@ impl Errors<'_> {
     ///
     /// Reports matched by `#tiger-ignore` directives will not be printed.
     pub fn emit_reports(&mut self, json: bool) {
-        let reports = self.take_reports();
+        let storage = take(&mut self.storage);
+        let reports = Self::flatten_reports(&storage);
         if json {
             _ = writeln!(self.output.get_mut(), "[");
             let mut first = true;
-            for report in &reports {
-                if self.should_ignore(report) {
+            for (report, pointers) in &reports {
+                if self.should_ignore(report, pointers) {
                     continue;
                 }
                 if !first {
                     _ = writeln!(self.output.get_mut(), ",");
                 }
                 first = false;
-                log_report_json(self, report);
+                log_report_json(self, report, pointers);
             }
             _ = writeln!(self.output.get_mut(), "\n]");
         } else {
-            for report in &reports {
-                if self.should_ignore(report) {
+            for (report, pointers) in &reports {
+                if self.should_ignore(report, pointers) {
                     continue;
                 }
-                log_report(self, report);
+                log_report(self, report, pointers);
             }
         }
     }
@@ -297,22 +309,22 @@ pub fn set_output_file(file: &Path) -> Result<()> {
 }
 
 /// Store an error report to be emitted when [`emit_reports`] is called.
-pub fn log(mut report: LogReport) {
+pub fn log((report, mut pointers): LogReport) {
     let mut vec = Vec::new();
-    report.pointers.drain(..).for_each(|pointer| {
+    pointers.drain(..).for_each(|pointer| {
         let index = vec.len();
         recursive_pointed_msg_expansion(&mut vec, &pointer);
         vec.insert(index, pointer);
     });
-    report.pointers.extend(vec);
-    Errors::get_mut().push_report(report);
+    pointers.extend(vec);
+    Errors::get_mut().push_report(report, pointers);
 }
 
 /// Expand `PointedMessage` recursively.
 /// That is; for the given `PointedMessage`, follow its location's link until such link is no
 /// longer available, adding a newly created `PointedMessage` to the given `Vec` for each linked
 /// location.
-fn recursive_pointed_msg_expansion(vec: &mut Vec<PointedMessage>, pointer: &PointedMessage) {
+fn recursive_pointed_msg_expansion(vec: &mut LogReportPointers, pointer: &PointedMessage) {
     if let Some(link) = pointer.loc.link_idx {
         let from_here = PointedMessage {
             loc: MACRO_MAP.get_loc(link).unwrap(),
@@ -342,8 +354,8 @@ pub fn emit_reports(json: bool) {
 
 /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].
 /// The stored reports will be left empty.
-pub fn take_reports() -> Vec<LogReport> {
-    Errors::get_mut().take_reports()
+pub fn take_reports() -> TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>> {
+    take(&mut Errors::get_mut().storage)
 }
 
 pub fn store_source_file(fullpath: PathBuf, source: &'static str) {
