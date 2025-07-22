@@ -153,18 +153,8 @@ impl Errors<'_> {
             if cmp != Ordering::Equal {
                 return cmp;
             }
-            // If severity and confidence are the same, order by loc. Check all locs in order.
-            for (a, b) in a.pointers.iter().zip(b.pointers.iter()) {
-                cmp = a.loc.cmp(&b.loc);
-                if cmp != Ordering::Equal {
-                    return cmp;
-                }
-            }
-            // Shorter chain goes first, if it comes to that.
-            cmp = b.pointers.len().cmp(&a.pointers.len());
-            if cmp != Ordering::Equal {
-                return cmp;
-            }
+            // If severity and confidence are the same, order by loc.
+            cmp = a.pointers.iter().map(|e| e.loc).cmp(b.pointers.iter().map(|e| e.loc));
             // Fallback: order by message text.
             if cmp == Ordering::Equal {
                 cmp = a.msg.cmp(&b.msg);
