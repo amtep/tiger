@@ -21,6 +21,7 @@ pub use crate::config_load::validate_config_file;
 pub use crate::everything::Everything;
 pub use crate::fileset::FileKind;
 pub use crate::game::Game;
+pub use crate::helpers::{TigerHashMap, TigerHashSet};
 pub use crate::item::Item;
 pub use crate::launcher_settings::get_version_from_launcher;
 #[cfg(feature = "vic3")]
@@ -30,7 +31,7 @@ pub use crate::modfile::ModFile;
 pub use crate::report::{
     add_loaded_mod_root, disable_ansi_colors, emit_reports, log, set_output_file, set_output_style,
     set_show_loaded_mods, set_show_vanilla, suppress_from_json, take_reports, Confidence,
-    LogReport, PointedMessage, Severity,
+    LogReportMetadata, LogReportPointers, PointedMessage, Severity,
 };
 pub use crate::token::{Loc, Token};
 

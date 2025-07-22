@@ -1,11 +1,15 @@
 use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 
-use tiger_lib::{take_reports, Everything, LogReport};
+use tiger_lib::{
+    take_reports, Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet,
+};
 
 static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
-fn check_mod_helper(modname: &str) -> Vec<LogReport> {
+fn check_mod_helper(
+    modname: &str,
+) -> TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>> {
     let _guard = TEST_MUTEX.lock().unwrap();
 
     let vanilla_dir = PathBuf::from("tests/files/ck3");
@@ -20,64 +24,89 @@ fn check_mod_helper(modname: &str) -> Vec<LogReport> {
 }
 
 fn take_report_contains(
-    vec: &mut Vec<LogReport>,
+    storage: &mut TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
     pathname: &str,
     msg_contains: &str,
-) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
-        if report.msg.contains(msg_contains)
-            && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
-        {
-            let result = (*report).clone();
-            vec.remove(i);
-            return Some(result);
+) -> Option<(LogReportMetadata, LogReportPointers)> {
+    let mut result = None;
+    storage.retain(|report, occurrences| {
+        if report.msg.contains(msg_contains) {
+            if let Some(pointers) =
+                occurrences.extract_if(|p| p[0].loc.pathname() == PathBuf::from(pathname)).next()
+            {
+                result = Some(((*report).clone(), pointers));
+                if occurrences.is_empty() {
+                    return false;
+                }
+            }
         }
-    }
-    None
+        true
+    });
+    result
 }
 
-fn take_report(vec: &mut Vec<LogReport>, pathname: &str, msg: &str) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
-        if report.msg == msg && report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
-            let result = (*report).clone();
-            vec.remove(i);
-            return Some(result);
+fn take_report(
+    storage: &mut TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
+    pathname: &str,
+    msg: &str,
+) -> Option<(LogReportMetadata, LogReportPointers)> {
+    let mut result = None;
+    storage.retain(|report, occurrences| {
+        if report.msg == msg {
+            if let Some(pointers) =
+                occurrences.extract_if(|p| p[0].loc.pathname() == PathBuf::from(pathname)).next()
+            {
+                result = Some(((*report).clone(), pointers));
+                if occurrences.is_empty() {
+                    return false;
+                }
+            }
         }
-    }
-    None
+        true
+    });
+    result
 }
 
 fn take_report_pointer(
-    vec: &mut Vec<LogReport>,
+    storage: &mut TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
     pathname: &str,
     msg: &str,
     line: u32,
     column: u32,
-) -> Option<LogReport> {
-    for (i, report) in vec.iter().enumerate() {
-        if report.msg == msg
-            && report.pointers[0].loc.pathname() == PathBuf::from(pathname)
-            && report.pointers[0].loc.line == line
-            && report.pointers[0].loc.column == column
-        {
-            let result = (*report).clone();
-            vec.remove(i);
-            return Some(result);
+) -> Option<(LogReportMetadata, LogReportPointers)> {
+    let mut result = None;
+    storage.retain(|report, occurrences| {
+        if report.msg == msg {
+            if let Some(pointers) = occurrences
+                .extract_if(|p| {
+                    p[0].loc.pathname() == PathBuf::from(pathname)
+                        && p[0].loc.line == line
+                        && p[0].loc.column == column
+                })
+                .next()
+            {
+                result = Some(((*report).clone(), pointers));
+                if occurrences.is_empty() {
+                    return false;
+                }
+            }
         }
-    }
-    None
+        true
+    });
+    result
 }
 
-fn ignore_reports(vec: &mut Vec<LogReport>, pathname: &str) {
-    let mut i = 0;
-    while i < vec.len() {
-        let report = &vec[i];
-        if report.pointers[0].loc.pathname() == PathBuf::from(pathname) {
-            vec.remove(i);
-        } else {
-            i += 1;
+fn ignore_reports(
+    storage: &mut TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
+    pathname: &str,
+) {
+    storage.retain(|_, occurrences| {
+        occurrences.retain(|p| p[0].loc.pathname() != PathBuf::from(pathname));
+        if occurrences.is_empty() {
+            return false;
         }
-    }
+        true
+    });
 }
 
 #[test]
@@ -130,7 +159,7 @@ fn test_mod1() {
 
     let report = take_report(&mut reports, decisions, "file  does not exist");
     let report = report.expect("decision empty picture field test");
-    assert!(report.pointers[0].loc.line == 10);
+    assert!(report.1[0].loc.line == 10);
 
     let events = "events/non-dup.txt";
     let report = take_report(&mut reports, events, "required field `option` missing");
@@ -166,7 +195,7 @@ fn test_mod2() {
     report.expect("interaction localization key_extra_icon test");
     let report = take_report(&mut reports, interactions, "file gfx/also_missing does not exist");
     let report = report.expect("interaction missing extra_icon file test");
-    assert!(report.pointers[0].loc.line == 3);
+    assert!(report.1[0].loc.line == 3);
     let report = take_report(
         &mut reports,
         interactions,
