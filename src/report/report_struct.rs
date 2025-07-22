@@ -22,14 +22,6 @@ pub struct LogReport {
 }
 
 impl LogReport {
-    /// Returns the primary pointer.
-    ///
-    /// # Panics
-    /// May panic if this is an invalid `LogReport` with no pointers.
-    pub fn primary(&self) -> &PointedMessage {
-        self.pointers.first().expect("A LogReport must always have at least one PointedMessage.")
-    }
-
     /// Returns the length of the longest line number.
     pub fn indentation(&self) -> usize {
         self.pointers.iter().map(|pointer| pointer.loc.line.to_string().len()).max().unwrap_or(0)

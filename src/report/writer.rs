@@ -19,13 +19,14 @@ pub fn log_report(errors: &mut Errors, report: &LogReport) {
     // Log error lvl and message:
     log_line_title(errors, report);
 
-    // Log the primary pointer:
-    log_pointer(errors, None, report.primary(), indentation, report.severity);
-    // Log the other pointers:
-    report.pointers.windows(2).for_each(|pointers| {
-        // Existence of pointers[0] and pointers[1] is guaranteed by .windows(2) iterator
-        log_pointer(errors, Some(&pointers[0]), &pointers[1], indentation, report.severity);
-    });
+    // Log the pointers:
+    let iterator = report.pointers.iter();
+    let mut previous = None;
+    for pointer in iterator {
+        log_pointer(errors, previous, pointer, indentation, report.severity);
+        previous = Some(pointer);
+    }
+
     // Log the info line, if one exists.
     if let Some(info) = &report.info {
         log_line_info(errors, indentation, info);
