@@ -14,25 +14,21 @@ const MAX_IDLE_SPACE: usize = 16;
 
 /// Log the report.
 pub fn log_report(errors: &mut Errors, report: &LogReport) {
+    let indentation = report.indentation();
+
     // Log error lvl and message:
     log_line_title(errors, report);
 
     // Log the primary pointer:
-    log_pointer(errors, None, report.primary(), report.indentation(), report.severity);
+    log_pointer(errors, None, report.primary(), indentation, report.severity);
     // Log the other pointers:
     report.pointers.windows(2).for_each(|pointers| {
         // Existence of pointers[0] and pointers[1] is guaranteed by .windows(2) iterator
-        log_pointer(
-            errors,
-            Some(&pointers[0]),
-            &pointers[1],
-            report.indentation(),
-            report.severity,
-        );
+        log_pointer(errors, Some(&pointers[0]), &pointers[1], indentation, report.severity);
     });
     // Log the info line, if one exists.
     if let Some(info) = &report.info {
-        log_line_info(errors, report.indentation(), info);
+        log_line_info(errors, indentation, info);
     }
     // Write a blank line to visually separate reports:
     _ = writeln!(errors.output.borrow_mut());
