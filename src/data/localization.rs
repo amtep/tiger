@@ -36,9 +36,7 @@ use crate::item::Item;
 use crate::macros::{MacroMapIndex, MACRO_MAP};
 use crate::parse::localization::{parse_loca, ValueParser};
 use crate::parse::ParserMemory;
-use crate::report::{
-    err, report, tips, warn, warn_abbreviated, warn_header, will_maybe_log, ErrorKey, Severity,
-};
+use crate::report::{err, report, tips, warn, ErrorKey, Severity};
 use crate::scopes::Scopes;
 use crate::token::Token;
 #[cfg(feature = "vic3")]
@@ -657,19 +655,11 @@ impl Localization {
                 }
             }
             vec.sort_unstable_by_key(|entry| &entry.key.loc);
-            let mut printed_header = false;
             for entry in vec {
-                if !printed_header && will_maybe_log(&entry.key, ErrorKey::UnusedLocalization) {
-                    warn_header(
-                        ErrorKey::UnusedLocalization,
-                        &format!("Unused localization - {lang}:\n"),
-                    );
-                    printed_header = true;
-                }
-                warn_abbreviated(&entry.key, ErrorKey::UnusedLocalization);
-            }
-            if printed_header {
-                warn_header(ErrorKey::UnusedLocalization, "\n");
+                report(ErrorKey::UnusedLocalization, Severity::Untidy)
+                    .msg("Unused localization")
+                    .abbreviated(&entry.key)
+                    .push();
             }
         }
     }

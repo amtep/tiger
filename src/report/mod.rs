@@ -1,13 +1,14 @@
 //! Error report collection and printing facilities.
 
-pub(crate) use builder::{err, fatal, report, tips, untidy, warn, ReportBuilderStage3};
+pub(crate) use builder::{err, fatal, report, tips, untidy, warn, ReportBuilderFull};
 pub(crate) use error_key::ErrorKey;
 pub(crate) use error_loc::ErrorLoc;
 pub use errors::*;
 pub(crate) use filter::FilterRule;
 pub(crate) use output_style::OutputStyle;
 pub use report_struct::{
-    Confidence, LogReportMetadata, LogReportPointers, PointedMessage, Severity,
+    Confidence, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle, PointedMessage,
+    Severity,
 };
 pub use suppress::suppress_from_json;
 

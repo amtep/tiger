@@ -6,6 +6,12 @@ use crate::token::Loc;
 
 pub type LogReport = (LogReportMetadata, LogReportPointers);
 
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum LogReportStyle {
+    Full,
+    Abbreviated,
+}
+
 /// Describes a report about a potentially problematic situation that can be logged.
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct LogReportMetadata {
@@ -19,6 +25,8 @@ pub struct LogReportMetadata {
     pub msg: String,
     /// Optional info message to be printed at the end.
     pub info: Option<String>,
+    // /// Output style for this report
+    pub style: LogReportStyle,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]

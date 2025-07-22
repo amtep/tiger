@@ -54,8 +54,8 @@ impl PdxFile {
         if contents.starts_with(BOM_CHAR) {
             Some(parse_pdx_file(entry, contents, BOM_UTF8_LEN, parser))
         } else {
-            let msg = "file must start with a UTF-8 BOM";
-            warn(ErrorKey::Encoding).msg(msg).loc(entry).push();
+            let msg = "Expected UTF-8 BOM encoding";
+            warn(ErrorKey::Encoding).msg(msg).abbreviated(entry).push();
             Some(parse_pdx_file(entry, contents, 0, parser))
         }
     }
@@ -65,8 +65,8 @@ impl PdxFile {
     pub fn read_no_bom(entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
         let contents = Self::read_utf8(entry)?;
         if contents.starts_with(BOM_CHAR) {
-            let msg = "file must not start with a UTF-8 BOM";
-            err(ErrorKey::Encoding).msg(msg).loc(entry).push();
+            let msg = "Expected UTF-8 encoding without BOM";
+            err(ErrorKey::Encoding).msg(msg).abbreviated(entry).push();
             Some(parse_pdx_file(entry, contents, BOM_UTF8_LEN, parser))
         } else {
             Some(parse_pdx_file(entry, contents, 0, parser))
@@ -91,7 +91,7 @@ impl PdxFile {
             Err(e) => {
                 let msg = "could not read file";
                 let info = format!("{e:#}");
-                err(ErrorKey::ReadError).msg(msg).info(info).loc(entry).push();
+                err(ErrorKey::ReadError).msg(msg).info(info).abbreviated(entry).push();
                 return None;
             }
         };
@@ -99,7 +99,7 @@ impl PdxFile {
             let (contents, errors) = UTF_8.decode_without_bom_handling(&bytes[BOM_UTF8_LEN..]);
             if errors {
                 let msg = "could not decode UTF-8 file";
-                err(ErrorKey::Encoding).msg(msg).loc(entry).push();
+                err(ErrorKey::Encoding).msg(msg).abbreviated(entry).push();
                 None
             } else {
                 Some(parse_pdx_file(entry, contents.into_owned(), 0, parser))
@@ -108,7 +108,7 @@ impl PdxFile {
             let (contents, errors) = WINDOWS_1252.decode_without_bom_handling(&bytes);
             if errors {
                 let msg = "could not decode WINDOWS-1252 file";
-                err(ErrorKey::Encoding).msg(msg).loc(entry).push();
+                err(ErrorKey::Encoding).msg(msg).abbreviated(entry).push();
                 None
             } else {
                 Some(parse_pdx_file(entry, contents.into_owned(), 0, parser))
@@ -138,8 +138,8 @@ impl PdxFile {
             if contents.starts_with(BOM_CHAR) {
                 parse_reader_export(entry, contents, BOM_UTF8_LEN, memory);
             } else {
-                let msg = "file must start with a UTF-8 BOM";
-                warn(ErrorKey::Encoding).msg(msg).loc(entry).push();
+                let msg = "Expected UTF-8 BOM encoding";
+                warn(ErrorKey::Encoding).msg(msg).abbreviated(entry).push();
                 parse_reader_export(entry, contents, 0, memory);
             }
         }

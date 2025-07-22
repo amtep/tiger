@@ -6,7 +6,7 @@ use std::mem::take;
 
 use crate::game::Game;
 use crate::helpers::{stringify_choices, ActionOrEvent, TigerHashMap};
-use crate::report::{err, warn, ErrorKey, ReportBuilderStage3};
+use crate::report::{err, warn, ErrorKey, ReportBuilderFull};
 use crate::scopes::Scopes;
 use crate::token::Token;
 
@@ -822,7 +822,7 @@ impl ScopeContext {
     }
 
     /// Add messages to a report that describe where this `ScopeContext` came from.
-    pub fn log_traceback(&self, mut builder: ReportBuilderStage3) -> ReportBuilderStage3 {
+    pub fn log_traceback(&self, mut builder: ReportBuilderFull) -> ReportBuilderFull {
         for elem in self.traceback.iter().rev() {
             builder = builder.loc_msg(elem.token(), "triggered from here");
         }

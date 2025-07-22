@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fs::{read, File};
 use std::io::{stdout, Write};
+use std::iter::once;
 use std::mem::take;
 use std::ops::{Bound, RangeBounds};
 use std::path::{Path, PathBuf};
@@ -18,12 +19,12 @@ use crate::macros::MACRO_MAP;
 use crate::parse::ignore::IgnoreFilter;
 use crate::report::error_loc::ErrorLoc;
 use crate::report::filter::ReportFilter;
-use crate::report::report_struct::LogReport;
 use crate::report::suppress::{Suppression, SuppressionKey};
 use crate::report::writer::log_report;
 use crate::report::writer_json::log_report_json;
 use crate::report::{
-    ErrorKey, FilterRule, LogReportMetadata, LogReportPointers, OutputStyle, PointedMessage,
+    ErrorKey, FilterRule, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle,
+    OutputStyle, PointedMessage,
 };
 use crate::token::{leak, Loc};
 
@@ -120,37 +121,26 @@ impl<'a> Errors<'_> {
         self.storage.entry(report).or_default().insert(pointers);
     }
 
-    /// Immediately log a single-line report about this error.
-    ///
-    /// This is intended for voluminous almost-identical errors, such as from the "unused
-    /// localization" check.
-    // TODO: integrate this function into the error reporting framework.
-    pub fn push_abbreviated<E: ErrorLoc>(&mut self, eloc: E, key: ErrorKey) {
-        let loc = eloc.into_loc();
-        if self.filter.should_maybe_print(key, loc) {
-            if loc.line == 0 {
-                _ = writeln!(self.output.get_mut(), "({key}) {}", loc.pathname().to_string_lossy());
-            } else if let Some(line) = self.cache.get_line(loc) {
-                _ = writeln!(self.output.get_mut(), "({key}) {line}");
-            }
-        }
-    }
-
-    /// Immediately print an error message. It is intended to introduce a following block of
-    /// messages printed with [`Errors::push_abbreviated`].
-    // TODO: integrate this function into the error reporting framework.
-    pub fn push_header(&mut self, _key: ErrorKey, msg: &str) {
-        _ = writeln!(self.output.get_mut(), "{msg}");
-    }
-
     /// Extract the stored reports, sort them, and return them as a vector of ([`LogReport`],Vec<[`PointedMessage`]>).
     pub fn flatten_reports(
+        &self,
         report_store: &'a TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
     ) -> Vec<(&'a LogReportMetadata, Cow<'a, LogReportPointers>)> {
         let mut reports: Vec<_> = report_store
             .iter()
-            .flat_map(|(report, occurrences)| {
-                occurrences.iter().map(move |pointers| (report, Cow::Borrowed(pointers)))
+            .flat_map(|(report, occurrences)| -> Box<dyn Iterator<Item = _>> {
+                let iterator =
+                    occurrences.iter().filter(|pointers| !self.should_ignore(report, pointers));
+                match report.style {
+                    LogReportStyle::Full => {
+                        Box::new(iterator.map(move |pointers| (report, Cow::Borrowed(pointers))))
+                    }
+                    LogReportStyle::Abbreviated => {
+                        let mut pointers: Vec<_> = iterator.map(|o| o[0].clone()).collect();
+                        pointers.sort_unstable_by_key(|p| p.loc);
+                        Box::new(once((report, Cow::Owned(pointers))))
+                    }
+                }
             })
             .collect();
         reports.sort_unstable_by(|(a, ap), (b, bp)| {
@@ -185,14 +175,11 @@ impl<'a> Errors<'_> {
     /// Reports matched by `#tiger-ignore` directives will not be printed.
     pub fn emit_reports(&mut self, json: bool) {
         let storage = take(&mut self.storage);
-        let reports = Self::flatten_reports(&storage);
+        let reports = self.flatten_reports(&storage);
         if json {
             _ = writeln!(self.output.get_mut(), "[");
             let mut first = true;
             for (report, pointers) in &reports {
-                if self.should_ignore(report, pointers) {
-                    continue;
-                }
                 if !first {
                     _ = writeln!(self.output.get_mut(), ",");
                 }
@@ -202,9 +189,6 @@ impl<'a> Errors<'_> {
             _ = writeln!(self.output.get_mut(), "\n]");
         } else {
             for (report, pointers) in &reports {
-                if self.should_ignore(report, pointers) {
-                    continue;
-                }
                 log_report(self, report, pointers);
             }
         }
@@ -370,24 +354,6 @@ where
     let end = lines.end_bound().cloned();
     let entry = IgnoreEntry { start, end, filter };
     Errors::get_mut().ignore.entry(pathname).or_default().push(entry);
-}
-
-// =================================================================================================
-// =============== Deprecated legacy calls to submit reports:
-// =================================================================================================
-
-/// Immediately print an error message. It is intended to introduce a following block of
-/// messages printed with [`warn_abbreviated`].
-pub(crate) fn warn_header(key: ErrorKey, msg: &str) {
-    Errors::get_mut().push_header(key, msg);
-}
-
-/// Immediately log a single-line report about this error.
-///
-/// This is intended for voluminous almost-identical errors, such as from the "unused
-/// localization" check.
-pub(crate) fn warn_abbreviated<E: ErrorLoc>(eloc: E, key: ErrorKey) {
-    Errors::get_mut().push_abbreviated(eloc, key);
 }
 
 // =================================================================================================
