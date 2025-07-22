@@ -23,7 +23,7 @@ use crate::helpers::BiTigerHashMap;
 #[cfg(feature = "hoi4")]
 use crate::hoi4::data::scripted_localisation::ScriptedLocalisation;
 use crate::item::Item;
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(feature = "jomini")]
 use crate::report::err;
 #[cfg(feature = "hoi4")]
 use crate::report::Severity;
@@ -754,6 +754,20 @@ pub fn validate_datatypes(
                 {
                     // TODO: is a TopScope even valid to pass to .Custom? verify
                     validate_custom(token, data, Scopes::all(), lang);
+                }
+            }
+        }
+
+        // TODO: handle GetDefineAtIndex too. No examples in vanilla.
+        #[cfg(feature = "jomini")]
+        if code.name.is("GetDefine") && code.arguments.len() == 2 {
+            if let CodeArg::Literal(ref token1) = code.arguments[0] {
+                if let CodeArg::Literal(ref token2) = code.arguments[1] {
+                    let key = format!("{token1}|{token2}");
+                    if data.defines.get_bv(&key).is_none() {
+                        let msg = format!("{key} not defined in common/defines/");
+                        err(ErrorKey::MissingItem).msg(msg).loc(token2).push();
+                    }
                 }
             }
         }

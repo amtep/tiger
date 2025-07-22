@@ -1131,7 +1131,7 @@ impl Everything {
         self.effects.get(key.as_str())
     }
 
-    #[cfg(feature = "ck3")] // happens not to be used by vic3
+    #[cfg(feature = "ck3")]
     pub(crate) fn get_defined_string(&self, key: &str) -> Option<&Token> {
         self.defines.get_bv(key).and_then(BV::get_value)
     }
@@ -1142,14 +1142,16 @@ impl Everything {
     }
 
     #[allow(clippy::missing_panics_doc)] // only panics on poisoned mutex
-    #[cfg(feature = "ck3")] // happens not to be used by vic3
+    #[cfg(feature = "ck3")]
     pub(crate) fn get_defined_string_warn(&self, token: &Token, key: &str) -> Option<&Token> {
         let result = self.get_defined_string(key);
-        let mut cache = self.warned_defines.write().unwrap();
-        if result.is_none() && !cache.contains(key) {
-            let msg = format!("{key} not defined in common/defines/");
-            err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            cache.insert(key.to_string());
+        if result.is_none() {
+            let mut cache = self.warned_defines.write().unwrap();
+            if !cache.contains(key) {
+                let msg = format!("{key} not defined in common/defines/");
+                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
+                cache.insert(key.to_string());
+            }
         }
         result
     }
@@ -1158,11 +1160,13 @@ impl Everything {
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     pub(crate) fn get_defined_array_warn(&self, token: &Token, key: &str) -> Option<&Block> {
         let result = self.get_defined_array(key);
-        let mut cache = self.warned_defines.write().unwrap();
-        if result.is_none() && !cache.contains(key) {
-            let msg = format!("{key} not defined in common/defines/");
-            err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            cache.insert(key.to_string());
+        if result.is_none() {
+            let mut cache = self.warned_defines.write().unwrap();
+            if !cache.contains(key) {
+                let msg = format!("{key} not defined in common/defines/");
+                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
+                cache.insert(key.to_string());
+            }
         }
         result
     }

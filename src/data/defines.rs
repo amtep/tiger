@@ -43,7 +43,7 @@ impl Defines {
         }
     }
 
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(feature = "jomini")]
     pub fn get_bv(&self, key: &str) -> Option<&BV> {
         self.defines.get(key).map(|d| &d.bv)
     }
