@@ -52,9 +52,9 @@ fn log_pointer(
         return;
     }
     if let Some(line) = errors.cache.get_line(pointer.loc) {
-        let (line, removed, spaces) = line_spacing(line.to_owned());
-        log_line_from_source(errors, pointer, indentation, &line, spaces);
-        log_line_carets(errors, pointer, indentation, &line, removed, spaces, severity);
+        let (line, removed, spaces) = line_spacing(line);
+        log_line_from_source(errors, pointer, indentation, line, spaces);
+        log_line_carets(errors, pointer, indentation, line, removed, spaces, severity);
     }
 }
 
@@ -199,7 +199,7 @@ pub(crate) fn kind_tag<'a>(errors: &'a Errors<'a>, kind: FileKind) -> &'a str {
 
 /// Removes the leading spaces and tabs from `line` and returns it,
 /// together with how many character positions were removed and how many spaces should be substituted.
-fn line_spacing(mut line: String) -> (String, usize, usize) {
+fn line_spacing(line: &str) -> (&str, usize, usize) {
     let mut remove = 0;
     let mut spaces = 0;
     for c in line.chars() {
@@ -213,6 +213,5 @@ fn line_spacing(mut line: String) -> (String, usize, usize) {
         remove += 1;
     }
     spaces = spaces.min(MAX_IDLE_SPACE);
-    line.replace_range(..remove, "");
-    (line, remove, spaces)
+    (&line[remove..], remove, spaces)
 }
