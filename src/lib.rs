@@ -29,7 +29,7 @@ pub use crate::mod_metadata::ModMetadata;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 pub use crate::modfile::ModFile;
 pub use crate::report::{
-    add_loaded_mod_root, disable_ansi_colors, emit_reports, log, set_output_file, set_output_style,
+    add_loaded_mod_root, disable_ansi_colors, emit_reports, log, set_output_style,
     set_show_loaded_mods, set_show_vanilla, suppress_from_json, take_reports, Confidence,
     LogReportMetadata, LogReportPointers, PointedMessage, Severity,
 };

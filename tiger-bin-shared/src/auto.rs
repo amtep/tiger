@@ -1,4 +1,4 @@
-use std::fs::{read_dir, DirEntry};
+use std::fs::{read_dir, DirEntry, File};
 use std::mem::forget;
 use std::path::{Path, PathBuf};
 
@@ -8,7 +8,7 @@ use console::Term;
 use tiger_lib::ModFile;
 #[cfg(feature = "vic3")]
 use tiger_lib::ModMetadata;
-use tiger_lib::{emit_reports, set_output_file, Everything};
+use tiger_lib::{emit_reports, Everything};
 
 use crate::gamedir::{
     find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
@@ -137,7 +137,7 @@ fn validate_mod(
     let output_filename =
         format!("{name_short}-tiger-{}.log", modpath.file_name().unwrap().to_string_lossy());
     let output_file = &logdir.join(output_filename);
-    set_output_file(output_file)?;
+    let mut output = Box::new(File::create(output_file)?);
     eprintln!("Writing error reports to {} ...", output_file.display());
     eprintln!("This will take a few seconds.");
 
@@ -165,12 +165,13 @@ fn validate_mod(
     // The colors can be enabled again in the config file.
     everything.load_output_settings(false);
     everything.load_config_filtering_rules();
-    emit_reports(false);
+    emit_reports(&mut output, false);
 
     everything.load_all();
     everything.validate_all();
     everything.check_rivers();
-    emit_reports(false);
+
+    emit_reports(&mut output, false);
 
     // Properly dropping `everything` takes a noticeable amount of time, and we're exiting anyway.
     forget(everything);

@@ -1,3 +1,4 @@
+use std::io::stdout;
 use std::{mem::forget, path::PathBuf};
 
 use anyhow::{bail, Result};
@@ -242,8 +243,10 @@ pub fn run(
             everything.load_output_settings(true);
             everything.load_config_filtering_rules();
 
+            let mut output = stdout();
+
             if !args.json {
-                emit_reports(false);
+                emit_reports(&mut output, false);
             }
 
             // We must apply the --no-color flag AFTER loading and applying the config,
@@ -272,7 +275,7 @@ pub fn run(
                 everything.check_unused();
             }
 
-            emit_reports(args.json);
+            emit_reports(&mut output, args.json);
 
             // Properly dropping `everything` takes a noticeable amount of time, and we're exiting anyway.
             forget(everything);
