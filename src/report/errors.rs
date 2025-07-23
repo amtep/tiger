@@ -3,15 +3,14 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::cmp::Ordering;
-use std::fs::{read, File};
-use std::io::{stdout, Write};
+use std::fs::read;
+use std::io::Write;
 use std::iter::once;
 use std::mem::take;
 use std::ops::{Bound, RangeBounds};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
-use anyhow::Result;
 use encoding_rs::{UTF_8, WINDOWS_1252};
 
 use crate::helpers::{TigerHashMap, TigerHashSet};
@@ -31,9 +30,8 @@ use crate::token::{leak, Loc};
 static ERRORS: LazyLock<Mutex<Errors>> = LazyLock::new(|| Mutex::new(Errors::default()));
 
 #[allow(missing_debug_implementations)]
+#[derive(Default)]
 pub struct Errors<'a> {
-    pub(crate) output: RefCell<Box<dyn Write + Send>>,
-
     /// Extra loaded mods' error tags.
     pub(crate) loaded_mods_labels: Vec<String>,
 
@@ -58,23 +56,7 @@ pub struct Errors<'a> {
     storage: TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
 }
 
-impl Default for Errors<'_> {
-    fn default() -> Self {
-        Errors {
-            output: RefCell::new(Box::new(stdout())),
-            loaded_mods_labels: Vec::default(),
-            loaded_dlcs_labels: Vec::default(),
-            cache: Cache::default(),
-            filter: ReportFilter::default(),
-            styles: OutputStyle::default(),
-            storage: TigerHashMap::default(),
-            suppress: TigerHashMap::default(),
-            ignore: TigerHashMap::default(),
-        }
-    }
-}
-
-impl<'a> Errors<'_> {
+impl Errors<'_> {
     fn should_suppress(&self, report: &LogReportMetadata, pointers: &LogReportPointers) -> bool {
         let key = SuppressionKey { key: report.key, message: Cow::Borrowed(&report.msg) };
         if let Some(v) = self.suppress.get(&key) {
@@ -121,12 +103,10 @@ impl<'a> Errors<'_> {
         self.storage.entry(report).or_default().insert(pointers);
     }
 
-    /// Extract the stored reports, sort them, and return them as a vector of ([`LogReport`],Vec<[`PointedMessage`]>).
-    pub fn flatten_reports(
-        &self,
-        report_store: &'a TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>>,
-    ) -> Vec<(&'a LogReportMetadata, Cow<'a, LogReportPointers>)> {
-        let mut reports: Vec<_> = report_store
+    /// Extract the stored reports, sort them, and return them as a vector.
+    pub fn flatten_reports(&self) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>)> {
+        let mut reports: Vec<_> = self
+            .storage
             .iter()
             .flat_map(|(report, occurrences)| -> Box<dyn Iterator<Item = _>> {
                 let iterator =
@@ -173,25 +153,25 @@ impl<'a> Errors<'_> {
     /// readability and occasionally gets changed to improve that.
     ///
     /// Reports matched by `#tiger-ignore` directives will not be printed.
-    pub fn emit_reports(&mut self, json: bool) {
-        let storage = take(&mut self.storage);
-        let reports = self.flatten_reports(&storage);
+    pub fn emit_reports<O: Write + Send>(&mut self, output: &mut O, json: bool) {
+        let reports = self.flatten_reports();
         if json {
-            _ = writeln!(self.output.get_mut(), "[");
+            _ = writeln!(output, "[");
             let mut first = true;
             for (report, pointers) in &reports {
                 if !first {
-                    _ = writeln!(self.output.get_mut(), ",");
+                    _ = writeln!(output, ",");
                 }
                 first = false;
-                log_report_json(self, report, pointers);
+                log_report_json(self, output, report, pointers);
             }
-            _ = writeln!(self.output.get_mut(), "\n]");
+            _ = writeln!(output, "\n]");
         } else {
             for (report, pointers) in &reports {
-                log_report(self, report, pointers);
+                log_report(self, output, report, pointers);
             }
         }
+        self.storage.clear();
     }
 
     pub fn store_source_file(&mut self, fullpath: PathBuf, source: &'static str) {
@@ -285,13 +265,6 @@ pub fn add_loaded_dlc_root(label: String) {
     errors.loaded_dlcs_labels.push(label);
 }
 
-/// Configure the error reports to be written to this file instead of to stdout.
-pub fn set_output_file(file: &Path) -> Result<()> {
-    let file = File::create(file)?;
-    Errors::get_mut().output = RefCell::new(Box::new(file));
-    Ok(())
-}
-
 /// Store an error report to be emitted when [`emit_reports`] is called.
 pub fn log((report, mut pointers): LogReport) {
     let mut vec = Vec::new();
@@ -332,8 +305,8 @@ pub fn will_maybe_log<E: ErrorLoc>(eloc: E, key: ErrorKey) -> bool {
 ///
 /// Note that the default output format is not stable across versions. It is meant for human
 /// readability and occasionally gets changed to improve that.
-pub fn emit_reports(json: bool) {
-    Errors::get_mut().emit_reports(json);
+pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool) {
+    Errors::get_mut().emit_reports(output, json);
 }
 
 /// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].

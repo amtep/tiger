@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use serde_json::json;
 
 use crate::report::errors::Errors;
@@ -5,8 +7,9 @@ use crate::report::writer::kind_tag;
 use crate::report::{LogReportMetadata, LogReportPointers};
 
 /// Log the report in JSON format.
-pub fn log_report_json(
-    errors: &mut Errors,
+pub fn log_report_json<O: Write + Send>(
+    errors: &Errors,
+    output: &mut O,
     report: &LogReportMetadata,
     pointers: &LogReportPointers,
 ) {
@@ -36,7 +39,7 @@ pub fn log_report_json(
         "locations": pointers,
     });
 
-    if let Err(e) = serde_json::to_writer_pretty(errors.output.get_mut(), &report) {
+    if let Err(e) = serde_json::to_writer_pretty(output, &report) {
         eprintln!("JSON error: {e:#}");
     }
 }

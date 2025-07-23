@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use ansiterm::{ANSIString, ANSIStrings};
 use unicode_width::UnicodeWidthChar;
 
@@ -14,29 +16,35 @@ const SPACES_PER_TAB: usize = 4;
 const MAX_IDLE_SPACE: usize = 16;
 
 /// Log the report.
-pub fn log_report(errors: &mut Errors, report: &LogReportMetadata, pointers: &LogReportPointers) {
+pub fn log_report<O: Write + Send>(
+    errors: &Errors,
+    output: &mut O,
+    report: &LogReportMetadata,
+    pointers: &LogReportPointers,
+) {
     let indentation = pointer_indentation(pointers);
     // Log error lvl and message:
-    log_line_title(errors, report);
+    log_line_title(errors, output, report);
 
     // Log the pointers:
     let iterator = pointers.iter();
     let mut previous = None;
     for pointer in iterator {
-        log_pointer(errors, previous, pointer, indentation, report.severity);
+        log_pointer(errors, output, previous, pointer, indentation, report.severity);
         previous = Some(pointer);
     }
 
     // Log the info line, if one exists.
     if let Some(info) = &report.info {
-        log_line_info(errors, indentation, info);
+        log_line_info(errors, output, indentation, info);
     }
     // Write a blank line to visually separate reports:
-    _ = writeln!(errors.output.borrow_mut());
+    _ = writeln!(output);
 }
 
-fn log_pointer(
-    errors: &mut Errors,
+fn log_pointer<O: Write + Send>(
+    errors: &Errors,
+    output: &mut O,
     previous: Option<&PointedMessage>,
     pointer: &PointedMessage,
     indentation: usize,
@@ -44,7 +52,7 @@ fn log_pointer(
 ) {
     if previous.is_none() || !previous.unwrap().loc.same_file(pointer.loc) {
         // This pointer is not the same as the previous pointer. Print file location as well:
-        log_line_file_location(errors, pointer, indentation);
+        log_line_file_location(errors, output, pointer, indentation);
     }
     if pointer.loc.line == 0 {
         // Line being zero means the location is an entire file,
@@ -53,13 +61,13 @@ fn log_pointer(
     }
     if let Some(line) = errors.cache.get_line(pointer.loc) {
         let (line, removed, spaces) = line_spacing(line);
-        log_line_from_source(errors, pointer, indentation, line, spaces);
-        log_line_carets(errors, pointer, indentation, line, removed, spaces, severity);
+        log_line_from_source(errors, output, pointer, indentation, line, spaces);
+        log_line_carets(errors, output, pointer, indentation, line, removed, spaces, severity);
     }
 }
 
 /// Log the first line of a report, containing the severity level and the error message.
-fn log_line_title(errors: &Errors, report: &LogReportMetadata) {
+fn log_line_title<O: Write + Send>(errors: &Errors, output: &mut O, report: &LogReportMetadata) {
     let line: &[ANSIString<'static>] = &[
         errors
             .styles
@@ -69,11 +77,11 @@ fn log_line_title(errors: &Errors, report: &LogReportMetadata) {
         errors.styles.style(Styled::Default).paint(": "),
         errors.styles.style(Styled::ErrorMessage).paint(report.msg.clone()),
     ];
-    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line));
+    _ = writeln!(output, "{}", ANSIStrings(line));
 }
 
 /// Log the optional info line that is part of the overall report.
-fn log_line_info(errors: &Errors, indentation: usize, info: &str) {
+fn log_line_info<O: Write + Send>(errors: &Errors, output: &mut O, indentation: usize, info: &str) {
     let line_info: &[ANSIString<'static>] = &[
         errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
         errors.styles.style(Styled::Default).paint(" "),
@@ -83,11 +91,16 @@ fn log_line_info(errors: &Errors, indentation: usize, info: &str) {
         errors.styles.style(Styled::Default).paint(" "),
         errors.styles.style(Styled::Info).paint(info.to_string()),
     ];
-    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_info));
+    _ = writeln!(output, "{}", ANSIStrings(line_info));
 }
 
 /// Log the line containing the location's mod name and filename.
-fn log_line_file_location(errors: &Errors, pointer: &PointedMessage, indentation: usize) {
+fn log_line_file_location<O: Write + Send>(
+    errors: &Errors,
+    output: &mut O,
+    pointer: &PointedMessage,
+    indentation: usize,
+) {
     let line_filename: &[ANSIString<'static>] = &[
         errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
         errors.styles.style(Styled::Location).paint("-->"),
@@ -102,12 +115,13 @@ fn log_line_file_location(errors: &Errors, pointer: &PointedMessage, indentation
             .style(Styled::Location)
             .paint(format!("{}", pointer.loc.pathname().display())),
     ];
-    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_filename));
+    _ = writeln!(output, "{}", ANSIStrings(line_filename));
 }
 
 /// Print a line from the source file.
-fn log_line_from_source(
+fn log_line_from_source<O: Write + Send>(
     errors: &Errors,
+    output: &mut O,
     pointer: &PointedMessage,
     indentation: usize,
     line: &str,
@@ -120,11 +134,13 @@ fn log_line_from_source(
         errors.styles.style(Styled::Default).paint(" "),
         errors.styles.style(Styled::SourceText).paint(format!("{:spaces$}{line}", "")),
     ];
-    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_from_source));
+    _ = writeln!(output, "{}", ANSIStrings(line_from_source));
 }
 
-fn log_line_carets(
+#[allow(clippy::too_many_arguments)]
+fn log_line_carets<O: Write + Send>(
     errors: &Errors,
+    output: &mut O,
     pointer: &PointedMessage,
     indentation: usize,
     line: &str,
@@ -173,7 +189,7 @@ fn log_line_carets(
             .style(Styled::Tag(severity, true))
             .paint(pointer.msg.as_deref().unwrap_or("")),
     ];
-    _ = writeln!(errors.output.borrow_mut(), "{}", ANSIStrings(line_carets));
+    _ = writeln!(output, "{}", ANSIStrings(line_carets));
 }
 
 pub(crate) fn kind_tag<'a>(errors: &'a Errors<'a>, kind: FileKind) -> &'a str {
