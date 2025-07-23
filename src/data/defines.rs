@@ -91,6 +91,38 @@ impl Define {
         // TODO: validate that each define is the right 'type',
         // such as a path, a number, or a block of numeric values
 
+        let define_type = match &self.bv {
+            BV::Value(token) => {
+                if token.is_number() {
+                    "DefineType::Number"
+                } else if token.is("yes") || token.is("no") {
+                    "DefineType::Boolean"
+                } else {
+                    "DefineType::String"
+                }
+            }
+            BV::Block(block) => {
+                if block.num_items() == 0 {
+                    "DefineType::UnknownList"
+                } else {
+                    let first = block.iter_items().next().unwrap();
+                    if first.get_value().map(|t| t.is_number()).unwrap_or(false) {
+                        if block.num_items() == 4 {
+                            "DefineType::Color"
+                        } else {
+                            "DefineType::NumberList"
+                        }
+                    } else if first.get_value().map(|t| !t.is_number()).unwrap_or(false) {
+                        "DefineType::StringList"
+                    } else {
+                        "DefineType::UnknownList"
+                    }
+                }
+            }
+        };
+
+        eprintln!("    (\"{}|{}\", {define_type}),", &self.group, &self.name);
+
         #[cfg(feature = "ck3")]
         if self.group.is("NGameIcons") && self.name.is("PIETY_GROUPS") {
             if let Some(icon_path) =
