@@ -10,10 +10,7 @@ use crate::script_value::validate_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_target;
-use crate::validate::{
-    validate_color, validate_optional_duration, validate_optional_duration_int,
-    validate_possibly_named_color,
-};
+use crate::validate::{validate_color, validate_optional_duration, validate_possibly_named_color};
 use crate::validator::{Validator, ValueValidator};
 use crate::vic3::data::buildings::BuildingType;
 use crate::vic3::tables::misc::{LOBBY_FORMATION_REASON, STATE_TYPES, STRATA, TARIFF_LEVELS};
@@ -1098,7 +1095,7 @@ pub fn validate_create_treaty(
     vd.field_date("entered_into_force_on");
     vd.field_validated_block("binding_period", |block, data| {
         let mut vd = Validator::new(block, data);
-        validate_optional_duration_int(&mut vd);
+        validate_optional_duration(&mut vd, sc);
     });
 
     if !block.has_key("amends") && !block.has_key("articles_to_create") {
