@@ -346,7 +346,9 @@ pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool, consolidate: bo
     Errors::get_mut().emit_reports(output, json, consolidate);
 }
 
-/// Extract the stored reports, sort them, and return them as a vector of [`LogReport`].
+/// Extract the stored reports, sort them, and return them as a hashmap with the occurrences for
+/// each instance of metadata split out.
+///
 /// The stored reports will be left empty.
 pub fn take_reports() -> TigerHashMap<LogReportMetadata, TigerHashSet<LogReportPointers>> {
     take(&mut Errors::get_mut().storage)
