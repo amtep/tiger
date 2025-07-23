@@ -322,7 +322,7 @@ fn recursive_pointed_msg_expansion(vec: &mut LogReportPointers, pointer: &Pointe
     if let Some(link) = pointer.loc.link_idx {
         let from_here = PointedMessage {
             loc: MACRO_MAP.get_loc(link).unwrap(),
-            length: 0,
+            length: 1,
             msg: Some("from here".to_owned()),
         };
         let index = vec.len();

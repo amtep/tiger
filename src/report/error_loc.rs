@@ -142,7 +142,7 @@ impl ErrorLoc for Loc {
 
 impl ErrorLoc for Token {
     fn loc_length(&self) -> usize {
-        self.as_str().chars().count()
+        self.as_str().chars().count().max(1)
     }
 
     fn into_loc(self) -> Loc {
@@ -152,7 +152,7 @@ impl ErrorLoc for Token {
 
 impl ErrorLoc for &Token {
     fn loc_length(&self) -> usize {
-        self.as_str().chars().count()
+        self.as_str().chars().count().max(1)
     }
 
     fn into_loc(self) -> Loc {
