@@ -112,7 +112,17 @@ pub struct Music {
 impl Music {
     pub fn validate(&self, data: &Everything) {
         let mut vd = Validator::new(&self.block, data);
-        let mut sc = ScopeContext::new(Scopes::Character, &self.key);
+        let scope = match Game::game() {
+            #[cfg(feature = "ck3")]
+            Game::Ck3 => Scopes::Character,
+            #[cfg(feature = "vic3")]
+            Game::Vic3 => Scopes::Country,
+            #[cfg(feature = "imperator")]
+            Game::Imperator => Scopes::Country,
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => Scopes::Country,
+        };
+        let mut sc = ScopeContext::new(scope, &self.key);
 
         vd.field_localization("name", &mut sc);
         vd.field_item("music", Item::Sound);
