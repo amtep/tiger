@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use crate::block::{Block, BV};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
+use crate::game::Game;
 use crate::helpers::{dup_error, TigerHashMap};
 #[cfg(feature = "ck3")]
 use crate::item::Item;
@@ -10,6 +11,7 @@ use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 #[cfg(feature = "ck3")]
 use crate::report::Severity;
+use crate::report::{err, ErrorKey};
 use crate::token::Token;
 
 #[derive(Clone, Debug, Default)]
@@ -88,8 +90,25 @@ impl Define {
     #[allow(clippy::unused_self)]
     #[allow(unused_variables)] // because only ck3 uses `data`
     pub fn validate(&self, data: &Everything) {
-        // TODO: validate that each define is the right 'type',
-        // such as a path, a number, or a block of numeric values
+        let defines_map = match Game::game() {
+            #[cfg(feature = "ck3")]
+            Game::Ck3 => &crate::ck3::tables::defines::DEFINES_MAP,
+            #[cfg(feature = "vic3")]
+            Game::Vic3 => &crate::vic3::tables::defines::DEFINES_MAP,
+            #[cfg(feature = "imperator")]
+            Game::Imperator => &crate::imperator::tables::defines::DEFINES_MAP,
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => &crate::hoi4::tables::defines::DEFINES_MAP,
+        };
+
+        // TODO: save key instead of reconstructing it here?
+        let key = format!("{}|{}", &self.group, &self.name);
+        if let Some(dt) = defines_map.get(&*key) {
+            dt.validate(&self.bv, data);
+        } else {
+            let msg = format!("unknown define {key}");
+            err(ErrorKey::UnknownField).msg(msg).loc(&self.name).push();
+        }
 
         #[cfg(feature = "ck3")]
         if self.group.is("NGameIcons") && self.name.is("PIETY_GROUPS") {

@@ -52,6 +52,7 @@ mod datatype;
 mod date;
 mod db;
 mod dds;
+mod defines;
 mod desc;
 mod effect;
 #[cfg(feature = "jomini")]
