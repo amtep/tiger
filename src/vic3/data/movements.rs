@@ -9,6 +9,7 @@ use crate::script_value::validate_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
+use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]
 pub struct PoliticalMovement {}
@@ -25,6 +26,8 @@ impl PoliticalMovement {
 
 impl DbKind for PoliticalMovement {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        maybe_warn_modifiable_capitalization(key);
+
         let mut vd = Validator::new(block, data);
 
         data.verify_exists(Item::Localization, key);

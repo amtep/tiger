@@ -8,7 +8,7 @@ use crate::helpers::TigerHashMap;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::modif::ModifKinds;
-use crate::report::{report, ErrorKey, Severity};
+use crate::report::{report, untidy, ErrorKey, Severity};
 use crate::token::Token;
 
 pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
@@ -554,6 +554,16 @@ fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn:
             let info = format!("so the modifier {name} will have no effect");
             report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
+    }
+}
+
+pub fn maybe_warn_modifiable_capitalization(name: &Token) {
+    if !name.is_lowercase() {
+        untidy(ErrorKey::DefinitionName)
+            .msg("item name contains capital letters, but modifier type definition names must be lowercase")
+            .info("so dynamic modifiers for this item will not be available")
+            .loc(name)
+            .push();
     }
 }
 

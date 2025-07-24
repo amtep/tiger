@@ -6,6 +6,7 @@ use crate::item::{Item, ItemLoader};
 use crate::token::Token;
 use crate::validate::validate_possibly_named_color;
 use crate::validator::Validator;
+use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]
 pub struct AcceptanceStatus {}
@@ -23,6 +24,8 @@ impl AcceptanceStatus {
 impl DbKind for AcceptanceStatus {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
+
+        maybe_warn_modifiable_capitalization(key);
 
         data.verify_exists(Item::Localization, key);
         let loca = format!("{key}_desc");

@@ -10,6 +10,7 @@ use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::validate_possibly_named_color;
 use crate::validator::Validator;
+use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]
 pub struct CombatUnit {}
@@ -27,6 +28,8 @@ impl CombatUnit {
 impl DbKind for CombatUnit {
     // This whole item type is undocumented.
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        maybe_warn_modifiable_capitalization(key);
+
         data.verify_exists(Item::Localization, key);
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
