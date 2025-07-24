@@ -11,9 +11,33 @@ use crate::modif::ModifKinds;
 use crate::report::{report, ErrorKey, Severity};
 use crate::token::Token;
 
+pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
+    let kind = lookup_engine_modif(name, data, warn);
+
+    // The Item::ModifierType must exist
+    if data.item_exists(Item::ModifierTypeDefinition, name.as_str()) {
+        return kind.or(Some(ModifKinds::all()));
+    } else if let Some(sev) = warn {
+        let info = kind
+            .and(Some("You can create it and the game engine will apply the modifier"))
+            .unwrap_or("You can create it and the modifier will appear in game, but the engine will not apply any effect");
+        report(ErrorKey::MissingItem, sev)
+            .msg("modifier type definition does not exist")
+            .info(info)
+            .loc(name)
+            .push();
+    }
+
+    None
+}
+
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.
 /// Returns None otherwise.
-pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
+fn lookup_engine_modif(
+    name: &Token,
+    data: &Everything,
+    warn: Option<Severity>,
+) -> Option<ModifKinds> {
     let name_lc = Lowercase::new(name.as_str());
 
     if let result @ Some(_) = MODIF_MAP.get(&name_lc).copied() {
@@ -25,7 +49,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
             let msg = format!("{name} has been removed");
             report(ErrorKey::Removed, sev).msg(msg).info(info).loc(name).push();
         }
-        return Some(ModifKinds::all());
+        return None;
     }
 
     // Look up generated modifs, in a careful order because of possibly overlapping suffixes.
@@ -43,7 +67,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // building_group_$BuildingGroup$_$PopType$_fertility_mult
     // building_group_$BuildingGroup$_$PopType$_mortality_mult
     // building_group_$BuildingGroup$_$PopType$_standard_of_living_add
-    // TODO: allowed_collectivization_add is not enabled for all bg
     // building_group_$BuildingGroup$_allowed_collectivization_add
     // building_group_$BuildingGroup$_employee_mult
     // building_group_$BuildingGroup$_fertility_mult
@@ -134,7 +157,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
             return Some(ModifKinds::Building);
         }
     }
-    // TODO: the _mult doesn't exist for all goods
+
     // goods_input_$Goods$_add
     // goods_input_$Goods$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("goods_input_") {
@@ -157,7 +180,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // building_output_$Goods$_add (obsolete)
     // building_output_$Goods$_mult (obsolete)
     if let Some(part) = name_lc.strip_prefix_unchecked("building_output_") {
-        // TODO: some goods don't have the _mult version. Figure out why.
         for &sfx in &["_add", "_mult"] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
                 maybe_warn(Item::Goods, &part, name, data, warn);
@@ -173,7 +195,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // goods_output_$Goods$_add
     // goods_output_$Goods$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("goods_output_") {
-        // TODO: some goods don't have the _mult version. Figure out why.
         for &sfx in &["_add", "_mult"] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
                 maybe_warn(Item::Goods, &part, name, data, warn);
@@ -190,7 +211,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
 
-    // TODO: this is only for a few institutions
     // country_institution_cost_$Institution$_add
     // country_institution_cost_$Institution$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_cost_") {
@@ -202,7 +222,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
 
-    // TODO: this is only for 1 institution
     // country_institution_impact_$Institution$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_impact_") {
         if let Some(part) = part.strip_suffix_unchecked("_mult") {
@@ -211,7 +230,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
 
-    // TODO: this is only for 2 institutions
     // country_institution_size_change_speed_$Institution$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_size_change_speed_") {
         if let Some(part) = part.strip_suffix_unchecked("_mult") {
@@ -355,7 +373,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
 
-    // TODO: this is only for a few laws
     // country_enactment_time_$Law$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("country_enactment_time_") {
         if let Some(part) = part.strip_suffix_unchecked("_mult") {
@@ -385,7 +402,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
                     && !data.item_exists_lc(Item::Culture, &part)
                 {
                     let msg = format!("{part} not found as culture or religion");
-                    let info = format!("so the modifier {name} does not exist");
+                    let info = format!("so the modifier {name} will have no effect");
                     report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
                 }
             }
@@ -445,7 +462,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
                     && !data.item_has_property(Item::BuildingType, part.as_str(), "max_level")
                 {
                     let msg = format!("building {part} does not have `has_max_level = yes`");
-                    let info = format!("so the modifier {name} does not exist");
+                    let info = format!("so the modifier {name} will have no effect");
                     report(ErrorKey::MissingItem, sev)
                         .strong()
                         .msg(msg)
@@ -495,7 +512,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
 
-    // TODO: not all of these exist for all unit types
     // unit_$CombatUnit$_offense_mult
     // unit_$CombatUnit$_offense_add
     if let Some(part) = name_lc.strip_prefix_unchecked("unit_") {
@@ -528,13 +544,6 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 
     // TODO: modifiers from terrain labels
 
-    // User-defined modifs are accepted in Vic3.
-    // They must have a ModifierType entry to be accepted by the game engine,
-    // so if that exists then accept the modif.
-    if data.item_exists_lc(Item::ModifierTypeDefinition, &name_lc) {
-        return Some(ModifKinds::all());
-    }
-
     None
 }
 
@@ -542,7 +551,7 @@ fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn:
     if let Some(sev) = warn {
         if !data.item_exists_lc(itype, s) {
             let msg = format!("could not find {itype} {s}");
-            let info = format!("so the modifier {name} does not exist");
+            let info = format!("so the modifier {name} will have no effect");
             report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
     }

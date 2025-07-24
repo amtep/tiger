@@ -182,8 +182,7 @@ pub fn validate_modifs<'a>(
             }
             #[cfg(feature = "vic3")]
             if Game::is_vic3() {
-                // The Item::ModifierType doesn't need to exist if the defaults are ok,
-                // but the loca should exist.
+                // The loca should exist.
                 let (loca_key, loca_desc_key) = modif_loc_vic3(key, data);
                 data.verify_exists_implied(Item::Localization, &loca_key, key);
                 data.verify_exists_implied(Item::Localization, &loca_desc_key, key);
@@ -193,7 +192,9 @@ pub fn validate_modifs<'a>(
                 let loca_key = modif_loc_hoi4(key, data);
                 data.verify_exists_implied(Item::Localization, &loca_key, key);
             }
-        } else {
+        }
+        // All modifiers are potentially valid in vic3
+        else if !Game::is_vic3() {
             let msg = format!("unknown modifier `{key}`");
             err(ErrorKey::UnknownField).msg(msg).loc(key).push();
         }
@@ -214,7 +215,9 @@ pub fn verify_modif_exists(key: &Token, data: &Everything, kinds: ModifKinds, se
 
     if let Some(mk) = lookup_modif(key, data, Some(sev)) {
         kinds.require(mk, key);
-    } else {
+    }
+    // All modifiers are potentially valid in vic3
+    else if !Game::is_vic3() {
         let msg = format!("unknown modifier `{key}`");
         err(ErrorKey::UnknownField).msg(msg).loc(key).push();
     }
