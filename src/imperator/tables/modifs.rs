@@ -4,9 +4,9 @@ use std::sync::LazyLock;
 
 use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
+use crate::imperator::modif::ModifKinds;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::modif::ModifKinds;
 use crate::report::{report, ErrorKey, Severity};
 use crate::token::Token;
 

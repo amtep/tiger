@@ -1,10 +1,11 @@
 use crate::block::Block;
+use crate::ck3::modif::ModifKinds;
 use crate::ck3::tables::modifs::modif_loc;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{verify_modif_exists, ModifKinds};
+use crate::modif::verify_modif_exists;
 use crate::report::Severity;
 use crate::token::Token;
 use crate::validator::Validator;

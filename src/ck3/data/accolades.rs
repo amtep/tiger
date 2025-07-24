@@ -2,13 +2,14 @@ use crate::block::Block;
 use crate::ck3::data::maa::{
     validate_holding_bonus, validate_terrain_bonus, validate_winter_bonus,
 };
+use crate::ck3::modif::ModifKinds;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;

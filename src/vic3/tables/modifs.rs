@@ -7,9 +7,9 @@ use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::modif::ModifKinds;
 use crate::report::{report, untidy, ErrorKey, Severity};
 use crate::token::Token;
+use crate::vic3::modif::ModifKinds;
 
 pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
     let name_lc = Lowercase::new(name.as_str());

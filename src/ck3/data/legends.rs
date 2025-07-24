@@ -1,4 +1,5 @@
 use crate::block::{Block, BV};
+use crate::ck3::modif::ModifKinds;
 use crate::ck3::tables::misc::LEGEND_QUALITY;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
@@ -8,7 +9,7 @@ use crate::effect::validate_effect;
 use crate::game::GameFlags;
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::script_value::{validate_non_dynamic_script_value, validate_script_value_no_breakdown};

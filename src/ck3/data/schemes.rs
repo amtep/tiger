@@ -1,4 +1,5 @@
 use crate::block::Block;
+use crate::ck3::modif::ModifKinds;
 use crate::ck3::tables::misc::{AGENT_SLOT_CONTRIBUTION_TYPE, AI_TARGETS};
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
@@ -7,7 +8,7 @@ use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{warn, ErrorKey};
 use crate::scopes::Scopes;
 use crate::script_value::validate_non_dynamic_script_value;

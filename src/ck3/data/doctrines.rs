@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use crate::block::Block;
+use crate::ck3::modif::ModifKinds;
 use crate::ck3::validate::validate_traits;
 use crate::context::ScopeContext;
 use crate::desc::validate_desc;
@@ -8,7 +9,7 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{dup_error, TigerHashMap, TigerHashSet};
 use crate::item::Item;
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::scopes::Scopes;

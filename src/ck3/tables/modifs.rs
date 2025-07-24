@@ -3,11 +3,11 @@
 use std::borrow::Cow;
 use std::sync::LazyLock;
 
+use crate::ck3::modif::ModifKinds;
 use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::modif::ModifKinds;
 use crate::report::{report, ErrorKey, Severity};
 use crate::token::Token;
 

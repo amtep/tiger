@@ -1,10 +1,11 @@
 use crate::block::Block;
+use crate::ck3::modif::ModifKinds;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::pdxfile::PdxEncoding;
 use crate::report::{err, warn, ErrorKey};
 use crate::scopes::Scopes;
