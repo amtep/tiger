@@ -18,12 +18,14 @@ pub enum DefineType {
     Date,
     String,
     Item(Item),
+    SingleQuotedItem(Item),
     Choice(&'static [&'static str]),
     UnknownList,
     IntegerList,
     NumberList,
     StringList,
     ItemList(Item),
+    ItemOrEmptyList(Item),
     /// Color is a list of 4 numbers, presumably in RGBA format.
     Color,
     /// Color3 is a list of 3 numbers, presumably in RGB format.
@@ -36,12 +38,16 @@ impl From<DefineType> for Datatype {
             DefineType::Boolean => Datatype::bool,
             DefineType::Integer | DefineType::Number => Datatype::CFixedPoint,
             DefineType::Date => Datatype::Date,
-            DefineType::String | DefineType::Item(_) | DefineType::Choice(_) => Datatype::CString,
+            DefineType::String
+            | DefineType::Item(_)
+            | DefineType::SingleQuotedItem(_)
+            | DefineType::Choice(_) => Datatype::CString,
             DefineType::UnknownList
             | DefineType::IntegerList
             | DefineType::NumberList
             | DefineType::StringList
-            | DefineType::ItemList(_) => Datatype::Unknown,
+            | DefineType::ItemList(_)
+            | DefineType::ItemOrEmptyList(_) => Datatype::Unknown,
             DefineType::Color3 => Datatype::CVector3f,
             DefineType::Color => Datatype::CVector4f,
         }
@@ -76,6 +82,15 @@ impl DefineType {
                     data.verify_exists(itype, token);
                 }
             }
+            DefineType::SingleQuotedItem(itype) => {
+                if let Some(token) = bv.expect_value() {
+                    if let Some(sfx) = token.strip_prefix("'") {
+                        if let Some(bare) = sfx.strip_suffix("'") {
+                            data.verify_exists(itype, &bare);
+                        }
+                    }
+                }
+            }
             DefineType::Choice(choices) => {
                 if let Some(token) = bv.expect_value() {
                     if !choices.contains(&token.as_str()) {
@@ -108,6 +123,16 @@ impl DefineType {
                     let mut vd = Validator::new(block, data);
                     for value in vd.values() {
                         data.verify_exists(itype, value);
+                    }
+                }
+            }
+            DefineType::ItemOrEmptyList(itype) => {
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    for value in vd.values() {
+                        if !value.as_str().is_empty() {
+                            data.verify_exists(itype, value);
+                        }
                     }
                 }
             }
