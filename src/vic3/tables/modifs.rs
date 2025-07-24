@@ -12,10 +12,12 @@ use crate::report::{report, untidy, ErrorKey, Severity};
 use crate::token::Token;
 
 pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
-    let kind = lookup_engine_modif(name, data, warn);
+    let name_lc = Lowercase::new(name.as_str());
+
+    let kind = lookup_engine_modif(name, &name_lc, data, warn);
 
     // The Item::ModifierType must exist
-    if data.item_exists(Item::ModifierTypeDefinition, name.as_str()) {
+    if data.item_exists_lc(Item::ModifierTypeDefinition, &name_lc) {
         return kind.or(Some(ModifKinds::all()));
     } else if let Some(sev) = warn {
         let info = kind
@@ -35,16 +37,15 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 /// Returns None otherwise.
 fn lookup_engine_modif(
     name: &Token,
+    name_lc: &Lowercase,
     data: &Everything,
     warn: Option<Severity>,
 ) -> Option<ModifKinds> {
-    let name_lc = Lowercase::new(name.as_str());
-
-    if let result @ Some(_) = MODIF_MAP.get(&name_lc).copied() {
+    if let result @ Some(_) = MODIF_MAP.get(name_lc).copied() {
         return result;
     }
 
-    if let Some(info) = MODIF_REMOVED_MAP.get(&name_lc).copied() {
+    if let Some(info) = MODIF_REMOVED_MAP.get(name_lc).copied() {
         if let Some(sev) = warn {
             let msg = format!("{name} has been removed");
             report(ErrorKey::Removed, sev).msg(msg).info(info).loc(name).push();
