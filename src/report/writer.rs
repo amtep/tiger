@@ -35,14 +35,16 @@ pub fn log_report<O: Write + Send>(
         previous = Some(pointer);
     }
 
-    // Log the info line, if one exists.
-    if let Some(info) = &report.info {
-        log_line_info(errors, output, indentation, info);
-    }
     // Log the additional count, if it's more than zero
     if additional > 0 {
         log_count(errors, output, indentation, additional);
     }
+
+    // Log the info line, if one exists.
+    if let Some(info) = &report.info {
+        log_line_info(errors, output, indentation, info);
+    }
+
     // Write a blank line to visually separate reports:
     _ = writeln!(output);
 }
