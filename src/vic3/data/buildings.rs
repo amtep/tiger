@@ -12,6 +12,7 @@ use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
 use crate::vic3::data::production_methods::ProductionMethodGroup;
+use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]
 pub struct BuildingType {}
@@ -98,6 +99,8 @@ impl DbKind for BuildingType {
         let mut sc = ScopeContext::new(Scopes::Country, key);
         let mut building_sc = ScopeContext::new(Scopes::Building, key);
         let mut state_sc = ScopeContext::new(Scopes::State, key);
+
+        maybe_warn_modifiable_capitalization(key);
 
         data.verify_exists(Item::Localization, key);
         if block.get_field_bool("expandable").unwrap_or(true) {
@@ -229,6 +232,8 @@ impl BuildingGroup {
 impl DbKind for BuildingGroup {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
+
+        maybe_warn_modifiable_capitalization(key);
 
         data.verify_exists(Item::Localization, key);
 
