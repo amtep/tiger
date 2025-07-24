@@ -5,13 +5,14 @@ use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{warn, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_trigger;
 use crate::validator::Validator;
+use crate::vic3::modif::ModifKinds;
 
 #[derive(Clone, Debug)]
 pub struct CommanderOrder {}

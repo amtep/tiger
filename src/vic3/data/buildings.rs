@@ -4,7 +4,7 @@ use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::script_value::validate_non_dynamic_script_value;
@@ -12,6 +12,7 @@ use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
 use crate::vic3::data::production_methods::ProductionMethodGroup;
+use crate::vic3::modif::ModifKinds;
 use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]

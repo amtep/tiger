@@ -23,7 +23,7 @@ use crate::hoi4::variables::validate_variable;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 #[cfg(any(feature = "vic3", feature = "imperator"))]
-use crate::modif::{verify_modif_exists, ModifKinds};
+use crate::modif::verify_modif_exists;
 use crate::report::{err, fatal, tips, warn, ErrorKey, Severity};
 use crate::scopes::{
     needs_prefix, scope_iterator, scope_prefix, scope_to_scope, ArgumentValue, Scopes,
@@ -1600,7 +1600,24 @@ fn validate_argument_internal(
         #[cfg(any(feature = "vic3", feature = "imperator"))]
         ArgumentValue::Modif => {
             // TODO: deduce the ModifKinds from the `this` scope
-            verify_modif_exists(arg, data, ModifKinds::all(), Severity::Warning);
+            match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => verify_modif_exists(
+                    arg,
+                    data,
+                    crate::vic3::modif::ModifKinds::all(),
+                    Severity::Warning,
+                ),
+                #[cfg(feature = "imperator")]
+                Game::Imperator => verify_modif_exists(
+                    arg,
+                    data,
+                    crate::imperator::modif::ModifKinds::all(),
+                    Severity::Warning,
+                ),
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            }
         }
         #[cfg(any(feature = "vic3", feature = "ck3"))]
         ArgumentValue::Identifier(kind) => {

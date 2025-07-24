@@ -3,13 +3,14 @@ use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::report::{warn, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::validate_possibly_named_color;
 use crate::validator::Validator;
+use crate::vic3::modif::ModifKinds;
 use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]

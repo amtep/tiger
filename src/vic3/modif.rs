@@ -1,50 +1,88 @@
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
-use crate::modif::ModifKinds;
+use bitflags::bitflags;
 
-pub fn display_fmt(mk: ModifKinds, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-    let mut vec = Vec::new();
-    if mk.contains(ModifKinds::Battle) {
-        vec.push("battle");
+use crate::{modif, vic3::tables::modifs::lookup_modif};
+
+bitflags! {
+    // LAST UPDATED VIC3 1.7.0
+    // Taken from the game's `modifers.log`
+    // Remember to update the display_fmt functions when ModifKinds changes.
+    #[derive(Debug, Copy, Clone, PartialEq)]
+    #[rustfmt::skip]
+    pub struct ModifKinds: u32 {
+        const Character         = 1<<0;
+        const Country           = 1<<1;
+        const State             = 1<<2;
+        const Unit              = 1<<4;
+        const Battle            = 1<<5;
+        const Building          = 1<<6;
+        const InterestGroup     = 1<<7;
+        const Market            = 1<<8;
+        const PoliticalMovement = 1<<9;
+        const Tariff            = 1<<10;
+        const Tax               = 1<<11;
+        const Goods             = 1<<12;
+        const MilitaryFormation = 1<<13;
+        const PowerBloc         = 1<<14;
     }
-    if mk.contains(ModifKinds::Building) {
-        vec.push("building");
+}
+
+impl modif::ModifKinds for ModifKinds {
+    fn lookup_modif(
+        name: &crate::Token,
+        data: &crate::Everything,
+        warn: Option<crate::Severity>,
+    ) -> Option<Self> {
+        lookup_modif(name, data, warn)
     }
-    if mk.contains(ModifKinds::Character) {
-        vec.push("character");
+}
+
+impl Display for ModifKinds {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+        let mut vec = Vec::new();
+        if self.contains(ModifKinds::Battle) {
+            vec.push("battle");
+        }
+        if self.contains(ModifKinds::Building) {
+            vec.push("building");
+        }
+        if self.contains(ModifKinds::Character) {
+            vec.push("character");
+        }
+        if self.contains(ModifKinds::Country) {
+            vec.push("country");
+        }
+        if self.contains(ModifKinds::InterestGroup) {
+            vec.push("interest group");
+        }
+        if self.contains(ModifKinds::Market) {
+            vec.push("market");
+        }
+        if self.contains(ModifKinds::PoliticalMovement) {
+            vec.push("political movement");
+        }
+        if self.contains(ModifKinds::State) {
+            vec.push("state");
+        }
+        if self.contains(ModifKinds::Tariff) {
+            vec.push("tariff");
+        }
+        if self.contains(ModifKinds::Tax) {
+            vec.push("tax");
+        }
+        if self.contains(ModifKinds::Unit) {
+            vec.push("unit");
+        }
+        if self.contains(ModifKinds::Goods) {
+            vec.push("goods");
+        }
+        if self.contains(ModifKinds::MilitaryFormation) {
+            vec.push("military formation");
+        }
+        if self.contains(ModifKinds::PowerBloc) {
+            vec.push("power bloc");
+        }
+        write!(f, "{}", vec.join(", "))
     }
-    if mk.contains(ModifKinds::Country) {
-        vec.push("country");
-    }
-    if mk.contains(ModifKinds::InterestGroup) {
-        vec.push("interest group");
-    }
-    if mk.contains(ModifKinds::Market) {
-        vec.push("market");
-    }
-    if mk.contains(ModifKinds::PoliticalMovement) {
-        vec.push("political movement");
-    }
-    if mk.contains(ModifKinds::State) {
-        vec.push("state");
-    }
-    if mk.contains(ModifKinds::Tariff) {
-        vec.push("tariff");
-    }
-    if mk.contains(ModifKinds::Tax) {
-        vec.push("tax");
-    }
-    if mk.contains(ModifKinds::Unit) {
-        vec.push("unit");
-    }
-    if mk.contains(ModifKinds::Goods) {
-        vec.push("goods");
-    }
-    if mk.contains(ModifKinds::MilitaryFormation) {
-        vec.push("military formation");
-    }
-    if mk.contains(ModifKinds::PowerBloc) {
-        vec.push("power bloc");
-    }
-    write!(f, "{}", vec.join(", "))
 }

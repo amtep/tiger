@@ -1,4 +1,5 @@
 use crate::block::{Block, BV};
+use crate::ck3::modif::ModifKinds;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
@@ -6,7 +7,7 @@ use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::modif::{validate_modifs, ModifKinds};
+use crate::modif::validate_modifs;
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

@@ -1,9 +1,10 @@
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::helpers::{is_country_tag, stringify_choices};
+use crate::hoi4::modif::ModifKinds;
 use crate::hoi4::tables::variables::{Suffix, ARRAYS_MAP, VARIABLES_MAP};
 use crate::item::Item;
-use crate::modif::{verify_modif_exists, ModifKinds};
+use crate::modif::verify_modif_exists;
 use crate::report::{report, ErrorKey, Severity};
 use crate::scopes::Scopes;
 use crate::token::Token;
