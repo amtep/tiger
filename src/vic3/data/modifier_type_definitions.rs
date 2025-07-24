@@ -4,7 +4,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::{verify_modif_exists, ModifKinds};
-use crate::report::Severity;
+use crate::report::{report, ErrorKey, Severity};
 use crate::token::Token;
 use crate::validator::Validator;
 use crate::vic3::tables::modifs::modif_loc_vic3;
@@ -27,6 +27,14 @@ impl ModifierTypeDefinition {
 impl DbKind for ModifierTypeDefinition {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
+
+        // Modifier type definitions must be lowercase
+        if !key.is_lowercase() {
+            report(ErrorKey::DefinitionName, Severity::Error)
+                .msg("modifier type definition names must be lowercase")
+                .loc(key)
+                .push();
+        }
 
         let (loca, loca_desc) = modif_loc_vic3(key, data);
         data.verify_exists_implied(Item::Localization, &loca, key);

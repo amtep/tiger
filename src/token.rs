@@ -420,6 +420,11 @@ impl Token {
         self.s.parse::<Date>().is_ok()
     }
 
+    /// Tests if the taken is lowercase
+    pub fn is_lowercase(&self) -> bool {
+        !self.s.chars().any(char::is_uppercase)
+    }
+
     #[must_use]
     pub fn linked(mut self, link_idx: Option<MacroMapIndex>) -> Self {
         self.loc.link_idx = link_idx;
