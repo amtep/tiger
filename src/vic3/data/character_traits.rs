@@ -40,24 +40,29 @@ impl DbKind for CharacterTrait {
         });
         vd.field_validated_block("command_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(
+                block,
+                data,
+                ModifKinds::Character | ModifKinds::Battle | ModifKinds::MilitaryFormation,
+                vd,
+            );
         });
         vd.field_validated_block("country_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Character | ModifKinds::Country, vd);
         });
         // undocumented
         vd.field_validated_block("agitator_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Character | ModifKinds::PoliticalMovement, vd);
         });
         vd.field_validated_block("interest_group_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Character | ModifKinds::InterestGroup, vd);
         });
         vd.field_validated_block("executive_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Character | ModifKinds::Building, vd);
         });
 
         vd.field_trigger("possible", Tooltipped::No, &mut sc);

@@ -79,7 +79,7 @@ impl DbKind for CompanyType {
 
         vd.field_validated_block("prosperity_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
 
         vd.field_trigger_rooted("ai_will_do", Tooltipped::No, Scopes::Country);

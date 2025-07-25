@@ -71,7 +71,7 @@ impl DbKind for LegitimacyLevel {
         vd.field_integer_range("threshold", 0..=100);
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
         vd.field_script_value_rooted("loyalties_gain", Scopes::Country);
         if block.has_key("loyalties_gain") {
@@ -103,7 +103,7 @@ impl DbKind for LibertyDesireLevel {
         vd.field_list_items("valid_sway_wargoals_against_overlord", Item::Wargoal);
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::State, vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
         vd.field_item("background_texture", Item::File);
     }

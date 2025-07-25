@@ -37,7 +37,7 @@ impl DbKind for Decree {
         vd.field_item("texture", Item::File);
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::State | ModifKinds::Building, vd);
+            validate_modifs(block, data, ModifKinds::State, vd);
         });
         vd.field_list_items("unlocking_technologies", Item::Technology);
         vd.field_list_items("unlocking_laws", Item::LawType);

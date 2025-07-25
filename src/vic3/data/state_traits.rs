@@ -35,7 +35,7 @@ impl DbKind for StateTrait {
 
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::State, vd);
         });
     }
 }
