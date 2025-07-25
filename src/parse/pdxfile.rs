@@ -3,6 +3,7 @@
 //! The main entry points are [`parse_pdx_file`], [`parse_pdx_macro`], and [`parse_pdx_internal`].
 
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 use lalrpop_util::{lalrpop_mod, ParseError};
 
@@ -28,13 +29,14 @@ lalrpop_mod! {
     #[allow(clippy::if_then_some_else_none)]
     parser, "/parse/pdxfile/parser.rs"
 }
+static FILE_PARSER: LazyLock<parser::FileParser> = LazyLock::new(parser::FileParser::new);
 
 /// Re-parse a macro (which is a scripted effect, trigger, or modifier that uses $ parameters)
 /// after argument substitution. A full re-parse is needed because the game engine allows tricks
 /// such as passing `#` as a macro argument in order to comment out the rest of a line.
 pub fn parse_pdx_macro(inputs: &[Token], global: &PdxfileMemory, local: &PdxfileMemory) -> Block {
     let mut combined = CombinedMemory::from_local(global, local.clone());
-    match parser::FileParser::new().parse(inputs, &mut combined, Lexer::new(inputs)) {
+    match FILE_PARSER.parse(inputs, &mut combined, Lexer::new(inputs)) {
         Ok(block) => block,
         Err(e) => {
             eprintln!("Internal error: re-parsing macro failed.\n{e}");
@@ -51,7 +53,7 @@ fn parse_pdx(entry: &FileEntry, content: &'static str, memory: &ParserMemory) ->
     loc.column = 1;
     let inputs = [Token::from_static_str(content, loc)];
     let mut combined = CombinedMemory::new(&memory.pdxfile);
-    match parser::FileParser::new().parse(&inputs, &mut combined, Lexer::new(&inputs)) {
+    match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
         Ok(mut block) => {
             block.loc = file_loc;
             block
@@ -91,7 +93,7 @@ pub fn parse_reader_export(
     loc.column = 1;
     let inputs = [Token::from_static_str(content, loc)];
     let mut combined = CombinedMemory::new(global);
-    match parser::FileParser::new().parse(&inputs, &mut combined, Lexer::new(&inputs)) {
+    match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
         Ok(_) => {
             global.merge(combined.into_local());
         }

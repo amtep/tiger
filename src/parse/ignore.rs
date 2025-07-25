@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use lalrpop_util::lalrpop_mod;
 
 use crate::report::ErrorKey;
@@ -7,6 +9,7 @@ lalrpop_mod! {
     #[allow(clippy::if_then_some_else_none)]
     parser, "/parse/ignore/parser.rs"
 }
+static COMMENT_PARSER: LazyLock<parser::CommentParser> = LazyLock::new(parser::CommentParser::new);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum IgnoreSize {
@@ -31,7 +34,7 @@ pub struct IgnoreSpec {
 }
 
 pub fn parse_comment(comment: &str) -> Option<IgnoreSpec> {
-    parser::CommentParser::new().parse(comment).ok()
+    COMMENT_PARSER.parse(comment).ok()
 }
 
 impl IgnoreSpec {
