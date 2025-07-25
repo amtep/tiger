@@ -636,6 +636,9 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("building_unincorporated_subsistence_output_mult", ModifKinds::Building),
     ("building_unincorporated_throughput_add", ModifKinds::Building),
     ("building_working_conditions_mult", ModifKinds::Building),
+    // Character modifiers flow to military formation and character from other scopes
+    // They do *not* flow between characters and military formations
+    // The kind is set based on which scope actually applies an effect
     ("character_advancement_speed_add", ModifKinds::Character),
     ("character_blockade_mult", ModifKinds::Character),
     ("character_command_limit_add", ModifKinds::Character),
@@ -646,7 +649,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("character_health_add", ModifKinds::Character),
     ("character_interception_add", ModifKinds::Character),
     ("character_popularity_add", ModifKinds::Character),
-    ("character_supply_route_cost_mult", ModifKinds::Character),
+    ("character_supply_route_cost_mult", ModifKinds::MilitaryFormation),
     ("country_acceptance_culture_base_add", ModifKinds::Country),
     ("country_acceptance_primary_culture_add", ModifKinds::Country),
     ("country_acceptance_religion_base_add", ModifKinds::Country),
@@ -991,21 +994,74 @@ pub static MODIF_FLOW_MAP: LazyLock<TigerHashMap<ModifKinds, ModifKinds>> = Lazy
     map
 });
 
+/// Oddities:
+///  - Charater modifiers placed on countries flow to military formations and do nothing
+///  - Interest group strength modifiers flow to all characters. I don't know what the path for that is
 const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
-    (ModifKinds::Character, ModifKinds::all()),
-    (ModifKinds::Country, ModifKinds::all()),
-    (ModifKinds::State, ModifKinds::State.union(ModifKinds::Building)),
-    (ModifKinds::Unit, ModifKinds::all()),
-    (ModifKinds::Battle, ModifKinds::all()),
-    (ModifKinds::Building, ModifKinds::Building),
-    (ModifKinds::InterestGroup, ModifKinds::all()),
-    (ModifKinds::Market, ModifKinds::all()),
-    (ModifKinds::PoliticalMovement, ModifKinds::all()),
-    (ModifKinds::Tariff, ModifKinds::all()),
-    (ModifKinds::Tax, ModifKinds::all()),
-    (ModifKinds::Goods, ModifKinds::all()),
-    (ModifKinds::MilitaryFormation, ModifKinds::all()),
-    (ModifKinds::PowerBloc, ModifKinds::all()),
+    (
+        // Things don't seem to flow from characters directly
+        // rather it's conditional based on where the modifier is being applied
+        ModifKinds::Character,
+        ModifKinds::Character,
+    ),
+    (
+        ModifKinds::Country,
+        ModifKinds::Country
+            // Direct nodes
+            .union(ModifKinds::State)
+            .union(ModifKinds::InterestGroup)
+            .union(ModifKinds::MilitaryFormation)
+            .union(ModifKinds::Battle)
+            .union(ModifKinds::PoliticalMovement)
+            .union(ModifKinds::Tax)
+            // From State
+            .union(ModifKinds::Building)
+            // From Building
+            .union(ModifKinds::Goods)
+            // From MilitaryFormation
+            .union(ModifKinds::Unit),
+        // Confirmed, not Characters
+    ),
+    (
+        ModifKinds::State,
+        ModifKinds::State
+            // Direct nodes
+            .union(ModifKinds::Building)
+            // From Building
+            .union(ModifKinds::Goods),
+    ),
+    (
+        ModifKinds::Unit,
+        ModifKinds::Unit, // Confirmed, not Goods
+    ),
+    (
+        ModifKinds::Battle,
+        ModifKinds::Battle
+            // Direct nodes
+            .union(ModifKinds::Unit),
+    ),
+    (
+        ModifKinds::Building,
+        ModifKinds::Building
+            // Direct nodes
+            .union(ModifKinds::Goods)
+            .union(ModifKinds::Unit),
+    ),
+    (ModifKinds::InterestGroup, ModifKinds::InterestGroup),
+    (ModifKinds::Market, ModifKinds::Market),
+    (ModifKinds::PoliticalMovement, ModifKinds::PoliticalMovement),
+    (ModifKinds::Tariff, ModifKinds::Tariff),
+    (ModifKinds::Tax, ModifKinds::Tax),
+    (ModifKinds::Goods, ModifKinds::Goods),
+    (
+        ModifKinds::MilitaryFormation,
+        ModifKinds::MilitaryFormation
+            // Direct nodes
+            .union(ModifKinds::Unit)
+            .union(ModifKinds::Character),
+        // Confirmed, not Battle
+    ),
+    (ModifKinds::PowerBloc, ModifKinds::PowerBloc),
 ];
 
 static MODIF_REMOVED_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static str>> =

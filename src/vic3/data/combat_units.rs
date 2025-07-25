@@ -48,9 +48,7 @@ impl DbKind for CombatUnit {
         });
         vd.field_validated_block("upkeep_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            // The upkeep modifier gets applied to the country so it can
-            // actually take a variety of `ModifKinds`.
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Goods, vd);
         });
         vd.field_validated_block("formation_modifier", |block, data| {
             let vd = Validator::new(block, data);

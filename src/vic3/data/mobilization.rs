@@ -62,15 +62,15 @@ impl DbKind for MobilizationOption {
 
         vd.field_validated_block("upkeep_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Goods, vd);
         });
         vd.field_validated_block("upkeep_modifier_unscaled", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Goods, vd);
         });
         vd.field_validated_block("unit_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::MilitaryFormation, vd);
         });
 
         // Docs say it's Militaryformation, but the only example in vanilla contradicts that.

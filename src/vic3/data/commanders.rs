@@ -62,7 +62,7 @@ impl DbKind for CommanderOrder {
         });
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            let mk = ModifKinds::Battle | ModifKinds::Character | ModifKinds::Unit;
+            let mk = ModifKinds::Character | ModifKinds::Battle;
             validate_modifs(block, data, mk, vd);
         });
 
@@ -119,14 +119,25 @@ impl DbKind for CommanderRank {
         // ways than promotion.
         vd.field_integer_range("rank_value", 1..);
 
-        for field in
-            &["character_modifier", "general_modifier", "admiral_modifier", "country_modifier"]
-        {
+        vd.field_validated_block("character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        for field in &["general_modifier", "admiral_modifier"] {
             vd.field_validated_block(field, |block, data| {
                 let vd = Validator::new(block, data);
-                validate_modifs(block, data, ModifKinds::all(), vd);
+                validate_modifs(
+                    block,
+                    data,
+                    ModifKinds::Character | ModifKinds::Battle | ModifKinds::MilitaryFormation,
+                    vd,
+                );
             });
         }
+        vd.field_validated_block("country_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Country, vd);
+        });
         vd.field_validated_block("interest_group_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::InterestGroup, vd);

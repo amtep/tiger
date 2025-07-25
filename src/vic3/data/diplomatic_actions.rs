@@ -277,11 +277,16 @@ fn validate_pact(block: &Block, data: &Everything, sc: &mut ScopeContext) {
 
     // undocumented
 
+    for field in &["first_modifier", "second_modifier"] {
+        vd.field_validated_block(field, |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Country, vd);
+        });
+    }
+
     // TODO: the existence of first_foreign_pro_country_lobby_member_modifier
     // and first_foreign_anti_country_lobby_member_modifier is a guess. Verify.
     for field in &[
-        "first_modifier",
-        "second_modifier",
         "first_foreign_pro_country_lobby_member_modifier",
         "first_foreign_anti_country_lobby_member_modifier",
         "second_foreign_pro_country_lobby_member_modifier",
@@ -289,7 +294,7 @@ fn validate_pact(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     ] {
         vd.field_validated_block(field, |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::InterestGroup, vd);
         });
     }
 

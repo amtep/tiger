@@ -60,11 +60,11 @@ impl DbKind for LawType {
 
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
         vd.field_validated_block("acceptance_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
 
         vd.field_list_items("requires_law_or", Item::LawType);
@@ -95,7 +95,7 @@ impl DbKind for LawType {
         vd.field_item("institution", Item::Institution);
         vd.field_validated_block("institution_modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::all(), vd);
+            validate_modifs(block, data, ModifKinds::Country, vd);
         });
 
         vd.field_list_items("build_from_investment_pool", Item::BuildingGroup);
@@ -110,7 +110,7 @@ impl DbKind for LawType {
         ] {
             vd.field_validated_block(field, |block, data| {
                 let vd = Validator::new(block, data);
-                validate_modifs(block, data, ModifKinds::all(), vd);
+                validate_modifs(block, data, ModifKinds::Country, vd);
             });
         }
 
@@ -119,10 +119,7 @@ impl DbKind for LawType {
             "tariff_modifier_export_priority",
             "tariff_modifier_import_priority",
         ] {
-            vd.field_validated_block(field, |block, data| {
-                let vd = Validator::new(block, data);
-                validate_modifs(block, data, ModifKinds::all(), vd);
-            });
+            vd.advice_field(field, &format!("`{field}` was removed in 1.9"));
         }
 
         vd.field_trigger_rooted("ai_will_do", Tooltipped::No, Scopes::Country);

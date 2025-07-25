@@ -39,13 +39,13 @@ impl DbKind for ProductionMethod {
         });
 
         vd.field_validated_block("country_modifiers", |block, data| {
-            validate_modifier_block(block, data, ModifKinds::all());
+            validate_modifier_block(block, data, ModifKinds::Country);
         });
         vd.field_validated_block("state_modifiers", |block, data| {
-            validate_modifier_block(block, data, ModifKinds::all());
+            validate_modifier_block(block, data, ModifKinds::State);
         });
         vd.field_validated_block("building_modifiers", |block, data| {
-            validate_modifier_block(block, data, ModifKinds::all());
+            validate_modifier_block(block, data, ModifKinds::Building);
         });
         vd.field_list_items("timed_modifiers", Item::Modifier);
 
