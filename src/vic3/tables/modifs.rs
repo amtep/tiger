@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::sync::LazyLock;
 
 use crate::everything::Everything;
-use crate::helpers::TigerHashMap;
+use crate::helpers::{TigerHashMap, TigerHashMapExt};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{report, untidy, ErrorKey, Severity};
@@ -979,6 +979,33 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("unit_provinces_lost_mult", ModifKinds::Unit),
     ("unit_recovery_rate_add", ModifKinds::Unit),
     ("unit_supply_consumption_mult", ModifKinds::Unit),
+];
+
+/// Game internally has a modifier graph which controls how modifiers flow
+/// This is a representation of reachability on that graph
+pub static MODIF_FLOW_MAP: LazyLock<TigerHashMap<ModifKinds, ModifKinds>> = LazyLock::new(|| {
+    let mut map = TigerHashMap::with_capacity(MODIF_FLOW_TABLE.len());
+    for (a, b) in MODIF_FLOW_TABLE.iter().copied() {
+        map.insert(a, b);
+    }
+    map
+});
+
+const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
+    (ModifKinds::Character, ModifKinds::all()),
+    (ModifKinds::Country, ModifKinds::all()),
+    (ModifKinds::State, ModifKinds::State.union(ModifKinds::Building)),
+    (ModifKinds::Unit, ModifKinds::all()),
+    (ModifKinds::Battle, ModifKinds::all()),
+    (ModifKinds::Building, ModifKinds::Building),
+    (ModifKinds::InterestGroup, ModifKinds::all()),
+    (ModifKinds::Market, ModifKinds::all()),
+    (ModifKinds::PoliticalMovement, ModifKinds::all()),
+    (ModifKinds::Tariff, ModifKinds::all()),
+    (ModifKinds::Tax, ModifKinds::all()),
+    (ModifKinds::Goods, ModifKinds::all()),
+    (ModifKinds::MilitaryFormation, ModifKinds::all()),
+    (ModifKinds::PowerBloc, ModifKinds::all()),
 ];
 
 static MODIF_REMOVED_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static str>> =
