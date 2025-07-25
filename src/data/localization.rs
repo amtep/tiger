@@ -11,8 +11,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::LazyLock;
 
-use bitvec::order::Lsb0;
-use bitvec::{bitarr, BitArr};
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use murmur3::murmur3_32;
 use rayon::scope;
@@ -46,11 +44,11 @@ use crate::vic3::tables::localization::BUILTIN_MACROS_VIC3;
 #[derive(Debug)]
 pub struct Localization {
     /// Which languages to check, according to the config file.
-    check_langs: BitArr!(for Language::COUNT, in u16),
+    check_langs: [bool; Language::COUNT],
     /// Which languages also actually exist in the mod.
     /// This is used to not warn about missing loca when a mod doesn't have the language at all.
     /// (This saves them the effort of configuring `check_langs`).
-    mod_langs: BitArr!(for Language::COUNT, in u16),
+    mod_langs: [bool; Language::COUNT],
     /// Database of all localizations, indexed first by language and then by localization key.
     locas: Box<[TigerHashMap<String, LocaEntry>; Language::COUNT]>,
 }
@@ -688,8 +686,6 @@ impl Localization {
 
 impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
     fn config(&mut self, config: &Block) {
-        let mut langs = bitarr![u16, Lsb0; 0; Language::COUNT];
-
         if let Some(block) = config.get_field_block("languages") {
             // TODO: warn if there are unknown languages in check or skip?
             let check = block.get_field_values("check");
@@ -700,10 +696,9 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
                 if check.iter().any(|t| t.is(lang_str))
                     || (check.is_empty() && skip.iter().all(|t| !t.is(lang_str)))
                 {
-                    langs.set(lang.to_idx(), true);
+                    self.check_langs[lang.to_idx()] = true;
                 }
             }
-            self.check_langs = langs;
         }
     }
 
@@ -774,7 +769,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
         let hash = &mut self.locas[filelang.to_idx()];
 
         if entry.kind() == FileKind::Mod {
-            self.mod_langs.set(filelang.to_idx(), true);
+            self.mod_langs[filelang.to_idx()] = true;
         }
 
         for loca in vec.drain(..) {
@@ -796,8 +791,8 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
 impl Default for Localization {
     fn default() -> Self {
         Localization {
-            check_langs: bitarr![u16, Lsb0; 1; Language::COUNT],
-            mod_langs: bitarr![u16, Lsb0; 0; Language::COUNT],
+            check_langs: [true; Language::COUNT],
+            mod_langs: [false; Language::COUNT],
             locas: Box::new(std::array::from_fn(|_| TigerHashMap::default())),
         }
     }
