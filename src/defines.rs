@@ -79,7 +79,9 @@ impl DefineType {
             }
             DefineType::Item(itype) => {
                 if let Some(token) = bv.expect_value() {
-                    data.verify_exists(itype, token);
+                    if !(itype == Item::Sound && token.as_str().is_empty()) {
+                        data.verify_exists(itype, token);
+                    }
                 }
             }
             DefineType::SingleQuotedItem(itype) => {
