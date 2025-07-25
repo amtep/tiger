@@ -2,13 +2,18 @@ use std::fmt::{Display, Formatter};
 
 use bitflags::bitflags;
 
-use crate::{modif, vic3::tables::modifs::lookup_modif};
+use crate::{
+    modif,
+    report::{err, ErrorKey},
+    vic3::tables::modifs::{lookup_modif, MODIF_FLOW_MAP},
+    Token,
+};
 
 bitflags! {
     // LAST UPDATED VIC3 1.7.0
     // Taken from the game's `modifers.log`
     // Remember to update the display_fmt functions when ModifKinds changes.
-    #[derive(Debug, Copy, Clone, PartialEq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     #[rustfmt::skip]
     pub struct ModifKinds: u32 {
         const Character         = 1<<0;
@@ -35,6 +40,19 @@ impl modif::ModifKinds for ModifKinds {
         warn: Option<crate::Severity>,
     ) -> Option<Self> {
         lookup_modif(name, data, warn)
+    }
+
+    fn require(self, other: Self, token: &Token) {
+        let valid_kinds = self
+            .iter()
+            .map(|kind| *MODIF_FLOW_MAP.get(&kind).unwrap_or(&ModifKinds::empty()))
+            .reduce(ModifKinds::union)
+            .unwrap_or(self);
+        if !valid_kinds.intersects(other) {
+            let msg = format!("`{token}` is a modifier for {other} and will not flow from {self}");
+            let info = format!("valid modifiers are for {valid_kinds}");
+            err(ErrorKey::Modifiers).msg(msg).info(info).loc(token).push();
+        }
     }
 }
 

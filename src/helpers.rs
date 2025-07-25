@@ -11,7 +11,9 @@ use crate::scopes::Scopes;
 use crate::token::Token;
 
 pub type TigerHashMap<K, V> = HashMap<K, V>;
+pub use ahash::HashMapExt as TigerHashMapExt;
 pub type TigerHashSet<T> = HashSet<T>;
+pub use ahash::HashSetExt as TigerHashSetExt;
 
 #[macro_export]
 macro_rules! set {
