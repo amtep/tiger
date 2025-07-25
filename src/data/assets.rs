@@ -480,7 +480,8 @@ fn validate_meshsettings(block: &Block, data: &Everything) {
     vd.field_item_or_empty("texture_diffuse", Item::TextureFile);
     vd.field_item_or_empty("texture_normal", Item::TextureFile);
     vd.field_item_or_empty("texture_specular", Item::TextureFile);
-    vd.field_validated_block("texture", |block, data| {
+    // TODO: verify if indexes have to be unique
+    vd.multi_field_validated_block("texture", |block, data| {
         let mut vd = Validator::new(block, data);
         vd.req_field("file");
         vd.req_field("index");
