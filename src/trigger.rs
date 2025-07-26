@@ -1814,7 +1814,8 @@ pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
                 Trigger::CompareValue
                 | Trigger::CompareDate
                 | Trigger::ItemOrCompareValue(_)
-                | Trigger::CompareChoice(_),
+                | Trigger::CompareChoice(_)
+                | Trigger::CompareChoiceOrNumber(_),
             )),
         ) => Some(s),
         #[cfg(feature = "imperator")]
