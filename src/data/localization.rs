@@ -276,7 +276,11 @@ fn get_file_lang(filename: &OsStr) -> Option<Language> {
 impl Localization {
     // TODO: Remove `+ '_` in edition 2024
     fn iter_lang_idx(&self) -> impl Iterator<Item = usize> + '_ {
-        (0..Language::COUNT).filter(|i| self.mod_langs[*i])
+        self.iter_lang().map(Language::to_idx)
+    }
+
+    fn iter_lang(&self) -> impl Iterator<Item = Language> + '_ {
+        Language::iter().filter(|i| self.mod_langs[i.to_idx()])
     }
 
     pub fn exists(&self, key: &str) -> bool {
@@ -313,13 +317,7 @@ impl Localization {
         if key.is_empty() {
             return;
         }
-        self.mark_used(key);
-        let mut langs_missing = Vec::new();
-        for lang in self.iter_lang_idx() {
-            if !self.locas[lang].contains_key(key) {
-                langs_missing.push(Language::from_idx(lang).into());
-            }
-        }
+        let langs_missing = self.mark_used_return_missing(key);
         if !langs_missing.is_empty() {
             let msg = format!("missing {} localization key {key}", stringify_list(&langs_missing));
             // TODO: get confidence level from caller
@@ -339,13 +337,8 @@ impl Localization {
                 .push();
             return;
         }
-        self.mark_used(name.as_str());
-        let mut langs_missing = Vec::new();
-        for lang in self.iter_lang_idx() {
-            if !self.locas[lang].contains_key(name.as_str()) {
-                langs_missing.push(Language::from_idx(lang).into());
-            }
-        }
+
+        let langs_missing = self.mark_used_return_missing(name.as_str());
         if !langs_missing.is_empty() {
             // It's merely untidy if the name is only missing in latin-script languages and the
             // name doesn't have indicators that it really needs to be localized (such as underscores
@@ -372,6 +365,7 @@ impl Localization {
         }
     }
 
+    #[allow(dead_code)]
     pub fn exists_lang(&self, key: &str, lang: Language) -> bool {
         if !self.locas[lang.to_idx()].contains_key(key) {
             return false;
@@ -388,8 +382,7 @@ impl Localization {
             return;
         }
         if let Some(lang) = lang {
-            self.mark_used(key);
-            if !self.exists_lang(key, lang) {
+            if !self.mark_used_lang_return_exists(key, lang) {
                 let msg = format!("missing {lang} localization key {key}");
                 // TODO: get confidence level from caller
                 warn(ErrorKey::MissingLocalization).msg(msg).loc(token).push();
@@ -399,33 +392,57 @@ impl Localization {
         }
     }
 
-    pub fn mark_used(&self, key: &str) {
-        for lang in self.iter_lang_idx() {
-            if let Some(entry) = self.locas[lang].get(key) {
-                entry.used.store(true, Relaxed);
+    /// Marks a localization key as used for all languages.
+    /// Returns whether the key exists for any language (same as [`Localization::exists`]).
+    pub fn mark_used_return_exists(&self, key: &str) -> bool {
+        let mut exists = false;
+        for lang in self.iter_lang() {
+            exists |= self.mark_used_lang_return_exists(key, lang);
+        }
+        exists
+    }
+
+    /// Marks a localization key as used for all languages.
+    /// Returns a [`Vec<&str>`] containing the languages for which the key does not exist.
+    fn mark_used_return_missing(&self, key: &str) -> Vec<&'static str> {
+        let mut langs_missing = Vec::new();
+        for lang in self.iter_lang() {
+            if !self.mark_used_lang_return_exists(key, lang) {
+                langs_missing.push(lang.into());
             }
         }
+        langs_missing
+    }
+
+    /// Marks a localization key as used for one language.
+    /// Returns whether the key exists for this language (same as [`Localization::exists_lang`]).
+    fn mark_used_lang_return_exists(&self, key: &str, lang: Language) -> bool {
+        if let Some(entry) = self.locas[lang.to_idx()].get(key) {
+            entry.used.store(true, Relaxed);
+            return true;
+        }
+        false
     }
 
     #[allow(dead_code)]
     pub fn suggest(&self, key: &str, token: &Token) {
-        self.mark_used(key);
-        let mut found = false;
-        let mut not_found = false;
-        for lang in self.iter_lang_idx() {
-            if self.locas[lang].contains_key(key) {
-                found = true;
-            } else {
-                not_found = true;
-            }
+        if key.is_empty() {
+            return;
         }
-        if found && not_found {
-            // The loca is defined for some languages but not others.
-            // This inconsistency is worth warning about.
-            self.verify_exists_implied(key, token, Severity::Warning);
-        } else if not_found {
+        let langs_missing = self.mark_used_return_missing(key);
+        // They're all missing
+        if langs_missing.len() == self.iter_lang().count() {
             let msg = format!("you can define localization `{key}`");
             tips(ErrorKey::SuggestLocalization).msg(msg).loc(token).push();
+        }
+        // The loca is defined for some languages but not others.
+        // This inconsistency is worth warning about.
+        else if !langs_missing.is_empty() {
+            let msg = format!("missing {} localization key {key}", stringify_list(&langs_missing));
+            report(ErrorKey::MissingLocalization, Item::Localization.severity())
+                .msg(msg)
+                .loc(token)
+                .push();
         }
     }
 
@@ -633,9 +650,7 @@ impl Localization {
         let mut i = 0;
         loop {
             let loca = format!("{prefix}{i}");
-            if self.exists(&loca) {
-                self.mark_used(&loca);
-            } else {
+            if !self.mark_used_return_exists(&loca) {
                 break;
             }
             i += 1;
