@@ -36,3 +36,11 @@ herrmod1
 herrmod2
 htest.sh
 htestmod.sh
+
+internal_benches/ck3.toml
+
+internal_benches/vic3.toml
+
+benches/ck3.toml
+
+benches/vic3.toml
