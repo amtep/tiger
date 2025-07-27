@@ -33,7 +33,18 @@ impl Events {
         if let Some((key_a, key_b)) = key.as_str().split_once('.') {
             if let Ok(id) = u16::from_str(key_b) {
                 if let Some(other) = self.get_event(key.as_str()) {
-                    dup_error(&key, &other.key, "event");
+                    #[allow(clippy::redundant_else)]
+                    if Game::is_vic3() {
+                        // Earlier events override later ones in vic3.
+                        // The game will complain but it does work, so don't warn unless warranted.
+                        if other.key.loc.kind <= key.loc.kind {
+                            dup_error(&other.key, &key, "event");
+                        }
+                        return;
+                    } else {
+                        // In the other games, overriding events is always an error.
+                        dup_error(&key, &other.key, "event");
+                    }
                 }
                 self.events.insert((key_a, id), Event::new(key, block));
                 return;
