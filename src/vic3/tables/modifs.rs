@@ -1044,8 +1044,8 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
         ModifKinds::Building,
         ModifKinds::Building
             // Direct nodes
-            .union(ModifKinds::Goods)
-            .union(ModifKinds::Unit),
+            .union(ModifKinds::Goods),
+        // Does not flow to Unit, despite usage in vanilla.
     ),
     (ModifKinds::InterestGroup, ModifKinds::InterestGroup),
     (ModifKinds::Market, ModifKinds::Market),
