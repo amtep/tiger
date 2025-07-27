@@ -4,7 +4,7 @@ use image::{DynamicImage, Rgb};
 
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::TigerHashSet;
+use crate::helpers::{TigerHashSet, TigerIterHelpers};
 use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::report::{err, report, ErrorKey, Severity};
@@ -86,7 +86,7 @@ impl FileHandler<DynamicImage> for Vic3Provinces {
     fn handle_file(&mut self, entry: &FileEntry, img: DynamicImage) {
         self.provinces_png = Some(entry.clone());
         if let DynamicImage::ImageRgb8(img) = img {
-            for pixel in img.pixels() {
+            for pixel in img.pixels().skip_repeated() {
                 self.colors.insert(*pixel);
             }
         }

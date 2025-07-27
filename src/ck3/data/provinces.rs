@@ -10,7 +10,7 @@ use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::game::GameFlags;
-use crate::helpers::{TigerHashMap, TigerHashSet};
+use crate::helpers::{TigerHashMap, TigerHashSet, TigerIterHelpers};
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
@@ -320,7 +320,7 @@ impl FileHandler<FileContent> for Ck3Provinces {
             }
             FileContent::Provinces(img) => {
                 if let DynamicImage::ImageRgb8(img) = img {
-                    for pixel in img.pixels().copied() {
+                    for pixel in img.pixels().skip_repeated().copied() {
                         unsafe {
                             // SAFETY: `ColorBitArray::index` is guaranteed to return a valid index
                             self.colors
