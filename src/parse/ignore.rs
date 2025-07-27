@@ -34,6 +34,10 @@ pub struct IgnoreSpec {
 }
 
 pub fn parse_comment(comment: &str) -> Option<IgnoreSpec> {
+    // Shortcut for performance
+    if !comment.trim_start().starts_with("tiger-ignore") {
+        return None;
+    }
     COMMENT_PARSER.parse(comment).ok()
 }
 
