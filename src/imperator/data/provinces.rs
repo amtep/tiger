@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use image::{DynamicImage, Rgb};
+use itertools::Itertools;
 
 use crate::block::Block;
 use crate::everything::Everything;
@@ -262,7 +263,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
             }
             FileContent::Provinces(img) => {
                 if let DynamicImage::ImageRgb8(img) = img {
-                    for pixel in img.pixels() {
+                    for pixel in img.pixels().dedup() {
                         self.colors.insert(*pixel);
                     }
                 }

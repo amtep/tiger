@@ -4,6 +4,7 @@ use std::str::FromStr;
 use bitvec::bitbox;
 use bitvec::boxed::BitBox;
 use image::{DynamicImage, Rgb};
+use itertools::Itertools;
 
 use crate::block::Block;
 use crate::db::{Db, DbKind};
@@ -320,7 +321,7 @@ impl FileHandler<FileContent> for Ck3Provinces {
             }
             FileContent::Provinces(img) => {
                 if let DynamicImage::ImageRgb8(img) = img {
-                    for pixel in img.pixels().copied() {
+                    for pixel in img.pixels().dedup().copied() {
                         unsafe {
                             // SAFETY: `ColorBitArray::index` is guaranteed to return a valid index
                             self.colors

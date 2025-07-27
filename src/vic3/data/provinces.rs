@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use image::{DynamicImage, Rgb};
+use itertools::Itertools;
 
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
@@ -86,7 +87,7 @@ impl FileHandler<DynamicImage> for Vic3Provinces {
     fn handle_file(&mut self, entry: &FileEntry, img: DynamicImage) {
         self.provinces_png = Some(entry.clone());
         if let DynamicImage::ImageRgb8(img) = img {
-            for pixel in img.pixels() {
+            for pixel in img.pixels().dedup() {
                 self.colors.insert(*pixel);
             }
         }
