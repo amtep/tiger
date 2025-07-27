@@ -703,13 +703,19 @@ impl Localization {
 
 impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
     fn config(&mut self, config: &Block) {
-        let mut langs = bitarr![u16, Lsb0; 0; Language::COUNT];
-
         if let Some(block) = config.get_field_block("languages") {
+            // By default, self.check_langs is all true.
+            // If a languages block exists in the config, then check_langs
+            // should contain only the configured languages, so langs is
+            // initialized to all false here.
+            let mut langs = bitarr![u16, Lsb0; 0; Language::COUNT];
+
             // TODO: warn if there are unknown languages in check or skip?
             let check = block.get_field_values("check");
             let skip = block.get_field_values("skip");
 
+            // If check is used, then check only those languages.
+            // If instead skip is used, then check all languages except the skipped ones.
             for lang in Language::iter() {
                 let lang_str = lang.into();
                 if check.iter().any(|t| t.is(lang_str))
