@@ -1343,3 +1343,35 @@ impl Drop for Everything {
         MACRO_MAP.clear();
     }
 }
+
+#[cfg(feature = "internal_benches")]
+mod benchmark {
+    use super::*;
+    use divan::Bencher;
+
+    #[cfg(feature = "ck3")]
+    #[divan::bench(args = internal_benches::ck3::bench_mods())]
+    fn load_provinces_ck3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
+        bencher
+            .with_inputs(|| {
+                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
+                    .unwrap()
+            })
+            .bench_local_refs(|everything| {
+                everything.fileset.handle(&mut everything.provinces_ck3, &everything.parser);
+            });
+    }
+
+    #[cfg(feature = "vic3")]
+    #[divan::bench(args = internal_benches::vic3::bench_mods())]
+    fn load_provinces_vic3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
+        bencher
+            .with_inputs(|| {
+                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
+                    .unwrap()
+            })
+            .bench_local_refs(|everything| {
+                everything.fileset.handle(&mut everything.provinces_vic3, &everything.parser);
+            });
+    }
+}
