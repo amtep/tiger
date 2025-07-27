@@ -137,19 +137,23 @@ impl Gui {
     pub fn load_type(&mut self, key: Token, base: Token, block: Block) {
         let key_lc = Lowercase::new(key.as_str());
 
+        // With gui types the earlier one takes precedence
         if let Some(other) = self.types.get(&key_lc) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "gui type");
+            if other.key.loc.kind <= key.loc.kind {
+                dup_error(&other.key, &key, "gui type");
             }
+            return;
         }
         self.types.insert(key_lc, GuiType::new(key, base, block));
     }
 
     pub fn load_template(&mut self, key: Token, block: Block) {
+        // With gui templates the earlier one takes precedence
         if let Some(other) = self.templates.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "gui template");
+            if other.key.loc.kind <= key.loc.kind {
+                dup_error(&other.key, &key, "gui template");
             }
+            return;
         }
         self.templates.insert(key.as_str(), GuiTemplate::new(key, block));
     }
