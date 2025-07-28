@@ -235,3 +235,41 @@ pub fn camel_case_to_separated_words(s: &str) -> String {
     }
     temp_s
 }
+
+pub struct SkipRepeated<I, T>
+where
+    I: Iterator<Item = T>,
+    T: PartialEq + Copy,
+{
+    iter: I,
+    last: Option<T>,
+}
+
+impl<I, T> Iterator for SkipRepeated<I, T>
+where
+    I: Iterator<Item = T>,
+    T: PartialEq + Copy,
+{
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let next = self.iter.next();
+            if next != self.last || self.last.is_none() {
+                self.last = next;
+                return self.last;
+            }
+        }
+    }
+}
+
+pub trait TigerIterHelpers: Iterator {
+    fn skip_repeated<T>(self) -> SkipRepeated<Self, Self::Item>
+    where
+        Self: Sized + Iterator<Item = T>,
+        T: PartialEq + Copy,
+    {
+        SkipRepeated { iter: self, last: None }
+    }
+}
+impl<T> TigerIterHelpers for T where T: Iterator + ?Sized {}

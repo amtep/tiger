@@ -7,7 +7,7 @@ use std::{
 };
 use tiger_lib::{Everything, Game};
 
-static CONFIG_PATH: &str = "./benches/config.toml";
+static CONFIG_PATH: &str = "../benches/vic3.toml";
 
 // Sample Config File:
 // vanilla_dir = "..."

@@ -166,6 +166,26 @@ The various path options are only needed if Tiger can't find the paths on its ow
 * `--help` Print help.
 * `--version` Print version
 
+## Benchmarks
+
+First, create config files in `benchmarks/`. Copy the `.example` files and adjust the paths for your system.
+
+Whole system benchmarks are run with:
+```
+cargo bench -p ck3-tiger
+```
+They support baselines with:
+```
+cargo bench -p ck3-tiger -- --save-baseline my_baseline
+cargo bench -p ck3-tiger -- --baseline my_baseline
+```
+
+Internal benchmarks are run with:
+```
+cargo bench -p internal_benches --features ck3
+```
+They do not support baselines
+
 ## Contributions
 
 I welcome contributions and collaborations! Some forms that contributions can take:

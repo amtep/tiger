@@ -799,17 +799,18 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
         }
 
         for loca in vec.drain(..) {
-            if !is_replace_path(entry.path()) {
-                if let Some(other) = hash.get(loca.key.as_str()) {
+            hash.entry(loca.key.to_string())
+                .and_modify(|other| {
                     // other.key and loca.key are in the other order than usual here,
                     // because in loca the older definition overrides the later one.
-                    if other.key.loc.kind == entry.kind() && other.orig != loca.orig {
+                    if !is_replace_path(entry.path())
+                        && other.key.loc.kind == entry.kind()
+                        && other.orig != loca.orig
+                    {
                         dup_error(&other.key, &loca.key, "localization");
-                        continue;
                     }
-                }
-            }
-            hash.insert(loca.key.to_string(), loca);
+                })
+                .or_insert(loca);
         }
     }
 }

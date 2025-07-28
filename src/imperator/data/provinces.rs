@@ -6,7 +6,7 @@ use image::{DynamicImage, Rgb};
 use crate::block::Block;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::{TigerHashMap, TigerHashSet};
+use crate::helpers::{TigerHashMap, TigerHashSet, TigerIterHelpers};
 use crate::item::Item;
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
@@ -262,7 +262,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
             }
             FileContent::Provinces(img) => {
                 if let DynamicImage::ImageRgb8(img) = img {
-                    for pixel in img.pixels() {
+                    for pixel in img.pixels().skip_repeated() {
                         self.colors.insert(*pixel);
                     }
                 }

@@ -1,6 +1,9 @@
 use std::iter::Peekable;
 use std::mem::take;
 use std::str::Chars;
+use std::sync::LazyLock;
+
+use regex::Regex;
 
 use crate::data::localization::{Language, LocaEntry, LocaValue, MacroValue};
 use crate::datatype::{Code, CodeArg, CodeChain};
@@ -159,8 +162,8 @@ impl LocaParser {
         }
     }
 
-    // Look ahead to the last `"` on the line
-    fn find_dquote(&self) -> Option<usize> {
+    #[allow(unused)]
+    fn find_dquote_chars(&self) -> Option<usize> {
         let mut offset = self.offset;
         let mut dquote_offset = None;
         for c in self.chars.clone() {
@@ -172,6 +175,52 @@ impl LocaParser {
             offset += c.len_utf8();
         }
         dquote_offset
+    }
+
+    #[allow(unused)]
+    fn find_dquote_bytes(&self) -> Option<usize> {
+        let mut offset = self.offset;
+        let mut dquote_offset = None;
+        for c in self.content[offset..].bytes() {
+            if c == b'"' {
+                dquote_offset = Some(offset);
+            } else if c == b'\n' {
+                return dquote_offset;
+            }
+            offset += 1;
+        }
+        dquote_offset
+    }
+
+    #[allow(unused)]
+    fn find_dquote_regex(&self) -> Option<usize> {
+        static REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?m:"[^"\n]*$)"#).unwrap());
+        thread_local! {
+            static LOCAL_REGEX: LazyLock<Regex> = LazyLock::new(|| REGEX.clone());
+        }
+        let dquote_match = LOCAL_REGEX.with(|r| r.find_at(self.content, self.offset))?;
+        Some(dquote_match.start())
+    }
+
+    #[allow(unused)]
+    fn find_dquote_simd(&self) -> Option<usize> {
+        use memchr;
+        let mut dquote_offset = None;
+        let haystack = &self.content.as_bytes()[self.offset..];
+        for hoffset in memchr::memchr2_iter(b'"', b'\n', haystack) {
+            let c = haystack[hoffset];
+            if c == b'"' {
+                dquote_offset = Some(self.offset + hoffset);
+            } else if c == b'\n' {
+                return dquote_offset;
+            }
+        }
+        dquote_offset
+    }
+
+    // Look ahead to the last `"` on the line
+    fn find_dquote(&self) -> Option<usize> {
+        self.find_dquote_regex()
     }
 
     fn parse_format(&mut self) -> Option<Token> {
@@ -438,28 +487,34 @@ impl<'a> ValueParser<'a> {
         }
     }
 
+    fn reached_end(&self) -> bool {
+        self.content_idx + 1 == self.content.len()
+    }
+
+    fn advance_idx(&mut self) {
+        self.content_idx += 1;
+        self.loc = self.content[self.content_idx].loc;
+        self.offset = 0;
+    }
+
     fn peek(&mut self) -> Option<char> {
-        let p = self.content_iters[self.content_idx].peek();
-        if p.is_none() {
-            if self.content_idx + 1 == self.content.len() {
-                None
-            } else {
-                self.content_idx += 1;
-                self.loc = self.content[self.content_idx].loc;
-                self.offset = 0;
-                self.peek()
-            }
+        if let Some(p) = self.content_iters[self.content_idx].peek() {
+            Some(*p)
+        } else if !self.reached_end() {
+            self.advance_idx();
+            self.peek()
         } else {
-            p.copied()
+            None
         }
     }
 
     fn next_char(&mut self) {
-        // self.peek advances content_idx if needed
-        if self.peek().is_some() {
-            let c = self.content_iters[self.content_idx].next().unwrap();
+        if let Some(c) = self.content_iters[self.content_idx].next() {
             self.offset += c.len_utf8();
             self.loc.column += 1;
+        } else if !self.reached_end() {
+            self.advance_idx();
+            self.next_char();
         }
     }
 
