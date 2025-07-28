@@ -805,13 +805,10 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
                     let other = occupied_entry.get();
                     // other.key and loca.key are in the other order than usual here,
                     // because in loca the older definition overrides the later one.
-                    if !is_replace_path(entry.path())
-                        && other.key.loc.kind == entry.kind()
-                        && other.orig != loca.orig
-                    {
-                        dup_error(&other.key, &loca.key, "localization");
-                    } else {
+                    if is_replace_path(entry.path()) {
                         occupied_entry.insert(loca);
+                    } else if other.key.loc.kind == entry.kind() && other.orig != loca.orig {
+                        dup_error(&other.key, &loca.key, "localization");
                     }
                 }
                 Entry::Vacant(vacant_entry) => {
