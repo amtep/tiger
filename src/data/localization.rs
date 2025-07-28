@@ -2,6 +2,7 @@
 
 use std::borrow::Borrow;
 use std::cmp::Ordering;
+use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
 use std::fs::read_to_string;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
@@ -799,17 +800,24 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
         }
 
         for loca in vec.drain(..) {
-            if !is_replace_path(entry.path()) {
-                if let Some(other) = hash.get(loca.key.as_str()) {
+            match hash.entry(loca.key.to_string()) {
+                Entry::Occupied(mut occupied_entry) => {
+                    let other = occupied_entry.get();
                     // other.key and loca.key are in the other order than usual here,
                     // because in loca the older definition overrides the later one.
-                    if other.key.loc.kind == entry.kind() && other.orig != loca.orig {
+                    if !is_replace_path(entry.path())
+                        && other.key.loc.kind == entry.kind()
+                        && other.orig != loca.orig
+                    {
                         dup_error(&other.key, &loca.key, "localization");
-                        continue;
+                    } else {
+                        occupied_entry.insert(loca);
                     }
                 }
+                Entry::Vacant(vacant_entry) => {
+                    vacant_entry.insert(loca);
+                }
             }
-            hash.insert(loca.key.to_string(), loca);
         }
     }
 }
