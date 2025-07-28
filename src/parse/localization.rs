@@ -1,6 +1,9 @@
 use std::iter::Peekable;
 use std::mem::take;
 use std::str::Chars;
+use std::sync::LazyLock;
+
+use regex::Regex;
 
 use crate::data::localization::{Language, LocaEntry, LocaValue, MacroValue};
 use crate::datatype::{Code, CodeArg, CodeChain};
@@ -190,6 +193,16 @@ impl LocaParser {
     }
 
     #[allow(unused)]
+    fn find_dquote_regex(&self) -> Option<usize> {
+        static REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"(?m:"[^"\n]*$)"#).unwrap());
+        thread_local! {
+            static LOCAL_REGEX: LazyLock<Regex> = LazyLock::new(|| REGEX.clone());
+        }
+        let dquote_match = LOCAL_REGEX.with(|r| r.find_at(self.content, self.offset))?;
+        Some(dquote_match.start())
+    }
+
+    #[allow(unused)]
     fn find_dquote_simd(&self) -> Option<usize> {
         use memchr;
         let mut dquote_offset = None;
@@ -207,7 +220,7 @@ impl LocaParser {
 
     // Look ahead to the last `"` on the line
     fn find_dquote(&self) -> Option<usize> {
-        self.find_dquote_simd()
+        self.find_dquote_regex()
     }
 
     fn parse_format(&mut self) -> Option<Token> {
