@@ -438,28 +438,34 @@ impl<'a> ValueParser<'a> {
         }
     }
 
+    fn reached_end(&self) -> bool {
+        self.content_idx + 1 == self.content.len()
+    }
+
+    fn advance_idx(&mut self) {
+        self.content_idx += 1;
+        self.loc = self.content[self.content_idx].loc;
+        self.offset = 0;
+    }
+
     fn peek(&mut self) -> Option<char> {
-        let p = self.content_iters[self.content_idx].peek();
-        if p.is_none() {
-            if self.content_idx + 1 == self.content.len() {
-                None
-            } else {
-                self.content_idx += 1;
-                self.loc = self.content[self.content_idx].loc;
-                self.offset = 0;
-                self.peek()
-            }
+        if let Some(p) = self.content_iters[self.content_idx].peek() {
+            Some(*p)
+        } else if !self.reached_end() {
+            self.advance_idx();
+            self.peek()
         } else {
-            p.copied()
+            None
         }
     }
 
     fn next_char(&mut self) {
-        // self.peek advances content_idx if needed
-        if self.peek().is_some() {
-            let c = self.content_iters[self.content_idx].next().unwrap();
+        if let Some(c) = self.content_iters[self.content_idx].next() {
             self.offset += c.len_utf8();
             self.loc.column += 1;
+        } else if !self.reached_end() {
+            self.advance_idx();
+            self.next_char();
         }
     }
 
