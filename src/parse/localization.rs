@@ -159,8 +159,8 @@ impl LocaParser {
         }
     }
 
-    // Look ahead to the last `"` on the line
-    fn find_dquote(&self) -> Option<usize> {
+    #[allow(unused)]
+    fn find_dquote_chars(&self) -> Option<usize> {
         let mut offset = self.offset;
         let mut dquote_offset = None;
         for c in self.chars.clone() {
@@ -172,6 +172,42 @@ impl LocaParser {
             offset += c.len_utf8();
         }
         dquote_offset
+    }
+
+    #[allow(unused)]
+    fn find_dquote_bytes(&self) -> Option<usize> {
+        let mut offset = self.offset;
+        let mut dquote_offset = None;
+        for c in self.content[offset..].bytes() {
+            if c == b'"' {
+                dquote_offset = Some(offset);
+            } else if c == b'\n' {
+                return dquote_offset;
+            }
+            offset += 1;
+        }
+        dquote_offset
+    }
+
+    #[allow(unused)]
+    fn find_dquote_simd(&self) -> Option<usize> {
+        use memchr;
+        let mut dquote_offset = None;
+        let haystack = &self.content.as_bytes()[self.offset..];
+        for hoffset in memchr::memchr2_iter(b'"', b'\n', haystack) {
+            let c = haystack[hoffset];
+            if c == b'"' {
+                dquote_offset = Some(self.offset + hoffset);
+            } else if c == b'\n' {
+                return dquote_offset;
+            }
+        }
+        dquote_offset
+    }
+
+    // Look ahead to the last `"` on the line
+    fn find_dquote(&self) -> Option<usize> {
+        self.find_dquote_simd()
     }
 
     fn parse_format(&mut self) -> Option<Token> {

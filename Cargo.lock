@@ -2721,6 +2721,7 @@ dependencies = [
  "inventory",
  "lalrpop",
  "lalrpop-util",
+ "memchr",
  "murmur3",
  "phf 0.12.1",
  "png",
