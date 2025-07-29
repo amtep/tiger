@@ -2,6 +2,8 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Mutex;
 
+use rayon::prelude::*;
+
 use crate::block::{Block, BlockItem, Field};
 use crate::context::{Reason, ScopeContext, Signature};
 use crate::data::scripted_effects::Effect;
@@ -142,9 +144,9 @@ impl Events {
             item.validate(data);
         }
 
-        for item in self.events.values() {
+        self.events.par_iter().for_each(|(_, item)| {
             item.validate(data);
-        }
+        });
     }
 
     pub fn validate_call(&self, key: &Token, data: &Everything, sc: &mut ScopeContext) {
