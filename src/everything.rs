@@ -491,36 +491,42 @@ impl Everything {
 
     #[cfg(feature = "vic3")]
     fn load_all_vic3(&mut self) {
-        self.fileset.handle(&mut self.events, &self.parser);
-        self.fileset.handle(&mut self.history, &self.parser);
-        self.fileset.handle(&mut self.provinces_vic3, &self.parser);
-        self.fileset.handle(&mut self.data_bindings, &self.parser);
-        self.fileset.handle(&mut self.coas, &self.parser);
-        self.fileset.handle(&mut self.scripted_lists, &self.parser);
-        self.fileset.handle(&mut self.scripted_modifiers, &self.parser);
-        self.fileset.handle(&mut self.script_values, &self.parser);
-        self.fileset.handle(&mut self.music, &self.parser);
+        scope(|s| {
+            s.spawn(|_| self.fileset.handle(&mut self.events, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.history, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.provinces_vic3, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.data_bindings, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.coas, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.scripted_lists, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.scripted_modifiers, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.script_values, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.music, &self.parser));
+        });
         self.load_json(Item::TerrainMask, TerrainMask::add_json);
     }
 
     #[cfg(feature = "imperator")]
     fn load_all_imperator(&mut self) {
-        self.fileset.handle(&mut self.events, &self.parser);
-        self.fileset.handle(&mut self.decisions_imperator, &self.parser);
-        self.fileset.handle(&mut self.provinces_imperator, &self.parser);
-        self.fileset.handle(&mut self.coas, &self.parser);
-        self.fileset.handle(&mut self.scripted_lists, &self.parser);
-        self.fileset.handle(&mut self.scripted_modifiers, &self.parser);
-        self.fileset.handle(&mut self.script_values, &self.parser);
-        self.fileset.handle(&mut self.music, &self.parser);
+        scope(|s| {
+            s.spawn(|_| self.fileset.handle(&mut self.events, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.decisions_imperator, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.provinces_imperator, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.coas, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.scripted_lists, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.scripted_modifiers, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.script_values, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.music, &self.parser));
+        });
     }
 
     #[cfg(feature = "hoi4")]
     fn load_all_hoi4(&mut self) {
-        self.fileset.handle(&mut self.events_hoi4, &self.parser);
-        self.fileset.handle(&mut self.gfx, &self.parser);
-        self.fileset.handle(&mut self.provinces_hoi4, &self.parser);
-        self.fileset.handle(&mut self.music_hoi4, &self.parser);
+        scope(|s| {
+            s.spawn(|_| self.fileset.handle(&mut self.events_hoi4, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.gfx, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.provinces_hoi4, &self.parser));
+            s.spawn(|_| self.fileset.handle(&mut self.music_hoi4, &self.parser));
+        });
     }
 
     fn scan_all_generic(&mut self) {
