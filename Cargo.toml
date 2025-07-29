@@ -29,13 +29,16 @@ vic3 = ["jomini"]
 imperator = ["jomini"]
 jomini = ["image/png", "dep:png"]
 hoi4 = ["image/bmp", "dep:tinybmp"]
-internal_benches = ["dep:internal_benches", "dep:divan"]
+# figure out how to do this without blocking publication on crates.io
+#internal_benches = ["dep:internal_benches", "dep:divan"]
+internal_benches = ["dep:divan"]
 
 [build-dependencies]
 lalrpop = "0.22.0"
 
 [dependencies]
-internal_benches = { path = "internal_benches", optional = true }
+# figure out how to do this without blocking publication on crates.io
+#internal_benches = { path = "internal_benches", optional = true }
 divan = { version = "0.1.21", optional = true }
 ansiterm = "0.12.2"
 anyhow = "1"

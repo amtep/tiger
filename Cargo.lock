@@ -2659,7 +2659,6 @@ dependencies = [
  "encoding_rs",
  "glob",
  "image",
- "internal_benches",
  "inventory",
  "itertools 0.14.0",
  "lalrpop",
