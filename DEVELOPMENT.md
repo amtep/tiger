@@ -1,6 +1,6 @@
 ## Benchmarks
 
-First, create config files in `benchs/`. Copy the `.example` files and adjust the paths for your system.
+First, create config files in `benches/`. Copy the `.example` files and adjust the paths for your system.
 
 Whole system benchmarks are run with:
 ```

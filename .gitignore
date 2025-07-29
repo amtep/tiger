@@ -1,12 +1,13 @@
 .idea/
 .vscode/
 /target/
-*/benches/config.toml
 cachegrind.out*
 callgrind.out*
 massif.out*
 flamegraph*.svg
 *.swp
+benches/ck3.toml
+benches/vic3.toml
 
 # Random testing stuff not useful to anyone else in its current form
 cerr1
@@ -37,10 +38,3 @@ herrmod2
 htest.sh
 htestmod.sh
 
-internal_benches/ck3.toml
-
-internal_benches/vic3.toml
-
-benches/ck3.toml
-
-benches/vic3.toml
