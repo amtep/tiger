@@ -187,7 +187,7 @@ Some ideas for code contributions:
 * Solving one of the issues marked in the [TODO](https://github.com/amtep/tiger/wiki/Todo) or [IDEAS](https://github.com/amtep/tiger/wiki/Ideas) wiki pages
 * Speed or memory use improvements; opportunities are all over the place
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) and the [CODING](https://github.com/amtep/tiger/wiki/Overview-for-coders) wiki page for an overview of the code and coding style.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for tips and the [CODING](https://github.com/amtep/tiger/wiki/Overview-for-coders) wiki page for an overview of the code and coding style.
 
 ### License
 
