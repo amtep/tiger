@@ -15,7 +15,7 @@ tiger-lib = { path = "..", version = "1.11.0", default-features = false }
 anyhow = "1"
 cfg-if = "1"
 clap = { version = "4.5", features = ["derive"] }
-console = "0.15"
+console = "0.16"
 # held back because of msrv
 home = "0.5"
 regex = "1.10"
