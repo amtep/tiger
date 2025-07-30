@@ -27,6 +27,7 @@ use crate::report::{
     add_loaded_dlc_root, add_loaded_mod_root, err, fatal, report, ErrorKey, Severity,
 };
 use crate::token::Token;
+use crate::util::fix_slashes_for_target_platform;
 
 /// Note that ordering of these enum values matters.
 /// Files later in the order will override files of the same name before them,
@@ -711,10 +712,12 @@ fn get_modfile(
 ) -> Option<PathBuf> {
     let mut path: Option<PathBuf> = None;
     if let Some(modfile) = block.get_field_value("modfile") {
-        let modfile_path = config_path
-            .parent()
-            .unwrap() // SAFETY: known to be for a file in a directory
-            .join(modfile.as_str());
+        let modfile_path = fix_slashes_for_target_platform(
+            config_path
+                .parent()
+                .unwrap() // SAFETY: known to be for a file in a directory
+                .join(modfile.as_str()),
+        );
         if modfile_path.exists() {
             path = Some(modfile_path);
         } else {
@@ -724,7 +727,11 @@ fn get_modfile(
     if path.is_none() {
         if let Some(workshop_id) = block.get_field_value("workshop_id") {
             match paradox_dir {
-                Some(p) => path = Some(p.join(format!("mod/ugc_{workshop_id}.mod"))),
+                Some(p) => {
+                    path = Some(fix_slashes_for_target_platform(
+                        p.join(format!("mod/ugc_{workshop_id}.mod")),
+                    ));
+                }
                 None => eprintln!("workshop_id defined, but could not find paradox directory"),
             }
         }
@@ -741,10 +748,12 @@ fn get_mod(
 ) -> Option<PathBuf> {
     let mut path: Option<PathBuf> = None;
     if let Some(modfile) = block.get_field_value("mod") {
-        let mod_path = config_path
-            .parent()
-            .unwrap() // SAFETY: known to be for a file in a directory
-            .join(modfile.as_str());
+        let mod_path = fix_slashes_for_target_platform(
+            config_path
+                .parent()
+                .unwrap() // SAFETY: known to be for a file in a directory
+                .join(modfile.as_str()),
+        );
         if mod_path.exists() {
             path = Some(mod_path);
         } else {
@@ -754,7 +763,9 @@ fn get_mod(
     if path.is_none() {
         if let Some(workshop_id) = block.get_field_value("workshop_id") {
             match workshop_dir {
-                Some(w) => path = Some(w.join(workshop_id.as_str())),
+                Some(w) => {
+                    path = Some(fix_slashes_for_target_platform(w.join(workshop_id.as_str())));
+                }
                 None => eprintln!("workshop_id defined, but could not find workshop"),
             }
         }
