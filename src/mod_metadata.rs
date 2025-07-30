@@ -26,7 +26,7 @@ impl ModMetadata {
         let pathname = fix_slashes_for_target_platform(mod_dir.join(&in_mod_path));
         let entry = FileEntry::new(in_mod_path, FileKind::Mod, pathname.clone());
         let block = parse_json_file(&entry)
-            .with_context(|| format!("Could not read metadata file {}", pathname.display()))?;
+            .with_context(|| format!("could not read metadata file {}", pathname.display()))?;
         Ok(Self { modpath: mod_dir.to_path_buf(), block })
     }
 

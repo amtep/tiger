@@ -323,21 +323,32 @@ impl Fileset {
             } else if Game::is_vic3() {
                 #[cfg(feature = "vic3")]
                 if let Some(pathdir) = get_mod(&label, config_path, block, workshop_dir) {
-                    if let Ok(metadata) = ModMetadata::read(&pathdir) {
-                        eprintln!(
-                            "Loading secondary mod {label} from: {}{}",
-                            pathdir.display(),
-                            metadata
-                                .display_name()
-                                .map_or_else(String::new, |name| format!(" \"{name}\"")),
-                        );
-                        let kind = FileKind::LoadedMod(mod_idx);
-                        let loaded_mod =
-                            LoadedMod::new(kind, label.clone(), pathdir, metadata.replace_paths());
-                        add_loaded_mod_root(label);
-                        self.loaded_mods.push(loaded_mod);
-                    } else {
-                        bail!("does not look like a mod dir: {}", pathdir.display());
+                    match ModMetadata::read(&pathdir) {
+                        Ok(metadata) => {
+                            eprintln!(
+                                "Loading secondary mod {label} from: {}{}",
+                                pathdir.display(),
+                                metadata
+                                    .display_name()
+                                    .map_or_else(String::new, |name| format!(" \"{name}\"")),
+                            );
+                            let kind = FileKind::LoadedMod(mod_idx);
+                            let loaded_mod = LoadedMod::new(
+                                kind,
+                                label.clone(),
+                                pathdir,
+                                metadata.replace_paths(),
+                            );
+                            add_loaded_mod_root(label);
+                            self.loaded_mods.push(loaded_mod);
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "could not load secondary mod {label} from: {}",
+                                pathdir.display()
+                            );
+                            eprintln!("  because: {e}");
+                        }
                     }
                 } else {
                     bail!("could not load secondary mod from config; missing valid `mod` or `workshop_id` field");
