@@ -190,8 +190,16 @@ impl Errors<'_> {
     /// readability and occasionally gets changed to improve that.
     ///
     /// Reports matched by `#tiger-ignore` directives will not be printed.
-    pub fn emit_reports<O: Write + Send>(&mut self, output: &mut O, json: bool, consolidate: bool) {
+    ///
+    /// Returns true iff any reports were printed.
+    pub fn emit_reports<O: Write + Send>(
+        &mut self,
+        output: &mut O,
+        json: bool,
+        consolidate: bool,
+    ) -> bool {
         let reports = self.flatten_reports(consolidate);
+        let result = !reports.is_empty();
         if json {
             _ = writeln!(output, "[");
             let mut first = true;
@@ -209,6 +217,7 @@ impl Errors<'_> {
             }
         }
         self.storage.clear();
+        result
     }
 
     pub fn store_source_file(&mut self, fullpath: PathBuf, source: &'static str) {
@@ -342,8 +351,10 @@ pub fn will_maybe_log<E: ErrorLoc>(eloc: E, key: ErrorKey) -> bool {
 ///
 /// Note that the default output format is not stable across versions. It is meant for human
 /// readability and occasionally gets changed to improve that.
-pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool, consolidate: bool) {
-    Errors::get_mut().emit_reports(output, json, consolidate);
+///
+/// Returns true iff any reports were printed.
+pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool, consolidate: bool) -> bool {
+    Errors::get_mut().emit_reports(output, json, consolidate)
 }
 
 /// Extract the stored reports, sort them, and return them as a hashmap with the occurrences for
