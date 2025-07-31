@@ -53,7 +53,7 @@ pub struct Localization {
     /// (This saves them the effort of configuring `check_langs`).
     mod_langs: BitArr!(for Language::COUNT, in u16),
     /// Database of all localizations, indexed first by language and then by localization key.
-    locas: Box<[TigerHashMap<String, LocaEntry>; Language::COUNT]>,
+    locas: Box<[TigerHashMap<&'static str, LocaEntry>; Language::COUNT]>,
 }
 
 /// List of languages that are supported by the game engine.
@@ -171,7 +171,7 @@ impl LocaEntry {
     fn expand_macros<'a>(
         &'a self,
         vec: &mut Vec<Token>,
-        from: &'a TigerHashMap<String, LocaEntry>,
+        from: &'a TigerHashMap<&'a str, LocaEntry>,
         count: &mut usize,
         sc: &mut ScopeContext,
         link: Option<MacroMapIndex>,
@@ -570,9 +570,9 @@ impl Localization {
         }
     }
 
-    fn validate_loca(
+    fn validate_loca<'b>(
         entry: &LocaEntry,
-        from: &TigerHashMap<String, LocaEntry>,
+        from: &'b TigerHashMap<&'b str, LocaEntry>,
         data: &Everything,
         sc: &mut ScopeContext,
         lang: Language,
@@ -685,7 +685,7 @@ impl Localization {
         for lang in self.iter_lang_idx() {
             for key in data.database.iter_keys(Item::PerkTree) {
                 let loca = format!("{key}_name");
-                if let Some(entry) = self.locas[lang].get(&loca) {
+                if let Some(entry) = self.locas[lang].get(loca.as_str()) {
                     if let LocaValue::Text(token) = &entry.value {
                         if token.as_str().ends_with("_visible") {
                             data.verify_exists(Item::ScriptedGui, token);
@@ -800,7 +800,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
         }
 
         for loca in vec.drain(..) {
-            match hash.entry(loca.key.to_string()) {
+            match hash.entry(loca.key.as_str()) {
                 Entry::Occupied(mut occupied_entry) => {
                     let other = occupied_entry.get();
                     // other.key and loca.key are in the other order than usual here,

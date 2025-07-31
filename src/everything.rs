@@ -1380,4 +1380,16 @@ mod benchmark {
                 everything.fileset.handle(&mut everything.provinces_vic3, &everything.parser);
             });
     }
+
+    #[divan::bench(args = internal_benches::vic3::bench_mods())]
+    fn load_localization(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
+        bencher
+            .with_inputs(|| {
+                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
+                    .unwrap()
+            })
+            .bench_local_refs(|everything| {
+                everything.fileset.handle(&mut everything.localization, &everything.parser);
+            });
+    }
 }
