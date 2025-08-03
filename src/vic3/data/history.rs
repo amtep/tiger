@@ -8,6 +8,7 @@ use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::TigerHashMap;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
+use crate::report::{err, warn, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -38,17 +39,27 @@ impl History {
     }
 
     pub fn validate(&self, data: &Everything) {
-        // Don't know what order the history effects are executed in, so let's do alphabetic
-        // except for `GLOBAL`, which is documented to go last.
-        let mut names: Vec<&'static str> =
-            self.history.keys().filter(|name| **name != "GLOBAL").map(|name| &**name).collect();
-        names.sort_unstable();
-        names.push("GLOBAL");
-
-        for name in names {
+        for name in HISTORY_SEQUENCE {
             if let Some(item) = self.history.get(name) {
                 item.validate(data);
             }
+        }
+
+        // Validate the remaining ones even if we don't know about them.
+        // They may be for a newer game version.
+        for (name, item) in &self.history {
+            if HISTORY_SEQUENCE.contains(&name) {
+                continue;
+            }
+            if *name == "CONSCRIPTION" {
+                let msg = format!("CONSCRIPTION history is not processed by the game");
+                let info = "as of 1.9.7";
+                warn(ErrorKey::Bugs).msg(msg).info(info).loc(&item.key).push();
+                continue;
+            }
+            let msg = format!("unknown history classification `{name}`");
+            err(ErrorKey::UnknownField).msg(msg).loc(&item.key).push();
+            item.validate(data);
         }
     }
 }
@@ -89,3 +100,31 @@ impl HistoryEffect {
         validate_effect(&self.block, data, &mut sc, Tooltipped::No);
     }
 }
+
+/// The order in which history files are processed by the game engine.
+/// It was determined by adding `debug_log` entries to the history files.
+/// LAST UPDATED VIC3 VERSION 1.9.7
+const HISTORY_SEQUENCE: &[&str] = &[
+    "STATES",
+    "COUNTRIES",
+    "POPS",
+    "DIPLOMACY",
+    "POPULATION",
+    "POWER_BLOCS",
+    "INTERESTS",
+    "BUILDINGS",
+    "PRODUCTION_METHODS",
+    "MILITARY_FORMATIONS",
+    "AI",
+    "TREATIES",
+    "LOBBIES",
+    "DIPLOMATIC_PLAYS",
+    "TRADE",
+    // GLOBAL is documented to go last, but it doesn't.
+    "GLOBAL",
+    "POLITICAL_MOVEMENTS",
+    "CHARACTERS",
+    "GOVERNMENT",
+    "GOVERNMENT_SETUP",
+    "MILITARY_DEPLOYMENTS",
+];
