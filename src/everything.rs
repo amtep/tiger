@@ -747,6 +747,7 @@ impl Everything {
             Item::DangerType => DANGER_TYPES.contains(&key),
             Item::DlcFeature => DLC_FEATURES_CK3.contains(&key),
             Item::Doctrine => self.doctrines.exists(key),
+            Item::DoctrineBooleanParameter => self.doctrines.boolean_parameter_exists(key),
             Item::DoctrineCategory => self.doctrines.category_exists(key),
             Item::DoctrineParameter => self.doctrines.parameter_exists(key),
             Item::Event => self.events.exists(key),
@@ -1187,6 +1188,9 @@ impl Everything {
             Item::Character => Box::new(self.characters.iter_keys()),
             Item::CharacterInteractionCategory => Box::new(self.interaction_cats.iter_keys()),
             Item::Doctrine => Box::new(self.doctrines.iter_keys()),
+            Item::DoctrineBooleanParameter => {
+                Box::new(self.doctrines.iter_boolean_parameter_keys())
+            }
             Item::DoctrineCategory => Box::new(self.doctrines.iter_category_keys()),
             Item::DoctrineParameter => Box::new(self.doctrines.iter_parameter_keys()),
             Item::Event => Box::new(self.events.iter_keys()),

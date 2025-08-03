@@ -23,7 +23,8 @@ use crate::variables::Variables;
 pub struct Doctrines {
     categories: TigerHashMap<&'static str, DoctrineCategory>,
     doctrines: TigerHashMap<&'static str, Doctrine>,
-    parameters: TigerHashSet<Token>, // only the boolean parameters
+    parameters: TigerHashSet<Token>, // all parameters, including boolean
+    boolean_parameters: TigerHashSet<Token>, // only the boolean parameters
 }
 
 impl Doctrines {
@@ -82,8 +83,16 @@ impl Doctrines {
         self.parameters.contains(key)
     }
 
+    pub fn boolean_parameter_exists(&self, key: &str) -> bool {
+        self.boolean_parameters.contains(key)
+    }
+
     pub fn iter_parameter_keys(&self) -> impl Iterator<Item = &Token> {
         self.parameters.iter()
+    }
+
+    pub fn iter_boolean_parameter_keys(&self) -> impl Iterator<Item = &Token> {
+        self.boolean_parameters.iter()
     }
 
     pub fn unreformed(&self, key: &str) -> bool {
@@ -126,8 +135,9 @@ impl FileHandler<Block> for Doctrines {
 
                 if let Some(b) = block.get_field_block("parameters") {
                     for (k, v) in b.iter_assignments() {
+                        self.parameters.insert(k.clone());
                         if v.is("yes") || v.is("no") {
-                            self.parameters.insert(k.clone());
+                            self.boolean_parameters.insert(k.clone());
                         }
                     }
                 }

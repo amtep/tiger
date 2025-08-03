@@ -281,6 +281,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] DiarchyParameter,
     #[cfg(feature = "ck3")] DiarchyType,
     #[cfg(feature = "ck3")] Doctrine,
+    #[cfg(feature = "ck3")] DoctrineBooleanParameter,
     #[cfg(feature = "ck3")] DoctrineCategory,
     #[cfg(feature = "ck3")] DoctrineParameter,
     #[cfg(feature = "ck3")] DomicileBuilding,
@@ -1143,6 +1144,8 @@ impl Item {
             Item::DiarchyType => "common/diarchies/diarchy_types/",
             #[cfg(feature = "ck3")]
             Item::Doctrine => "common/religion/doctrines/",
+            #[cfg(feature = "ck3")]
+            Item::DoctrineBooleanParameter => "common/religion/doctrines/",
             #[cfg(feature = "ck3")]
             Item::DoctrineCategory => "common/religion/doctrines/",
             #[cfg(feature = "ck3")]

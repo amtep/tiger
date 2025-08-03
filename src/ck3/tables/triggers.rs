@@ -590,7 +590,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_dlc", Item(Item::DlcName)),
     (Scopes::None, "has_dlc_feature", Item(Item::DlcFeature)),
     (Scopes::Faith, "has_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
-    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineParameter)),
+    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineBooleanParameter)),
     (Scopes::Character, "has_domicile", Boolean),
     (Scopes::Domicile, "has_domicile_building", Item(Item::DomicileBuilding)),
     (Scopes::Domicile, "has_domicile_building_or_higher", Item(Item::DomicileBuilding)),
