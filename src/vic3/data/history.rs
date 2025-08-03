@@ -48,11 +48,11 @@ impl History {
         // Validate the remaining ones even if we don't know about them.
         // They may be for a newer game version.
         for (name, item) in &self.history {
-            if HISTORY_SEQUENCE.contains(&name) {
+            if HISTORY_SEQUENCE.contains(name) {
                 continue;
             }
             if *name == "CONSCRIPTION" {
-                let msg = format!("CONSCRIPTION history is not processed by the game");
+                let msg = "CONSCRIPTION history is not processed by the game";
                 let info = "as of 1.9.7";
                 warn(ErrorKey::Bugs).msg(msg).info(info).loc(&item.key).push();
                 continue;
