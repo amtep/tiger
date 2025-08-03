@@ -449,11 +449,11 @@ impl<'a> ValueParser<'a> {
         }
     }
 
-    fn peek_or_advance_idx(&mut self) -> Option<char> {
+    fn peek(&mut self) -> Option<char> {
         if let Some(p) = self.content_iters[self.content_idx].peek() {
             Some(*p)
         } else if self.maybe_advance_idx() {
-            self.peek_or_advance_idx()
+            self.peek()
         } else {
             None
         }
@@ -475,7 +475,7 @@ impl<'a> ValueParser<'a> {
     }
 
     fn skip_whitespace(&mut self) {
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             if c.is_whitespace() {
                 self.next_char();
             } else {
@@ -486,14 +486,14 @@ impl<'a> ValueParser<'a> {
 
     fn unexpected_char(&mut self, expected: &str, errorkey: ErrorKey) {
         // TODO: handle EOF better
-        let c = self.peek_or_advance_idx().unwrap_or(' ');
+        let c = self.peek().unwrap_or(' ');
         let msg = format!("Unexpected character `{c}`, {expected}");
         warn(errorkey).msg(msg).loc(self.loc).push();
     }
 
     fn get_key(&mut self) -> Token {
         let mut text = self.start_text();
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             if is_key_char(c) {
                 text.add_char(c);
                 self.next_char();
@@ -505,10 +505,10 @@ impl<'a> ValueParser<'a> {
     }
 
     fn parse_format(&mut self) -> Option<Token> {
-        (self.peek_or_advance_idx() == Some('|')).then(|| {
+        (self.peek() == Some('|')).then(|| {
             self.next_char(); // eat the |
             let mut text = self.start_text();
-            while let Some(c) = self.peek_or_advance_idx() {
+            while let Some(c) = self.peek() {
                 if c == '$' || c == ']' {
                     break;
                 }
@@ -525,12 +525,12 @@ impl<'a> ValueParser<'a> {
 
         loop {
             self.skip_whitespace();
-            if self.peek_or_advance_idx() == Some('\'') {
+            if self.peek() == Some('\'') {
                 self.next_char();
                 let loc = self.loc;
                 let mut parens: isize = 0;
                 let mut text = self.start_text();
-                while let Some(c) = self.peek_or_advance_idx() {
+                while let Some(c) = self.peek() {
                     match c {
                         '\'' => break,
                         ']' => {
@@ -553,24 +553,24 @@ impl<'a> ValueParser<'a> {
                     text.add_char(c);
                     self.next_char();
                 }
-                if self.peek_or_advance_idx() != Some('\'') {
+                if self.peek() != Some('\'') {
                     self.value.push(LocaValue::Error);
                     return Vec::new();
                 }
                 v.push(CodeArg::Literal(text.take_to_token()));
                 self.next_char();
-            } else if self.peek_or_advance_idx() == Some(')') {
+            } else if self.peek() == Some(')') {
                 // Empty () means no arguments
             } else {
                 v.push(CodeArg::Chain(self.parse_code_inner()));
             }
             self.skip_whitespace();
-            if self.peek_or_advance_idx() != Some(',') {
+            if self.peek() != Some(',') {
                 break;
             }
             self.next_char(); // Eat the comma
         }
-        if self.peek_or_advance_idx() == Some(')') {
+        if self.peek() == Some(')') {
             self.next_char();
         } else {
             self.unexpected_char("expected `)`", ErrorKey::Datafunctions);
@@ -581,12 +581,12 @@ impl<'a> ValueParser<'a> {
     fn parse_code_code(&mut self) -> Code {
         let mut text = self.start_text();
 
-        if Game::is_hoi4() && self.peek_or_advance_idx() == Some('?') {
+        if Game::is_hoi4() && self.peek() == Some('?') {
             text.add_char('?');
             self.next_char();
         }
 
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             if is_code_char(c) {
                 text.add_char(c);
                 self.next_char();
@@ -595,7 +595,7 @@ impl<'a> ValueParser<'a> {
             }
         }
         let name = text.take_to_token();
-        if self.peek_or_advance_idx() == Some('(') {
+        if self.peek() == Some('(') {
             Code { name, arguments: self.parse_code_args() }
         } else {
             Code { name, arguments: Vec::new() }
@@ -608,11 +608,11 @@ impl<'a> ValueParser<'a> {
             v.push(self.parse_code_code());
             // Newlines followed by whitespace are allowed in code sequences,
             // but not random whitespace.
-            if matches!(self.peek_or_advance_idx(), Some('\r' | '\n')) {
+            if matches!(self.peek(), Some('\r' | '\n')) {
                 self.next_char();
                 self.skip_whitespace();
             }
-            if self.peek_or_advance_idx() != Some('.') {
+            if self.peek() != Some('.') {
                 break;
             }
             self.next_char(); // Eat the '.'
@@ -631,7 +631,7 @@ impl<'a> ValueParser<'a> {
         // The game engine doesn't mind if there are too many `)` before the `]`, so handle
         // that at "untidy" severity.
         let mut warned_extra_parens = false;
-        while self.peek_or_advance_idx() == Some(')') {
+        while self.peek() == Some(')') {
             if !warned_extra_parens {
                 let msg = "too many `)`";
                 untidy(ErrorKey::Datafunctions).msg(msg).loc(self.loc).push();
@@ -643,7 +643,7 @@ impl<'a> ValueParser<'a> {
 
         let format = self.parse_format();
 
-        if self.peek_or_advance_idx() == Some(']') {
+        if self.peek() == Some(']') {
             self.next_char();
             self.value.push(LocaValue::Code(chain, format));
         } else {
@@ -670,11 +670,11 @@ impl<'a> ValueParser<'a> {
     fn parse_markup(&mut self) {
         let loc = self.loc;
         self.next_char(); // skip the #
-        if self.peek_or_advance_idx() == Some('#') {
+        if self.peek() == Some('#') {
             // double # means a literal #
             self.next_char();
             self.value.push(LocaValue::Text(Token::from_static_str("#", loc)));
-        } else if self.peek_or_advance_idx() == Some('!') {
+        } else if self.peek() == Some('!') {
             self.next_char();
             self.value.push(LocaValue::MarkupEnd);
         } else {
@@ -690,7 +690,7 @@ impl<'a> ValueParser<'a> {
                 InValue(String, String, Loc, usize),
             }
             let mut state = State::InKey(String::new());
-            while let Some(c) = self.peek_or_advance_idx() {
+            while let Some(c) = self.peek() {
                 if c.is_whitespace() {
                     break;
                 }
@@ -776,7 +776,7 @@ impl<'a> ValueParser<'a> {
                     }
                 }
             }
-            if self.peek_or_advance_idx().is_none_or(char::is_whitespace) {
+            if self.peek().is_none_or(char::is_whitespace) {
                 self.next_char();
             } else {
                 let msg = "#markup should be followed by a space";
@@ -791,7 +791,7 @@ impl<'a> ValueParser<'a> {
 
         let mut old_value = take(&mut self.value);
 
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             if c == '[' {
                 self.parse_code();
             } else if is_key_char(c) {
@@ -835,7 +835,7 @@ impl<'a> ValueParser<'a> {
         self.next_char(); // eat the @
 
         let mut text = self.start_text();
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             if c.is_ascii_uppercase() {
                 text.add_char(c);
                 self.next_char();
@@ -855,7 +855,7 @@ impl<'a> ValueParser<'a> {
     fn parse_escape(&mut self) {
         let loc = self.loc;
         self.next_char(); // Skip the \
-        let s = match self.peek_or_advance_idx() {
+        let s = match self.peek() {
             Some('n') => '\n'.to_string(),
             Some(c) => c.to_string(),
             None => {
@@ -869,7 +869,7 @@ impl<'a> ValueParser<'a> {
 
     fn parse_text(&mut self) {
         let mut text = self.start_text();
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             match c {
                 '[' | '#' | '@' | '\\' => break,
                 _ => {
@@ -882,7 +882,7 @@ impl<'a> ValueParser<'a> {
     }
 
     pub fn parse_vec(mut self) -> Vec<LocaValue> {
-        while let Some(c) = self.peek_or_advance_idx() {
+        while let Some(c) = self.peek() {
             match c {
                 '[' => self.parse_code(),
                 '#' => self.parse_markup(),
