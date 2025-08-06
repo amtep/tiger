@@ -8,6 +8,7 @@ use crate::helpers::{TigerHashMap, TigerHashMapExt};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{report, untidy, ErrorKey, Severity};
+use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::vic3::modif::ModifKinds;
 
@@ -984,6 +985,31 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("unit_supply_consumption_mult", ModifKinds::Unit),
 ];
 
+pub fn modif_scope_kind(scopes: Scopes) -> ModifKinds {
+    let mut kinds = ModifKinds::empty();
+
+    for s in scopes {
+        kinds.set(
+            // List of scopes from add_modifier supported scopes in script docs
+            #[allow(clippy::match_same_arms)]
+            match s {
+                Scopes::Country => ModifKinds::Country,
+                Scopes::Character => ModifKinds::Character,
+                Scopes::State => ModifKinds::State,
+                Scopes::Building => ModifKinds::Building,
+                Scopes::Institution => ModifKinds::Country,
+                Scopes::InterestGroup => ModifKinds::InterestGroup,
+                Scopes::JournalEntry => ModifKinds::Country,
+                Scopes::PoliticalMovement => ModifKinds::PoliticalMovement,
+                Scopes::PowerBloc => ModifKinds::PowerBloc,
+                _ => ModifKinds::empty(),
+            },
+            true,
+        );
+    }
+    kinds
+}
+
 /// Game internally has a modifier graph which controls how modifiers flow
 /// This is a representation of reachability on that graph
 pub static MODIF_FLOW_MAP: LazyLock<TigerHashMap<ModifKinds, ModifKinds>> = LazyLock::new(|| {
@@ -1025,6 +1051,8 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
     (
         ModifKinds::State,
         ModifKinds::State
+            // TODO: Test for connection to Battle
+            // TODO: Test for Interest group attraction and political strength modifiers making it to pops
             // Direct nodes
             .union(ModifKinds::Building)
             // From Building

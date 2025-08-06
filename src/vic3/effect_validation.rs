@@ -62,13 +62,17 @@ pub fn validate_add_religion_sol_modifier(
 pub fn validate_add_enactment_modifier(
     _key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
-    vd.field_item("name", Item::Modifier);
+    vd.field_validated_value("name", |_key, mut vd| {
+        vd.item(Item::Modifier);
+        let value = vd.value();
+        data.validate_call(Item::Modifier, value, &Block::new(value.loc), sc);
+    });
     vd.field_script_value("multiplier", sc);
 }
 
@@ -82,12 +86,17 @@ pub fn validate_add_modifier(
     match bv {
         BV::Value(value) => {
             data.verify_exists(Item::Modifier, value);
+            data.validate_call(Item::Modifier, value, &Block::new(value.loc), sc);
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
             vd.set_case_sensitive(false);
             vd.req_field("name");
-            vd.field_item("name", Item::Modifier);
+            vd.field_validated_value("name", |_key, mut vd| {
+                vd.item(Item::Modifier);
+                let value = vd.value();
+                data.validate_call(Item::Modifier, value, &Block::new(value.loc), sc);
+            });
             vd.field_script_value("multiplier", sc);
             validate_optional_duration(&mut vd, sc);
             vd.field_bool("is_decaying");

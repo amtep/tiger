@@ -1082,7 +1082,7 @@ impl Everything {
         self.database.validate_use(itype, key, block, self);
     }
 
-    #[cfg(feature = "ck3")] // happens not to be used by vic3
+    #[allow(dead_code)]
     pub(crate) fn validate_call(
         &self,
         itype: Item,

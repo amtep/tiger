@@ -195,7 +195,7 @@ impl Db {
         }
     }
 
-    #[cfg(feature = "ck3")] // vic3 happens not to use
+    #[allow(dead_code)]
     pub fn validate_call(
         &self,
         item: Item,
