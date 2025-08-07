@@ -19,7 +19,7 @@ use crate::parse::ignore::IgnoreFilter;
 use crate::report::error_loc::ErrorLoc;
 use crate::report::filter::ReportFilter;
 use crate::report::suppress::{Suppression, SuppressionKey};
-use crate::report::writer::log_report;
+use crate::report::writer::{log_report, log_summary};
 use crate::report::writer_json::log_report_json;
 use crate::report::{
     ErrorKey, FilterRule, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle,
@@ -197,6 +197,7 @@ impl Errors<'_> {
         output: &mut O,
         json: bool,
         consolidate: bool,
+        summary: bool,
     ) -> bool {
         let reports = self.flatten_reports(consolidate);
         let result = !reports.is_empty();
@@ -214,6 +215,9 @@ impl Errors<'_> {
         } else {
             for (report, pointers, additional) in &reports {
                 log_report(self, output, report, pointers, *additional);
+            }
+            if summary {
+                log_summary(output, &self.styles, &reports);
             }
         }
         self.storage.clear();
@@ -353,8 +357,13 @@ pub fn will_maybe_log<E: ErrorLoc>(eloc: E, key: ErrorKey) -> bool {
 /// readability and occasionally gets changed to improve that.
 ///
 /// Returns true iff any reports were printed.
-pub fn emit_reports<O: Write + Send>(output: &mut O, json: bool, consolidate: bool) -> bool {
-    Errors::get_mut().emit_reports(output, json, consolidate)
+pub fn emit_reports<O: Write + Send>(
+    output: &mut O,
+    json: bool,
+    consolidate: bool,
+    summary: bool,
+) -> bool {
+    Errors::get_mut().emit_reports(output, json, consolidate, summary)
 }
 
 /// Extract the stored reports, sort them, and return them as a hashmap with the occurrences for
