@@ -71,7 +71,7 @@ impl ReportBuilderStage1 {
 
     /// Sets the main report message.
     pub fn msg<S: Into<String>>(self, msg: S) -> ReportBuilderStage2 {
-        ReportBuilderStage2 { stage1: self, msg: msg.into(), info: None }
+        ReportBuilderStage2 { stage1: self, msg: msg.into(), info: None, wiki: None }
     }
 }
 
@@ -81,6 +81,7 @@ pub struct ReportBuilderStage2 {
     stage1: ReportBuilderStage1,
     msg: String,
     info: Option<String>,
+    wiki: Option<String>,
 }
 
 impl ReportBuilderStage2 {
@@ -97,12 +98,21 @@ impl ReportBuilderStage2 {
         self
     }
 
+    /// Optional step. Adds a wiki section to the report.
+    #[allow(dead_code)]
+    pub fn wiki<S: Into<String>>(mut self, wiki: S) -> Self {
+        let wiki = wiki.into();
+        self.wiki = if wiki.is_empty() { None } else { Some(wiki) };
+        self
+    }
+
     pub fn loc<E: ErrorLoc>(self, eloc: E) -> ReportBuilderFull {
         let length = eloc.loc_length();
         ReportBuilderFull {
             stage1: self.stage1,
             msg: self.msg,
             info: self.info,
+            wiki: self.wiki,
             pointers: vec![PointedMessage { loc: eloc.into_loc(), length, msg: None }],
         }
     }
@@ -113,12 +123,19 @@ impl ReportBuilderStage2 {
             stage1: self.stage1,
             msg: self.msg,
             info: self.info,
+            wiki: self.wiki,
             pointers: vec![PointedMessage { loc: eloc.into_loc(), length, msg: Some(msg.into()) }],
         }
     }
 
     pub fn pointers(self, pointers: LogReportPointers) -> ReportBuilderFull {
-        ReportBuilderFull { stage1: self.stage1, msg: self.msg, info: self.info, pointers }
+        ReportBuilderFull {
+            stage1: self.stage1,
+            msg: self.msg,
+            info: self.info,
+            wiki: self.wiki,
+            pointers,
+        }
     }
 
     pub fn abbreviated<E: ErrorLoc>(self, eloc: E) -> ReportBuilderAbbreviated {
@@ -126,6 +143,7 @@ impl ReportBuilderStage2 {
             stage1: self.stage1,
             msg: self.msg,
             info: self.info,
+            wiki: self.wiki,
             pointers: vec![PointedMessage { loc: eloc.into_loc(), length: 0, msg: None }],
         }
     }
@@ -137,6 +155,7 @@ pub struct ReportBuilderFull {
     stage1: ReportBuilderStage1,
     msg: String,
     info: Option<String>,
+    wiki: Option<String>,
     pointers: LogReportPointers,
 }
 
@@ -166,6 +185,7 @@ impl ReportBuilderFull {
                 confidence: self.stage1.2,
                 msg: self.msg,
                 info: self.info,
+                wiki: self.wiki,
                 style: LogReportStyle::Full,
             },
             self.pointers,
@@ -183,6 +203,7 @@ pub struct ReportBuilderAbbreviated {
     stage1: ReportBuilderStage1,
     msg: String,
     info: Option<String>,
+    wiki: Option<String>,
     pointers: LogReportPointers,
 }
 
@@ -196,6 +217,7 @@ impl ReportBuilderAbbreviated {
                 confidence: self.stage1.2,
                 msg: self.msg,
                 info: self.info,
+                wiki: self.wiki,
                 style: LogReportStyle::Abbreviated,
             },
             self.pointers,

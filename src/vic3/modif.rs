@@ -3,10 +3,11 @@ use std::fmt::{Display, Formatter};
 use bitflags::bitflags;
 
 use crate::{
-    modif,
-    report::{err, ErrorKey},
+    context, modif,
+    report::{report, ErrorKey},
+    scopes::Scopes,
     vic3::tables::modifs::{lookup_modif, MODIF_FLOW_MAP},
-    Token,
+    Severity, Token,
 };
 
 bitflags! {
@@ -33,6 +34,46 @@ bitflags! {
     }
 }
 
+impl ModifKinds {
+    pub fn require_from(
+        self,
+        other: Self,
+        token: &Token,
+        scope: Option<(&Token, Scopes, &context::Reason)>,
+        sev: Severity,
+    ) {
+        let valid_kinds = self
+            .iter()
+            .map(|kind| *MODIF_FLOW_MAP.get(&kind).unwrap_or(&ModifKinds::empty()))
+            .reduce(ModifKinds::union)
+            .unwrap_or(self);
+        if !valid_kinds.intersects(other) {
+            let from = if let Some((_, scopes, _)) = scope {
+                format!("{scopes} scope")
+            } else {
+                self.to_string()
+            };
+            let msg = format!("`{token}` is a modifier for {other} and will not flow from {from}");
+            let info = if self.is_empty() {
+                format!("there are no valid modifiers for {from}")
+            } else {
+                format!("valid modifiers are for {valid_kinds}")
+            };
+            let mut report = report(ErrorKey::Modifiers, sev)
+                .msg(msg)
+                .info(info)
+                .wiki("https://vic3.paradoxwikis.com/Modifier_types#Modifier_type_flow")
+                .loc(token);
+            if let Some((token, _, reason)) = scope {
+                report = report
+                    .loc_msg(token, "from this temporary modifier")
+                    .loc_msg(reason.token(), format!("scope was {}", reason.msg()));
+            }
+            report.push();
+        }
+    }
+}
+
 impl modif::ModifKinds for ModifKinds {
     fn lookup_modif(
         name: &crate::Token,
@@ -43,16 +84,7 @@ impl modif::ModifKinds for ModifKinds {
     }
 
     fn require(self, other: Self, token: &Token) {
-        let valid_kinds = self
-            .iter()
-            .map(|kind| *MODIF_FLOW_MAP.get(&kind).unwrap_or(&ModifKinds::empty()))
-            .reduce(ModifKinds::union)
-            .unwrap_or(self);
-        if !valid_kinds.intersects(other) {
-            let msg = format!("`{token}` is a modifier for {other} and will not flow from {self}");
-            let info = format!("valid modifiers are for {valid_kinds}");
-            err(ErrorKey::Modifiers).msg(msg).info(info).loc(token).push();
-        }
+        self.require_from(other, token, None, Severity::Error);
     }
 }
 

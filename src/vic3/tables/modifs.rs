@@ -8,6 +8,7 @@ use crate::helpers::{TigerHashMap, TigerHashMapExt};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{report, untidy, ErrorKey, Severity};
+use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::vic3::modif::ModifKinds;
 
@@ -18,7 +19,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 
     // The Item::ModifierType must exist
     if data.item_exists_lc(Item::ModifierTypeDefinition, &name_lc) {
-        return kind.or(Some(ModifKinds::all()));
+        return kind.or_else(|| Some(lookup_modif_prefix(name)));
     } else if let Some(sev) = warn {
         let info = kind
             .and(Some("You can create it and the game engine will apply the modifier"))
@@ -26,11 +27,29 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         report(ErrorKey::MissingItem, sev)
             .msg("modifier type definition does not exist")
             .info(info)
+            .wiki("https://vic3.paradoxwikis.com/Modifier_types#Defining_modifier_types")
             .loc(name)
             .push();
     }
 
     None
+}
+
+fn lookup_modif_prefix(name: &Token) -> ModifKinds {
+    for (prefix, kind) in MODIF_PREFIX_TABLE {
+        if name.as_str().starts_with(prefix) {
+            return kind;
+        }
+    }
+    // A modifier that doesn't use one of the prefixes will appear in the scope it was added.
+    // The game will log an error for this, but it otherwise works.
+    untidy(ErrorKey::Modifiers)
+        .msg("script only modifier does not use a valid prefix")
+        .info("consider using a prefix to ensure the modifier flows to the intended scope")
+        .wiki("https://vic3.paradoxwikis.com/Modifier_types#Modifier_type_flow")
+        .loc(name)
+        .push();
+    ModifKinds::all()
 }
 
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.
@@ -603,6 +622,22 @@ pub fn modif_loc_vic3(name: &Token, data: &Everything) -> (Cow<'static, str>, Co
     (Cow::Borrowed(name.as_str()), Cow::Owned(desc_loc))
 }
 
+const MODIF_PREFIX_TABLE: [(&str, ModifKinds); 13] = [
+    ("character_", ModifKinds::Character),
+    ("country_", ModifKinds::Country),
+    ("state_", ModifKinds::State),
+    ("unit_", ModifKinds::Unit),
+    ("battle_", ModifKinds::Battle),
+    ("building_", ModifKinds::Building),
+    ("interest_group_", ModifKinds::InterestGroup),
+    ("market_", ModifKinds::Market),
+    ("political_movement_", ModifKinds::PoliticalMovement),
+    ("tax_", ModifKinds::Tax),
+    ("goods_", ModifKinds::Goods),
+    ("military_formation_", ModifKinds::MilitaryFormation),
+    ("power_bloc_", ModifKinds::PowerBloc),
+];
+
 static MODIF_MAP: LazyLock<TigerHashMap<Lowercase<'static>, ModifKinds>> = LazyLock::new(|| {
     let mut hash = TigerHashMap::default();
     for (s, kind) in MODIF_TABLE.iter().copied() {
@@ -984,6 +1019,31 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("unit_supply_consumption_mult", ModifKinds::Unit),
 ];
 
+pub fn modif_scope_kind(scopes: Scopes) -> ModifKinds {
+    let mut kinds = ModifKinds::empty();
+
+    for s in scopes {
+        kinds.set(
+            // List of scopes from add_modifier supported scopes in script docs
+            #[allow(clippy::match_same_arms)]
+            match s {
+                Scopes::Country => ModifKinds::Country,
+                Scopes::Character => ModifKinds::Character,
+                Scopes::State => ModifKinds::State,
+                Scopes::Building => ModifKinds::Building,
+                Scopes::Institution => ModifKinds::Country,
+                Scopes::InterestGroup => ModifKinds::InterestGroup,
+                Scopes::JournalEntry => ModifKinds::Country,
+                Scopes::PoliticalMovement => ModifKinds::PoliticalMovement,
+                Scopes::PowerBloc => ModifKinds::PowerBloc,
+                _ => ModifKinds::empty(),
+            },
+            true,
+        );
+    }
+    kinds
+}
+
 /// Game internally has a modifier graph which controls how modifiers flow
 /// This is a representation of reachability on that graph
 pub static MODIF_FLOW_MAP: LazyLock<TigerHashMap<ModifKinds, ModifKinds>> = LazyLock::new(|| {
@@ -1025,6 +1085,8 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
     (
         ModifKinds::State,
         ModifKinds::State
+            // TODO: Test for connection to Battle
+            // TODO: Test for Interest group attraction and political strength modifiers making it to pops
             // Direct nodes
             .union(ModifKinds::Building)
             // From Building

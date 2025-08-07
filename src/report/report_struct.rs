@@ -25,6 +25,8 @@ pub struct LogReportMetadata {
     pub msg: String,
     /// Optional info message to be printed at the end.
     pub info: Option<String>,
+    /// Optional wiki link to be printed at the end.
+    pub wiki: Option<String>,
     // /// Output style for this report
     pub style: LogReportStyle,
 }
