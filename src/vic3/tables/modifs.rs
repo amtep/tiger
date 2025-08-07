@@ -1071,11 +1071,11 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
             .union(ModifKinds::State)
             .union(ModifKinds::InterestGroup)
             .union(ModifKinds::MilitaryFormation)
-            .union(ModifKinds::Battle)
             .union(ModifKinds::PoliticalMovement)
             .union(ModifKinds::Tax)
             // From State
             .union(ModifKinds::Building)
+            .union(ModifKinds::Battle)
             // From Building
             .union(ModifKinds::Goods)
             // From MilitaryFormation
@@ -1085,12 +1085,14 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
     (
         ModifKinds::State,
         ModifKinds::State
-            // TODO: Test for connection to Battle
-            // TODO: Test for Interest group attraction and political strength modifiers making it to pops
             // Direct nodes
             .union(ModifKinds::Building)
+            .union(ModifKinds::Battle)
             // From Building
-            .union(ModifKinds::Goods),
+            .union(ModifKinds::Goods)
+            // From Battle
+            .union(ModifKinds::Unit),
+        // Confirmed, not interest group
     ),
     (
         ModifKinds::Unit,
