@@ -36,6 +36,7 @@ pub fn log_report_json<O: Write + Send>(
         "key": report.key,
         "message": &report.msg,
         "info": &report.info,
+        "wiki": &report.wiki,
         "locations": pointers,
     });
 

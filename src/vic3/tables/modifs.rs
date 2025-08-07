@@ -27,6 +27,7 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         report(ErrorKey::MissingItem, sev)
             .msg("modifier type definition does not exist")
             .info(info)
+            .wiki("https://vic3.paradoxwikis.com/Modifier_types#Defining_modifier_types")
             .loc(name)
             .push();
     }
@@ -45,6 +46,7 @@ fn lookup_modif_prefix(name: &Token) -> ModifKinds {
     untidy(ErrorKey::Modifiers)
         .msg("script only modifier does not use a valid prefix")
         .info("consider using a prefix to ensure the modifier flows to the intended scope")
+        .wiki("https://vic3.paradoxwikis.com/Modifier_types#Modifier_type_flow")
         .loc(name)
         .push();
     ModifKinds::all()

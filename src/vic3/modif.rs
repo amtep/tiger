@@ -59,7 +59,11 @@ impl ModifKinds {
             } else {
                 format!("valid modifiers are for {valid_kinds}")
             };
-            let mut report = report(ErrorKey::Modifiers, sev).msg(msg).info(info).loc(token);
+            let mut report = report(ErrorKey::Modifiers, sev)
+                .msg(msg)
+                .info(info)
+                .wiki("https://vic3.paradoxwikis.com/Modifier_types#Modifier_type_flow")
+                .loc(token);
             if let Some((token, _, reason)) = scope {
                 report = report
                     .loc_msg(token, "from this temporary modifier")
