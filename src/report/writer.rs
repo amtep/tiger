@@ -45,7 +45,7 @@ pub fn log_report<O: Write + Send>(
         log_line_info(errors, output, indentation, info);
     }
 
-    // Log the info line, if one exists.
+    // Log the wiki link line, if one exists.
     if let Some(wiki) = &report.wiki {
         log_line_wiki(errors, output, indentation, wiki);
     }
@@ -106,7 +106,7 @@ fn log_line_info<O: Write + Send>(errors: &Errors, output: &mut O, indentation: 
     _ = writeln!(output, "{}", ANSIStrings(line_info));
 }
 
-/// Log the optional info line that is part of the overall report.
+/// Log the optional wiki link line that is part of the overall report.
 fn log_line_wiki<O: Write + Send>(errors: &Errors, output: &mut O, indentation: usize, wiki: &str) {
     let line_info: &[ANSIString<'static>] = &[
         errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
