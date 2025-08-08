@@ -120,7 +120,7 @@ impl Errors<'_> {
     pub fn flatten_reports(
         &self,
         consolidate: bool,
-    ) -> Vec<(&LogReportMetadata, Cow<LogReportPointers>, usize)> {
+    ) -> Vec<(&LogReportMetadata, Cow<'_, LogReportPointers>, usize)> {
         let mut reports: Vec<_> = self
             .storage
             .iter()
