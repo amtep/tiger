@@ -10,6 +10,9 @@ use std::sync::{LazyLock, RwLock};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PathTableIndex(u32);
+impl PathTableIndex {
+    pub const UNTRACKED: PathTableIndex = PathTableIndex(u32::MAX);
+}
 
 static PATHTABLE: LazyLock<RwLock<PathTable>> = LazyLock::new(|| RwLock::new(PathTable::default()));
 
@@ -47,12 +50,18 @@ impl PathTable {
     /// Return the local path based on its index.
     /// This can panic if the index is not one provided by `PathTable::store`.
     pub fn lookup_path(idx: PathTableIndex) -> &'static Path {
+        if idx == PathTableIndex::UNTRACKED {
+            return Path::new("");
+        }
         PATHTABLE.read().unwrap().lookup_paths_inner(idx).0
     }
 
     /// Return the full path based on its index.
     /// This can panic if the index is not one provided by `PathTable::store`.
     pub fn lookup_fullpath(idx: PathTableIndex) -> &'static Path {
+        if idx == PathTableIndex::UNTRACKED {
+            return Path::new("");
+        }
         PATHTABLE.read().unwrap().lookup_paths_inner(idx).1
     }
 

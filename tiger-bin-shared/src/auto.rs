@@ -8,7 +8,7 @@ use console::Term;
 use tiger_lib::ModFile;
 #[cfg(feature = "vic3")]
 use tiger_lib::ModMetadata;
-use tiger_lib::{emit_reports, Everything};
+use tiger_lib::{emit_reports, Everything, Fileset};
 
 use crate::gamedir::{
     find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
@@ -119,13 +119,16 @@ fn validate_mod(
 ) -> Result<()> {
     let mut everything;
     let mut modpath = modpath;
+    let mut fileset = Fileset::new(Some(game), modpath.to_path_buf());
 
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-    let modfile = ModFile::read(modpath)?;
+    let modfile = ModFile::read(&mut fileset, modpath)?;
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     let modpath_owned = modfile.modpath();
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     {
+        let modfile = ModFile::read(&mut fileset, modpath)?;
+        fileset.set_replace_paths(modfile.replace_paths());
         modpath = &modpath_owned;
         if !modpath.is_dir() {
             eprintln!("Looking for mod in {}", modpath.display());
@@ -143,20 +146,13 @@ fn validate_mod(
 
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     {
-        everything =
-            Everything::new(None, Some(game), workshop, paradox, modpath, modfile.replace_paths())?;
+        everything = Everything::new(fileset, None, workshop, paradox, modpath)?;
     }
     #[cfg(feature = "vic3")]
     {
-        let metadata = ModMetadata::read(modpath)?;
-        everything = Everything::new(
-            None,
-            Some(game),
-            workshop,
-            paradox,
-            modpath,
-            metadata.replace_paths(),
-        )?;
+        let metadata = ModMetadata::read(&mut fileset, modpath)?;
+        fileset.set_replace_paths(metadata.replace_paths());
+        everything = Everything::new(fileset, None, workshop, paradox, modpath)?;
     }
 
     // Unfortunately have to disable the colors by default because

@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::Block;
 use crate::ck3::data::titles::Tier;
@@ -73,7 +74,7 @@ impl FileHandler<Block> for TitleHistories {
         PathBuf::from("history/titles")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -81,7 +82,7 @@ impl FileHandler<Block> for TitleHistories {
         PdxFile::read_detect_encoding(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, block) in block.drain_definitions_warn() {
             if Tier::try_from(&key).is_ok() {
                 self.load_item(key, block);

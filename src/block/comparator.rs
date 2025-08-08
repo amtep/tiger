@@ -32,6 +32,7 @@ pub enum Eq {
     Question,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct UnknownComparatorError;
 
 impl FromStr for Comparator {

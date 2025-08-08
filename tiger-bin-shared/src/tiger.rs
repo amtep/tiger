@@ -9,7 +9,7 @@ use tiger_lib::ModFile;
 use tiger_lib::ModMetadata;
 use tiger_lib::{
     disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
-    set_show_vanilla, suppress_from_json, validate_config_file, Everything,
+    set_show_vanilla, suppress_from_json, validate_config_file, Everything, Fileset,
 };
 
 use crate::gamedir::{
@@ -218,7 +218,9 @@ pub fn run(
                     args.modpath.push("descriptor.mod");
                 }
 
-                let modfile = ModFile::read(&args.modpath)?;
+                let mut fileset = Fileset::new(args.game.as_deref(), args.modpath.clone());
+                let modfile = ModFile::read(&mut fileset, &args.modpath)?;
+                fileset.set_replace_paths(modfile.replace_paths());
                 let modpath = modfile.modpath();
                 if !modpath.exists() {
                     eprintln!("Looking for mod in {}", modpath.display());
@@ -227,26 +229,26 @@ pub fn run(
                 eprintln!("Using mod directory: {}", modpath.display());
 
                 everything = Everything::new(
+                    fileset,
                     args.config.as_deref(),
-                    args.game.as_deref(),
                     args.workshop.as_deref(),
                     args.paradox.as_deref(),
                     &modpath,
-                    modfile.replace_paths(),
                 )?;
             }
             #[cfg(feature = "vic3")]
             {
-                let metadata = ModMetadata::read(&args.modpath)?;
+                let mut fileset = Fileset::new(args.game.as_deref(), args.modpath.clone());
+                let metadata = ModMetadata::read(&mut fileset, &args.modpath)?;
+                fileset.set_replace_paths(metadata.replace_paths());
                 eprintln!("Using mod directory: {}", metadata.modpath().display());
 
                 everything = Everything::new(
+                    fileset,
                     args.config.as_deref(),
-                    args.game.as_deref(),
                     args.workshop.as_deref(),
                     args.paradox.as_deref(),
                     &args.modpath,
-                    metadata.replace_paths(),
                 )?;
             }
 

@@ -5,7 +5,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tiger_lib::{Everything, Game};
+use tiger_lib::{Everything, Fileset, Game, ModMetadata};
 
 static CONFIG_PATH: &str = "../benches/vic3.toml";
 
@@ -27,8 +27,7 @@ fn workspace_path(s: &str) -> PathBuf {
     let p = PathBuf::from(s);
     if p.is_relative() {
         PathBuf::from("..").join(p)
-    }
-    else {
+    } else {
         p
     }
 }
@@ -48,6 +47,8 @@ fn bench_multiple(c: &mut Criterion) {
         mod_paths.extend(iter);
     }
 
+    let vanilla_dir = PathBuf::from(config.vanilla_dir);
+
     let mut group = c.benchmark_group("benchmark");
     group.sample_size(config.sample_size.unwrap_or(10));
     for (index, mod_path) in mod_paths.iter().enumerate() {
@@ -58,7 +59,7 @@ fn bench_multiple(c: &mut Criterion) {
             BenchmarkId::new("mods", format!("{}. {}", index + 1, mod_data["name"])),
             &mod_path,
             |b, modpath_ref| {
-                b.iter(|| bench_mod(&config.vanilla_dir, modpath_ref));
+                b.iter(|| bench_mod(&vanilla_dir, modpath_ref));
             },
         );
     }
@@ -66,9 +67,11 @@ fn bench_multiple(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_mod(vanilla_dir: &str, modpath: &Path) {
-    let mut everything =
-        Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![]).unwrap();
+fn bench_mod(vanilla_dir: &Path, modpath: &PathBuf) {
+    let mut fileset = Fileset::new(Some(vanilla_dir), modpath.clone());
+    let modfile = ModMetadata::read(&mut fileset, modpath).unwrap();
+    fileset.set_replace_paths(modfile.replace_paths());
+    let mut everything = Everything::new(fileset, None, None, None, &modfile.modpath()).unwrap();
     everything.load_all();
     everything.validate_all();
     everything.check_rivers();
