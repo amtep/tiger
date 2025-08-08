@@ -1,5 +1,5 @@
 use serde::Serialize;
-use strum_macros::{Display, EnumIter, EnumString, IntoStaticStr};
+use strum_macros::{Display, EnumCount, EnumIter, EnumString, IntoStaticStr};
 
 use crate::report::ErrorKey;
 use crate::token::Loc;
@@ -78,6 +78,7 @@ pub fn pointer_indentation(pointers: &LogReportPointers) -> usize {
     Hash,
     IntoStaticStr,
     EnumString,
+    EnumCount,
     EnumIter,
     Serialize,
 )]

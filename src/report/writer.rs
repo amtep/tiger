@@ -1,6 +1,9 @@
+use std::borrow::Cow;
 use std::io::Write;
 
 use ansiterm::{ANSIString, ANSIStrings};
+use itertools::Itertools;
+use strum::{EnumCount as _, IntoEnumIterator};
 use unicode_width::UnicodeWidthChar;
 
 use crate::fileset::FileKind;
@@ -8,7 +11,7 @@ use crate::game::Game;
 use crate::report::errors::Errors;
 use crate::report::output_style::Styled;
 use crate::report::report_struct::pointer_indentation;
-use crate::report::{LogReportMetadata, LogReportPointers, PointedMessage, Severity};
+use crate::report::{LogReportMetadata, LogReportPointers, OutputStyle, PointedMessage, Severity};
 
 /// Source lines printed in the output have leading tab characters replaced by this number of spaces.
 const SPACES_PER_TAB: usize = 4;
@@ -52,6 +55,29 @@ pub fn log_report<O: Write + Send>(
 
     // Write a blank line to visually separate reports:
     _ = writeln!(output);
+}
+
+pub fn log_summary<O: Write + Send>(
+    output: &mut O,
+    styles: &OutputStyle,
+    reports: &Vec<(&LogReportMetadata, Cow<'_, LogReportPointers>, usize)>,
+) {
+    let mut counts = [0usize; Severity::COUNT];
+    for (metadata, _, additional) in reports {
+        counts[metadata.severity as usize] += 1 + additional;
+    }
+
+    let line = Severity::iter()
+        .rev()
+        .flat_map(|sev| {
+            [
+                styles.style(Styled::Tag(sev, true)).paint(format!("{sev}")),
+                styles.style(Styled::Tag(sev, false)).paint(format!(": {}", counts[sev as usize])),
+                styles.style(Styled::Default).paint(", "),
+            ]
+        })
+        .collect_vec();
+    _ = writeln!(output, "{}", ANSIStrings(&line[..line.len() - 1]));
 }
 
 fn log_pointer<O: Write + Send>(
