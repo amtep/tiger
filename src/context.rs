@@ -165,7 +165,7 @@ impl Reason {
     }
 
     // TODO: change this to Display ?
-    pub fn msg(&self) -> Cow<str> {
+    pub fn msg(&self) -> Cow<'_, str> {
         match self {
             Reason::Token(t) => Cow::Owned(format!("deduced from `{t}` here")),
             Reason::Name(_) => Cow::Borrowed("deduced from the scope's name"),

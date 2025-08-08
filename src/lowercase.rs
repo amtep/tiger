@@ -75,7 +75,7 @@ impl<'a> Lowercase<'a> {
     }
 
     #[cfg(any(feature = "vic3", feature = "imperator"))]
-    pub fn rmatch_indices_unchecked(&self, separator: char) -> RMatchIndices<char> {
+    pub fn rmatch_indices_unchecked(&self, separator: char) -> RMatchIndices<'_, char> {
         self.0.rmatch_indices(separator)
     }
 

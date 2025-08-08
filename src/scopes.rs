@@ -406,7 +406,7 @@ pub fn scope_to_scope(name: &Token, inscopes: Scopes) -> Option<(Scopes, Scopes)
     } else if let Some((version, explanation)) = scope_to_scope_removed(&name_lc) {
         let msg = format!("`{name}` was removed in {version}");
         err(ErrorKey::Removed).strong().msg(msg).info(explanation).loc(name).push();
-        return Some((Scopes::all(), Scopes::all_but_none()));
+        Some((Scopes::all(), Scopes::all_but_none()))
     } else {
         None
     }

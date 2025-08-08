@@ -173,7 +173,7 @@ impl<'a> ValueValidator<'a> {
 
     #[must_use]
     #[allow(dead_code)]
-    pub fn split(&mut self, c: char) -> Vec<ValueValidator> {
+    pub fn split(&mut self, c: char) -> Vec<ValueValidator<'_>> {
         self.validated = true;
         self.value.split(c).into_iter().map(|value| self.value_validator(value)).collect()
     }

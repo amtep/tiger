@@ -314,49 +314,49 @@ impl Block {
     }
 
     /// Return an iterator over the contents of this block.
-    pub fn iter_items(&self) -> std::slice::Iter<BlockItem> {
+    pub fn iter_items(&self) -> std::slice::Iter<'_, BlockItem> {
         self.v.iter()
     }
 
     /// Return a destructive iterator over the contents of this block.
     /// It will give ownership of the returned `BlockItem` objects.
-    pub fn drain(&mut self) -> std::vec::Drain<BlockItem> {
+    pub fn drain(&mut self) -> std::vec::Drain<'_, BlockItem> {
         self.v.drain(..)
     }
 
     /// Return an iterator over all the `key = ...` fields in this block, ignoring the loose values
     /// and loose blocks.
-    pub fn iter_fields(&self) -> IterFields {
+    pub fn iter_fields(&self) -> IterFields<'_> {
         IterFields { iter: self.v.iter(), warn: false }
     }
 
     /// Return an iterator over all the `key = ...` fields in this block, while warning about loose values
     /// and loose blocks.
     #[allow(dead_code)] // Not used by all games
-    pub fn iter_fields_warn(&self) -> IterFields {
+    pub fn iter_fields_warn(&self) -> IterFields<'_> {
         IterFields { iter: self.v.iter(), warn: true }
     }
 
     /// Return an iterator over all the `key = value` fields in this block, ignoring other kinds of contents.
-    pub fn iter_assignments(&self) -> IterAssignments {
+    pub fn iter_assignments(&self) -> IterAssignments<'_> {
         IterAssignments { iter: self.v.iter(), warn: false }
     }
 
     /// Return an iterator over all the `key = value` fields in this block, while warning about
     /// every other kind of content.
     #[allow(dead_code)] // It's here for symmetry
-    pub fn iter_assignments_warn(&self) -> IterAssignments {
+    pub fn iter_assignments_warn(&self) -> IterAssignments<'_> {
         IterAssignments { iter: self.v.iter(), warn: true }
     }
 
     /// Return an iterator over all the `key = { ... }` fields in this block, ignoring other kinds of contents.
-    pub fn iter_definitions(&self) -> IterDefinitions {
+    pub fn iter_definitions(&self) -> IterDefinitions<'_> {
         IterDefinitions { iter: self.v.iter(), warn: false }
     }
 
     /// Return an iterator over all the `key = { ... }` fields in this block, while warning about
     /// every other kind of content.
-    pub fn iter_definitions_warn(&self) -> IterDefinitions {
+    pub fn iter_definitions_warn(&self) -> IterDefinitions<'_> {
         IterDefinitions { iter: self.v.iter(), warn: true }
     }
 
@@ -364,49 +364,49 @@ impl Block {
     /// ignoring every other kind of content.
     /// It differs from [`Block::iter_fields`] in that it requires the comparator to be `=`.
     #[allow(dead_code)] // It's here for symmetry
-    pub fn iter_assignments_and_definitions(&self) -> IterAssignmentsAndDefinitions {
+    pub fn iter_assignments_and_definitions(&self) -> IterAssignmentsAndDefinitions<'_> {
         IterAssignmentsAndDefinitions { iter: self.v.iter(), warn: false }
     }
 
     /// Return an iterator over all the `key = value` and `key = { ... }` fields in this block,
     /// while warning about every other kind of content.
     /// It differs from [`Block::iter_fields_warn`] in that it requires the comparator to be `=`.
-    pub fn iter_assignments_and_definitions_warn(&self) -> IterAssignmentsAndDefinitions {
+    pub fn iter_assignments_and_definitions_warn(&self) -> IterAssignmentsAndDefinitions<'_> {
         IterAssignmentsAndDefinitions { iter: self.v.iter(), warn: true }
     }
 
     /// Like [`Block::iter_definitions_warn`] but it's a destructive iterator that gives ownership
     /// over the returned definitions.
-    pub fn drain_definitions_warn(&mut self) -> DrainDefinitions {
+    pub fn drain_definitions_warn(&mut self) -> DrainDefinitions<'_> {
         DrainDefinitions { iter: self.v.drain(..) }
     }
 
     /// Like [`Block::iter_assignments_warn`] but it's a destructive iterator that gives ownership
     /// over the returned assignments.
     #[allow(dead_code)] // Not used by all games
-    pub fn drain_assignments_warn(&mut self) -> DrainAssignments {
+    pub fn drain_assignments_warn(&mut self) -> DrainAssignments<'_> {
         DrainAssignments { iter: self.v.drain(..) }
     }
 
     /// Iterate over the loose values in the block.
-    pub fn iter_values(&self) -> IterValues {
+    pub fn iter_values(&self) -> IterValues<'_> {
         IterValues { iter: self.v.iter(), warn: false }
     }
 
     /// Iterate over the loose values in the block, while warning about everything else.
-    pub fn iter_values_warn(&self) -> IterValues {
+    pub fn iter_values_warn(&self) -> IterValues<'_> {
         IterValues { iter: self.v.iter(), warn: true }
     }
 
     /// Iterate over the loose sub-blocks in the block.
     #[allow(dead_code)]
-    pub fn iter_blocks(&self) -> IterBlocks {
+    pub fn iter_blocks(&self) -> IterBlocks<'_> {
         IterBlocks { iter: self.v.iter(), warn: false }
     }
 
     /// Iterate over the loose sub-blocks in the block, while warning about everything else.
     #[allow(dead_code)] // It's here for symmetry
-    pub fn iter_blocks_warn(&self) -> IterBlocks {
+    pub fn iter_blocks_warn(&self) -> IterBlocks<'_> {
         IterBlocks { iter: self.v.iter(), warn: true }
     }
 

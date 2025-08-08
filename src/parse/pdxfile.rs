@@ -3,6 +3,7 @@
 //! The main entry points are [`parse_pdx_file`], [`parse_pdx_macro`], and [`parse_pdx_internal`].
 
 use std::path::PathBuf;
+use std::slice;
 use std::sync::LazyLock;
 
 use lalrpop_util::{lalrpop_mod, ParseError};
@@ -144,7 +145,7 @@ impl MacroComponent {
 fn split_macros(token: &Token) -> Vec<MacroComponent> {
     let mut vec = Vec::new();
     let mut index_loc = (0, token.loc);
-    for lex in Lexer::new(&[token.clone()]).flatten() {
+    for lex in Lexer::new(slice::from_ref(token)).flatten() {
         #[allow(clippy::cast_possible_truncation)]
         if let (start, Lexeme::MacroParam(param), end) = lex {
             // The param token does not include the enclosing `$` chars, but the start..end range does.
