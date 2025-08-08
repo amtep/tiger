@@ -7,7 +7,6 @@ members = [
     "hoi4-tiger",
     "tiger-bin-shared",
     "utils",
-    "internal_benches",
     ".",
 ]
 
@@ -29,17 +28,20 @@ vic3 = ["jomini"]
 imperator = ["jomini"]
 jomini = ["image/png", "dep:png"]
 hoi4 = ["image/bmp", "dep:tinybmp"]
-# figure out how to do this without blocking publication on crates.io
-#internal_benches = ["dep:internal_benches", "dep:divan"]
-internal_benches = ["dep:divan"]
+internal_benches = ["dep:divan", "dep:toml"]
 
 [build-dependencies]
 lalrpop = "0.22.0"
 
 [dependencies]
-# figure out how to do this without blocking publication on crates.io
-#internal_benches = { path = "internal_benches", optional = true }
+# Benchmark deps
+# These must be optional dependencies enabled with a feature flag
+# If they are in dev-dependencies, the benchmarks won't run
+# https://github.com/nvzqz/divan/issues/26
 divan = { version = "0.1.21", optional = true }
+toml = { version = "0.9.5", optional = true }
+
+# Standard deps
 ansiterm = "0.12.2"
 anyhow = "1"
 as-any = "0.3.0"
@@ -67,6 +69,12 @@ ahash = "0.8"
 murmur3 = "0.5.2"
 glob = "0.3.2"
 itertools = "0.14.0"
+
+[[bench]]
+name = "internals"
+harness = false
+
+required-features = ["internal_benches"]
 
 [profile.bench]
 debug = true

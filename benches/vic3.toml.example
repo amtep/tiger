@@ -1,4 +1,4 @@
 vanilla_dir = "/home/user/.steam/steam/steamapps/common/Victoria 3/"
-#mod_dir = ".."
-mod_paths = ["../mod-test-vanilla"]
+#mod_dir = ""
+mod_paths = ["mod-test-vanilla"]
 sample_size = 10

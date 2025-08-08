@@ -1,4 +1,4 @@
 vanilla_dir = "/home/user/.steam/steam/steamapps/common/Crusader Kings III/"
-modfile_dir = "../mod-test-vanilla"
+modfile_dir = "mod-test-vanilla"
 modfile_paths = []
 sample_size = 10
