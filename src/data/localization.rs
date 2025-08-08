@@ -8,12 +8,12 @@ use std::fs::read_to_string;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
-use std::sync::LazyLock;
 
 use bitvec::order::Lsb0;
-use bitvec::{bitarr, BitArr};
+use bitvec::{BitArr, bitarr};
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use murmur3::murmur3_32;
 use rayon::scope;
@@ -24,20 +24,20 @@ use crate::block::Block;
 #[cfg(feature = "ck3")]
 use crate::ck3::tables::localization::{BUILTIN_MACROS_CK3, COMPLEX_TOOLTIPS_CK3};
 use crate::context::ScopeContext;
-use crate::datatype::{validate_datatypes, CodeChain, Datatype};
+use crate::datatype::{CodeChain, Datatype, validate_datatypes};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler, FileKind};
 use crate::game::Game;
-use crate::helpers::{dup_error, stringify_list, TigerHashMap};
+use crate::helpers::{TigerHashMap, dup_error, stringify_list};
 #[cfg(feature = "hoi4")]
 use crate::hoi4::tables::localization::BUILTIN_MACROS_HOI4;
 #[cfg(feature = "imperator")]
 use crate::imperator::tables::localization::BUILTIN_MACROS_IMPERATOR;
 use crate::item::Item;
-use crate::macros::{MacroMapIndex, MACRO_MAP};
-use crate::parse::localization::{parse_loca, ValueParser};
+use crate::macros::{MACRO_MAP, MacroMapIndex};
 use crate::parse::ParserMemory;
-use crate::report::{err, report, tips, warn, ErrorKey, Severity};
+use crate::parse::localization::{ValueParser, parse_loca};
+use crate::report::{ErrorKey, Severity, err, report, tips, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 #[cfg(feature = "vic3")]
@@ -185,7 +185,7 @@ impl LocaEntry {
         if let LocaValue::Macro(v) = &self.value {
             for macrovalue in v {
                 match macrovalue {
-                    MacroValue::Text(ref token) => vec.push(token.clone().linked(link)),
+                    MacroValue::Text(token) => vec.push(token.clone().linked(link)),
                     MacroValue::Keyword(keyword) => {
                         if let Some(entry) = from.get(keyword.as_str()) {
                             entry.used.store(true, Relaxed);
@@ -208,11 +208,15 @@ impl LocaEntry {
                                 // same as above... we can't know what value it really has
                                 vec.push(keyword.clone().linked(link));
                             } else {
-                                let msg = &format!("The substitution parameter ${keyword}$ is not defined anywhere as a key.");
+                                let msg = &format!(
+                                    "The substitution parameter ${keyword}$ is not defined anywhere as a key."
+                                );
                                 warn(ErrorKey::Localization).msg(msg).loc(keyword).push();
                             }
                         } else {
-                            let msg = &format!("The substitution parameter ${keyword}$ is not defined anywhere as a key.");
+                            let msg = &format!(
+                                "The substitution parameter ${keyword}$ is not defined anywhere as a key."
+                            );
                             warn(ErrorKey::Localization).msg(msg).loc(keyword).push();
                         }
                     }
@@ -467,7 +471,7 @@ impl Localization {
                 // |E is the formatting used for game concepts in ck3
                 #[cfg(feature = "ck3")]
                 if Game::is_ck3() {
-                    if let Some(ref format) = format {
+                    if let Some(format) = format {
                         if format.as_str().contains('E') || format.as_str().contains('e') {
                             if let Some(name) = chain.as_gameconcept() {
                                 if !is_builtin_macro(name) {
@@ -730,11 +734,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
     }
 
     fn subpath(&self) -> PathBuf {
-        if Game::is_hoi4() {
-            PathBuf::from("localisation")
-        } else {
-            PathBuf::from("localization")
-        }
+        if Game::is_hoi4() { PathBuf::from("localisation") } else { PathBuf::from("localization") }
     }
 
     fn load_file(

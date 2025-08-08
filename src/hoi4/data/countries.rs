@@ -6,12 +6,12 @@ use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::lowercase::Lowercase;
 use crate::pdxfile::PdxEncoding;
-use crate::report::{warn, ErrorKey};
+use crate::report::{ErrorKey, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_trigger_internal;
-use crate::validate::{validate_modifiers_with_base, ListType};
+use crate::validate::{ListType, validate_modifiers_with_base};
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]

@@ -2,7 +2,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 #[cfg(feature = "ck3")]
 use crate::ck3::validate::{
     validate_activity_modifier, validate_ai_value_modifier, validate_compare_modifier,
@@ -18,7 +18,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 #[cfg(feature = "jomini")]
 use crate::report::fatal;
-use crate::report::{err, report, warn, Confidence, ErrorKey, Severity};
+use crate::report::{Confidence, ErrorKey, Severity, err, report, warn};
 #[cfg(any(feature = "ck3", feature = "hoi4"))]
 use crate::scopes::Scopes;
 use crate::scopes::{scope_prefix, scope_to_scope};
@@ -31,8 +31,8 @@ use crate::trigger::validate_target_ok_this;
 #[cfg(feature = "jomini")]
 use crate::trigger::validate_trigger;
 use crate::trigger::{
-    is_character_token, partition, validate_argument, validate_argument_scope, validate_inscopes,
-    validate_trigger_internal, warn_not_first, Part, PartFlags,
+    Part, PartFlags, is_character_token, partition, validate_argument, validate_argument_scope,
+    validate_inscopes, validate_trigger_internal, warn_not_first,
 };
 use crate::validator::Validator;
 

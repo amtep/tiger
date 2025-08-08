@@ -6,11 +6,11 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::lowercase::Lowercase;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validate::{validate_color, ListType};
+use crate::validate::{ListType, validate_color};
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]

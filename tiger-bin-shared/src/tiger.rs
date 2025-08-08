@@ -1,23 +1,23 @@
 use std::io::stdout;
 use std::{mem::forget, path::PathBuf};
 
-use anyhow::{bail, Result};
-use clap::{error::ErrorKind, Args, Parser, Subcommand};
+use anyhow::{Result, bail};
+use clap::{Args, Parser, Subcommand, error::ErrorKind};
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use tiger_lib::ModFile;
 #[cfg(feature = "vic3")]
 use tiger_lib::ModMetadata;
 use tiger_lib::{
-    disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
-    set_show_vanilla, suppress_from_json, validate_config_file, Everything,
+    Everything, disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
+    set_show_vanilla, suppress_from_json, validate_config_file,
 };
 
+use crate::GameConsts;
 use crate::gamedir::{
     find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
 };
 use crate::update::update;
 use crate::version::warn_versions;
-use crate::GameConsts;
 
 #[derive(Parser)]
 #[clap(args_conflicts_with_subcommands = true)]
@@ -155,7 +155,9 @@ pub fn run(
                     if sig.is_file() {
                         eprintln!("Ok.");
                     } else {
-                        bail!("Cannot find {name_short} directory. Please supply it as the --game option.");
+                        bail!(
+                            "Cannot find {name_short} directory. Please supply it as the --game option."
+                        );
                     }
                 }
             } else {
@@ -187,7 +189,9 @@ pub fn run(
             }
 
             if args.show_vanilla {
-                eprintln!("Showing warnings for base game files too. There will be many false positives in those.");
+                eprintln!(
+                    "Showing warnings for base game files too. There will be many false positives in those."
+                );
             }
 
             if args.show_mods {

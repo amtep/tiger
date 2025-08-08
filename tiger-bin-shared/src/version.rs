@@ -34,14 +34,20 @@ pub fn warn_versions(
         eprintln!("Tiger was made for {tiger_game} version {tiger_game_version},");
         eprintln!("but the older version {launcher_game_version} was detected in the game files.");
         eprintln!("This may lead to erroneous reports from Tiger.");
-        eprintln!("Please consider updating your game, or perhaps downgrading Tiger to a more compatible version.");
+        eprintln!(
+            "Please consider updating your game, or perhaps downgrading Tiger to a more compatible version."
+        );
     } else if tiger_patch < game_patch {
         eprintln!("Tiger was made for {tiger_game} version {tiger_game_version},");
-        eprintln!("but the slightly newer version {launcher_game_version} was detected in the game files.");
+        eprintln!(
+            "but the slightly newer version {launcher_game_version} was detected in the game files."
+        );
         eprintln!("This is probably okay, but there may be some erroneous reports.");
     } else if tiger_patch > game_patch {
         eprintln!("Tiger was made for {tiger_game} version {tiger_game_version},");
-        eprintln!("but the slightly older version {launcher_game_version} was detected in the game files.");
+        eprintln!(
+            "but the slightly older version {launcher_game_version} was detected in the game files."
+        );
         eprintln!("This is probably okay, but there may be some erroneous reports.");
     } else {
         eprintln!("Tiger was made for {tiger_game} version {tiger_game_version},");

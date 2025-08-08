@@ -9,7 +9,7 @@ use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::{camel_case_to_separated_words, display_choices, snake_case_to_camel_case};
 use crate::item::Item;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 
 /// vic3 and ck3 need more than 64 bits, but the others don't.

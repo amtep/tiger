@@ -1,3 +1,4 @@
+use crate::Everything;
 use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
 use crate::context::ScopeContext;
@@ -9,7 +10,6 @@ use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
-use crate::Everything;
 
 #[derive(Clone, Debug)]
 pub struct LegitimacyType {}

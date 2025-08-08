@@ -4,7 +4,7 @@ use crate::block::BV;
 use crate::datatype::Datatype;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::token::Token;
 use crate::validator::Validator;
 

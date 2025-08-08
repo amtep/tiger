@@ -17,17 +17,17 @@ use crate::data::customloca::CustomLocalization;
 use crate::data::localization::Language;
 use crate::everything::Everything;
 use crate::game::Game;
+use crate::helpers::BiTigerHashMap;
 #[cfg(feature = "hoi4")]
 use crate::helpers::is_country_tag;
-use crate::helpers::BiTigerHashMap;
 #[cfg(feature = "hoi4")]
 use crate::hoi4::data::scripted_localisation::ScriptedLocalisation;
 use crate::item::Item;
-#[cfg(feature = "jomini")]
-use crate::report::err;
 #[cfg(feature = "hoi4")]
 use crate::report::Severity;
-use crate::report::{warn, ErrorKey};
+#[cfg(feature = "jomini")]
+use crate::report::err;
+use crate::report::{ErrorKey, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 
@@ -589,7 +589,10 @@ pub fn validate_datatypes(
             // Real life example: [ROOT.Char.Custom2('RelationToMeShort', schemer)]
             if sc.is_name_defined(code.name.as_str()).is_some() && !game_concept_formatting {
                 let msg = format!("`{}` is both a named scope and a game concept here", &code.name);
-                let info = format!("The game concept will take precedence. Do `{}.Self` if you want the named scope.", &code.name);
+                let info = format!(
+                    "The game concept will take precedence. Do `{}.Self` if you want the named scope.",
+                    &code.name
+                );
                 warn(ErrorKey::Datafunctions).msg(msg).info(info).loc(&code.name).push();
             }
 

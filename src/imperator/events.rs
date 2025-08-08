@@ -6,11 +6,11 @@ use crate::effect::{validate_effect, validate_effect_internal};
 use crate::everything::Everything;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validate::{validate_ai_chance, validate_modifiers_with_base, ListType};
+use crate::validate::{ListType, validate_ai_chance, validate_modifiers_with_base};
 use crate::validator::Validator;
 
 const EVENT_TYPES: &[&str] = &[

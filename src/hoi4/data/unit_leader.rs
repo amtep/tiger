@@ -1,4 +1,4 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
@@ -7,7 +7,7 @@ use crate::helpers::TigerHashSet;
 use crate::hoi4::modif::ModifKinds;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

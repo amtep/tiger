@@ -1,15 +1,15 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::effect::validate_effect_internal;
 use crate::everything::Everything;
 use crate::hoi4::data::events::Event;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validate::{validate_ai_chance, validate_modifiers, ListType};
+use crate::validate::{ListType, validate_ai_chance, validate_modifiers};
 use crate::validator::Validator;
 
 // TODO

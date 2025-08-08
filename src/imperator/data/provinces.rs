@@ -9,10 +9,10 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
-use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
+use crate::parse::csv::{parse_csv, read_csv};
 use crate::pdxfile::PdxFile;
-use crate::report::{err, fatal, report, untidy, warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err, fatal, report, untidy, warn};
 use crate::token::{Loc, Token};
 
 pub type ProvId = u32;

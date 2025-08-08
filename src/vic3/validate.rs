@@ -4,7 +4,7 @@ use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{err, warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err, warn};
 use crate::scopes::Scopes;
 use crate::validator::Validator;
 

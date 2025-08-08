@@ -5,8 +5,8 @@
 //!   without pointers, which would lead to panics.
 
 use crate::report::{
-    log, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, LogReportStyle,
-    PointedMessage, Severity,
+    Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, LogReportStyle,
+    PointedMessage, Severity, log,
 };
 
 // =================================================================================================

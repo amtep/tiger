@@ -7,7 +7,7 @@ use crate::everything::Everything;
 use crate::helpers::{TigerHashMap, TigerHashMapExt};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{report, untidy, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, report, untidy};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::vic3::modif::ModifKinds;

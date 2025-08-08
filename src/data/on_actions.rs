@@ -14,7 +14,7 @@ use crate::pdxfile::PdxFile;
 #[cfg(feature = "ck3")]
 use crate::report::warn;
 #[cfg(any(feature = "ck3", feature = "hoi4"))]
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

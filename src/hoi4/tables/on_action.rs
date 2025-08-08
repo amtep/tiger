@@ -1,7 +1,7 @@
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 
