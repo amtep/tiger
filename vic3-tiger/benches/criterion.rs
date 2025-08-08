@@ -23,13 +23,24 @@ struct Config {
     sample_size: Option<usize>,
 }
 
+fn workspace_path(s: &str) -> PathBuf {
+    let p = PathBuf::from(s);
+    if p.is_relative() {
+        PathBuf::from("..").join(p)
+    }
+    else {
+        p
+    }
+}
+
 fn bench_multiple(c: &mut Criterion) {
     Game::set(Game::Vic3).unwrap();
     let content = fs::read_to_string(CONFIG_PATH).unwrap();
     let config: Config = toml::from_str(&content).unwrap();
-    let mut mod_paths = config.mod_paths.iter().map(PathBuf::from).collect::<Vec<_>>();
+    let mut mod_paths = config.mod_paths.iter().map(|p| workspace_path(p)).collect::<Vec<_>>();
 
     if let Some(mod_dir) = config.mod_dir {
+        let mod_dir = workspace_path(&mod_dir);
         let iter =
             fs::read_dir(mod_dir).unwrap().filter_map(|entry| entry.ok()).filter_map(|entry| {
                 entry.path().join(".metadata/metadata.json").is_file().then(|| entry.path())
