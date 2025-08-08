@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::{Block, Field};
 use crate::context::ScopeContext;
@@ -73,7 +74,7 @@ impl FileHandler<Block> for Hoi4Musics {
         PathBuf::from("music")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -81,7 +82,7 @@ impl FileHandler<Block> for Hoi4Musics {
         PdxFile::read_no_bom(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         let mut station = None;
 
         for item in block.drain() {

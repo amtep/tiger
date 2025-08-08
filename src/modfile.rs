@@ -7,13 +7,14 @@ use std::string::ToString;
 use anyhow::{Context, Result};
 
 use crate::block::Block;
-use crate::fileset::{FileEntry, FileKind};
+use crate::fileset::FileKind;
 use crate::game::Game;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{untidy, warn, ErrorKey};
 use crate::token::Token;
 use crate::util::fix_slashes_for_target_platform;
+use crate::Fileset;
 
 /// Representation of a `.mod` file and its contents.
 #[allow(dead_code)] // TODO, see below
@@ -72,9 +73,10 @@ fn validate_modfile(block: &Block) -> ModFile {
 
 impl ModFile {
     /// Take the path to a `.mod` file, validate it, and return its parsed structure.
-    pub fn read(pathname: &Path) -> Result<Self> {
-        let entry = FileEntry::new(pathname.to_path_buf(), FileKind::Mod, pathname.to_path_buf());
-        let block = PdxFile::read_optional_bom(&entry, &ParserMemory::default())
+    pub fn read(fileset: &mut Fileset, pathname: &Path) -> Result<Self> {
+        let block = fileset
+            .get_or_create_entry(pathname.to_path_buf(), FileKind::Mod, pathname.to_path_buf())
+            .and_then(|entry| PdxFile::read_optional_bom(entry, &ParserMemory::default()))
             .with_context(|| format!("Could not read .mod file {}", pathname.display()))?;
         Ok(validate_modfile(&block))
     }

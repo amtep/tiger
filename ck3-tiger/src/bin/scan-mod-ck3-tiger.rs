@@ -10,7 +10,7 @@ use clap::Parser;
 use serde_json::{json, to_string_pretty, Value};
 use strum::IntoEnumIterator;
 
-use tiger_lib::{Everything, FileKind, Game, Item, ModFile};
+use tiger_lib::{Everything, FileKind, Fileset, Game, Item, ModFile};
 
 #[derive(Parser)]
 struct Cli {
@@ -34,7 +34,9 @@ fn main() -> Result<()> {
     if args.modpath.is_dir() {
         args.modpath.push("descriptor.mod");
     }
-    let modfile = ModFile::read(&args.modpath)?;
+    let mut fileset = Fileset::new(None, args.modpath.clone());
+    let modfile = ModFile::read(&mut fileset, &args.modpath)?;
+    fileset.set_replace_paths(modfile.replace_paths());
     let modpath = modfile.modpath();
     if !modpath.exists() {
         eprintln!("Looking for mod in {}", modpath.display());
@@ -42,8 +44,7 @@ fn main() -> Result<()> {
     }
     eprintln!("Using mod directory: {}", modpath.display());
 
-    let mut everything =
-        Everything::new(None, None, None, None, &modpath, modfile.replace_paths())?;
+    let mut everything = Everything::new(fileset, None, None, None, &modpath)?;
 
     everything.load_all();
 

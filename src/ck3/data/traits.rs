@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::{Block, BV};
 use crate::ck3::modif::ModifKinds;
@@ -110,7 +111,7 @@ impl FileHandler<Block> for Traits {
         PathBuf::from("common/traits")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -118,7 +119,7 @@ impl FileHandler<Block> for Traits {
         PdxFile::read(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, block) in block.drain_definitions_warn() {
             self.load_item(key, block);
         }

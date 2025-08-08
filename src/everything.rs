@@ -55,7 +55,7 @@ use crate::data::{
 };
 use crate::db::{Db, DbKind};
 use crate::dds::DdsFiles;
-use crate::fileset::{FileEntry, FileKind, Fileset};
+use crate::fileset::{FileKind, Fileset};
 use crate::game::Game;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use crate::helpers::TigerHashSet;
@@ -233,16 +233,16 @@ impl Everything {
     /// `mod_root` is the path to the mod files. The config file will also be looked for there.
     ///
     /// `replace_paths` is from the similarly named field in the `.mod` file.
+    ///
+    /// # Panics
+    /// Will panic if passed a finalized fileset
     pub fn new(
+        mut fileset: Fileset,
         config_filepath: Option<&Path>,
-        vanilla_dir: Option<&Path>,
         workshop_dir: Option<&Path>,
         paradox_dir: Option<&Path>,
         mod_root: &Path,
-        replace_paths: Vec<PathBuf>,
     ) -> Result<Self> {
-        let mut fileset = Fileset::new(vanilla_dir, mod_root.to_path_buf(), replace_paths);
-
         let config_file_name = match Game::game() {
             #[cfg(feature = "ck3")]
             Game::Ck3 => "ck3-tiger.conf",
@@ -259,11 +259,14 @@ impl Everything {
             None => mod_root.join(config_file_name),
         };
 
+        let config_entry = fileset
+            .get_or_create_entry(config_file.clone(), FileKind::Mod, config_file.clone())
+            .unwrap();
         let config = if config_file.is_file() {
-            Self::read_config(config_file_name, &config_file)
+            PdxFile::read_optional_bom(config_entry, &ParserMemory::default())
                 .ok_or(FilesError::ConfigUnreadable { path: config_file })?
         } else {
-            Block::new(Loc::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
+            Block::new(Loc::from(config_entry))
         };
 
         fileset.config(config.clone(), workshop_dir, paradox_dir)?;
@@ -344,11 +347,6 @@ impl Everything {
             wars: Wars::default(),
             variables: Variables::new(),
         })
-    }
-
-    fn read_config(name: &str, path: &Path) -> Option<Block> {
-        let entry = FileEntry::new(PathBuf::from(name), FileKind::Mod, path.to_path_buf());
-        PdxFile::read_optional_bom(&entry, &ParserMemory::default())
     }
 
     pub fn load_config_filtering_rules(&self) {
@@ -1366,8 +1364,8 @@ mod benchmark {
     fn load_provinces_ck3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::new(Some(Path::new(vanilla_dir)), modpath.clone());
+                Everything::new(fileset, None, None, None, modpath).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.provinces_ck3, &everything.parser);
@@ -1379,8 +1377,8 @@ mod benchmark {
     fn load_provinces_vic3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::new(Some(Path::new(vanilla_dir)), modpath.clone());
+                Everything::new(fileset, None, None, None, modpath).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.provinces_vic3, &everything.parser);
@@ -1391,8 +1389,8 @@ mod benchmark {
     fn load_localization(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::new(Some(Path::new(vanilla_dir)), modpath.clone());
+                Everything::new(fileset, None, None, None, modpath).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.localization, &everything.parser);

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::block::{Block, BlockItem, Field, BV};
 use crate::fileset::FileEntry;
 use crate::token::{Loc, Token};
@@ -131,6 +133,18 @@ impl ErrorLoc for FileEntry {
 impl ErrorLoc for &FileEntry {
     fn into_loc(self) -> Loc {
         Loc::from(self)
+    }
+}
+
+impl ErrorLoc for Arc<FileEntry> {
+    fn into_loc(self) -> Loc {
+        Loc::from(self)
+    }
+}
+
+impl ErrorLoc for &Arc<FileEntry> {
+    fn into_loc(self) -> Loc {
+        Loc::from(&**self)
     }
 }
 
