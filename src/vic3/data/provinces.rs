@@ -1,15 +1,17 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use image::{DynamicImage, Rgb};
 use itertools::Itertools;
 
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::TigerHashSet;
 use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::report::{err, report, ErrorKey, Severity};
 use crate::token::Token;
+use crate::Loc;
 
 #[derive(Clone, Debug, Default)]
 pub struct Vic3Provinces {
@@ -17,7 +19,7 @@ pub struct Vic3Provinces {
     colors: TigerHashSet<Rgb<u8>>,
 
     /// Kept and used for error reporting.
-    provinces_png: Option<FileEntry>,
+    provinces_png: Option<Loc>,
 }
 
 impl Vic3Provinces {
@@ -59,7 +61,7 @@ impl FileHandler<DynamicImage> for Vic3Provinces {
         PathBuf::from("map_data/provinces.png")
     }
 
-    fn load_file(&self, entry: &FileEntry, _parser: &ParserMemory) -> Option<DynamicImage> {
+    fn load_file(&self, entry: &Arc<FileEntry>, _parser: &ParserMemory) -> Option<DynamicImage> {
         if entry.path().components().count() == 2 {
             let img = match image::open(entry.fullpath()) {
                 Ok(img) => img,
@@ -84,8 +86,8 @@ impl FileHandler<DynamicImage> for Vic3Provinces {
         None
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, img: DynamicImage) {
-        self.provinces_png = Some(entry.clone());
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, img: DynamicImage) {
+        self.provinces_png = Some(Loc::from(entry));
         if let DynamicImage::ImageRgb8(img) = img {
             for pixel in img.pixels().dedup() {
                 self.colors.insert(*pixel);

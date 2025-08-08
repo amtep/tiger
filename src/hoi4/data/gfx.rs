@@ -1,10 +1,11 @@
 //! Process .gfx files, which contain sprite and mesh definitions.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::Block;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{dup_error, exact_dup_advice, TigerHashMap};
 use crate::item::Item;
 use crate::parse::ParserMemory;
@@ -79,7 +80,7 @@ impl FileHandler<Block> for Gfx {
         PathBuf::from("")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         // Don't descend into the dlc directories directly.
         // Wait for them to be processed as Dlc FileKind.
         if entry.path().starts_with("dlc") || entry.path().starts_with("integrated_dlc") {
@@ -95,7 +96,7 @@ impl FileHandler<Block> for Gfx {
         }
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, mut block) in block.drain_definitions_warn() {
             if key.lowercase_is("spritetypes") {
                 for (key, block) in block.drain_definitions_warn() {

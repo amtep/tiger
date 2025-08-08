@@ -7,13 +7,14 @@ use std::fmt::{Debug, Display, Error, Formatter};
 use std::hash::Hash;
 use std::mem::ManuallyDrop;
 use std::ops::{Bound, Range, RangeBounds};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::slice::SliceIndex;
+use std::sync::Arc;
 
 use bumpalo::Bump;
 
 use crate::date::Date;
-use crate::fileset::{FileEntry, FileKind};
+use crate::files::{FileEntry, FileKind};
 use crate::macros::MacroMapIndex;
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{err, untidy, ErrorKey};
@@ -31,12 +32,6 @@ pub struct Loc {
 }
 
 impl Loc {
-    #[must_use]
-    pub(crate) fn for_file(pathname: PathBuf, kind: FileKind, fullpath: PathBuf) -> Self {
-        let idx = PathTable::store(pathname, fullpath);
-        Loc { idx, kind, line: 0, column: 0, link_idx: None }
-    }
-
     pub fn filename(self) -> Cow<'static, str> {
         PathTable::lookup_path(self.idx)
             .file_name()
@@ -60,10 +55,12 @@ impl Loc {
 
 impl From<&FileEntry> for Loc {
     fn from(entry: &FileEntry) -> Self {
-        if let Some(idx) = entry.path_idx() {
-            Loc { idx, kind: entry.kind(), line: 0, column: 0, link_idx: None }
-        } else {
-            Self::for_file(entry.path().to_path_buf(), entry.kind(), entry.fullpath().to_path_buf())
+        Loc {
+            idx: entry.get_or_init_path_idx(),
+            kind: entry.kind(),
+            line: 0,
+            column: 0,
+            link_idx: None,
         }
     }
 }
@@ -80,6 +77,18 @@ impl From<FileEntry> for Loc {
     }
 }
 
+impl From<Arc<FileEntry>> for Loc {
+    fn from(entry: Arc<FileEntry>) -> Self {
+        (&*entry).into()
+    }
+}
+
+impl From<&Arc<FileEntry>> for Loc {
+    fn from(entry: &Arc<FileEntry>) -> Self {
+        (&**entry).into()
+    }
+}
+
 impl Debug for Loc {
     /// Roll our own `Debug` implementation to handle the path field
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
@@ -92,19 +101,6 @@ impl Debug for Loc {
             .field("column", &self.column)
             .field("linkindex", &self.link_idx)
             .finish()
-    }
-}
-
-/// Leak the string, including any excess capacity.
-///
-/// It should only be used for large strings, rather than for small, individuals strings,
-/// due to the memory overhead. Use [`bump`] instead, which uses a bump allocator to store
-/// the strings.
-pub(crate) fn leak(s: String) -> &'static str {
-    let s = ManuallyDrop::new(s);
-    unsafe {
-        let s_ptr: *const str = s.as_ref();
-        &*s_ptr
     }
 }
 

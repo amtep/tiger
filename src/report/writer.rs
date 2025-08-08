@@ -3,7 +3,7 @@ use std::io::Write;
 use ansiterm::{ANSIString, ANSIStrings};
 use unicode_width::UnicodeWidthChar;
 
-use crate::fileset::FileKind;
+use crate::files::FileKind;
 use crate::game::Game;
 use crate::report::errors::Errors;
 use crate::report::output_style::Styled;

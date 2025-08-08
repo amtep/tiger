@@ -6,7 +6,7 @@ use std::str::Chars;
 use anyhow::{bail, Result};
 use encoding_rs::WINDOWS_1252;
 
-use crate::fileset::FileEntry;
+use crate::files::FileEntry;
 use crate::report::ErrorLoc;
 use crate::token::{Loc, Token};
 

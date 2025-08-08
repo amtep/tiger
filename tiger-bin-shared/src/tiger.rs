@@ -3,13 +3,9 @@ use std::{mem::forget, path::PathBuf};
 
 use anyhow::{bail, Result};
 use clap::{error::ErrorKind, Args, Parser, Subcommand};
-#[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-use tiger_lib::ModFile;
-#[cfg(feature = "vic3")]
-use tiger_lib::ModMetadata;
 use tiger_lib::{
     disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
-    set_show_vanilla, suppress_from_json, validate_config_file, Everything,
+    set_show_vanilla, suppress_from_json, validate_config_file, Everything, Fileset, Game,
 };
 
 use crate::gamedir::{
@@ -210,45 +206,24 @@ pub fn run(
                 disable_ansi_colors();
             }
 
-            let mut everything;
+            let fileset = Fileset::builder(args.game.as_deref());
+            let fileset = match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => fileset.with_modfile(args.modpath),
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => fileset.with_metadata(args.modpath),
+                #[cfg(feature = "imperator")]
+                Game::Imperator => fileset.with_modfile(args.modpath),
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => fileset.with_modfile(args.modpath),
+            }?;
 
-            #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-            {
-                if args.modpath.is_dir() {
-                    args.modpath.push("descriptor.mod");
-                }
-
-                let modfile = ModFile::read(&args.modpath)?;
-                let modpath = modfile.modpath();
-                if !modpath.exists() {
-                    eprintln!("Looking for mod in {}", modpath.display());
-                    bail!("Cannot find mod directory. Please make sure the .mod file is correct.");
-                }
-                eprintln!("Using mod directory: {}", modpath.display());
-
-                everything = Everything::new(
-                    args.config.as_deref(),
-                    args.game.as_deref(),
-                    args.workshop.as_deref(),
-                    args.paradox.as_deref(),
-                    &modpath,
-                    modfile.replace_paths(),
-                )?;
-            }
-            #[cfg(feature = "vic3")]
-            {
-                let metadata = ModMetadata::read(&args.modpath)?;
-                eprintln!("Using mod directory: {}", metadata.modpath().display());
-
-                everything = Everything::new(
-                    args.config.as_deref(),
-                    args.game.as_deref(),
-                    args.workshop.as_deref(),
-                    args.paradox.as_deref(),
-                    &args.modpath,
-                    metadata.replace_paths(),
-                )?;
-            }
+            let mut everything = Everything::new(
+                fileset,
+                args.config.as_deref(),
+                args.workshop.as_deref(),
+                args.paradox.as_deref(),
+            )?;
 
             // Print a blank line between the preamble and the first report:
             eprintln!();

@@ -4,13 +4,12 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
-use std::fs::read_to_string;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering::Relaxed;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use bitvec::order::Lsb0;
 use bitvec::{bitarr, BitArr};
@@ -26,7 +25,7 @@ use crate::ck3::tables::localization::{BUILTIN_MACROS_CK3, COMPLEX_TOOLTIPS_CK3}
 use crate::context::ScopeContext;
 use crate::datatype::{validate_datatypes, CodeChain, Datatype};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler, FileKind};
+use crate::files::{FileEntry, FileHandler, FileKind};
 use crate::game::Game;
 use crate::helpers::{dup_error, stringify_list, TigerHashMap};
 #[cfg(feature = "hoi4")]
@@ -739,7 +738,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
 
     fn load_file(
         &self,
-        entry: &FileEntry,
+        entry: &Arc<FileEntry>,
         _parser: &ParserMemory,
     ) -> Option<(Language, Vec<LocaEntry>)> {
         if !entry.filename().to_string_lossy().ends_with(".yml") {
@@ -769,16 +768,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
                     warn(ErrorKey::Filename).msg(msg).info(info).loc(entry).push();
                 }
             }
-            match read_to_string(entry.fullpath()) {
-                Ok(content) => {
-                    return Some((filelang, parse_loca(entry, content, filelang).collect()));
-                }
-                Err(e) => {
-                    let msg = "could not read file";
-                    let info = &format!("{e:#}");
-                    err(ErrorKey::ReadError).msg(msg).info(info).loc(entry).push();
-                }
-            }
+            return Some((filelang, parse_loca(entry, filelang)?.collect()));
         } else if entry.kind() >= FileKind::Vanilla {
             // Check for `FileKind::Vanilla` because Jomini and Clausewitz support more languages
             let msg = "could not determine language from filename";
@@ -791,7 +781,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
         None
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, loaded: (Language, Vec<LocaEntry>)) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, loaded: (Language, Vec<LocaEntry>)) {
         let (filelang, mut vec) = loaded;
         let hash = &mut self.locas[filelang.to_idx()];
 

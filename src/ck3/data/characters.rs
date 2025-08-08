@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
 use atomic_enum::atomic_enum;
 
@@ -14,7 +15,7 @@ use crate::context::ScopeContext;
 use crate::date::Date;
 use crate::effect::{validate_effect, validate_effect_field};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
@@ -255,7 +256,7 @@ impl FileHandler<Block> for Characters {
         PathBuf::from("history/characters")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -263,7 +264,7 @@ impl FileHandler<Block> for Characters {
         PdxFile::read(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, block) in block.drain_definitions_warn() {
             self.load_item(key, block);
         }

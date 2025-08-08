@@ -6,7 +6,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::block::{Block, BlockItem, Field, BV};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::game::Game;
 use crate::gui::{BuiltinWidget, GuiBlock, GuiBlockFrom};
 use crate::helpers::{dup_error, TigerHashMap, TigerHashSet};
@@ -282,7 +282,7 @@ impl FileHandler<Block> for Gui {
         }
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".gui") {
             return None;
         }
@@ -290,7 +290,7 @@ impl FileHandler<Block> for Gui {
         PdxFile::read_optional_bom(entry, parser)
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, mut block: Block) {
         #[derive(Clone, Debug)]
         enum Expecting {
             Widget,

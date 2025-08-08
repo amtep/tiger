@@ -2,7 +2,8 @@ use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 
 use tiger_lib::{
-    take_reports, Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet,
+    take_reports, Everything, Fileset, LogReportMetadata, LogReportPointers, TigerHashMap,
+    TigerHashSet,
 };
 
 static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
@@ -15,8 +16,8 @@ fn check_mod_helper(
     let vanilla_dir = PathBuf::from("tests/files/ck3");
     let mod_root = PathBuf::from(format!("tests/files/{}", modname));
 
-    let mut everything =
-        Everything::new(None, Some(&vanilla_dir), None, None, &mod_root, Vec::new()).unwrap();
+    let fileset = Fileset::builder(Some(&vanilla_dir)).with_modfile(mod_root).unwrap();
+    let mut everything = Everything::new(fileset, None, None, None).unwrap();
     everything.load_all();
     everything.validate_all();
 

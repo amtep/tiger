@@ -1,8 +1,9 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::{Block, BV};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::game::Game;
 use crate::helpers::{dup_error, TigerHashMap, TigerHashSet};
 use crate::item::Item;
@@ -24,7 +25,7 @@ pub struct Assets {
     attributes: TigerHashSet<Token>,
     blend_shapes: TigerHashSet<Token>,
     musics: TigerHashSet<Token>,
-    textures: TigerHashMap<String, (FileEntry, Token)>,
+    textures: TigerHashMap<String, (Arc<FileEntry>, Token)>,
 }
 
 impl Assets {
@@ -109,7 +110,7 @@ impl Assets {
         self.textures.values().map(|(_, token)| token)
     }
 
-    pub fn get_texture(&self, key: &str) -> Option<&FileEntry> {
+    pub fn get_texture(&self, key: &str) -> Option<&Arc<FileEntry>> {
         self.textures.get(key).map(|(entry, _)| entry)
     }
 
@@ -126,7 +127,7 @@ impl FileHandler<Option<Block>> for Assets {
     }
 
     /// TODO: should probably simplify this `FileHandler` by keeping the textures in a separate `FileHandler`.
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Option<Block>> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Option<Block>> {
         let name = entry.filename().to_string_lossy();
 
         if name.ends_with(".dds") {
@@ -138,7 +139,7 @@ impl FileHandler<Option<Block>> for Assets {
         }
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, loaded: Option<Block>) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, loaded: Option<Block>) {
         let name = entry.filename().to_string_lossy();
         if name.ends_with(".dds") {
             if let Some((other, _)) = self.textures.get(&*name) {
@@ -151,7 +152,7 @@ impl FileHandler<Option<Block>> for Assets {
                 }
             }
             let entry_token = Token::new(&entry.filename().to_string_lossy(), entry.into());
-            self.textures.insert(name.to_string(), (entry.clone(), entry_token));
+            self.textures.insert(name.to_string(), (Arc::clone(entry), entry_token));
             return;
         }
 

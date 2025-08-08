@@ -4,7 +4,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use tiger_lib::{Everything, ModFile};
+use tiger_lib::{Everything, Fileset};
 
 static CONFIG_PATH: &str = "../benches/ck3.toml";
 
@@ -26,8 +26,7 @@ fn workspace_path(s: &str) -> PathBuf {
     let p = PathBuf::from(s);
     if p.is_relative() {
         PathBuf::from("..").join(p)
-    }
-    else {
+    } else {
         p
     }
 }
@@ -35,7 +34,8 @@ fn workspace_path(s: &str) -> PathBuf {
 fn bench_multiple(c: &mut Criterion) {
     let content = fs::read_to_string(CONFIG_PATH).unwrap();
     let config: Config = toml::from_str(&content).unwrap();
-    let mut modfile_paths = config.modfile_paths.iter().map(|p| workspace_path(p)).collect::<Vec<_>>();
+    let mut modfile_paths =
+        config.modfile_paths.iter().map(|p| workspace_path(p)).collect::<Vec<_>>();
 
     if let Some(modfile_dir) = config.modfile_dir {
         let modfile_dir = workspace_path(&modfile_dir);
@@ -46,18 +46,16 @@ fn bench_multiple(c: &mut Criterion) {
         modfile_paths.extend(iter);
     }
 
+    let vanilla_dir = PathBuf::from(config.vanilla_dir);
+
     let mut group = c.benchmark_group("benchmark");
     group.sample_size(config.sample_size.unwrap_or(10));
     for (index, modfile_path) in modfile_paths.iter().enumerate() {
-        let modfile = ModFile::read(modfile_path).unwrap();
         group.bench_with_input(
-            BenchmarkId::new(
-                "mods",
-                format!("{}. {}", index + 1, modfile.display_name().unwrap_or_default()),
-            ),
-            &modfile,
-            |b, modfile_ref| {
-                b.iter(|| bench_mod(&config.vanilla_dir, modfile_ref));
+            BenchmarkId::new("mods", format!("{}. {}", index + 1, modfile_path.display())),
+            modfile_path,
+            |b, modfile_path| {
+                b.iter(|| bench_mod(&vanilla_dir, modfile_path.clone()));
             },
         );
     }
@@ -65,16 +63,9 @@ fn bench_multiple(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_mod(vanilla_dir: &str, modfile: &ModFile) {
-    let mut everything = Everything::new(
-        None,
-        Some(Path::new(vanilla_dir)),
-        None,
-        None,
-        &modfile.modpath(),
-        modfile.replace_paths(),
-    )
-    .unwrap();
+fn bench_mod(vanilla_dir: &Path, modfile_path: PathBuf) {
+    let fileset = Fileset::builder(Some(vanilla_dir)).with_modfile(modfile_path).unwrap();
+    let mut everything = Everything::new(fileset, None, None, None).unwrap();
     everything.load_all();
     everything.validate_all();
     everything.check_rivers();

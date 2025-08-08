@@ -7,7 +7,7 @@ use std::string::ToString;
 use anyhow::{Context, Result};
 
 use crate::block::Block;
-use crate::fileset::{FileEntry, FileKind};
+use crate::files::FileEntry;
 use crate::game::Game;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
@@ -72,10 +72,9 @@ fn validate_modfile(block: &Block) -> ModFile {
 
 impl ModFile {
     /// Take the path to a `.mod` file, validate it, and return its parsed structure.
-    pub fn read(pathname: &Path) -> Result<Self> {
-        let entry = FileEntry::new(pathname.to_path_buf(), FileKind::Mod, pathname.to_path_buf());
-        let block = PdxFile::read_optional_bom(&entry, &ParserMemory::default())
-            .with_context(|| format!("Could not read .mod file {}", pathname.display()))?;
+    pub fn read(entry: &FileEntry) -> Result<Self> {
+        let block = PdxFile::read_optional_bom(entry, &ParserMemory::default())
+            .with_context(|| format!("Could not read .mod file {}", entry.path().display()))?;
         Ok(validate_modfile(&block))
     }
 

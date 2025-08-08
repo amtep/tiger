@@ -1,12 +1,13 @@
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use image::{DynamicImage, Rgb};
 use itertools::Itertools;
 
 use crate::block::Block;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
 use crate::parse::csv::{parse_csv, read_csv};
@@ -28,7 +29,7 @@ pub struct ImperatorProvinces {
     provinces: TigerHashMap<ProvId, Province>,
 
     /// Kept and used for error reporting.
-    definition_csv: Option<FileEntry>,
+    definition_csv: Option<Loc>,
 
     adjacencies: Vec<Adjacency>,
 
@@ -176,7 +177,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
         PathBuf::from("map_data")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<FileContent> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<FileContent> {
         if entry.path().components().count() == 2 {
             match &*entry.filename().to_string_lossy() {
                 "adjacencies.csv" => {
@@ -235,7 +236,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
         None
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, content: FileContent) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, content: FileContent) {
         match content {
             FileContent::Adjacencies(content) => {
                 let mut seen_terminator = false;
@@ -256,7 +257,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
                 }
             }
             FileContent::Definitions(content) => {
-                self.definition_csv = Some(entry.clone());
+                self.definition_csv = Some(Loc::from(entry));
                 for csv in parse_csv(entry, 0, &content) {
                     self.parse_definition(&csv);
                 }
@@ -278,7 +279,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
             eprintln!("map_data/definition.csv is missing?!?");
             return;
         }
-        let definition_csv = self.definition_csv.as_ref().unwrap();
+        let definition_csv = self.definition_csv.unwrap();
 
         let mut seen_colors = TigerHashMap::default();
         #[allow(clippy::cast_possible_truncation)]

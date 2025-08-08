@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::block::Comparator;
 
-use crate::fileset::FileKind;
+use crate::files::FileKind;
 use crate::report::{
     err, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, Severity,
 };
