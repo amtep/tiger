@@ -8,7 +8,7 @@ use crate::hoi4::validate::validate_equipment_bonus;
 use crate::hoi4::validate::validate_rules;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

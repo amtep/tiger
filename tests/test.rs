@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 
 use tiger_lib::{
-    take_reports, Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet,
+    Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet, take_reports,
 };
 
 static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));

@@ -5,8 +5,8 @@ use std::borrow::Cow;
 use std::mem::take;
 
 use crate::game::Game;
-use crate::helpers::{stringify_choices, ActionOrEvent, TigerHashMap};
-use crate::report::{err, warn, ErrorKey, ReportBuilderFull};
+use crate::helpers::{ActionOrEvent, TigerHashMap, stringify_choices};
+use crate::report::{ErrorKey, ReportBuilderFull, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 

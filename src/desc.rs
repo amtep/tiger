@@ -5,11 +5,11 @@
 //!
 //! The main entry point is [`validate_desc`].
 
-use crate::block::{Block, Comparator, Eq::Single, BV};
+use crate::block::{BV, Block, Comparator, Eq::Single};
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, warn};
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_trigger, validate_trigger_key_bv};

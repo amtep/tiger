@@ -5,7 +5,7 @@ use bimap::BiHashMap;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
-use crate::report::{tips, warn, ErrorKey};
+use crate::report::{ErrorKey, tips, warn};
 #[cfg(feature = "hoi4")]
 use crate::scopes::Scopes;
 use crate::token::Token;

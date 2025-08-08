@@ -5,11 +5,11 @@ use std::path::PathBuf;
 use crate::block::Block;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::{dup_error, exact_dup_advice, TigerHashMap};
+use crate::helpers::{TigerHashMap, dup_error, exact_dup_advice};
 use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 use crate::validate::validate_color;
 use crate::validator::Validator;
@@ -88,11 +88,7 @@ impl FileHandler<Block> for Gfx {
 
         let name = entry.filename().to_string_lossy();
 
-        if name.ends_with(".gfx") {
-            PdxFile::read_optional_bom(entry, parser)
-        } else {
-            None
-        }
+        if name.ends_with(".gfx") { PdxFile::read_optional_bom(entry, parser) } else { None }
     }
 
     fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {

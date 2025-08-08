@@ -3,11 +3,10 @@ use std::fmt::{Display, Formatter};
 use bitflags::bitflags;
 
 use crate::{
-    context, modif,
-    report::{report, ErrorKey},
+    Severity, Token, context, modif,
+    report::{ErrorKey, report},
     scopes::Scopes,
-    vic3::tables::modifs::{lookup_modif, MODIF_FLOW_MAP},
-    Severity, Token,
+    vic3::tables::modifs::{MODIF_FLOW_MAP, lookup_modif},
 };
 
 bitflags! {

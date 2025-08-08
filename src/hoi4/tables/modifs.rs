@@ -8,7 +8,7 @@ use crate::helpers::TigerHashMap;
 use crate::hoi4::modif::ModifKinds;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{report, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, report};
 use crate::token::Token;
 
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.
@@ -226,8 +226,9 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
                 && !data.item_exists(Item::SpecialProjectTag, part.as_str())
                 && !data.item_exists(Item::Specialization, part.as_str())
             {
-                let msg =
-                    format!("could not find {part} as special project, special project tag or specialization");
+                let msg = format!(
+                    "could not find {part} as special project, special project tag or specialization"
+                );
                 let info = format!("so the modifier {name} does not exist");
                 report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
             }

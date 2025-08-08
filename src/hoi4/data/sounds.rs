@@ -4,7 +4,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::pdxfile::PdxEncoding;
-use crate::report::{warn, ErrorKey};
+use crate::report::{ErrorKey, warn};
 use crate::token::Token;
 use crate::util::SmartJoin;
 use crate::validator::Validator;

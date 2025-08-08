@@ -11,20 +11,16 @@ use png::{ColorType, Decoder};
 #[cfg(feature = "hoi4")]
 use tinybmp::{Bpp, CompressionMethod, RawBmp};
 
+use crate::Game;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::parse::ParserMemory;
-use crate::report::{err, warn, will_maybe_log, ErrorKey};
-use crate::Game;
+use crate::report::{ErrorKey, err, warn, will_maybe_log};
 
 #[inline]
 fn river_image_path() -> &'static str {
-    if Game::is_hoi4() {
-        "map/rivers.bmp"
-    } else {
-        "map_data/rivers.png"
-    }
+    if Game::is_hoi4() { "map/rivers.bmp" } else { "map_data/rivers.png" }
 }
 
 /// The `rivers.png/bmp` has an indexed palette where the colors don't matter, only the index values

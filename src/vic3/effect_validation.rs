@@ -1,10 +1,10 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::helpers::TigerHashSet;
 use crate::item::Item;
-use crate::report::{err, warn, ErrorKey, ErrorLoc};
+use crate::report::{ErrorKey, ErrorLoc, err, warn};
 use crate::scopes::Scopes;
 use crate::script_value::validate_script_value;
 use crate::token::Token;

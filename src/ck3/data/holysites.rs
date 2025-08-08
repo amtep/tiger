@@ -6,7 +6,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{fatal, warn, ErrorKey};
+use crate::report::{ErrorKey, fatal, warn};
 use crate::token::Token;
 use crate::validator::Validator;
 

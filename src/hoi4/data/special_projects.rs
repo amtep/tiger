@@ -1,11 +1,11 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::hoi4::validate::validate_equipment_bonus;
 use crate::item::{Item, ItemLoader};
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

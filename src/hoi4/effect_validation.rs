@@ -1,10 +1,10 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::effect::validate_effect_control;
 use crate::everything::Everything;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

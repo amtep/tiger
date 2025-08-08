@@ -3,12 +3,12 @@ use std::path::Path;
 
 use crate::block::Comparator;
 
+use crate::Token;
 use crate::fileset::FileKind;
 use crate::report::{
-    err, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, Severity,
+    Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, Severity, err,
 };
 use crate::token::Loc;
-use crate::Token;
 
 /// Determines whether a given Report should be printed.
 /// If a report is matched by both the blacklist and the whitelist, it will not be printed.

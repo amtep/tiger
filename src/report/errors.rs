@@ -2,7 +2,7 @@
 
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::cmp::{min_by, Ordering};
+use std::cmp::{Ordering, min_by};
 use std::fs::read;
 use std::io::Write;
 use std::iter::{empty, once};
@@ -26,7 +26,7 @@ use crate::report::{
     OutputStyle, PointedMessage,
 };
 use crate::set;
-use crate::token::{leak, Loc};
+use crate::token::{Loc, leak};
 
 /// Error types that should be logged once when consolidating reports
 static LOG_ONCE: LazyLock<TigerHashSet<ErrorKey>> = LazyLock::new(|| {
