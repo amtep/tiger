@@ -1,3 +1,4 @@
+extern crate tiger_lib;
 use tiger_lib::Game;
 
 fn main() {

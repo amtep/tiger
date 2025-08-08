@@ -35,6 +35,9 @@ pub use crate::report::{
 };
 pub use crate::token::{Loc, Token};
 
+#[cfg(feature = "internal_benches")]
+mod benches;
+
 #[cfg(feature = "ck3")]
 mod ck3;
 #[cfg(feature = "hoi4")]

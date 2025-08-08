@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::{fs, path::PathBuf, sync::LazyLock};
 
-static CONFIG_PATH: &str = "../benches/vic3.toml";
+static CONFIG_PATH: &str = "benches/vic3.toml";
 
 // Sample Config File:
 // vanilla_dir = "..."

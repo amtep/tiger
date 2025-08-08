@@ -1355,12 +1355,14 @@ impl Drop for Everything {
 }
 
 #[cfg(feature = "internal_benches")]
+#[divan::bench_group(sample_count = 10)]
 mod benchmark {
     use super::*;
-    use divan::Bencher;
+    use crate::benches;
+    use divan::{self, Bencher};
 
     #[cfg(feature = "ck3")]
-    #[divan::bench(args = internal_benches::ck3::bench_mods())]
+    #[divan::bench(args = benches::ck3::bench_mods())]
     fn load_provinces_ck3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
@@ -1373,7 +1375,7 @@ mod benchmark {
     }
 
     #[cfg(feature = "vic3")]
-    #[divan::bench(args = internal_benches::vic3::bench_mods())]
+    #[divan::bench(args = benches::vic3::bench_mods())]
     fn load_provinces_vic3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
@@ -1385,7 +1387,7 @@ mod benchmark {
             });
     }
 
-    #[divan::bench(args = internal_benches::vic3::bench_mods())]
+    #[divan::bench(args = benches::bench_mods())]
     fn load_localization(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
