@@ -8,7 +8,7 @@ use std::io::Write;
 use std::iter::{empty, once};
 use std::mem::take;
 use std::ops::{Bound, RangeBounds};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
 use encoding_rs::{UTF_8, WINDOWS_1252};
@@ -61,7 +61,7 @@ pub struct Errors<'a> {
     pub(crate) suppress: TigerHashMap<SuppressionKey<'a>, Vec<Suppression>>,
     // The range is decomposed into its start and end bounds in order to
     // avoid dyn shenanigans with the RangeBounds trait.
-    ignore: TigerHashMap<PathBuf, Vec<IgnoreEntry>>,
+    ignore: TigerHashMap<&'a Path, Vec<IgnoreEntry>>,
 
     /// All reports that passed the checks, stored here to be sorted before being emitted all at once.
     /// The "abbreviated" reports don't participate in this. They are still emitted immediately.
@@ -78,7 +78,7 @@ impl Errors<'_> {
                     continue;
                 }
                 for (s, p) in suppression.iter().zip(pointers.iter()) {
-                    if s.path == p.loc.pathname().to_string_lossy()
+                    if s.path == p.loc.pathname()
                         && s.tag == p.msg
                         && s.line.as_deref() == self.cache.get_line(p.loc)
                     {
@@ -378,7 +378,7 @@ pub fn store_source_file(fullpath: PathBuf, source: &'static str) {
     Errors::get_mut().store_source_file(fullpath, source);
 }
 
-pub fn register_ignore_filter<R>(pathname: PathBuf, lines: R, filter: IgnoreFilter)
+pub fn register_ignore_filter<R>(pathname: &'static Path, lines: R, filter: IgnoreFilter)
 where
     R: RangeBounds<u32>,
 {

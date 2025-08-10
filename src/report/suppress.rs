@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use serde::Deserialize;
@@ -19,7 +19,7 @@ pub type Suppression = Vec<SuppressionLocation>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize)]
 pub struct SuppressionLocation {
-    pub path: String,
+    pub path: PathBuf,
     pub line: Option<String>,
     pub tag: Option<String>,
 }

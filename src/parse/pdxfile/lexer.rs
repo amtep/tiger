@@ -236,7 +236,7 @@ impl<'input> Lexer<'input> {
         let line = self.loc.line;
         let path = self.loc.pathname();
         for filter in self.pending_line_ignores.drain(..) {
-            register_ignore_filter(path.to_path_buf(), line..=line, filter);
+            register_ignore_filter(path, line..=line, filter);
         }
     }
 
@@ -252,7 +252,7 @@ impl<'input> Lexer<'input> {
         let path = self.loc.pathname();
         while let Some((depth, line, filter)) = self.active_block_ignores.last() {
             if self.brace_depth == *depth {
-                register_ignore_filter(path.to_path_buf(), *line..=self.loc.line, filter.clone());
+                register_ignore_filter(path, *line..=self.loc.line, filter.clone());
                 self.active_block_ignores.pop();
             } else {
                 break;
@@ -540,7 +540,7 @@ impl Iterator for Lexer<'_> {
                             IgnoreSize::Line => self.pending_line_ignores.push(spec.filter),
                             IgnoreSize::Block => self.pending_block_ignores.push(spec.filter),
                             IgnoreSize::File => {
-                                let path = self.loc.pathname().to_path_buf();
+                                let path = self.loc.pathname();
                                 register_ignore_filter(path, .., spec.filter);
                             }
                             IgnoreSize::Begin => {
@@ -549,7 +549,7 @@ impl Iterator for Lexer<'_> {
                             IgnoreSize::End => {
                                 if let Some((start_line, filter)) = self.active_range_ignores.pop()
                                 {
-                                    let path = self.loc.pathname().to_path_buf();
+                                    let path = self.loc.pathname();
                                     register_ignore_filter(path, start_line..self.loc.line, filter);
                                 }
                             }

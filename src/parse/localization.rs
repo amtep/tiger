@@ -275,17 +275,15 @@ impl LocaParser {
                     match spec.size {
                         IgnoreSize::Line => self.pending_line_ignores.push(spec.filter),
                         IgnoreSize::Block => (),
-                        IgnoreSize::File => register_ignore_filter(
-                            self.loc.pathname().to_path_buf(),
-                            ..,
-                            spec.filter,
-                        ),
+                        IgnoreSize::File => {
+                            register_ignore_filter(self.loc.pathname(), .., spec.filter);
+                        }
                         IgnoreSize::Begin => {
                             self.active_range_ignores.push((self.loc.line + 1, spec.filter));
                         }
                         IgnoreSize::End => {
                             if let Some((start_line, filter)) = self.active_range_ignores.pop() {
-                                let path = self.loc.pathname().to_path_buf();
+                                let path = self.loc.pathname();
                                 register_ignore_filter(path, start_line..self.loc.line, filter);
                             }
                         }
@@ -312,7 +310,7 @@ impl LocaParser {
         self.skip_until_key();
         self.chars.peek()?;
         for filter in self.pending_line_ignores.drain(..) {
-            let path = self.loc.pathname().to_path_buf();
+            let path = self.loc.pathname();
             let line = self.loc.line;
             register_ignore_filter(path, line..=line, filter);
         }
