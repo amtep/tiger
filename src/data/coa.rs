@@ -1,10 +1,11 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::{Block, BV};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::game::{Game, GameFlags};
 use crate::helpers::{dup_error, exact_dup_advice, TigerHashMap};
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
@@ -105,7 +106,7 @@ impl FileHandler<Block> for Coas {
         PathBuf::from("common/coat_of_arms/coat_of_arms/")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -113,7 +114,7 @@ impl FileHandler<Block> for Coas {
         PdxFile::read_optional_bom(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, block: Block) {
         for (key, bv) in block.iter_assignments_and_definitions_warn() {
             self.load_item(key, bv);
         }

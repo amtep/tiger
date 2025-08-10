@@ -3,7 +3,7 @@ use crate::ck3::validate::validate_traits;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
-use crate::fileset::FileKind;
+use crate::files::FileKind;
 use crate::game::GameFlags;
 use crate::helpers::TigerHashMap;
 use crate::item::{Item, ItemLoader};

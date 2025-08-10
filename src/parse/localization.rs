@@ -4,13 +4,13 @@ use std::str::Chars;
 
 use crate::data::localization::{Language, LocaEntry, LocaValue, MacroValue};
 use crate::datatype::{Code, CodeArg, CodeChain};
-use crate::fileset::FileEntry;
+use crate::files::FileEntry;
 use crate::game::Game;
 use crate::parse::cob::Cob;
 use crate::parse::ignore::{parse_comment, IgnoreFilter, IgnoreSize};
 use crate::report::register_ignore_filter;
 use crate::report::{untidy, warn, ErrorKey};
-use crate::token::{leak, Loc, Token};
+use crate::token::{Loc, Token};
 
 fn is_key_char(c: char) -> bool {
     c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '\''
@@ -37,7 +37,8 @@ struct LocaParser {
 }
 
 impl LocaParser {
-    fn new(entry: &FileEntry, content: &'static str, lang: Language) -> Self {
+    fn new(entry: &FileEntry, lang: Language) -> Option<Self> {
+        let content = entry.contents()?.full();
         let mut chars = content.chars().peekable();
         let mut offset = 0;
 
@@ -67,7 +68,7 @@ impl LocaParser {
         // From here on we are reporting on file content
         loc.line = 1;
 
-        LocaParser {
+        Some(LocaParser {
             loc,
             offset,
             content,
@@ -78,7 +79,7 @@ impl LocaParser {
             loca_end: 0,
             pending_line_ignores: Vec::new(),
             active_range_ignores: Vec::new(),
-        }
+        })
     }
 
     fn next_char(&mut self) {
@@ -920,8 +921,7 @@ impl Iterator for LocaReader {
     }
 }
 
-pub fn parse_loca(entry: &FileEntry, content: String, lang: Language) -> LocaReader {
-    let content = leak(content);
-    let parser = LocaParser::new(entry, content, lang);
-    LocaReader { parser }
+pub fn parse_loca(entry: &FileEntry, lang: Language) -> Option<LocaReader> {
+    let parser = LocaParser::new(entry, lang)?;
+    Some(LocaReader { parser })
 }

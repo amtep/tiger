@@ -1,10 +1,11 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::effect::validate_effect;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::game::Game;
 use crate::helpers::TigerHashMap;
 use crate::item::Item;
@@ -83,7 +84,7 @@ impl FileHandler<Block> for OnActions {
         }
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -95,7 +96,7 @@ impl FileHandler<Block> for OnActions {
         PdxFile::read(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, block) in block.drain_definitions_warn() {
             if Game::is_hoi4() {
                 #[cfg(feature = "hoi4")]

@@ -5,12 +5,12 @@ use std::fs::write;
 use std::mem::forget;
 use std::path::PathBuf;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use clap::Parser;
 use serde_json::{json, to_string_pretty, Value};
 use strum::IntoEnumIterator;
 
-use tiger_lib::{Everything, FileKind, Game, Item, ModFile};
+use tiger_lib::{Everything, FileKind, Fileset, Game, Item};
 
 #[derive(Parser)]
 struct Cli {
@@ -34,16 +34,8 @@ fn main() -> Result<()> {
     if args.modpath.is_dir() {
         args.modpath.push("descriptor.mod");
     }
-    let modfile = ModFile::read(&args.modpath)?;
-    let modpath = modfile.modpath();
-    if !modpath.exists() {
-        eprintln!("Looking for mod in {}", modpath.display());
-        bail!("Cannot find mod directory. Please make sure the .mod file is correct.");
-    }
-    eprintln!("Using mod directory: {}", modpath.display());
-
-    let mut everything =
-        Everything::new(None, None, None, None, &modpath, modfile.replace_paths())?;
+    let fileset = Fileset::builder(None).with_modfile(args.modpath)?;
+    let mut everything = Everything::new(fileset, None, None, None)?;
 
     everything.load_all();
 

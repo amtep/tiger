@@ -9,15 +9,15 @@ use std::sync::LazyLock;
 use lalrpop_util::{lalrpop_mod, ParseError};
 
 use crate::block::{Block, Comparator, Eq};
-use crate::fileset::{FileEntry, FileKind};
+use crate::files::FileEntry;
 use crate::game::Game;
 use crate::parse::cob::Cob;
 use crate::parse::pdxfile::lexer::{LexError, Lexeme, Lexer};
 use crate::parse::pdxfile::memory::CombinedMemory;
 pub use crate::parse::pdxfile::memory::PdxfileMemory;
 use crate::parse::ParserMemory;
-use crate::report::{err, store_source_file, ErrorKey};
-use crate::token::{leak, Loc, Token};
+use crate::report::{err, ErrorKey};
+use crate::token::{Loc, Token};
 
 mod lexer;
 pub mod memory;
@@ -47,7 +47,8 @@ pub fn parse_pdx_macro(inputs: &[Token], global: &PdxfileMemory, local: &Pdxfile
 }
 
 /// Parse a whole file into a `Block`.
-fn parse_pdx(entry: &FileEntry, content: &'static str, memory: &ParserMemory) -> Block {
+fn parse_pdx(entry: &FileEntry, memory: &ParserMemory) -> Option<Block> {
+    let content = entry.contents()?.nobom();
     let file_loc = Loc::from(entry);
     let mut loc = file_loc;
     loc.line = 1;
@@ -57,42 +58,30 @@ fn parse_pdx(entry: &FileEntry, content: &'static str, memory: &ParserMemory) ->
     match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
         Ok(mut block) => {
             block.loc = file_loc;
-            block
+            Some(block)
         }
         Err(e) => {
             eprintln!("Internal error: parsing file {} failed.\n{e}", entry.path().display());
-            Block::new(inputs[0].loc)
+            Some(Block::new(inputs[0].loc))
         }
     }
 }
 
 /// Parse the content associated with the [`FileEntry`].
-pub fn parse_pdx_file(
-    entry: &FileEntry,
-    content: String,
-    offset: usize,
-    parser: &ParserMemory,
-) -> Block {
-    let content = leak(content);
-    store_source_file(entry.fullpath().to_path_buf(), &content[offset..]);
-    parse_pdx(entry, &content[offset..], parser)
+pub fn parse_pdx_file(entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    parse_pdx(entry, parser)
 }
 
 /// Parse the content associated with the [`FileEntry`], and update the global parser memory.
 #[cfg(feature = "ck3")]
-pub fn parse_reader_export(
-    entry: &FileEntry,
-    content: String,
-    offset: usize,
-    global: &mut PdxfileMemory,
-) {
-    let content = leak(content);
-    store_source_file(entry.fullpath().to_path_buf(), &content[offset..]);
-    let content = &content[offset..];
+pub fn parse_reader_export(entry: &FileEntry, global: &mut PdxfileMemory) {
+    let Some(contents) = entry.contents() else {
+        return;
+    };
     let mut loc = Loc::from(entry);
     loc.line = 1;
     loc.column = 1;
-    let inputs = [Token::from_static_str(content, loc)];
+    let inputs = [Token::from_static_str(contents.nobom(), loc)];
     let mut combined = CombinedMemory::new(global);
     match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
         Ok(_) => {
@@ -107,8 +96,8 @@ pub fn parse_reader_export(
 /// Parse a string into a [`Block`]. This function is meant for use by the validator itself, to
 /// allow it to load game description data from internal strings that are in pdx script format.
 pub fn parse_pdx_internal(input: &'static str, desc: &str) -> Block {
-    let entry = FileEntry::new(PathBuf::from(desc), FileKind::Internal, PathBuf::from(desc));
-    parse_pdx(&entry, input, &ParserMemory::default())
+    let entry = FileEntry::new_internal(PathBuf::from(desc), input);
+    parse_pdx(&entry, &ParserMemory::default()).unwrap()
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]

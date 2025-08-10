@@ -2,7 +2,7 @@
 //!
 //! Using this will make the often-cloned Loc faster to copy, since it will just contain an index into the global table.
 //! It also makes it faster to compare pathnames, because the table will be created in lexical order by the caller
-//! ([`Fileset`](crate::fileset::Fileset)), with the exception of some stray files (such as the config file)
+//! ([`Fileset`](crate::files::Fileset)), with the exception of some stray files (such as the config file)
 //! where the order doesn't matter.
 use std::hash::Hash;
 use std::path::{Path, PathBuf};
@@ -10,6 +10,9 @@ use std::sync::{LazyLock, RwLock};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PathTableIndex(u32);
+impl PathTableIndex {
+    pub const UNTRACKED: PathTableIndex = PathTableIndex(u32::MAX);
+}
 
 static PATHTABLE: LazyLock<RwLock<PathTable>> = LazyLock::new(|| RwLock::new(PathTable::default()));
 
@@ -47,12 +50,18 @@ impl PathTable {
     /// Return the local path based on its index.
     /// This can panic if the index is not one provided by `PathTable::store`.
     pub fn lookup_path(idx: PathTableIndex) -> &'static Path {
+        if idx == PathTableIndex::UNTRACKED {
+            return Path::new("");
+        }
         PATHTABLE.read().unwrap().lookup_paths_inner(idx).0
     }
 
     /// Return the full path based on its index.
     /// This can panic if the index is not one provided by `PathTable::store`.
     pub fn lookup_fullpath(idx: PathTableIndex) -> &'static Path {
+        if idx == PathTableIndex::UNTRACKED {
+            return Path::new("");
+        }
         PATHTABLE.read().unwrap().lookup_paths_inner(idx).1
     }
 

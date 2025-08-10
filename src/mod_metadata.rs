@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 
 use crate::block::Block;
-use crate::fileset::{FileEntry, FileKind};
+use crate::files::FileDb;
+use crate::files::FileKind;
 use crate::parse::json::parse_json_file;
 use crate::token::Token;
 use crate::util::fix_slashes_for_target_platform;
@@ -21,13 +22,13 @@ pub struct ModMetadata {
 
 impl ModMetadata {
     /// Read and parse the metadata file for the given mod dir
-    pub fn read(mod_dir: &Path) -> Result<Self> {
+    pub fn read(filedb: &mut FileDb, mod_dir: PathBuf) -> Result<Self> {
         let in_mod_path = PathBuf::from(".metadata/metadata.json");
         let pathname = fix_slashes_for_target_platform(mod_dir.join(&in_mod_path));
-        let entry = FileEntry::new(in_mod_path, FileKind::Mod, pathname.clone());
-        let block = parse_json_file(&entry)
+        let entry = filedb.get_or_create_entry(in_mod_path, FileKind::Mod, pathname.clone());
+        let block = parse_json_file(entry)
             .with_context(|| format!("could not read metadata file {}", pathname.display()))?;
-        Ok(Self { modpath: mod_dir.to_path_buf(), block })
+        Ok(Self { modpath: mod_dir, block })
     }
 
     /// Return the full path to the mod root.

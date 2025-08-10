@@ -5,6 +5,7 @@ use std::io::{Read, Seek, SeekFrom};
 use std::num::NonZero;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use ahash::HashMapExt;
 use bitvec::bitbox;
@@ -13,13 +14,14 @@ use image::{DynamicImage, Rgb, RgbImage};
 use strum_macros::EnumString;
 
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
 use crate::report::{err, report, untidy, warn, ErrorKey, Severity};
 use crate::token::Token;
+use crate::Loc;
 
 use super::terrain::Terrain;
 
@@ -83,7 +85,7 @@ pub struct Hoi4Provinces {
     provinces: TigerHashSet<Province>,
 
     /// Kept and used for error reporting.
-    definition_csv: Option<FileEntry>,
+    definition_csv: Option<Loc>,
 
     adjacencies: Vec<Adjacency>,
 }
@@ -146,7 +148,7 @@ impl Hoi4Provinces {
     }
 
     fn validate_provinces(&self) {
-        let Some(definition_csv) = self.definition_csv.as_ref() else {
+        let Some(definition_csv) = self.definition_csv else {
             // Shouldn't happen, it should come from vanilla if not from the mod
             eprintln!("map/definition.csv is missing?!?");
             return;
@@ -272,7 +274,7 @@ impl FileHandler<FileContent> for Hoi4Provinces {
         PathBuf::from("map")
     }
 
-    fn load_file(&self, entry: &FileEntry, _parser: &ParserMemory) -> Option<FileContent> {
+    fn load_file(&self, entry: &Arc<FileEntry>, _parser: &ParserMemory) -> Option<FileContent> {
         if entry.path().components().count() == 2 {
             match &*entry.filename().to_string_lossy() {
                 "adjacencies.csv" => {
@@ -360,7 +362,7 @@ impl FileHandler<FileContent> for Hoi4Provinces {
         None
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, content: FileContent) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, content: FileContent) {
         match content {
             FileContent::Adjacencies(content) => {
                 let mut seen_terminator = false;
@@ -381,7 +383,7 @@ impl FileHandler<FileContent> for Hoi4Provinces {
                 }
             }
             FileContent::Definitions(content) => {
-                self.definition_csv = Some(entry.clone());
+                self.definition_csv = Some(Loc::from(entry));
                 // Assume first line has province ID 0.
                 for csv in parse_csv(entry, 1, &content) {
                     self.parse_definition(&csv);

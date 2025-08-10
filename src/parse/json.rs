@@ -3,12 +3,11 @@
 //! `Block` is used, instead of a JSON-specific representation, for compatibility with the rest of the code.
 //! Unfortunately can't use serde-json because we need the locations for error reporting.
 
-use std::fs::read_to_string;
 use std::mem::{swap, take};
 
 use crate::block::Eq::Single;
 use crate::block::{Block, Comparator, BV};
-use crate::fileset::FileEntry;
+use crate::files::FileEntry;
 use crate::report::{err, warn, ErrorKey};
 use crate::token::{Loc, Token};
 
@@ -315,29 +314,9 @@ fn parse(blockloc: Loc, content: &str) -> Block {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub fn parse_json(entry: &FileEntry, content: &str) -> Block {
+pub fn parse_json_file(entry: &FileEntry) -> Option<Block> {
     let mut loc = Loc::from(entry);
     loc.line = 1;
     loc.column = 1;
-    parse(loc, content)
-}
-
-#[allow(clippy::module_name_repetitions)]
-pub fn parse_json_file(entry: &FileEntry) -> Option<Block> {
-    let contents = match read_to_string(entry.fullpath()) {
-        Ok(contents) => contents,
-        Err(e) => {
-            err(ErrorKey::ReadError)
-                .msg("could not read file")
-                .info(format!("{e:#}"))
-                .loc(entry)
-                .push();
-            return None;
-        }
-    };
-    if let Some(bomless) = contents.strip_prefix('\u{feff}') {
-        Some(parse_json(entry, bomless))
-    } else {
-        Some(parse_json(entry, &contents))
-    }
+    Some(parse(loc, entry.contents()?.nobom()))
 }

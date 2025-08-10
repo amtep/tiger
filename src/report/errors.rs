@@ -1,18 +1,15 @@
 //! Collect error reports and then write them out.
 
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::cmp::{min_by, Ordering};
-use std::fs::read;
 use std::io::Write;
 use std::iter::{empty, once};
 use std::mem::take;
 use std::ops::{Bound, RangeBounds};
 use std::path::PathBuf;
-use std::sync::{LazyLock, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 
-use encoding_rs::{UTF_8, WINDOWS_1252};
-
+use crate::files::FileEntry;
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::macros::MACRO_MAP;
 use crate::parse::ignore::IgnoreFilter;
@@ -26,7 +23,7 @@ use crate::report::{
     OutputStyle, PointedMessage,
 };
 use crate::set;
-use crate::token::{leak, Loc};
+use crate::token::Loc;
 
 /// Error types that should be logged once when consolidating reports
 static LOG_ONCE: LazyLock<TigerHashSet<ErrorKey>> = LazyLock::new(|| {
@@ -224,8 +221,8 @@ impl Errors<'_> {
         result
     }
 
-    pub fn store_source_file(&mut self, fullpath: PathBuf, source: &'static str) {
-        self.cache.filecache.borrow_mut().insert(fullpath, source);
+    pub fn store_source_file(&mut self, entry: Arc<FileEntry>) {
+        self.cache.filecache.insert(entry.fullpath().to_owned(), entry);
     }
 
     /// Get a mutable lock on the global ERRORS struct.
@@ -252,44 +249,22 @@ impl Errors<'_> {
 pub(crate) struct Cache {
     /// Files that have been read in to get the lines where errors occurred.
     /// Cached here to avoid duplicate I/O and UTF-8 parsing.
-    filecache: RefCell<TigerHashMap<PathBuf, &'static str>>,
-
-    /// Files that have been linesplit, cached to avoid doing that work again
-    linecache: RefCell<TigerHashMap<PathBuf, Vec<&'static str>>>,
+    filecache: TigerHashMap<PathBuf, Arc<FileEntry>>,
 }
 
 impl Cache {
     /// Fetch the contents of a single line from a script file.
-    pub(crate) fn get_line(&self, loc: Loc) -> Option<&'static str> {
-        let mut filecache = self.filecache.borrow_mut();
-        let mut linecache = self.linecache.borrow_mut();
-
+    pub(crate) fn get_line(&self, loc: Loc) -> Option<&str> {
         if loc.line == 0 {
             return None;
         }
         let fullpath = loc.fullpath();
-        if let Some(lines) = linecache.get(fullpath) {
-            return lines.get(loc.line as usize - 1).copied();
-        }
-        if let Some(contents) = filecache.get(fullpath) {
-            let lines: Vec<_> = contents.lines().collect();
-            let line = lines.get(loc.line as usize - 1).copied();
-            linecache.insert(fullpath.to_path_buf(), lines);
-            return line;
-        }
-        let bytes = read(fullpath).ok()?;
-        // Try decoding it as UTF-8. If that succeeds without errors, use it, otherwise fall back
-        // to WINDOWS_1252. The decode method will do BOM stripping.
-        let contents = match UTF_8.decode(&bytes) {
-            (contents, _, false) => contents,
-            (_, _, true) => WINDOWS_1252.decode(&bytes).0,
-        };
-        let contents = leak(contents.into_owned());
-        filecache.insert(fullpath.to_path_buf(), contents);
-
-        let lines: Vec<_> = contents.lines().collect();
-        let line = lines.get(loc.line as usize - 1).copied();
-        linecache.insert(fullpath.to_path_buf(), lines);
+        let entry = self.filecache.get(fullpath);
+        debug_assert!(entry.is_some());
+        let contents = entry?.contents();
+        debug_assert!(contents.is_some());
+        let line = contents?.line(loc.line as usize);
+        debug_assert!(line.is_some());
         line
     }
 }
@@ -374,8 +349,8 @@ pub fn take_reports() -> TigerHashMap<LogReportMetadata, TigerHashSet<LogReportP
     take(&mut Errors::get_mut().storage)
 }
 
-pub fn store_source_file(fullpath: PathBuf, source: &'static str) {
-    Errors::get_mut().store_source_file(fullpath, source);
+pub fn store_source_file(entry: Arc<FileEntry>) {
+    Errors::get_mut().store_source_file(entry);
 }
 
 pub fn register_ignore_filter<R>(pathname: PathBuf, lines: R, filter: IgnoreFilter)

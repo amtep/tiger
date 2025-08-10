@@ -19,7 +19,7 @@ compile_error!(
 
 pub use crate::config_load::validate_config_file;
 pub use crate::everything::Everything;
-pub use crate::fileset::FileKind;
+pub use crate::files::{FileKind, Fileset};
 pub use crate::game::Game;
 pub use crate::helpers::{TigerHashMap, TigerHashSet};
 pub use crate::item::Item;
@@ -61,7 +61,7 @@ mod effect;
 #[cfg(feature = "jomini")]
 mod effect_validation;
 mod everything;
-mod fileset;
+pub mod files;
 mod game;
 mod gui;
 mod helpers;

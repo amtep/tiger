@@ -5,6 +5,7 @@
 use std::fs;
 use std::ops::{RangeInclusive, RangeToInclusive};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[cfg(feature = "jomini")]
 use png::{ColorType, Decoder};
@@ -12,11 +13,11 @@ use png::{ColorType, Decoder};
 use tinybmp::{Bpp, CompressionMethod, RawBmp};
 
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::parse::ParserMemory;
 use crate::report::{err, warn, will_maybe_log, ErrorKey};
-use crate::Game;
+use crate::{Game, Loc};
 
 #[inline]
 fn river_image_path() -> &'static str {
@@ -55,7 +56,7 @@ impl RiverPixels {
 #[derive(Clone, Debug, Default)]
 pub struct Rivers {
     /// for error reporting
-    entry: Option<FileEntry>,
+    loc: Option<Loc>,
     width: u32,
     height: u32,
     pixels: Vec<u8>,
@@ -201,7 +202,7 @@ impl Rivers {
 
     fn validate_segments(
         &self,
-        entry: &FileEntry,
+        loc: Loc,
         river_segments: TigerHashMap<(u32, u32), (u32, u32)>,
         mut specials: TigerHashMap<(u32, u32), bool>,
     ) {
@@ -221,16 +222,16 @@ impl Rivers {
                         "({}, {}) river pixel connects two special pixels",
                         start.0, start.1
                     );
-                    warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                    warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                 } else if special_neighbors.is_empty() {
                     let msg = format!("({}, {}) orphan river pixel", start.0, start.1);
-                    warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                    warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                 } else {
                     let s = special_neighbors[0];
                     if specials[&s] {
                         let msg =
                             format!("({}, {}) pixel terminates multiple river segments", s.0, s.1);
-                        warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                        warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                     } else {
                         specials.insert(s, true);
                     }
@@ -243,19 +244,19 @@ impl Rivers {
                         "({}, {}) - ({}, {}) orphan river segment",
                         start.0, start.1, end.0, end.1
                     );
-                    warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                    warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                 } else if special_neighbors.len() > 1 {
                     let msg = format!(
                         "({}, {}) - ({}, {}) river segment has two terminators",
                         start.0, start.1, end.0, end.1
                     );
-                    warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                    warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                 } else {
                     let s = special_neighbors[0];
                     if specials[&s] {
                         let msg =
                             format!("({}, {}) pixel terminates multiple river segments", s.0, s.1);
-                        warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                        warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                     } else {
                         specials.insert(s, true);
                     }
@@ -267,14 +268,14 @@ impl Rivers {
     pub fn validate(&self, _data: &Everything) {
         // TODO: check image width and height against world defines
 
-        let Some(entry) = self.entry.as_ref() else {
+        let Some(loc) = self.loc else {
             // Shouldn't happen, it should come from vanilla if not from the mod
             eprintln!("{} is missing?!?", river_image_path());
             return;
         };
 
         // Early exit before expensive loop, if errors won't be logged anyway
-        if !will_maybe_log(entry, ErrorKey::Rivers) {
+        if !will_maybe_log(loc, ErrorKey::Rivers) {
             return;
         }
 
@@ -304,7 +305,7 @@ impl Rivers {
                         } else {
                             let msg =
                                 format!("({x}, {y}) river source (green) not at source of a river");
-                            warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                            warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                             bad_problem = true;
                         }
                     }
@@ -316,7 +317,7 @@ impl Rivers {
                             let msg = format!(
                                 "({x}, {y}) river tributary (red) not joining another river",
                             );
-                            warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                            warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                             bad_problem = true;
                         }
                     }
@@ -328,7 +329,7 @@ impl Rivers {
                             let msg = format!(
                                 "({x}, {y}) river split (yellow) not splitting off from a river",
                             );
-                            warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                            warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                             bad_problem = true;
                         }
                     }
@@ -346,7 +347,7 @@ impl Rivers {
                                         // though.
                                         if third_end == (x, y) {
                                             let msg = format!("({x}, {y}) river forms a loop");
-                                            warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                                            warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                                             bad_problem = true;
                                         } else {
                                             river_segments.insert(other_end, third_end);
@@ -371,7 +372,7 @@ impl Rivers {
                                 "({x}, {y}) river pixel has {} neighbors",
                                 river_neighbors.len()
                             );
-                            warn(ErrorKey::Rivers).msg(msg).loc(entry).push();
+                            warn(ErrorKey::Rivers).msg(msg).loc(loc).push();
                             bad_problem = true;
                         }
                     }
@@ -380,7 +381,7 @@ impl Rivers {
             }
         }
         if !bad_problem {
-            self.validate_segments(entry, river_segments, specials);
+            self.validate_segments(loc, river_segments, specials);
         }
     }
 }
@@ -390,7 +391,7 @@ impl FileHandler<Vec<u8>> for Rivers {
         PathBuf::from(river_image_path())
     }
 
-    fn load_file(&self, entry: &FileEntry, _parser: &ParserMemory) -> Option<Vec<u8>> {
+    fn load_file(&self, entry: &Arc<FileEntry>, _parser: &ParserMemory) -> Option<Vec<u8>> {
         match fs::read(entry.fullpath()) {
             Err(e) => {
                 err(ErrorKey::ReadError)
@@ -403,8 +404,8 @@ impl FileHandler<Vec<u8>> for Rivers {
         }
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, loaded: Vec<u8>) {
-        self.entry = Some(entry.clone());
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, loaded: Vec<u8>) {
+        self.loc = Some(Loc::from(entry));
         self.handle_image(&loaded, entry);
     }
 }

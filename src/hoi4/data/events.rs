@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use crate::block::{Block, BlockItem, Field};
 use crate::context::{Reason, ScopeContext, Signature};
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{dup_error, TigerHashMap, TigerHashSet};
 use crate::hoi4::events::{get_event_scope, validate_event};
 use crate::item::Item;
@@ -112,7 +112,7 @@ impl FileHandler<Block> for Hoi4Events {
         PathBuf::from("events")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -120,7 +120,7 @@ impl FileHandler<Block> for Hoi4Events {
         PdxFile::read_optional_bom(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for item in block.drain() {
             if let BlockItem::Field(Field(key, _, bv)) = item {
                 if key.is("add_namespace") {

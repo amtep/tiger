@@ -1,8 +1,9 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use crate::block::Block;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{dup_error, TigerHashMap};
 use crate::item::Item;
 use crate::parse::ParserMemory;
@@ -47,7 +48,7 @@ impl FileHandler<Block> for GameConcepts {
         PathBuf::from("common/game_concepts")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -55,7 +56,7 @@ impl FileHandler<Block> for GameConcepts {
         PdxFile::read(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, mut block: Block) {
         for (key, block) in block.drain_definitions_warn() {
             self.load_item(key, block);
         }

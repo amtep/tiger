@@ -1,10 +1,10 @@
 use std::path::PathBuf;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 use crate::block::{Block, BV};
 use crate::context::ScopeContext;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::{dup_error, exact_dup_error, TigerHashMap, BANNED_NAMES};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
@@ -102,7 +102,7 @@ impl FileHandler<Block> for ScriptValues {
         PathBuf::from("common/script_values")
     }
 
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+    fn load_file(&self, entry: &Arc<FileEntry>, parser: &ParserMemory) -> Option<Block> {
         if !entry.filename().to_string_lossy().ends_with(".txt") {
             return None;
         }
@@ -110,7 +110,7 @@ impl FileHandler<Block> for ScriptValues {
         PdxFile::read(entry, parser)
     }
 
-    fn handle_file(&mut self, _entry: &FileEntry, block: Block) {
+    fn handle_file(&mut self, _entry: &Arc<FileEntry>, block: Block) {
         for (key, bv) in block.iter_assignments_and_definitions_warn() {
             self.load_item(key, bv);
         }

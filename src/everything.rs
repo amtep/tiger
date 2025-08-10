@@ -55,7 +55,7 @@ use crate::data::{
 };
 use crate::db::{Db, DbKind};
 use crate::dds::DdsFiles;
-use crate::fileset::{FileEntry, FileKind, Fileset};
+use crate::files::{Fileset, FilesetBuilderWithMod};
 use crate::game::Game;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use crate::helpers::TigerHashSet;
@@ -80,7 +80,7 @@ use crate::pdxfile::PdxFile;
 use crate::report::err;
 use crate::report::{report, set_output_style, ErrorKey, OutputStyle, Severity};
 use crate::rivers::Rivers;
-use crate::token::{Loc, Token};
+use crate::token::Token;
 use crate::variables::Variables;
 #[cfg(feature = "vic3")]
 use crate::vic3::data::{
@@ -112,9 +112,6 @@ pub enum FilesError {
 /// * During validation, `Everything` is immutable and cross-checking between item types can be done safely.
 #[derive(Debug)]
 pub struct Everything {
-    /// Config from file
-    config: Block,
-
     /// The global parser state, carrying information between files.
     /// Currently only used by the pdxfile parser, to handle the `reader_export` directory,
     /// which is specially processed before all other files.
@@ -234,15 +231,11 @@ impl Everything {
     ///
     /// `replace_paths` is from the similarly named field in the `.mod` file.
     pub fn new(
+        fileset: FilesetBuilderWithMod,
         config_filepath: Option<&Path>,
-        vanilla_dir: Option<&Path>,
         workshop_dir: Option<&Path>,
         paradox_dir: Option<&Path>,
-        mod_root: &Path,
-        replace_paths: Vec<PathBuf>,
     ) -> Result<Self> {
-        let mut fileset = Fileset::new(vanilla_dir, mod_root.to_path_buf(), replace_paths);
-
         let config_file_name = match Game::game() {
             #[cfg(feature = "ck3")]
             Game::Ck3 => "ck3-tiger.conf",
@@ -256,26 +249,17 @@ impl Everything {
 
         let config_file = match config_filepath {
             Some(path) => path.to_path_buf(),
-            None => mod_root.join(config_file_name),
+            None => fileset.the_mod.root().join(config_file_name),
         };
 
-        let config = if config_file.is_file() {
-            Self::read_config(config_file_name, &config_file)
-                .ok_or(FilesError::ConfigUnreadable { path: config_file })?
-        } else {
-            Block::new(Loc::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
-        };
-
-        fileset.config(config.clone(), workshop_dir, paradox_dir)?;
-
+        let mut fileset = fileset.config(config_file, workshop_dir, paradox_dir)?;
         fileset.scan_all()?;
-        fileset.finalize();
+        let fileset = fileset.finalize();
 
         Ok(Everything {
             parser: ParserMemory::default(),
             fileset,
             dds: DdsFiles::default(),
-            config,
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             warned_defines: RwLock::new(TigerHashSet::default()),
             database: Db::default(),
@@ -346,14 +330,9 @@ impl Everything {
         })
     }
 
-    fn read_config(name: &str, path: &Path) -> Option<Block> {
-        let entry = FileEntry::new(PathBuf::from(name), FileKind::Mod, path.to_path_buf());
-        PdxFile::read_optional_bom(&entry, &ParserMemory::default())
-    }
-
     pub fn load_config_filtering_rules(&self) {
-        check_for_legacy_ignore(&self.config);
-        load_filter(&self.config);
+        check_for_legacy_ignore(&self.fileset.config);
+        load_filter(&self.fileset.config);
     }
 
     /// Load the `OutputStyle` settings from the config.
@@ -361,9 +340,9 @@ impl Everything {
     /// by supplying the --no-color flag.
     fn load_output_styles(&self, default_color: bool) -> OutputStyle {
         // Treat a missing output_style block and an empty output_style block exactly the same.
-        let block = match self.config.get_field_block("output_style") {
+        let block = match self.fileset.config.get_field_block("output_style") {
             Some(block) => Cow::Borrowed(block),
-            None => Cow::Owned(Block::new(self.config.loc)),
+            None => Cow::Owned(Block::new(self.fileset.config.loc)),
         };
         if !block.get_field_bool("enable").unwrap_or(default_color) {
             return OutputStyle::no_color();
@@ -1366,8 +1345,10 @@ mod benchmark {
     fn load_provinces_ck3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::builder(Some(Path::new(vanilla_dir)))
+                    .with_modfile(modpath.clone())
+                    .unwrap();
+                Everything::new(fileset, None, None, None).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.provinces_ck3, &everything.parser);
@@ -1379,8 +1360,10 @@ mod benchmark {
     fn load_provinces_vic3(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::builder(Some(Path::new(vanilla_dir)))
+                    .with_metadata(modpath.clone())
+                    .unwrap();
+                Everything::new(fileset, None, None, None).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.provinces_vic3, &everything.parser);
@@ -1391,8 +1374,19 @@ mod benchmark {
     fn load_localization(bencher: Bencher, (vanilla_dir, modpath): (&str, &PathBuf)) {
         bencher
             .with_inputs(|| {
-                Everything::new(None, Some(Path::new(vanilla_dir)), None, None, modpath, vec![])
-                    .unwrap()
+                let fileset = Fileset::builder(Some(Path::new(vanilla_dir)));
+                let fileset = match Game::game() {
+                    #[cfg(feature = "ck3")]
+                    Game::Ck3 => fileset.with_modfile(modpath.clone()),
+                    #[cfg(feature = "vic3")]
+                    Game::Vic3 => fileset.with_metadata(modpath.clone()),
+                    #[cfg(feature = "imperator")]
+                    Game::Imperator => fileset.with_modfile(modpath.clone()),
+                    #[cfg(feature = "hoi4")]
+                    Game::Hoi4 => fileset.with_modfile(modpath.clone()),
+                }
+                .unwrap();
+                Everything::new(fileset, None, None, None).unwrap()
             })
             .bench_local_refs(|everything| {
                 everything.fileset.handle(&mut everything.localization, &everything.parser);

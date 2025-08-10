@@ -3,13 +3,15 @@
 use std::fs::{metadata, File};
 use std::io::{Read, Result};
 use std::path::PathBuf;
+use std::sync::Arc;
 
-use crate::fileset::{FileEntry, FileHandler};
+use crate::files::{FileEntry, FileHandler};
 use crate::helpers::TigerHashMap;
 use crate::parse::ParserMemory;
 use crate::report::{err, tips, warn, ErrorKey};
 #[cfg(feature = "ck3")]
 use crate::token::Token;
+use crate::Loc;
 
 const DDS_HEADER_SIZE: usize = 124;
 const DDS_HEIGHT_OFFSET: usize = 12;
@@ -29,7 +31,7 @@ pub struct DdsFiles {
 }
 
 impl DdsFiles {
-    fn load_dds(entry: &FileEntry) -> Result<Option<DdsInfo>> {
+    fn load_dds(entry: &Arc<FileEntry>) -> Result<Option<DdsInfo>> {
         if metadata(entry.fullpath())?.len() == 0 {
             warn(ErrorKey::ImageFormat).msg("empty file").loc(entry).push();
             return Ok(None);
@@ -48,7 +50,7 @@ impl DdsFiles {
             err(ErrorKey::ImageFormat).msg("not a DDS file").loc(entry).push();
             return Ok(None);
         }
-        Ok(Some(DdsInfo::new(entry.clone(), &buffer)))
+        Ok(Some(DdsInfo::new(Loc::from(entry), &buffer)))
     }
 
     fn handle_dds(&mut self, entry: &FileEntry, info: DdsInfo) {
@@ -84,7 +86,7 @@ impl FileHandler<DdsInfo> for DdsFiles {
         PathBuf::from("gfx")
     }
 
-    fn load_file(&self, entry: &FileEntry, _parser: &ParserMemory) -> Option<DdsInfo> {
+    fn load_file(&self, entry: &Arc<FileEntry>, _parser: &ParserMemory) -> Option<DdsInfo> {
         if !entry.filename().to_string_lossy().ends_with(".dds") {
             return None;
         }
@@ -102,23 +104,23 @@ impl FileHandler<DdsInfo> for DdsFiles {
         }
     }
 
-    fn handle_file(&mut self, entry: &FileEntry, info: DdsInfo) {
+    fn handle_file(&mut self, entry: &Arc<FileEntry>, info: DdsInfo) {
         self.handle_dds(entry, info);
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct DdsInfo {
-    entry: FileEntry,
+    loc: Loc,
     compressed: bool,
     width: u32,
     height: u32,
 }
 
 impl DdsInfo {
-    pub fn new(entry: FileEntry, header: &[u8]) -> Self {
+    pub fn new(loc: Loc, header: &[u8]) -> Self {
         Self {
-            entry,
+            loc,
             compressed: (from_le32(header, DDS_PIXELFORMAT_FLAGS_OFFSET) & 0x04) != 0,
             width: from_le32(header, DDS_WIDTH_OFFSET),
             height: from_le32(header, DDS_HEIGHT_OFFSET),
@@ -132,7 +134,7 @@ impl DdsInfo {
                 "DDS file is {}x{}, which can cause scaling problems and graphical artifacts",
                 self.width, self.height
             );
-            err(ErrorKey::ImageSize).msg(msg).info(info).loc(&self.entry).push();
+            err(ErrorKey::ImageSize).msg(msg).info(info).loc(self.loc).push();
         }
     }
 }

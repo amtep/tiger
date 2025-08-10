@@ -4,11 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
 use console::Term;
-#[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-use tiger_lib::ModFile;
-#[cfg(feature = "vic3")]
-use tiger_lib::ModMetadata;
-use tiger_lib::{emit_reports, Everything};
+use tiger_lib::{emit_reports, Everything, Fileset, Game};
 
 use crate::gamedir::{
     find_game_directory_steam, find_paradox_directory, find_workshop_directory_steam,
@@ -55,7 +51,7 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
             &game,
             workshop.as_deref(),
             Some(&pdx),
-            &entries[0].path(),
+            entries[0].path(),
             &pdxlogs,
         )?;
     } else if entries.is_empty() {
@@ -94,7 +90,7 @@ pub fn run(game_consts: &GameConsts) -> Result<()> {
                         &game,
                         workshop.as_deref(),
                         Some(&pdx),
-                        &entries[modnr].path(),
+                        entries[modnr].path(),
                         &pdxlogs,
                     )?;
                     return Ok(());
@@ -114,26 +110,24 @@ fn validate_mod(
     game: &Path,
     workshop: Option<&Path>,
     paradox: Option<&Path>,
-    modpath: &Path,
+    modpath: PathBuf,
     logdir: &Path,
 ) -> Result<()> {
     let mut everything;
     let mut modpath = modpath;
 
-    #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-    let modfile = ModFile::read(modpath)?;
-    #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-    let modpath_owned = modfile.modpath();
-    #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-    {
-        modpath = &modpath_owned;
-        if !modpath.is_dir() {
-            eprintln!("Looking for mod in {}", modpath.display());
-            bail!("Cannot find mod directory. Please make sure the .mod file is correct.");
-        }
-    }
+    let fileset = Fileset::builder(Some(game));
+    let fileset = match Game::game() {
+        #[cfg(feature = "ck3")]
+        Game::Ck3 => fileset.with_modfile(modpath.clone()),
+        #[cfg(feature = "vic3")]
+        Game::Vic3 => fileset.with_metadata(modpath.clone()),
+        #[cfg(feature = "imperator")]
+        Game::Imperator => fileset.with_modfile(modpath.clone()),
+        #[cfg(feature = "hoi4")]
+        Game::Hoi4 => fileset.with_modfile(modpath.clone()),
+    }?;
 
-    eprintln!("Using mod directory: {}", modpath.display());
     let output_filename =
         format!("{name_short}-tiger-{}.log", modpath.file_name().unwrap().to_string_lossy());
     let output_file = &logdir.join(output_filename);
@@ -141,23 +135,7 @@ fn validate_mod(
     eprintln!("Writing error reports to {} ...", output_file.display());
     eprintln!("This will take a few seconds.");
 
-    #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
-    {
-        everything =
-            Everything::new(None, Some(game), workshop, paradox, modpath, modfile.replace_paths())?;
-    }
-    #[cfg(feature = "vic3")]
-    {
-        let metadata = ModMetadata::read(modpath)?;
-        everything = Everything::new(
-            None,
-            Some(game),
-            workshop,
-            paradox,
-            modpath,
-            metadata.replace_paths(),
-        )?;
-    }
+    everything = Everything::new(fileset, None, workshop, paradox)?;
 
     // Unfortunately have to disable the colors by default because
     // on Windows there's no easy way to view a file that contains those escape sequences.
