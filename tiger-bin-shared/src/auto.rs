@@ -165,7 +165,9 @@ fn validate_mod(
     // The colors can be enabled again in the config file.
     everything.load_output_settings(false);
     everything.load_config_filtering_rules();
-    emit_reports(&mut output, false, false, false);
+    if emit_reports(&mut output, false, false, false) {
+        bail!("Invalid config");
+    }
 
     everything.load_all();
     everything.validate_all();

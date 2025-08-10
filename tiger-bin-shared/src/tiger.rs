@@ -258,9 +258,8 @@ pub fn run(
 
             let mut output = stdout();
 
-            let mut any_printed = false;
-            if !args.json {
-                any_printed |= emit_reports(&mut output, false, args.consolidate, false);
+            if !args.json && emit_reports(&mut output, false, args.consolidate, false) {
+                bail!("Invalid config");
             }
 
             // We must apply the --no-color flag AFTER loading and applying the config,
@@ -289,7 +288,7 @@ pub fn run(
                 everything.check_unused();
             }
 
-            any_printed |= emit_reports(&mut output, args.json, args.consolidate, true);
+            let any_printed = emit_reports(&mut output, args.json, args.consolidate, true);
 
             if !args.json && !any_printed {
                 eprintln!("No problems found.");
