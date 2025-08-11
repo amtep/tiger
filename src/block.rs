@@ -3,7 +3,7 @@
 use crate::date::Date;
 use crate::macros::MACRO_MAP;
 use crate::parse::pdxfile::{parse_pdx_macro, MacroComponent, MacroComponentKind, PdxfileMemory};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 mod blockitem;
 mod bv;
@@ -39,7 +39,7 @@ pub struct Block {
     /// It is in a `Box` to save space in blocks that don't have a tag, which is most of them.
     pub tag: Option<Box<Token>>,
     /// The location of the start of the block. Used mostly for error reporting.
-    pub loc: Loc,
+    pub loc: LocStack,
     /// If the block is a top-level block and contains macro substitutions, this field will
     /// hold the original source for re-parsing.
     /// The source has already been split into a vec that alternates content with macro parameters.
@@ -50,7 +50,7 @@ pub struct Block {
 
 impl Block {
     /// Open a new `Block` at the given location.
-    pub fn new(loc: Loc) -> Self {
+    pub fn new(loc: LocStack) -> Self {
         Block { v: Vec::new(), tag: None, loc, source: None }
     }
 
@@ -463,7 +463,7 @@ impl Block {
     pub fn expand_macro(
         &self,
         args: &[(&str, Token)],
-        loc: Loc,
+        loc: LocStack,
         global: &PdxfileMemory,
     ) -> Option<Block> {
         let link_index = MACRO_MAP.get_or_insert_loc(loc);
@@ -484,7 +484,7 @@ impl Block {
                                 let mut val = val.clone();
                                 let orig_loc = val.loc;
                                 val.loc = token.loc;
-                                val.loc.column -= 1; // point at the $, it looks better
+                                val.loc.ptr.column -= 1; // point at the $, it looks better
                                 val.loc.link_idx = Some(MACRO_MAP.get_or_insert_loc(orig_loc));
                                 content.push(val);
                                 break;

@@ -26,7 +26,7 @@ impl ProvinceHistories {
     fn load_item(&mut self, id: ProvId, key: Token, mut block: Block) {
         if let Some(province) = self.provinces.get_mut(&id) {
             // Multiple entries are valid but could easily be a mistake.
-            if province.key.loc.kind >= key.loc.kind {
+            if province.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &province.key, "province");
             }
             province.block.append(&mut block);

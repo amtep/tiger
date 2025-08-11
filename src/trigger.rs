@@ -30,7 +30,7 @@ use crate::scopes::{
 };
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::tooltipped::Tooltipped;
 use crate::validate::{
     precheck_iterator_fields, validate_identifier, validate_ifelse_sequence,
@@ -1389,7 +1389,7 @@ impl std::fmt::Display for Part {
 }
 
 impl Part {
-    fn loc(&self) -> Loc {
+    fn loc(&self) -> LocStack {
         match self {
             Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
         }
@@ -1417,12 +1417,12 @@ pub fn partition(token: &Token) -> Vec<Part> {
                     if part_idx == idx {
                         // Empty part; err but skip it since it's likely a typo
                         let mut loc = token.loc;
-                        loc.column += col;
+                        loc.ptr.column += col;
                         err(ErrorKey::Validation).msg("empty part").loc(loc).push();
                     } else if !has_part_argument {
                         // The just completed part has no argument
                         let mut part_loc = token.loc;
-                        part_loc.column += part_col;
+                        part_loc.ptr.column += part_col;
                         #[allow(unused_mut)]
                         let mut part_token = token.subtoken(part_idx..idx, part_loc);
                         #[cfg(feature = "imperator")]
@@ -1454,7 +1454,7 @@ pub fn partition(token: &Token) -> Vec<Part> {
                 if paren_depth == 0 {
                     // Missing opening parenthesis `(`
                     let mut loc = token.loc;
-                    loc.column += col;
+                    loc.ptr.column += col;
                     err(ErrorKey::Validation)
                         .msg("closing without opening parenthesis `(`")
                         .loc(loc)
@@ -1462,11 +1462,11 @@ pub fn partition(token: &Token) -> Vec<Part> {
                 } else if paren_depth == 1 {
                     // Argument between parentheses
                     let mut func_loc = token.loc;
-                    func_loc.column += part_col;
+                    func_loc.ptr.column += part_col;
                     let func_token = token.subtoken(part_idx..first_paren_idx, func_loc);
 
                     let mut arg_loc = token.loc;
-                    arg_loc.column += first_paren_col + 1;
+                    arg_loc.ptr.column += first_paren_col + 1;
                     let arg_token = token.subtoken_stripped(first_paren_idx + 1..idx, arg_loc);
 
                     parts.push(Part::TokenArgument(func_token, arg_token));
@@ -1475,7 +1475,7 @@ pub fn partition(token: &Token) -> Vec<Part> {
                 } else if paren_depth == 2 {
                     // Cannot have nested parentheses
                     let mut loc = token.loc;
-                    loc.column += second_paren_col;
+                    loc.ptr.column += second_paren_col;
                     let nested_paren_token = token.subtoken(second_paren_idx..=idx, loc);
                     err(ErrorKey::Validation)
                         .msg("cannot have nested parentheses")
@@ -1488,7 +1488,7 @@ pub fn partition(token: &Token) -> Vec<Part> {
                 // an argument can only be the last part or followed by dot `.` AND hasn't erred from it yet
                 if has_part_argument && !has_part_argument_erred {
                     let mut loc = token.loc;
-                    loc.column += col;
+                    loc.ptr.column += col;
                     err(ErrorKey::Validation)
                         .msg("argument can only be the last part or followed by dot `.`")
                         .loc(loc)
@@ -1502,7 +1502,7 @@ pub fn partition(token: &Token) -> Vec<Part> {
     if paren_depth > 0 {
         // Missing closing parenthesis `)`
         let mut loc = token.loc;
-        loc.column += first_paren_col;
+        loc.ptr.column += first_paren_col;
         let broken_token = token.subtoken(first_paren_idx.., loc);
         err(ErrorKey::Validation)
             .msg("opening without closing parenthesis `)`")
@@ -1513,12 +1513,12 @@ pub fn partition(token: &Token) -> Vec<Part> {
     if part_idx == token.as_str().len() {
         // Trailing `.`
         let mut loc = token.loc;
-        loc.column += part_col;
+        loc.ptr.column += part_col;
         err(ErrorKey::Validation).msg("trailing dot `.`").loc(loc).push();
     } else if !has_part_argument {
         // final part (without argument)
         let mut part_loc = token.loc;
-        part_loc.column += part_col;
+        part_loc.ptr.column += part_col;
         // SAFETY: part_idx < token.as_str.len()
         #[allow(unused_mut)]
         let mut part_token = token.subtoken(part_idx.., part_loc);
@@ -1666,7 +1666,7 @@ pub fn validate_argument(
         // Imperator does not use `()`
         let msg = "imperator does not support the `()` syntax";
         let mut opening_paren_loc = arg.loc;
-        opening_paren_loc.column -= 1;
+        opening_paren_loc.ptr.column -= 1;
         err(ErrorKey::WrongGame).msg(msg).loc(opening_paren_loc).push();
         return;
     }
@@ -1675,7 +1675,7 @@ pub fn validate_argument(
     if Game::is_hoi4() {
         let msg = "hoi4 does not support the `()` syntax";
         let mut opening_paren_loc = arg.loc;
-        opening_paren_loc.column -= 1;
+        opening_paren_loc.ptr.column -= 1;
         err(ErrorKey::WrongGame).msg(msg).loc(opening_paren_loc).push();
         return;
     }

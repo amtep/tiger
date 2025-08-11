@@ -5,8 +5,8 @@
 //!   without pointers, which would lead to panics.
 
 use crate::report::{
-    log, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportPointers, LogReportStyle,
-    PointedMessage, Severity,
+    log, Confidence, ErrorKey, ErrorLoc, LogReportMetadata, LogReportStackPointers, LogReportStyle,
+    PointedMessageStack, Severity,
 };
 
 // =================================================================================================
@@ -113,7 +113,7 @@ impl ReportBuilderStage2 {
             msg: self.msg,
             info: self.info,
             wiki: self.wiki,
-            pointers: vec![PointedMessage { loc: eloc.into_loc(), length, msg: None }],
+            pointers: vec![PointedMessageStack { loc: eloc.into_loc(), length, msg: None }],
         }
     }
 
@@ -124,11 +124,15 @@ impl ReportBuilderStage2 {
             msg: self.msg,
             info: self.info,
             wiki: self.wiki,
-            pointers: vec![PointedMessage { loc: eloc.into_loc(), length, msg: Some(msg.into()) }],
+            pointers: vec![PointedMessageStack {
+                loc: eloc.into_loc(),
+                length,
+                msg: Some(msg.into()),
+            }],
         }
     }
 
-    pub fn pointers(self, pointers: LogReportPointers) -> ReportBuilderFull {
+    pub fn pointers(self, pointers: LogReportStackPointers) -> ReportBuilderFull {
         ReportBuilderFull {
             stage1: self.stage1,
             msg: self.msg,
@@ -144,7 +148,7 @@ impl ReportBuilderStage2 {
             msg: self.msg,
             info: self.info,
             wiki: self.wiki,
-            pointers: vec![PointedMessage { loc: eloc.into_loc(), length: 0, msg: None }],
+            pointers: vec![PointedMessageStack { loc: eloc.into_loc(), length: 0, msg: None }],
         }
     }
 }
@@ -156,19 +160,23 @@ pub struct ReportBuilderFull {
     msg: String,
     info: Option<String>,
     wiki: Option<String>,
-    pointers: LogReportPointers,
+    pointers: LogReportStackPointers,
 }
 
 impl ReportBuilderFull {
     pub fn loc_msg<E: ErrorLoc, S: Into<String>>(mut self, eloc: E, msg: S) -> Self {
         let length = eloc.loc_length();
-        self.pointers.push(PointedMessage { loc: eloc.into_loc(), length, msg: Some(msg.into()) });
+        self.pointers.push(PointedMessageStack {
+            loc: eloc.into_loc(),
+            length,
+            msg: Some(msg.into()),
+        });
         self
     }
     pub fn opt_loc_msg<E: ErrorLoc, S: Into<String>>(mut self, eloc: Option<E>, msg: S) -> Self {
         if let Some(eloc) = eloc {
             let length = eloc.loc_length();
-            self.pointers.push(PointedMessage {
+            self.pointers.push(PointedMessageStack {
                 loc: eloc.into_loc(),
                 length,
                 msg: Some(msg.into()),
@@ -177,7 +185,7 @@ impl ReportBuilderFull {
         self
     }
     /// Build the report and return it.
-    pub fn build(self) -> (LogReportMetadata, LogReportPointers) {
+    pub fn build(self) -> (LogReportMetadata, LogReportStackPointers) {
         (
             LogReportMetadata {
                 key: self.stage1.0,
@@ -204,12 +212,12 @@ pub struct ReportBuilderAbbreviated {
     msg: String,
     info: Option<String>,
     wiki: Option<String>,
-    pointers: LogReportPointers,
+    pointers: LogReportStackPointers,
 }
 
 impl ReportBuilderAbbreviated {
     /// Build the report and return it.
-    pub fn build(self) -> (LogReportMetadata, LogReportPointers) {
+    pub fn build(self) -> (LogReportMetadata, LogReportStackPointers) {
         (
             LogReportMetadata {
                 key: self.stage1.0,

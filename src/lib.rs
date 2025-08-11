@@ -31,9 +31,9 @@ pub use crate::modfile::ModFile;
 pub use crate::report::{
     add_loaded_mod_root, disable_ansi_colors, emit_reports, log, set_output_style,
     set_show_loaded_mods, set_show_vanilla, suppress_from_json, take_reports, Confidence,
-    LogReportMetadata, LogReportPointers, PointedMessage, Severity,
+    LogReportMetadata, LogReportPointers, LogReportStackPointers, PointedMessageStack, Severity,
 };
-pub use crate::token::{Loc, Token};
+pub use crate::token::{LocStack, Token};
 
 #[cfg(feature = "internal_benches")]
 mod benches;

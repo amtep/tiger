@@ -26,8 +26,7 @@ fn workspace_path(s: &str) -> PathBuf {
     let p = PathBuf::from(s);
     if p.is_relative() {
         PathBuf::from("..").join(p)
-    }
-    else {
+    } else {
         p
     }
 }
@@ -35,7 +34,8 @@ fn workspace_path(s: &str) -> PathBuf {
 fn bench_multiple(c: &mut Criterion) {
     let content = fs::read_to_string(CONFIG_PATH).unwrap();
     let config: Config = toml::from_str(&content).unwrap();
-    let mut modfile_paths = config.modfile_paths.iter().map(|p| workspace_path(p)).collect::<Vec<_>>();
+    let mut modfile_paths =
+        config.modfile_paths.iter().map(|p| workspace_path(p)).collect::<Vec<_>>();
 
     if let Some(modfile_dir) = config.modfile_dir {
         let modfile_dir = workspace_path(&modfile_dir);

@@ -287,7 +287,7 @@ impl DbKind for Faith {
         _data: &Everything,
     ) -> bool {
         if property == "is_modded" {
-            return key.loc.kind == FileKind::Mod;
+            return key.loc.ptr.kind == FileKind::Mod;
         }
         false
     }

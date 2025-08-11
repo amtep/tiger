@@ -10,7 +10,7 @@ use crate::block::Eq::Single;
 use crate::block::{Block, Comparator, BV};
 use crate::fileset::FileEntry;
 use crate::report::{err, warn, ErrorKey};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 #[derive(Copy, Clone, Debug)]
 enum State {
@@ -35,33 +35,33 @@ struct Parser {
 }
 
 impl Parser {
-    fn unknown_char(c: char, loc: Loc) {
+    fn unknown_char(c: char, loc: LocStack) {
         let msg = format!("Unrecognized character {c}");
         err(ErrorKey::ParseError).msg(msg).loc(loc).push();
     }
 
-    fn colon(&mut self, loc: Loc) {
+    fn colon(&mut self, loc: LocStack) {
         if !self.current.expect_colon {
             err(ErrorKey::ParseError).msg("unexpected `:`").loc(loc).push();
         }
         self.current.expect_colon = false;
     }
 
-    fn check_colon(&mut self, loc: Loc) {
+    fn check_colon(&mut self, loc: LocStack) {
         if self.current.expect_colon {
             err(ErrorKey::ParseError).msg("expected `:`").loc(loc).push();
             self.current.expect_comma = false;
         }
     }
 
-    fn comma(&mut self, loc: Loc) {
+    fn comma(&mut self, loc: LocStack) {
         if !self.current.expect_comma {
             err(ErrorKey::ParseError).msg("unexpected `,`").loc(loc).push();
         }
         self.current.expect_comma = false;
     }
 
-    fn check_comma(&mut self, loc: Loc) {
+    fn check_comma(&mut self, loc: LocStack) {
         if self.current.expect_comma {
             err(ErrorKey::ParseError).msg("expected `,`").loc(loc).push();
             self.current.expect_comma = false;
@@ -100,7 +100,7 @@ impl Parser {
         }
     }
 
-    fn open_bracket(&mut self, loc: Loc, bracket: char) {
+    fn open_bracket(&mut self, loc: LocStack, bracket: char) {
         self.check_colon(loc);
         self.check_comma(loc);
         if self.current.opening_bracket == '{' && self.current.key.is_none() {
@@ -118,7 +118,7 @@ impl Parser {
         self.stack.push(new_level);
     }
 
-    fn close_bracket(&mut self, loc: Loc, bracket: char) {
+    fn close_bracket(&mut self, loc: LocStack, bracket: char) {
         self.end_assign();
         if let Some(mut prev_level) = self.stack.pop() {
             swap(&mut self.current, &mut prev_level);
@@ -132,7 +132,7 @@ impl Parser {
                     .push();
             }
             self.block_value(prev_level.block);
-            if loc.column == 1 && !self.stack.is_empty() {
+            if loc.ptr.column == 1 && !self.stack.is_empty() {
                 let msg = "possible bracket error";
                 let info = "This closing bracket is at the start of a line but does not end a top-level item.";
                 warn(ErrorKey::BracePlacement).msg(msg).info(info).loc(loc).push();
@@ -154,7 +154,7 @@ impl Parser {
     }
 }
 
-fn parse(blockloc: Loc, content: &str) -> Block {
+fn parse(blockloc: LocStack, content: &str) -> Block {
     let mut parser = Parser {
         current: ParseLevel {
             block: Block::new(blockloc),
@@ -280,10 +280,10 @@ fn parse(blockloc: Loc, content: &str) -> Block {
         }
 
         if c == '\n' {
-            loc.line += 1;
-            loc.column = 1;
+            loc.ptr.line += 1;
+            loc.ptr.column = 1;
         } else {
-            loc.column += 1;
+            loc.ptr.column += 1;
         }
     }
 
@@ -316,9 +316,9 @@ fn parse(blockloc: Loc, content: &str) -> Block {
 
 #[allow(clippy::module_name_repetitions)]
 pub fn parse_json(entry: &FileEntry, content: &str) -> Block {
-    let mut loc = Loc::from(entry);
-    loc.line = 1;
-    loc.column = 1;
+    let mut loc = LocStack::from(entry);
+    loc.ptr.line = 1;
+    loc.ptr.column = 1;
     parse(loc, content)
 }
 

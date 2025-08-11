@@ -51,7 +51,7 @@ impl Default for Db {
 impl Db {
     pub fn add(&mut self, item: Item, key: Token, block: Block, kind: Box<dyn DbKind>) {
         if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 if other.block.equivalent(&block) {
                     exact_dup_error(&key, &other.key, &item.to_string());
                 } else {
@@ -72,7 +72,7 @@ impl Db {
         kind: Box<dyn DbKind>,
     ) {
         if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 if other.block.equivalent(&block) {
                     exact_dup_advice(&key, &other.key, &item.to_string());
                 } else {

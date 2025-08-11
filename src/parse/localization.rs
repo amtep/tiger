@@ -10,7 +10,7 @@ use crate::parse::cob::Cob;
 use crate::parse::ignore::{parse_comment, IgnoreFilter, IgnoreSize};
 use crate::report::register_ignore_filter;
 use crate::report::{untidy, warn, ErrorKey};
-use crate::token::{leak, Loc, Token};
+use crate::token::{leak, LocStack, Token};
 
 fn is_key_char(c: char) -> bool {
     c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '\''
@@ -24,7 +24,7 @@ fn is_code_char(c: char) -> bool {
 
 #[derive(Clone, Debug)]
 struct LocaParser {
-    loc: Loc,
+    loc: LocStack,
     offset: usize,
     content: &'static str,
     chars: Peekable<Chars<'static>>,
@@ -41,23 +41,23 @@ impl LocaParser {
         let mut chars = content.chars().peekable();
         let mut offset = 0;
 
-        let mut loc = Loc::from(entry);
-        // loc.line == 0 making this a whole file report
-        loc.column = 1; // From our perspective the BOM is a character and needs to be included in column offset
+        let mut loc = LocStack::from(entry);
+        // loc.ptr.line == 0 making this a whole file report
+        loc.ptr.column = 1; // From our perspective the BOM is a character and needs to be included in column offset
 
         if chars.peek() == Some(&'\u{feff}') {
             offset += '\u{feff}'.len_utf8();
-            loc.column += 1;
+            loc.ptr.column += 1;
             chars.next();
 
             if chars.peek() == Some(&'\u{feff}') {
                 // Second BOM is file content, not header, and should be reported with line number
-                loc.line = 1;
+                loc.ptr.line = 1;
                 let msg = "double BOM in localization file";
                 let info = "This will make the game engine skip the whole file.";
                 warn(ErrorKey::Encoding).strong().msg(msg).info(info).loc(loc).push();
                 offset += '\u{feff}'.len_utf8();
-                loc.column += 1;
+                loc.ptr.column += 1;
                 chars.next();
             }
         } else {
@@ -65,7 +65,7 @@ impl LocaParser {
         }
 
         // From here on we are reporting on file content
-        loc.line = 1;
+        loc.ptr.line = 1;
 
         LocaParser {
             loc,
@@ -86,10 +86,10 @@ impl LocaParser {
         if let Some(c) = self.chars.next() {
             self.offset += c.len_utf8();
             if c == '\n' {
-                self.loc.line += 1;
-                self.loc.column = 1;
+                self.loc.ptr.line += 1;
+                self.loc.ptr.column = 1;
             } else {
-                self.loc.column += 1;
+                self.loc.ptr.column += 1;
             }
         }
     }
@@ -279,12 +279,12 @@ impl LocaParser {
                             register_ignore_filter(self.loc.pathname(), .., spec.filter);
                         }
                         IgnoreSize::Begin => {
-                            self.active_range_ignores.push((self.loc.line + 1, spec.filter));
+                            self.active_range_ignores.push((self.loc.ptr.line + 1, spec.filter));
                         }
                         IgnoreSize::End => {
                             if let Some((start_line, filter)) = self.active_range_ignores.pop() {
                                 let path = self.loc.pathname();
-                                register_ignore_filter(path, start_line..self.loc.line, filter);
+                                register_ignore_filter(path, start_line..self.loc.ptr.line, filter);
                             }
                         }
                     }
@@ -311,7 +311,7 @@ impl LocaParser {
         self.chars.peek()?;
         for filter in self.pending_line_ignores.drain(..) {
             let path = self.loc.pathname();
-            let line = self.loc.line;
+            let line = self.loc.ptr.line;
             register_ignore_filter(path, line..=line, filter);
         }
 
@@ -413,7 +413,7 @@ impl LocaParser {
 }
 
 pub struct ValueParser<'a> {
-    loc: Loc,
+    loc: LocStack,
     offset: usize,
     content: Vec<&'a Token>,
     content_iters: Vec<Peekable<Chars<'a>>>,
@@ -460,7 +460,7 @@ impl<'a> ValueParser<'a> {
     fn next_char(&mut self) {
         if let Some(c) = self.content_iters[self.content_idx].next() {
             self.offset += c.len_utf8();
-            self.loc.column += 1;
+            self.loc.ptr.column += 1;
         } else if self.maybe_advance_idx() {
             self.next_char();
         }
@@ -650,7 +650,7 @@ impl<'a> ValueParser<'a> {
         }
     }
 
-    fn handle_tooltip(&mut self, value: &str, loc: Loc) {
+    fn handle_tooltip(&mut self, value: &str, loc: LocStack) {
         if value.contains(',') {
             // If the value contains commas, then it's #tooltip:tag,key or #tooltip:tag,key,value
             // Separate out the tooltip.
@@ -685,7 +685,7 @@ impl<'a> ValueParser<'a> {
             // #tooltip:[Party.GetTooltipTag]|[InterestGroup.GetTooltipTag],INTEREST_GROUP_AFFILIATION_BREAKDOWN
             enum State {
                 InKey(String),
-                InValue(String, String, Loc, usize),
+                InValue(String, String, LocStack, usize),
             }
             let mut state = State::InKey(String::new());
             while let Some(c) = self.peek() {

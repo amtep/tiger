@@ -27,8 +27,7 @@ fn workspace_path(s: &str) -> PathBuf {
     let p = PathBuf::from(s);
     if p.is_relative() {
         PathBuf::from("..").join(p)
-    }
-    else {
+    } else {
         p
     }
 }

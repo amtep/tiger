@@ -8,7 +8,7 @@ use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{warn, ErrorKey, Severity};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::validator::Validator;
 
 use super::provinces::ProvId;
@@ -18,14 +18,14 @@ const DEFAULT_TERRAINS: &[&str] = &["default_land", "default_sea", "default_coas
 #[derive(Clone, Debug, Default)]
 pub struct ProvinceTerrains {
     provinces: TigerHashMap<ProvId, ProvinceTerrain>,
-    file_loc: Option<Loc>,
+    file_loc: Option<LocStack>,
     defaults: [Option<Token>; DEFAULT_TERRAINS.len()],
 }
 
 impl ProvinceTerrains {
     fn load_item(&mut self, id: ProvId, key: Token, value: Token) {
         if let Some(province) = self.provinces.get_mut(&id) {
-            if province.key.loc.kind >= key.loc.kind {
+            if province.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &province.key, "province");
             }
             *province = ProvinceTerrain::new(key, value);
@@ -79,7 +79,7 @@ impl FileHandler<Block> for ProvinceTerrains {
                 self.load_item(id, key, value);
             } else if let Some(index) = DEFAULT_TERRAINS.iter().position(|&x| x == key.as_str()) {
                 if let Some(default) = &self.defaults[index] {
-                    if default.loc.kind >= key.loc.kind {
+                    if default.loc.ptr.kind >= key.loc.ptr.kind {
                         dup_error(&key, default, "default terrain");
                     }
                 } else {
@@ -119,7 +119,7 @@ impl ProvinceProperties {
     fn load_item(&mut self, id: ProvId, key: Token, mut block: Block) {
         if let Some(province) = self.provinces.get_mut(&id) {
             // Multiple entries are valid but could easily be a mistake.
-            if province.key.loc.kind >= key.loc.kind {
+            if province.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &province.key, "province");
             }
             province.block.append(&mut block);

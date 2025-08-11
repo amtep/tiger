@@ -1,6 +1,6 @@
 use crate::block::{Block, BlockItem, Field, BV};
 use crate::fileset::FileEntry;
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::trigger::Part;
 use crate::validator::ValueValidator;
 
@@ -9,7 +9,7 @@ pub trait ErrorLoc {
     fn loc_length(&self) -> usize {
         1
     }
-    fn into_loc(self) -> Loc;
+    fn into_loc(self) -> LocStack;
 }
 
 impl ErrorLoc for ValueValidator<'_> {
@@ -17,7 +17,7 @@ impl ErrorLoc for ValueValidator<'_> {
         self.value().loc_length()
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.value().into_loc()
     }
 }
@@ -27,7 +27,7 @@ impl ErrorLoc for &ValueValidator<'_> {
         self.value().loc_length()
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.value().into_loc()
     }
 }
@@ -37,7 +37,7 @@ impl ErrorLoc for &mut ValueValidator<'_> {
         self.value().loc_length()
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.value().into_loc()
     }
 }
@@ -51,7 +51,7 @@ impl ErrorLoc for BlockItem {
         }
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             BlockItem::Value(token) => token.into_loc(),
             BlockItem::Block(block) => block.into_loc(),
@@ -69,7 +69,7 @@ impl ErrorLoc for &BlockItem {
         }
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             BlockItem::Value(token) => token.into_loc(),
             BlockItem::Block(block) => block.into_loc(),
@@ -79,13 +79,13 @@ impl ErrorLoc for &BlockItem {
 }
 
 impl ErrorLoc for Field {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.into_key().into_loc()
     }
 }
 
 impl ErrorLoc for &Field {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.key().into_loc()
     }
 }
@@ -98,7 +98,7 @@ impl ErrorLoc for BV {
         }
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             BV::Value(token) => token.into_loc(),
             BV::Block(block) => block.into_loc(),
@@ -114,7 +114,7 @@ impl ErrorLoc for &BV {
         }
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             BV::Value(t) => t.into_loc(),
             BV::Block(s) => s.into_loc(),
@@ -123,19 +123,19 @@ impl ErrorLoc for &BV {
 }
 
 impl ErrorLoc for FileEntry {
-    fn into_loc(self) -> Loc {
-        Loc::from(&self)
+    fn into_loc(self) -> LocStack {
+        LocStack::from(&self)
     }
 }
 
 impl ErrorLoc for &FileEntry {
-    fn into_loc(self) -> Loc {
-        Loc::from(self)
+    fn into_loc(self) -> LocStack {
+        LocStack::from(self)
     }
 }
 
-impl ErrorLoc for Loc {
-    fn into_loc(self) -> Loc {
+impl ErrorLoc for LocStack {
+    fn into_loc(self) -> LocStack {
         self
     }
 }
@@ -145,7 +145,7 @@ impl ErrorLoc for Token {
         self.as_str().chars().count().max(1)
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.loc
     }
 }
@@ -155,25 +155,25 @@ impl ErrorLoc for &Token {
         self.as_str().chars().count().max(1)
     }
 
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.loc
     }
 }
 
 impl ErrorLoc for Block {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.loc
     }
 }
 
 impl ErrorLoc for &Block {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         self.loc
     }
 }
 
 impl ErrorLoc for Part {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
         }
@@ -188,7 +188,7 @@ impl ErrorLoc for Part {
 }
 
 impl ErrorLoc for &Part {
-    fn into_loc(self) -> Loc {
+    fn into_loc(self) -> LocStack {
         match self {
             Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
         }

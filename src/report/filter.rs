@@ -143,7 +143,7 @@ impl FilterRule {
                     .loc_msg(
                         {
                             let mut loc = token.into_loc();
-                            loc.column += u32::try_from(e.pos).unwrap_or(0);
+                            loc.ptr.column += u32::try_from(e.pos).unwrap_or(0);
                             loc
                         },
                         e.msg,
