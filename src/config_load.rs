@@ -409,7 +409,7 @@ pub fn assert_one_key(assert_key: &str, block: &Block) {
             .map(|(index, key)| PointedMessage {
                 loc: key.into_loc(),
                 length: 1,
-                msg: Some((if index == 0 { "It occurs here" } else { "and here" }).to_owned()),
+                msg: Some((if index == 0 { "It occurs here" } else { "and here" }).into()),
             })
             .collect();
         err(ErrorKey::Config)
