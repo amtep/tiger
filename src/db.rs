@@ -13,7 +13,9 @@ use strum::EnumCount;
 use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::everything::Everything;
-use crate::helpers::{dup_error, exact_dup_advice, exact_dup_error, TigerHashMap, TigerHashSet};
+use crate::helpers::{
+    dup_error, exact_dup_advice, exact_dup_error, DupReporter, TigerHashMap, TigerHashSet,
+};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::token::Token;
@@ -50,17 +52,7 @@ impl Default for Db {
 
 impl Db {
     pub fn add(&mut self, item: Item, key: Token, block: Block, kind: Box<dyn DbKind>) {
-        if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_error(&key, &other.key, &item.to_string());
-                } else {
-                    dup_error(&key, &other.key, &item.to_string());
-                }
-            }
-        }
-        self.items_lc[item as usize].insert(Lowercase::new(key.as_str()), key.as_str());
-        self.database[item as usize].insert(key.as_str(), DbEntry { key, block, kind });
+        self.add_with_reporter(item, key, block, kind, exact_dup_error);
     }
 
     #[allow(dead_code)]
@@ -71,17 +63,51 @@ impl Db {
         block: Block,
         kind: Box<dyn DbKind>,
     ) {
-        if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_advice(&key, &other.key, &item.to_string());
-                } else {
-                    dup_error(&key, &other.key, &item.to_string());
+        self.add_with_reporter(item, key, block, kind, exact_dup_advice);
+    }
+
+    fn add_with_reporter(
+        &mut self,
+        item: Item,
+        key: Token,
+        block: Block,
+        kind: Box<dyn DbKind>,
+        exact_dup_reporter: DupReporter,
+    ) {
+        use std::collections::hash_map::Entry;
+
+        match self.database[item as usize].entry(key.as_str()) {
+            Entry::Occupied(mut occupied_entry) => {
+                let new = DbEntry { key, block, kind };
+                let existing = occupied_entry.get();
+
+                let (keep, overwriten) =
+                    // Just compare the top loc, not the whole stack
+                    if new.key.loc.ptr > existing.key.loc.ptr {
+                        (&new, existing)
+                    } else {
+                        (existing, &new)
+                    };
+
+                if overwriten.key.loc.ptr.kind >= keep.key.loc.ptr.kind {
+                    if overwriten.block.equivalent(&keep.block) {
+                        exact_dup_reporter(&keep.key, &overwriten.key, &item.to_string());
+                    } else {
+                        dup_error(&keep.key, &overwriten.key, &item.to_string());
+                    }
+                }
+                // Update the db if the new entry is the one we're keeping
+                if &raw const new == &raw const *keep {
+                    self.items_lc[item as usize]
+                        .insert(Lowercase::new(new.key.as_str()), new.key.as_str());
+                    occupied_entry.insert(new);
                 }
             }
+            Entry::Vacant(vacant_entry) => {
+                self.items_lc[item as usize].insert(Lowercase::new(key.as_str()), key.as_str());
+                vacant_entry.insert(DbEntry { key, block, kind });
+            }
         }
-        self.items_lc[item as usize].insert(Lowercase::new(key.as_str()), key.as_str());
-        self.database[item as usize].insert(key.as_str(), DbEntry { key, block, kind });
     }
 
     #[cfg(feature = "hoi4")]
