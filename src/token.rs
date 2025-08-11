@@ -2,6 +2,7 @@
 //! in the game files they came from.
 
 use std::borrow::{Borrow, Cow};
+use std::cmp::Ordering;
 use std::ffi::OsStr;
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::hash::Hash;
@@ -14,11 +15,11 @@ use bumpalo::Bump;
 
 use crate::date::Date;
 use crate::fileset::{FileEntry, FileKind};
-use crate::macros::MacroMapIndex;
+use crate::macros::{MacroMapIndex, MACRO_MAP};
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{ErrorKey, err, untidy};
 
-#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Loc {
     pub(crate) idx: PathTableIndex,
     pub kind: FileKind,
@@ -55,6 +56,26 @@ impl Loc {
     #[inline]
     pub fn same_file(self, other: Loc) -> bool {
         self.idx == other.idx
+    }
+}
+
+impl PartialOrd for Loc {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Loc {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.idx
+            .cmp(&other.idx)
+            .then(self.line.cmp(&other.line))
+            .then(self.column.cmp(&other.column))
+            .then(
+                self.link_idx
+                    .map(|link| MACRO_MAP.get_loc(link))
+                    .cmp(&other.link_idx.map(|link| MACRO_MAP.get_loc(link))),
+            )
     }
 }
 
