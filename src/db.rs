@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use std::mem::take;
 
 use as_any::AsAny;
+use itertools::Itertools;
 use rayon::prelude::*;
 use strum::EnumCount;
 
@@ -102,7 +103,7 @@ impl Db {
     pub fn add_subitems(&mut self) {
         for itype in 0..Item::COUNT {
             let queue = take(&mut self.database[itype]);
-            for entry in queue.values() {
+            for entry in queue.values().sorted_by_key(|e| e.key.loc) {
                 entry.kind.add_subitems(&entry.key, &entry.block, self);
             }
             if self.database[itype].is_empty() {
