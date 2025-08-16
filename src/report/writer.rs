@@ -6,12 +6,13 @@ use itertools::Itertools;
 use strum::{EnumCount as _, IntoEnumIterator};
 use unicode_width::UnicodeWidthChar;
 
+use super::report_struct::{LogReportPointers, PointedMessage};
 use crate::fileset::FileKind;
 use crate::game::Game;
 use crate::report::errors::Errors;
 use crate::report::output_style::Styled;
 use crate::report::report_struct::pointer_indentation;
-use crate::report::{LogReportMetadata, LogReportPointers, OutputStyle, PointedMessage, Severity};
+use crate::report::{LogReportMetadata, OutputStyle, Severity};
 
 /// Source lines printed in the output have leading tab characters replaced by this number of spaces.
 const SPACES_PER_TAB: usize = 4;
