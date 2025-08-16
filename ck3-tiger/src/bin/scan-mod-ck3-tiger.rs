@@ -50,12 +50,13 @@ fn main() -> Result<()> {
     let mut grand_json = json!({});
     for itype in Item::iter() {
         let mut vec = Vec::new();
-        for token in everything.iter_keys(itype).filter(|token| token.loc.kind == FileKind::Mod) {
+        for token in everything.iter_keys(itype).filter(|token| token.loc.ptr.kind == FileKind::Mod)
+        {
             let json = json!({
                 "key": token.to_string(),
                 "file": token.loc.pathname(),
-                "line": if token.loc.line == 0 { None } else { Some(token.loc.line) },
-                "column": if token.loc.column == 0 { None } else { Some(token.loc.column) },
+                "line": if token.loc.ptr.line == 0 { None } else { Some(token.loc.ptr.line) },
+                "column": if token.loc.ptr.column == 0 { None } else { Some(token.loc.ptr.column) },
             });
             vec.push(json);
         }

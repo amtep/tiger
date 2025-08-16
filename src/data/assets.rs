@@ -31,7 +31,7 @@ impl Assets {
     pub fn load_item(&mut self, key: &Token, block: &Block) {
         if let Some(name) = block.get_field_value("name") {
             if let Some(other) = self.assets.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
+                if other.key.loc.ptr.kind >= name.loc.ptr.kind {
                     dup_error(name, &other.key, "asset");
                 }
             }
