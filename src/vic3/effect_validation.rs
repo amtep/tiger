@@ -73,7 +73,8 @@ pub fn validate_add_enactment_modifier(
         let value = vd.value();
         data.validate_call(Item::Modifier, value, &Block::new(value.loc), sc);
     });
-    vd.field_script_value("multiplier", sc);
+    // multiplier executes in root scope. This is probably a bug
+    vd.field_script_value_rooted("multiplier", sc.resolve_root().0);
 }
 
 pub fn validate_add_modifier(
@@ -97,7 +98,8 @@ pub fn validate_add_modifier(
                 let value = vd.value();
                 data.validate_call(Item::Modifier, value, &Block::new(value.loc), sc);
             });
-            vd.field_script_value("multiplier", sc);
+            // multiplier executes in root scope. This is probably a bug
+            vd.field_script_value_rooted("multiplier", sc.resolve_root().0);
             validate_optional_duration(&mut vd, sc);
             vd.field_bool("is_decaying");
         }

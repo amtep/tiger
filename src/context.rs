@@ -702,8 +702,7 @@ impl ScopeContext {
     }
 
     /// Return the possible scope types of `root`, and the reason why we think it has those types
-    #[doc(hidden)]
-    fn resolve_root(&self) -> (Scopes, &Reason) {
+    pub fn resolve_root(&self) -> (Scopes, &Reason) {
         match self.root {
             ScopeEntry::Scope(s, ref reason) => (s, reason),
             _ => unreachable!(),
