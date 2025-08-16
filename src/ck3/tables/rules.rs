@@ -8,7 +8,7 @@
 /// `root` is the root of the scope context. Other fields are added named scopes.
 ///
 /// For ease of updating, the rules are in the order they are found in the game files.
-// LAST UPDATED CK3 VERSION 1.13.0.3
+// LAST UPDATED CK3 VERSION 1.16.2.3
 // Taken from information in common/scripted_rules/00_rules.txt
 pub const SCRIPTED_RULES: &str = "
 	can_command_troops = {
@@ -58,7 +58,7 @@ pub const SCRIPTED_RULES: &str = "
 	}
 
 	is_character_allowed_to_be_player = {
-		tooltipped = no
+		tooltipped = yes
 		root = character
 		will_override_government = bool
 	}
@@ -204,10 +204,6 @@ pub const SCRIPTED_RULES: &str = "
 		root = character
 	}
 
-	is_eligible_for_court_positions = {
-		root = character
-	}
-
 	can_name_after_birth = {
 		tooltipped = no
 		root = character
@@ -276,6 +272,7 @@ pub const SCRIPTED_RULES: &str = "
 	}
 
 	can_promote_legend = {
+		tooltipped = no
 		root = character
 		legend = legend
 	}
@@ -302,5 +299,28 @@ pub const SCRIPTED_RULES: &str = "
 	can_move_domicile = {
 		root = province
 		owner = character
+	}
+
+	is_kurultai_succession_chaotic = {
+		root = character
+		situation = situation
+		situation_sub_region = situation_sub_region
+		list = {
+			disobedient_kurultai = character
+		}
+	}
+
+	ai_wants_to_migrate = {
+		root = character
+		domain_fertility = value
+	}
+
+	can_raze = {
+		root = character
+	}
+
+	can_raze_own_holding = {
+		root = character
+		province = province
 	}
 ";
