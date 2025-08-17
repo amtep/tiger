@@ -526,7 +526,7 @@ fn lookup_engine_modif(
             for &sfx in &["_add", "_mult"] {
                 if let Some(part) = part.strip_suffix_unchecked(sfx) {
                     maybe_warn(Item::TerrainKey, &part, name, data, warn);
-                    return Some(ModifKinds::Unit);
+                    return Some(ModifKinds::UnitCombat);
                 }
             }
         }
@@ -538,7 +538,7 @@ fn lookup_engine_modif(
         for &sfx in &["_offense_add", "_offense_mult"] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
                 maybe_warn(Item::CombatUnit, &part, name, data, warn);
-                return Some(ModifKinds::Unit);
+                return Some(ModifKinds::UnitCombat);
             }
         }
     }
@@ -981,42 +981,50 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("tax_income_add", ModifKinds::Tax),
     ("tax_land_add", ModifKinds::Tax),
     ("tax_per_capita_add", ModifKinds::Tax),
-    ("unit_advancement_speed_mult", ModifKinds::Unit),
-    ("unit_army_defense_add", ModifKinds::Unit),
-    ("unit_army_defense_mult", ModifKinds::Unit),
+    // Unit modifiers flow through either Military Formation or Battle.
+    // They get to units from either scope, but not all work when applied from Battle.
+    // This appears to be based on whether the modifier applies affects to combat
+    // (eg. offense, kill rate) or out of combat (eg. advancement speed, convoy raiding).
+    //
+    // Note that experience gain modifiers work while in combat, but experience is only
+    // added on the weekly tick. If the battle starts and ends without crossing into a
+    // new week, they won't do anything. This may not match the expected behaviour
+    ("unit_advancement_speed_mult", ModifKinds::UnitNonCombat),
+    ("unit_army_defense_add", ModifKinds::UnitCombat),
+    ("unit_army_defense_mult", ModifKinds::UnitCombat),
     ("unit_army_experience_gain_add", ModifKinds::Unit),
     ("unit_army_experience_gain_mult", ModifKinds::Unit),
-    ("unit_army_offense_add", ModifKinds::Unit),
-    ("unit_army_offense_mult", ModifKinds::Unit),
-    ("unit_blockade_add", ModifKinds::Unit),
-    ("unit_blockade_mult", ModifKinds::Unit),
-    ("unit_convoy_defense_mult", ModifKinds::Unit),
-    ("unit_convoy_raiding_interception_mult", ModifKinds::Unit),
-    ("unit_convoy_raiding_mult", ModifKinds::Unit),
-    ("unit_convoy_requirements_mult", ModifKinds::Unit),
-    ("unit_defense_add", ModifKinds::Unit),
-    ("unit_defense_mult", ModifKinds::Unit),
-    ("unit_devastation_mult", ModifKinds::Unit),
+    ("unit_army_offense_add", ModifKinds::UnitCombat),
+    ("unit_army_offense_mult", ModifKinds::UnitCombat),
+    ("unit_blockade_add", ModifKinds::UnitNonCombat),
+    ("unit_blockade_mult", ModifKinds::UnitNonCombat),
+    ("unit_convoy_defense_mult", ModifKinds::UnitNonCombat),
+    ("unit_convoy_raiding_interception_mult", ModifKinds::UnitNonCombat),
+    ("unit_convoy_raiding_mult", ModifKinds::UnitNonCombat),
+    ("unit_convoy_requirements_mult", ModifKinds::UnitNonCombat),
+    ("unit_defense_add", ModifKinds::UnitCombat),
+    ("unit_defense_mult", ModifKinds::UnitCombat),
+    ("unit_devastation_mult", ModifKinds::UnitCombat),
     ("unit_experience_gain_add", ModifKinds::Unit),
     ("unit_experience_gain_mult", ModifKinds::Unit),
-    ("unit_kill_rate_add", ModifKinds::Unit),
-    ("unit_morale_damage_mult", ModifKinds::Unit),
-    ("unit_morale_loss_add", ModifKinds::Unit),
-    ("unit_morale_loss_mult", ModifKinds::Unit),
-    ("unit_morale_recovery_mult", ModifKinds::Unit),
-    ("unit_navy_defense_add", ModifKinds::Unit),
-    ("unit_navy_defense_mult", ModifKinds::Unit),
+    ("unit_kill_rate_add", ModifKinds::UnitCombat),
+    ("unit_morale_damage_mult", ModifKinds::UnitCombat),
+    ("unit_morale_loss_add", ModifKinds::UnitCombat),
+    ("unit_morale_loss_mult", ModifKinds::UnitCombat),
+    ("unit_morale_recovery_mult", ModifKinds::UnitNonCombat),
+    ("unit_navy_defense_add", ModifKinds::UnitCombat),
+    ("unit_navy_defense_mult", ModifKinds::UnitCombat),
     ("unit_navy_experience_gain_add", ModifKinds::Unit),
     ("unit_navy_experience_gain_mult", ModifKinds::Unit),
-    ("unit_navy_offense_add", ModifKinds::Unit),
-    ("unit_navy_offense_mult", ModifKinds::Unit),
-    ("unit_occupation_mult", ModifKinds::Unit),
-    ("unit_offense_add", ModifKinds::Unit),
-    ("unit_offense_mult", ModifKinds::Unit),
-    ("unit_provinces_captured_mult", ModifKinds::Unit),
-    ("unit_provinces_lost_mult", ModifKinds::Unit),
-    ("unit_recovery_rate_add", ModifKinds::Unit),
-    ("unit_supply_consumption_mult", ModifKinds::Unit),
+    ("unit_navy_offense_add", ModifKinds::UnitCombat),
+    ("unit_navy_offense_mult", ModifKinds::UnitCombat),
+    ("unit_occupation_mult", ModifKinds::UnitCombat),
+    ("unit_offense_add", ModifKinds::UnitCombat),
+    ("unit_offense_mult", ModifKinds::UnitCombat),
+    ("unit_provinces_captured_mult", ModifKinds::UnitCombat),
+    ("unit_provinces_lost_mult", ModifKinds::UnitCombat),
+    ("unit_recovery_rate_add", ModifKinds::UnitCombat),
+    ("unit_supply_consumption_mult", ModifKinds::UnitNonCombat), // This one doesn't seem to work in any context
 ];
 
 pub fn modif_scope_kind(scopes: Scopes) -> ModifKinds {
@@ -1061,8 +1069,9 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
     (
         // Things don't seem to flow from characters directly
         // rather it's conditional based on where the modifier is being applied
+        // with the exception of combat modifiers
         ModifKinds::Character,
-        ModifKinds::Character,
+        ModifKinds::Character.union(ModifKinds::Battle).union(ModifKinds::UnitCombat),
     ),
     (
         ModifKinds::Country,
@@ -1091,7 +1100,7 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
             // From Building
             .union(ModifKinds::Goods)
             // From Battle
-            .union(ModifKinds::Unit),
+            .union(ModifKinds::UnitCombat),
         // Confirmed, not interest group
     ),
     (
@@ -1102,7 +1111,7 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
         ModifKinds::Battle,
         ModifKinds::Battle
             // Direct nodes
-            .union(ModifKinds::Unit),
+            .union(ModifKinds::UnitCombat),
     ),
     (
         ModifKinds::Building,
@@ -1126,6 +1135,31 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
         // Confirmed, not Battle
     ),
     (ModifKinds::PowerBloc, ModifKinds::PowerBloc),
+];
+
+pub fn modif_flow_suggest(name: &str, kind: ModifKinds) -> Option<&'static str> {
+    MODIF_FLOW_SUGGEST
+        .get(name)
+        .and_then(|&(other, other_kind)| other_kind.intersects(kind).then_some(other))
+}
+
+static MODIF_FLOW_SUGGEST: LazyLock<TigerHashMap<&str, (&str, ModifKinds)>> = LazyLock::new(|| {
+    let mut map = TigerHashMap::with_capacity(MODIF_FLOW_SUGGEST_TABLE.len() * 2);
+    for &(a, b) in MODIF_FLOW_SUGGEST_TABLE {
+        map.insert(a, (b, *MODIF_MAP.get(b).unwrap()));
+        map.insert(b, (a, *MODIF_MAP.get(a).unwrap()));
+    }
+    map
+});
+
+const MODIF_FLOW_SUGGEST_TABLE: &[(&str, &str)] = &[
+    ("unit_advancement_speed_mult", "character_advancement_speed_add"),
+    ("unit_blockade_mult", "character_blockade_mult"),
+    ("unit_convoy_defense_mult", "character_convoy_protection_mult"),
+    ("unit_convoy_raiding_mult", "character_convoy_raiding_mult"),
+    ("unit_convoy_requirements_mult", "character_supply_route_cost_mult"),
+    ("unit_convoy_raiding_interception_mult", "character_interception_add"),
+    ("unit_supply_consumption_mult", "building_mobilization_cost_mult"),
 ];
 
 static MODIF_REMOVED_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static str>> =
