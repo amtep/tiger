@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use bitflags::bitflags;
 
+use crate::vic3::tables::modifs::modif_flow_suggest;
 use crate::{
     context, modif,
     report::{report, ErrorKey},
@@ -20,7 +21,7 @@ bitflags! {
         const Character         = 1<<0;
         const Country           = 1<<1;
         const State             = 1<<2;
-        const Unit              = 1<<4;
+        const Unit              = 1<<3 | 1<<4;
         const Battle            = 1<<5;
         const Building          = 1<<6;
         const InterestGroup     = 1<<7;
@@ -31,6 +32,13 @@ bitflags! {
         const Goods             = 1<<12;
         const MilitaryFormation = 1<<13;
         const PowerBloc         = 1<<14;
+        // Special scopes that allows tiger to distinguish between
+        // modifiers that apply to units generally, or while in
+        // combat. This matters because unit modifiers only flow
+        // from characters while in combat, and non-combat unit
+        // modifiers don't have an effect in that context
+        const UnitCombat        = 1<<3;
+        const UnitNonCombat     = 1<<4;
     }
 }
 
@@ -44,7 +52,7 @@ impl ModifKinds {
     ) {
         let valid_kinds = self
             .iter()
-            .map(|kind| *MODIF_FLOW_MAP.get(&kind).unwrap_or(&ModifKinds::empty()))
+            .map(|kind| *MODIF_FLOW_MAP.get(&kind).unwrap_or(&kind))
             .reduce(ModifKinds::union)
             .unwrap_or(self);
         if !valid_kinds.intersects(other) {
@@ -56,6 +64,8 @@ impl ModifKinds {
             let msg = format!("`{token}` is a modifier for {other} and will not flow from {from}");
             let info = if self.is_empty() {
                 format!("there are no valid modifiers for {from}")
+            } else if let Some(suggest) = modif_flow_suggest(token.as_str(), valid_kinds) {
+                format!("a similar modifier exists that would flow `{suggest}`")
             } else {
                 format!("valid modifiers are for {valid_kinds}")
             };
@@ -123,6 +133,10 @@ impl Display for ModifKinds {
         }
         if self.contains(ModifKinds::Unit) {
             vec.push("unit");
+        } else if self.contains(ModifKinds::UnitCombat) {
+            vec.push("unit (combat)");
+        } else if self.contains(ModifKinds::UnitNonCombat) {
+            vec.push("unit (non-combat)");
         }
         if self.contains(ModifKinds::Goods) {
             vec.push("goods");

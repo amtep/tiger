@@ -96,7 +96,7 @@ impl DbKind for TerrainLabel {
         vd.replaced_field("modifiers", "modifier");
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Unit, vd);
+            validate_modifs(block, data, ModifKinds::UnitCombat, vd);
         });
     }
 }

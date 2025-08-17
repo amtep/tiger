@@ -38,7 +38,7 @@ impl DbKind for BattleCondition {
         vd.field_item("icon", Item::File);
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Unit | ModifKinds::Battle, vd);
+            validate_modifs(block, data, ModifKinds::UnitCombat | ModifKinds::Battle, vd);
         });
 
         let sc_builder = |key: &Token| {
