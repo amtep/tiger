@@ -119,6 +119,7 @@ fn lookup_engine_modif(
             "_tax_mult",
             "_unincorporated_throughput_add",
             "_throughput_add",
+            "_construction_efficiency_add",
         ] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
                 maybe_warn(Item::BuildingGroup, &part, name, data, warn);

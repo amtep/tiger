@@ -23,7 +23,7 @@ static TRIGGER_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Trigger)>> = La
     hash
 });
 
-/// LAST UPDATED VIC3 VERSION 1.8.1
+/// LAST UPDATED VIC3 VERSION 1.9.8
 /// See `triggers.log` from the game data dumps
 /// A key ends with '(' if it is the version that takes a parenthesized argument in script.
 const TRIGGER: &[(Scopes, &str, Trigger)] = &[
@@ -744,7 +744,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Pop, "is_employed", Boolean),
     (Scopes::Country, "is_enacting_law", Scope(Scopes::LawType)),
     (Scopes::Treaty, "is_enforced", Boolean),
-    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_equal_exchange", Boolean),
+    (
+        Scopes::Treaty.union(Scopes::TreatyOptions),
+        "is_equal_exchange",
+        Removed("1.9.8", "replaced with `is_equal_exchange_for`"),
+    ),
+    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_equal_exchange_for", Scope(Scopes::Country)),
     (Scopes::Treaty.union(Scopes::TreatyOptions), "is_exchanging_obligations", Boolean),
     (Scopes::Country, "is_expanding_institution", Boolean),
     (Scopes::Character, "is_female", Boolean),
