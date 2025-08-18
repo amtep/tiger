@@ -290,5 +290,6 @@ impl DbKind for BuildingGroup {
         vd.field_bool("is_government_funded");
         vd.field_bool("owns_other_buildings");
         vd.field_bool("is_shown_in_outliner");
+        vd.field_bool("construction_efficiency_modifier");
     }
 }
