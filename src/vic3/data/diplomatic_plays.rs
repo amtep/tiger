@@ -61,7 +61,7 @@ impl DbKind for DiplomaticPlay {
         vd.field_effect("on_weekly_pulse", Tooltipped::No, &mut diplo_sc);
         vd.field_effect("on_war_begins", Tooltipped::No, &mut diplo_sc);
         vd.field_effect("on_war_end", Tooltipped::No, &mut diplo_sc);
-        vd.field_effect("on_demand_accepted", Tooltipped::No, &mut diplo_sc);
+        vd.field_effect("on_demand_accepted", Tooltipped::No, &mut sc);
         vd.field_effect("on_demand_rejected", Tooltipped::No, &mut diplo_sc);
 
         // undocumented
