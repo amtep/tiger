@@ -760,7 +760,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::MilitaryFormation, "is_fully_mobilized", Boolean),
     (Scopes::None, "is_game_paused", Boolean),
     (Scopes::None, "is_gamestate_tutorial_active", Boolean),
-    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_giftable_to", Scope(Scopes::Country)),
+    (
+        Scopes::TreatyOptions.union(Scopes::TreatyArticleOptions),
+        "is_giftable_to",
+        Scope(Scopes::Country),
+    ),
     (Scopes::JournalEntry, "is_goal_complete", Boolean),
     (Scopes::Building, "is_government_funded", Boolean),
     (Scopes::Character, "is_heir", Boolean),
