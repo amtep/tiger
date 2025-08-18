@@ -1826,7 +1826,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::Value,
         ),
         (Scopes::Country, "pop_type_percent_country", Item(Item::PopType), Scopes::Value),
-        (Scopes::State, "pop_type_percent_state", Item(Item::PopType), Scopes::Value),
+        (Scopes::State, "pop_type_percent_state", Scope(Scopes::PopType), Scopes::Value),
         (Scopes::State, "population_by_culture", Scope(Scopes::Culture), Scopes::Value),
         (
             Scopes::Country,
