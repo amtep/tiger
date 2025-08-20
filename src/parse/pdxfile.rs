@@ -17,7 +17,7 @@ use crate::parse::pdxfile::memory::CombinedMemory;
 pub use crate::parse::pdxfile::memory::PdxfileMemory;
 use crate::parse::ParserMemory;
 use crate::report::{err, store_source_file, ErrorKey};
-use crate::token::{leak, Loc, Token};
+use crate::token::{leak, LocStack, Token};
 
 mod lexer;
 pub mod memory;
@@ -48,10 +48,10 @@ pub fn parse_pdx_macro(inputs: &[Token], global: &PdxfileMemory, local: &Pdxfile
 
 /// Parse a whole file into a `Block`.
 fn parse_pdx(entry: &FileEntry, content: &'static str, memory: &ParserMemory) -> Block {
-    let file_loc = Loc::from(entry);
+    let file_loc = LocStack::from(entry);
     let mut loc = file_loc;
-    loc.line = 1;
-    loc.column = 1;
+    loc.ptr.line = 1;
+    loc.ptr.column = 1;
     let inputs = [Token::from_static_str(content, loc)];
     let mut combined = CombinedMemory::new(&memory.pdxfile);
     match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
@@ -89,9 +89,9 @@ pub fn parse_reader_export(
     let content = leak(content);
     store_source_file(entry.fullpath().to_path_buf(), &content[offset..]);
     let content = &content[offset..];
-    let mut loc = Loc::from(entry);
-    loc.line = 1;
-    loc.column = 1;
+    let mut loc = LocStack::from(entry);
+    loc.ptr.line = 1;
+    loc.ptr.column = 1;
     let inputs = [Token::from_static_str(content, loc)];
     let mut combined = CombinedMemory::new(global);
     match FILE_PARSER.parse(&inputs, &mut combined, Lexer::new(&inputs)) {
@@ -155,7 +155,7 @@ fn split_macros(token: &Token) -> Vec<MacroComponent> {
             });
             // Do this before pushing `param` to the vec, because it uses `param`.
             index_loc = (end, param.loc);
-            index_loc.1.column += 1 + param.as_str().chars().count() as u32;
+            index_loc.1.ptr.column += 1 + param.as_str().chars().count() as u32;
             vec.push(MacroComponent { kind: MacroComponentKind::Macro, token: param });
         }
     }
@@ -199,14 +199,14 @@ fn warn_macros(token: &Token, has_macro_params: bool) {
     }
 }
 
-fn report_error(error: ParseError<usize, Lexeme, LexError>, mut file_loc: Loc) {
+fn report_error(error: ParseError<usize, Lexeme, LexError>, mut file_loc: LocStack) {
     match error {
         ParseError::InvalidToken { location: _ } // we don't pass `LexError`s
         | ParseError::User { error: _ } => unreachable!(),
         ParseError::UnrecognizedEof { location: _, expected: _ } => {
             let msg = "unexpected end of file";
-            file_loc.line = 0;
-            file_loc.column = 0;
+            file_loc.ptr.line = 0;
+            file_loc.ptr.column = 0;
             err(ErrorKey::ParseError).msg(msg).loc(file_loc).push();
         }
         ParseError::UnrecognizedToken { token: (_, lexeme, _), expected: _ }

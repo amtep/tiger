@@ -25,7 +25,7 @@ impl TitleHistories {
     pub fn load_item(&mut self, key: Token, mut block: Block) {
         if let Some(other) = self.histories.get_mut(key.as_str()) {
             // Multiple entries are valid but could easily be a mistake.
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 warn(ErrorKey::DuplicateItem)
                     .msg("title has two definition blocks, they will be added together")
                     .loc(&other.key)

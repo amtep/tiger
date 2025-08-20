@@ -39,7 +39,7 @@ impl Events {
                     if Game::is_vic3() {
                         // Earlier events override later ones in vic3.
                         // The game will complain but it does work, so don't warn unless warranted.
-                        if other.key.loc.kind <= key.loc.kind {
+                        if other.key.loc.ptr.kind <= key.loc.ptr.kind {
                             dup_error(&other.key, &key, "event");
                         }
                         return;
@@ -58,7 +58,7 @@ impl Events {
     }
 
     fn load_scripted_trigger(&mut self, key: Token, block: Block) {
-        let index = (key.loc.idx, key.as_str());
+        let index = (key.loc.ptr.idx, key.as_str());
         if let Some(other) = self.triggers.get(&index) {
             dup_error(&key, &other.key, "scripted trigger");
         }
@@ -66,7 +66,7 @@ impl Events {
     }
 
     fn load_scripted_effect(&mut self, key: Token, block: Block) {
-        let index = (key.loc.idx, key.as_str());
+        let index = (key.loc.ptr.idx, key.as_str());
         if let Some(other) = self.effects.get(&index) {
             dup_error(&key, &other.key, "scripted effect");
         }
@@ -87,13 +87,13 @@ impl Events {
 
     #[cfg(feature = "ck3")]
     pub fn get_trigger(&self, key: &Token) -> Option<&Trigger> {
-        let index = (key.loc.idx, key.as_str());
+        let index = (key.loc.ptr.idx, key.as_str());
         self.triggers.get(&index)
     }
 
     #[cfg(feature = "ck3")]
     pub fn get_effect(&self, key: &Token) -> Option<&Effect> {
-        let index = (key.loc.idx, key.as_str());
+        let index = (key.loc.ptr.idx, key.as_str());
         self.effects.get(&index)
     }
 

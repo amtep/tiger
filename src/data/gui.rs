@@ -139,7 +139,7 @@ impl Gui {
 
         // With gui types the earlier one takes precedence
         if let Some(other) = self.types.get(&key_lc) {
-            if other.key.loc.kind <= key.loc.kind {
+            if other.key.loc.ptr.kind <= key.loc.ptr.kind {
                 dup_error(&other.key, &key, "gui type");
             }
             return;
@@ -150,7 +150,7 @@ impl Gui {
     pub fn load_template(&mut self, key: Token, block: Block) {
         // With gui templates the earlier one takes precedence
         if let Some(other) = self.templates.get(key.as_str()) {
-            if other.key.loc.kind <= key.loc.kind {
+            if other.key.loc.ptr.kind <= key.loc.ptr.kind {
                 dup_error(&other.key, &key, "gui template");
             }
             return;
@@ -160,7 +160,7 @@ impl Gui {
 
     pub fn load_layer(&mut self, key: Token, block: Block) {
         if let Some(other) = self.layers.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "gui layer");
             }
         }
@@ -180,7 +180,7 @@ impl Gui {
         if let Some(cbm) = color_blind_mode {
             let index = (cbm.as_str(), key.as_str());
             if let Some(other) = self.textformats_colorblind.get(&index) {
-                if other.key.loc.kind >= key.loc.kind {
+                if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                     let id = format!("textformat for {cbm}");
                     dup_error(&key, &other.key, &id);
                 }
@@ -188,7 +188,7 @@ impl Gui {
             self.textformats_colorblind.insert(index, TextFormat::new(key, block, Some(cbm)));
         } else {
             if let Some(other) = self.textformats.get(key.as_str()) {
-                if other.key.loc.kind >= key.loc.kind {
+                if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                     dup_error(&key, &other.key, "textformat");
                 }
             }
