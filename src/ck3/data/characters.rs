@@ -488,7 +488,7 @@ impl Character {
             if birth.is_none() && event != Birth {
                 let msg = format!("{character} was not born yet on {date}");
                 let mut loc = token.loc;
-                loc.column = 0;
+                loc.ptr.column = 0;
                 warn(ErrorKey::History).msg(msg).loc(loc).push();
             }
 
@@ -498,7 +498,7 @@ impl Character {
                         "{character} was not alive on {date}, had already died on {death_date}"
                     );
                     let mut loc = token.loc;
-                    loc.column = 0;
+                    loc.ptr.column = 0;
                     warn(ErrorKey::History)
                         .msg(msg)
                         .loc(loc)
@@ -510,7 +510,7 @@ impl Character {
             match event {
                 Birth => {
                     let mut loc = token.loc;
-                    loc.column = 0;
+                    loc.ptr.column = 0;
 
                     if let Some((birth_date, birth_loc)) = birth {
                         let msg = format!(
@@ -551,7 +551,7 @@ impl Character {
                 }
                 Death => {
                     let mut loc = token.loc;
-                    loc.column = 0;
+                    loc.ptr.column = 0;
                     death = Some((date, loc));
                 }
                 Posthumous => {
