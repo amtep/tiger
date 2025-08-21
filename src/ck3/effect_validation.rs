@@ -1,4 +1,4 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::ck3::data::legends::LegendChronicle;
 use crate::ck3::tables::misc::{
     BANNED_TITLE_HISTORY_TYPES, LEGEND_QUALITY, OUTBREAK_INTENSITIES, TITLE_HISTORY_TYPES,
@@ -11,19 +11,18 @@ use crate::desc::validate_desc;
 use crate::effect::{validate_effect, validate_effect_internal};
 use crate::effect_validation::validate_random_list;
 use crate::everything::Everything;
-use crate::helpers::{stringify_choices, stringify_list, TigerHashSet};
+use crate::helpers::{TigerHashSet, stringify_choices, stringify_list};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{err, warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err, warn};
 use crate::scopes::Scopes;
 use crate::script_value::{validate_non_dynamic_script_value, validate_script_value};
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_target, validate_target_ok_this};
 use crate::validate::{
-    validate_duration, validate_identifier, validate_mandatory_duration,
+    ListType, validate_duration, validate_identifier, validate_mandatory_duration,
     validate_optional_duration, validate_optional_duration_int, validate_possibly_named_color,
-    ListType,
 };
 use crate::validator::{Validator, ValueValidator};
 

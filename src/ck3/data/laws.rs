@@ -7,7 +7,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -162,9 +162,10 @@ impl DbKind for Law {
             {
                 vd.field_item("pool_character_config", Item::PoolSelector);
             } else {
-                vd.ban_field("pool_character_config", || {
-                    "theocratic, company, or generate succession"
-                });
+                vd.ban_field(
+                    "pool_character_config",
+                    || "theocratic, company, or generate succession",
+                );
             }
 
             if order_of_succession == "election" {

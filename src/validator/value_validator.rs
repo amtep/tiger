@@ -9,7 +9,7 @@ use crate::everything::Everything;
 #[cfg(feature = "hoi4")]
 use crate::hoi4::variables::validate_variable;
 use crate::item::Item;
-use crate::report::{report, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, report};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::trigger::validate_target;

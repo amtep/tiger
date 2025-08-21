@@ -4,7 +4,7 @@ use crate::everything::Everything;
 use crate::game::{Game, GameFlags};
 use crate::item::{Item, ItemLoader};
 #[cfg(feature = "jomini")]
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

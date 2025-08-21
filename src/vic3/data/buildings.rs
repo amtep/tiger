@@ -5,7 +5,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::script_value::validate_non_dynamic_script_value;
 use crate::token::Token;

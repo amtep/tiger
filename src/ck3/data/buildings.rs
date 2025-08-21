@@ -1,4 +1,4 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::ck3::modif::ModifKinds;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;

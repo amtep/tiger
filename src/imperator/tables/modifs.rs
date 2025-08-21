@@ -7,7 +7,7 @@ use crate::helpers::TigerHashMap;
 use crate::imperator::modif::ModifKinds;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{report, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, report};
 use crate::token::Token;
 
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.

@@ -7,7 +7,7 @@ use std::sync::atomic::Ordering;
 
 use atomic_enum::atomic_enum;
 
-use crate::block::{Block, Comparator, Eq::*, BV};
+use crate::block::{BV, Block, Comparator, Eq::*};
 use crate::ck3::data::houses::House;
 use crate::ck3::validate::validate_portrait_modifier_overrides;
 use crate::context::ScopeContext;
@@ -20,7 +20,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
-use crate::report::{err, fatal, untidy, warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err, fatal, untidy, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -36,11 +36,7 @@ pub enum Gender {
 
 impl Gender {
     fn from_female_bool(b: bool) -> Self {
-        if b {
-            Gender::Female
-        } else {
-            Gender::Male
-        }
+        if b { Gender::Female } else { Gender::Male }
     }
 
     fn flip(self) -> Self {

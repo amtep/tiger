@@ -8,7 +8,7 @@ use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::TigerHashMap;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

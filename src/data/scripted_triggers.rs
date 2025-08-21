@@ -6,12 +6,12 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 #[cfg(feature = "hoi4")]
 use crate::game::Game;
-use crate::helpers::{dup_error, exact_dup_error, TigerHashMap, BANNED_NAMES};
+use crate::helpers::{BANNED_NAMES, TigerHashMap, dup_error, exact_dup_error};
 use crate::lowercase::Lowercase;
-use crate::macros::{MacroCache, MACRO_MAP};
+use crate::macros::{MACRO_MAP, MacroCache};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
-use std::fs::{read_to_string, File};
+use std::fs::{File, read_to_string};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Parser;
 
 #[derive(Debug, Parser)]
