@@ -16,17 +16,10 @@ anyhow = "1"
 cfg-if = "1"
 clap = { version = "4.5", features = ["derive"] }
 console = "0.16"
-# held back because of msrv
 home = "0.5"
 regex = "1.10"
 steamlocate = "2.0"
 thiserror = "2.0"
-
-litemap = "0.8"
-zerofrom = "0.1"
-
-# indirect dependency of self_update, held back for msrv
-base64ct = "=1.7.3"
 
 [target.'cfg(windows)'.dependencies]
 ansiterm = "0.12.2"

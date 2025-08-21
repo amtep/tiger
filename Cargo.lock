@@ -2618,18 +2618,15 @@ version = "1.11.1"
 dependencies = [
  "ansiterm",
  "anyhow",
- "base64ct",
  "cfg-if",
  "clap",
  "console 0.16.0",
  "home",
- "litemap",
  "regex",
  "self_update",
  "steamlocate",
  "thiserror 2.0.14",
  "tiger-lib",
- "zerofrom",
 ]
 
 [[package]]
