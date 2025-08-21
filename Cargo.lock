@@ -186,9 +186,9 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "base64ct"
-version = "1.7.3"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89e25b6adfb930f02d1981565a6e5d9c547ac15a96606256d3b59040e5cd4ca3"
+checksum = "55248b47b0caf0546f7988906588779981c43bb1bc9d0c44087278f80cdb44ba"
 
 [[package]]
 name = "bimap"
@@ -291,9 +291,9 @@ dependencies = [
 
 [[package]]
 name = "cfg-if"
-version = "1.0.1"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
+checksum = "2fd1289c04a9ea8cb22300a459a72a385d7c73d3259e2ed7dcb2af674838cfa9"
 
 [[package]]
 name = "cfg_aliases"
@@ -771,14 +771,14 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "filetime"
-version = "0.2.25"
+version = "0.2.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35c0522e981e68cbfa8c3f978441a5f34b30b96e146b33cd3359176b50fe8586"
+checksum = "bc0505cd1b6fa6580283f6bdf70a73fcf4aba1184038c90902b92b3dd0df63ed"
 dependencies = [
  "cfg-if",
  "libc",
  "libredox",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1046,19 +1046,21 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hyper"
-version = "1.6.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc2b571658e38e0c01b1fdca3bbbe93c00d3d71693ff2770043f8c29bc7d6f80"
+checksum = "eb3aa54a13a0dfe7fbe3a59e0c76093041720fdc77b110cc0fc260fafb4dc51e"
 dependencies = [
+ "atomic-waker",
  "bytes",
  "futures-channel",
- "futures-util",
+ "futures-core",
  "h2",
  "http",
  "http-body",
  "httparse",
  "itoa",
  "pin-project-lite",
+ "pin-utils",
  "smallvec",
  "tokio",
  "want",
@@ -1273,9 +1275,9 @@ dependencies = [
 
 [[package]]
 name = "inventory"
-version = "0.3.20"
+version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab08d7cd2c5897f2c949e5383ea7c7db03fb19130ffcfbf7eda795137ae3cb83"
+checksum = "bc61209c082fbeb19919bee74b176221b27223e27b65d781eb91af24eb1fb46e"
 dependencies = [
  "rustversion",
 ]
@@ -1650,7 +1652,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1db05f56d34358a8b1066f67cbb203ee3e7ed2ba674a6263a1d5ec6db2204323"
 dependencies = [
  "memchr",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "ucd-trie",
 ]
 
@@ -1862,9 +1864,9 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.97"
+version = "1.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d61789d7719defeb74ea5fe81f2fdfdbd28a803847077cecce2ff14e1472f6f1"
+checksum = "89ae43fd86e4158d6db51ad8e2b80f313af9cc74f5c0e03ccb87de09998732de"
 dependencies = [
  "unicode-ident",
 ]
@@ -1892,7 +1894,7 @@ dependencies = [
  "rustc-hash",
  "rustls",
  "socket2 0.5.10",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "tokio",
  "tracing",
  "web-time",
@@ -1913,7 +1915,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "tinyvec",
  "tracing",
  "web-time",
@@ -2305,9 +2307,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.142"
+version = "1.0.143"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "030fedb782600dcbd6f02d479bf0d817ac3bb40d644745b769d6a96bc3afc5a7"
+checksum = "d401abef1d108fbd9cbaebc3e46611f4b1021f714a0597a71f41ee463f5f4a5a"
 dependencies = [
  "itoa",
  "memchr",
@@ -2542,15 +2544,15 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.20.0"
+version = "3.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8a64e3985349f2441a1a9ef0b853f869006c3855f2cda6862a94d26ebb9d6a1"
+checksum = "15b61f8f20e3a6f7e0649d825294eaf317edce30f82cf6026e7e4cb9222a7d1e"
 dependencies = [
  "fastrand",
  "getrandom 0.3.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2583,11 +2585,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.14"
+version = "2.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b0949c3a6c842cbde3f1686d6eea5a010516deb7085f79db747562d4102f41e"
+checksum = "3467d614147380f2e4e374161426ff399c91084acd2363eaf549172b3d5e60c0"
 dependencies = [
- "thiserror-impl 2.0.14",
+ "thiserror-impl 2.0.16",
 ]
 
 [[package]]
@@ -2603,9 +2605,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.14"
+version = "2.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc5b44b4ab9c2fdd0e0512e6bece8388e214c0749f5862b114cc5b7a25daf227"
+checksum = "6c5e1be1c48b9172ee610da68fd9cd2770e7a4056cb3fc98710ee6906f0c7960"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2625,7 +2627,7 @@ dependencies = [
  "regex",
  "self_update",
  "steamlocate",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "tiger-lib",
 ]
 
@@ -2658,7 +2660,7 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "tinybmp",
  "toml",
  "unicode-width",
@@ -2715,9 +2717,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09b3661f17e86524eccd4371ab0429194e0d7c008abb45f7a7495b1719463c71"
+checksum = "bfa5fdc3bce6191a1dbc8c02d5c8bffcf557bafa17c124c5264a458f1b0613fa"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -3139,11 +3141,11 @@ checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 
 [[package]]
 name = "winapi-util"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
+checksum = "0978bf7171b3d90bac376700cb56d606feb40f251a475a5d6634613564460b22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3481,7 +3483,7 @@ dependencies = [
  "flate2",
  "indexmap",
  "memchr",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
  "time",
  "zopfli",
 ]
@@ -3494,7 +3496,7 @@ checksum = "dba6063ff82cdbd9a765add16d369abe81e520f836054e997c2db217ceca40c0"
 dependencies = [
  "base64",
  "ed25519-dalek",
- "thiserror 2.0.14",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
