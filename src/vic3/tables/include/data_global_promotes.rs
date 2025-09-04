@@ -177,6 +177,7 @@
     ("OBJECTIVE", Args::Args(&[]), Vic3(Objective)),
     ("OBJECTIVE_TYPE", Args::Args(&[]), Vic3(ObjectiveType)),
     ("OBJECT_SCOPE", Args::Args(&[]), Scope),
+    ("OTHER_COUNTRY", Args::Args(&[]), Vic3(Country)),
     ("Outliner", Args::Args(&[]), Vic3(Outliner)),
     ("PARTY", Args::Args(&[]), Vic3(Party)),
     ("PLAYER", Args::Args(&[]), Vic3(Player)),
