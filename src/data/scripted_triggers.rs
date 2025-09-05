@@ -29,7 +29,7 @@ pub struct Triggers {
 impl Triggers {
     fn load_item(&mut self, key: Token, block: Block) {
         if let Some(other) = self.triggers.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 if other.block.equivalent(&block) {
                     exact_dup_error(&key, &other.key, "scripted trigger");
                 } else {
@@ -260,6 +260,6 @@ const BUILTIN_OVERRIDE_TRIGGERS: &[&str] = &[
 /// but only if the key is from vanilla. If it's from the mod, they may have implemented the
 /// trigger differently.
 fn builtin_scope_overrides(key: &Token) -> Option<Scopes> {
-    (key.loc.kind.counts_as_vanilla() && BUILTIN_OVERRIDE_TRIGGERS.contains(&key.as_str()))
+    (key.loc.ptr.kind.counts_as_vanilla() && BUILTIN_OVERRIDE_TRIGGERS.contains(&key.as_str()))
         .then_some(Scopes::all())
 }

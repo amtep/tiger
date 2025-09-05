@@ -33,7 +33,7 @@ impl DataBindings {
             return;
         }
         if let Some(other) = self.bindings.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "data binding");
             }
         }
