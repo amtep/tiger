@@ -11,7 +11,7 @@ use crate::pdxfile::PdxFile;
 use crate::report::{err, warn, ErrorKey};
 use crate::scopes::Scopes;
 use crate::script_value::{validate_non_dynamic_script_value, validate_script_value};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::variables::Variables;
 
 #[derive(Debug, Default)]
@@ -23,7 +23,7 @@ pub struct ScriptValues {
 impl ScriptValues {
     fn load_item(&mut self, key: &Token, bv: &BV) {
         if let Some(other) = self.script_values.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 if other.bv.equivalent(bv) {
                     exact_dup_error(key, &other.key, "script value");
                 } else {
@@ -121,7 +121,7 @@ impl FileHandler<Block> for ScriptValues {
 pub struct ScriptValue {
     key: Token,
     bv: BV,
-    cache: RwLock<TigerHashMap<Loc, ScopeContext>>,
+    cache: RwLock<TigerHashMap<LocStack, ScopeContext>>,
     scope_override: Option<Scopes>,
 }
 

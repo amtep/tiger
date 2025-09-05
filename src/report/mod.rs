@@ -7,8 +7,8 @@ pub use errors::*;
 pub(crate) use filter::FilterRule;
 pub(crate) use output_style::OutputStyle;
 pub use report_struct::{
-    Confidence, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle, PointedMessage,
-    Severity,
+    Confidence, LogReport, LogReportMetadata, LogReportPointers, LogReportStackPointers,
+    LogReportStyle, PointedMessageStack, Severity,
 };
 pub use suppress::suppress_from_json;
 

@@ -82,7 +82,7 @@ impl Titles {
         is_county_capital: bool,
     ) {
         if let Some(other) = self.titles.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "title");
             }
         }

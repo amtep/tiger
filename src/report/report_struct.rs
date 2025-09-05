@@ -2,9 +2,9 @@ use serde::Serialize;
 use strum_macros::{Display, EnumCount, EnumIter, EnumString, IntoStaticStr};
 
 use crate::report::ErrorKey;
-use crate::token::Loc;
+use crate::token::{Loc, LocStack};
 
-pub type LogReport = (LogReportMetadata, LogReportPointers);
+pub type LogReport = (LogReportMetadata, LogReportStackPointers);
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum LogReportStyle {
@@ -32,6 +32,28 @@ pub struct LogReportMetadata {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct PointedMessageStack {
+    /// Which file and where in the file the error occurs.
+    /// Might point to a whole file, rather than a specific location in the file.
+    pub loc: LocStack,
+    /// The length of the offending phrase in characters.
+    /// Set this to 1 if the length cannot be determined.
+    /// This will determine the number of carets that are printed at the given location.
+    /// e.g.:     ^^^^^^^^^
+    /// A length of 0 will hide the carets
+    /// TODO: If we end up adding length to Loc, this field can be deleted.
+    pub length: usize,
+    /// A short message that will be printed at the caret location.
+    pub msg: Option<String>,
+}
+
+impl PointedMessageStack {
+    pub fn new(loc: LocStack) -> Self {
+        PointedMessageStack { loc, msg: None, length: 0 }
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct PointedMessage {
     /// Which file and where in the file the error occurs.
     /// Might point to a whole file, rather than a specific location in the file.
@@ -47,13 +69,8 @@ pub struct PointedMessage {
     pub msg: Option<String>,
 }
 
-impl PointedMessage {
-    pub fn new(loc: Loc) -> Self {
-        Self { loc, msg: None, length: 0 }
-    }
-}
-
 /// Should contain one or more elements.
+pub type LogReportStackPointers = Vec<PointedMessageStack>;
 pub type LogReportPointers = Vec<PointedMessage>;
 
 pub fn pointer_indentation(pointers: &LogReportPointers) -> usize {
