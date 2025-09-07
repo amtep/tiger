@@ -400,7 +400,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "religious_unity", CompareValue),
     (Scopes::Country, "safety", CompareValue),
     (Scopes::Country, "stability", CompareValue),
-    (Scopes::Country, "tag", ScopeOrItem(Scopes::Country, Item::Localization)),
+    (Scopes::Country, "tag", UncheckedValue),
     (Scopes::Country, "threat_in_owned_land", CompareValue),
     (Scopes::Country, "total_holdings", CompareValue),
     (Scopes::Country, "towards_civil_war", Boolean),
@@ -578,7 +578,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_variable_list", Identifier("list name")),
     (Scopes::None, "is_dynamic_tag", Boolean),
     (Scopes::None, "is_in_list", Special),
-    (Scopes::None, "is_dynamic_tag", Boolean),
     (Scopes::None, "is_iron_man", Boolean),
     (Scopes::None, "is_target_alive", Scope(Scopes::Character)),
     (

@@ -162,7 +162,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "change_country_color", Item(Item::NamedColor)),
     (Scopes::Country, "change_country_flag", Item(Item::Coa)),
     (Scopes::Country, "change_country_name", Item(Item::Localization)),
-    (Scopes::Country, "change_country_tag", Item(Item::Localization)),
+    (Scopes::Country, "change_country_tag", Unchecked),
     (Scopes::Country, "change_government", Item(Item::GovernmentType)),
     (Scopes::Country, "change_law", Item(Item::Law)),
     (Scopes::Country, "create_character", Vb(validate_create_character)),
