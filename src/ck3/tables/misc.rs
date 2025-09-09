@@ -75,7 +75,7 @@ pub const ARTIFACT_HISTORY: &[&str] = &[
     "reforged",
 ];
 
-/// LAST UPDATED CK3 VERSION 1.16
+/// LAST UPDATED CK3 VERSION 1.17.0
 /// Taken from `has_dlc_feature` in triggers.log
 pub const DLC_FEATURES_CK3: &[&str] = &[
     "garments_of_the_hre",
@@ -110,6 +110,7 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "arctic_attire",
     "crowns_of_the_world",
     "landless_adventurer",
+    "coronations",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
@@ -349,7 +350,7 @@ pub const ARTIFACT_RARITIES: &[&str] = &["common", "masterwork", "famed", "illus
 // LAST UPDATED CK3 VERSION 1.12.1
 pub const OUTBREAK_INTENSITIES: &[&str] = &["minor", "major", "apocalyptic"];
 
-// LAST UPDATED CK3 VERSION 1.15.0
+// LAST UPDATED CK3 VERSION 1.17.0
 pub const COMMON_DIRS: &[&str] = &[
     "common/accolade_icons",
     "common/accolade_names",

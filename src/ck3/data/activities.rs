@@ -202,6 +202,8 @@ impl DbKind for ActivityType {
             "realm",
             "top_realm",
             "holy_sites",
+            "holy_sites_domain",
+            "holy_sites_realm",
             "domicile",
             "domicile_domain",
             "domicile_realm",

@@ -564,7 +564,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "remove_character_modifier", Item(Item::Modifier)),
     (Scopes::Character, "remove_character_secret_faith", Yes),
     (Scopes::Character, "remove_claim", Scope(Scopes::LandedTitle)),
-    (Scopes::Army, "remove_commanded", Yes),
+    (Scopes::Army, "remove_commander", Yes),
     (Scopes::Character, "remove_concubine", Scope(Scopes::Character)),
     (Scopes::Confederation, "remove_confederation_member", Scope(Scopes::Character)),
     (Scopes::LandedTitle, "remove_county_modifier", Item(Item::Modifier)),
