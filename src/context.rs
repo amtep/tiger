@@ -135,6 +135,10 @@ pub enum Reason {
     /// The scope was supplied by the game engine. The `Token` points at a key explaining this, for
     /// example the key of an `Item` or the field key of a trigger or effect in an item.
     Builtin(Token),
+    /// The vic3 engine evaluates `multiplier` in `add_modifier` in root scope, which is probably a
+    /// bug. Explain it to the user when it comes up. The `Token` points at the `multiplier` key.
+    #[cfg(feature = "vic3")]
+    MultiplierBug(Token),
 }
 
 /// Information about a temporarily suspended scope-building operation.
@@ -161,15 +165,21 @@ impl Reason {
     pub fn token(&self) -> &Token {
         match self {
             Reason::Token(t) | Reason::Name(t) | Reason::Builtin(t) => t,
+            #[cfg(feature = "vic3")]
+            Reason::MultiplierBug(t) => t,
         }
     }
 
     // TODO: change this to Display ?
     pub fn msg(&self) -> Cow<'_, str> {
         match self {
-            Reason::Token(t) => Cow::Owned(format!("deduced from `{t}` here")),
-            Reason::Name(_) => Cow::Borrowed("deduced from the scope's name"),
-            Reason::Builtin(_) => Cow::Borrowed("supplied by the game engine"),
+            Reason::Token(t) => Cow::Owned(format!("scope was deduced from `{t}` here")),
+            Reason::Name(_) => Cow::Borrowed("scope was deduced from the scope's name"),
+            Reason::Builtin(_) => Cow::Borrowed("scope was supplied by the game engine"),
+            #[cfg(feature = "vic3")]
+            Reason::MultiplierBug(_) => {
+                Cow::Borrowed("as of 1.9.8, `multiplier` is evaluated in root scope")
+            }
         }
     }
 }
@@ -701,8 +711,16 @@ impl ScopeContext {
         self.scopes_reason().0
     }
 
+    #[cfg(feature = "vic3")]
+    pub fn get_multiplier_context(&self, key: &Token) -> Self {
+        let scopes = self.resolve_root().0;
+        let mut sc = ScopeContext::new(scopes, key);
+        sc.root = ScopeEntry::Scope(scopes, Reason::MultiplierBug(key.clone()));
+        sc
+    }
+
     /// Return the possible scope types of `root`, and the reason why we think it has those types
-    pub fn resolve_root(&self) -> (Scopes, &Reason) {
+    fn resolve_root(&self) -> (Scopes, &Reason) {
         match self.root {
             ScopeEntry::Scope(s, ref reason) => (s, reason),
             _ => unreachable!(),
@@ -841,7 +859,7 @@ impl ScopeContext {
                 } else {
                     let token = reason.token();
                     let msg = format!("`{token}` is for {scopes} but scope seems to be {s}");
-                    let msg2 = format!("scope was {}", r.msg());
+                    let msg2 = r.msg();
                     warn(ErrorKey::Scopes).msg(msg).loc(token).loc_msg(r.token(), msg2).push();
                 }
             }
