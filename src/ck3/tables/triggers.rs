@@ -927,7 +927,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_accolade_successor", Boolean),
     (Scopes::TaxSlot, "is_active_obligation", Item(Item::TaxSlotObligation)),
     (Scopes::Activity, "is_activity_complete", Boolean),
-    (Scopes::Character, "is_activity_type_on_cooldown", Scope(Scopes::ActivityType)),
+    (Scopes::Character, "is_activity_type_on_cooldown", ScopeOrItem(Scopes::ActivityType, Item::ActivityType)),
     (Scopes::Character, "is_adult", Boolean),
     (Scopes::Character, "is_agent_exposed_in_scheme", Scope(Scopes::Scheme)),
     (Scopes::AgentSlot, "is_agent_slot_type", Item(Item::AgentType)),
