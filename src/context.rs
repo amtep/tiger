@@ -700,11 +700,6 @@ impl ScopeContext {
         self.scopes().intersects(scopes)
     }
 
-    /// Return true iff `this` is known to be one of the types of `scopes`
-    pub fn must_be(&self, scopes: Scopes) -> bool {
-        scopes.contains(self.scopes())
-    }
-
     /// Return the possible scope types of this scope level.
     // TODO: maybe specialize this function for performance?
     pub fn scopes(&self) -> Scopes {

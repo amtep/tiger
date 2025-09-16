@@ -942,10 +942,13 @@ fn match_trigger_bv(
             if name.is("exists") {
                 if let Some(token) = bv.expect_value() {
                     if token.is("yes") || token.is("no") {
-                        if sc.must_be(Scopes::None) {
-                            let msg = "`exists = {token}` does nothing in None scope";
-                            warn(ErrorKey::Scopes).msg(msg).loc(token).push();
-                        }
+                        let msg = "`exists = yes/no` does not work";
+                        let info = if token.is("yes") {
+                            "try `exists = this`"
+                        } else {
+                            "try `NOT = { exists = this }`"
+                        };
+                        warn(ErrorKey::Scopes).msg(msg).info(info).loc(token).push();
                     } else if token.starts_with("scope:") && !token.as_str().contains('.') {
                         // exists = scope:name is used to check if that scope name was set
                         if !negated {
