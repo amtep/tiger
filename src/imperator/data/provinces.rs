@@ -13,7 +13,7 @@ use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{err, fatal, report, untidy, warn, ErrorKey, Severity};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 pub type ProvId = u32;
 
@@ -319,7 +319,7 @@ pub struct Coords {
 #[allow(dead_code)] // TODO
 #[derive(Clone, Debug)]
 pub struct Adjacency {
-    line: Loc,
+    line: LocStack,
     from: ProvId,
     to: ProvId,
     /// TODO: check type is sea or `river_large`

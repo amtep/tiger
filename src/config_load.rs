@@ -11,16 +11,16 @@ use crate::block::{Block, BlockItem, Comparator, Eq::*, Field, BV};
 use crate::helpers::stringify_list;
 use crate::report::{
     err, set_predicate, set_show_loaded_mods, set_show_vanilla, Confidence, ErrorKey, ErrorLoc,
-    FilterRule, PointedMessage, Severity,
+    FilterRule, PointedMessageStack, Severity,
 };
 
 /// Checks for legacy ignore blocks (that no longer work) and report an error if they are present.
 pub fn check_for_legacy_ignore(config: &Block) {
     // First, report errors if legacy ignore blocks are detected:
-    let pointers: Vec<PointedMessage> = config
+    let pointers: Vec<PointedMessageStack> = config
         .get_keys("ignore")
         .into_iter()
-        .map(|key| PointedMessage::new(key.into_loc()))
+        .map(|key| PointedMessageStack::new(key.into_loc()))
         .collect();
     if !pointers.is_empty() {
         err(ErrorKey::Config)
@@ -406,10 +406,10 @@ pub fn assert_one_key(assert_key: &str, block: &Block) {
         let pointers = keys
             .iter()
             .enumerate()
-            .map(|(index, key)| PointedMessage {
+            .map(|(index, key)| PointedMessageStack {
                 loc: key.into_loc(),
                 length: 1,
-                msg: Some((if index == 0 { "It occurs here" } else { "and here" }).to_owned()),
+                msg: Some((if index == 0 { "It occurs here" } else { "and here" }).into()),
             })
             .collect();
         err(ErrorKey::Config)
