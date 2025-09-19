@@ -22,6 +22,8 @@ macro_rules! set {
     };
 }
 
+pub type DupReporter = fn(&Token, &Token, &str) -> ();
+
 /// Warns about a redefinition of a database item
 pub fn dup_error(key: &Token, other: &Token, id: &str) {
     warn(ErrorKey::DuplicateItem)

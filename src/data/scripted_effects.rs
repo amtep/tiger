@@ -27,7 +27,7 @@ pub struct Effects {
 impl Effects {
     fn load_item(&mut self, key: Token, block: Block) {
         if let Some(other) = self.effects.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 if other.block.equivalent(&block) {
                     exact_dup_error(&key, &other.key, "scripted effect");
                 } else {

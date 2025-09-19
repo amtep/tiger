@@ -30,7 +30,7 @@ pub struct Doctrines {
 impl Doctrines {
     fn load_item(&mut self, key: Token, block: Block) {
         if let Some(other) = self.categories.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "doctrine category");
             }
         }
@@ -128,7 +128,7 @@ impl FileHandler<Block> for Doctrines {
                 }
 
                 if let Some(other) = self.doctrines.get(doctrine.as_str()) {
-                    if other.key.loc.kind >= doctrine.loc.kind {
+                    if other.key.loc.ptr.kind >= doctrine.loc.ptr.kind {
                         dup_error(doctrine, &other.key, "doctrine");
                     }
                 }

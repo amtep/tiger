@@ -10,7 +10,7 @@ use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{err, ErrorKey};
 use crate::scopes::{scope_iterator, Scopes};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_trigger;
 use crate::validator::Validator;
@@ -24,7 +24,7 @@ pub struct ScriptedLists {
 impl ScriptedLists {
     fn load_item(&mut self, key: Token, block: Block) {
         if let Some(other) = self.lists.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "scripted list");
             }
         }
@@ -86,7 +86,7 @@ impl FileHandler<Block> for ScriptedLists {
 pub struct List {
     pub key: Token,
     block: Block,
-    cache: RwLock<TigerHashMap<Loc, ScopeContext>>,
+    cache: RwLock<TigerHashMap<LocStack, ScopeContext>>,
 }
 
 impl List {
