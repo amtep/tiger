@@ -151,6 +151,23 @@ impl Titles {
     pub fn capital_of(&self, prov: ProvId) -> Option<&str> {
         self.baronies.get(&prov).and_then(|b| b.capital_of())
     }
+
+    /// Return true iff the vassal title is in the de jure land of the liege title.
+    /// A title is always in its own de jure.
+    pub fn is_de_jure(&self, liege: &str, vassal: &str) -> bool {
+        let mut key = vassal;
+        while let Some(title) = self.titles.get(key) {
+            if key == liege {
+                return true;
+            }
+            key = if let Some(parent) = title.parent {
+                parent
+            } else {
+                return false;
+            }
+        }
+        false
+    }
 }
 
 impl FileHandler<Block> for Titles {
@@ -220,13 +237,6 @@ impl Title {
 
         vd.field_validated("color", validate_possibly_named_color);
         vd.advice_field("color2", "no longer used");
-        if let Some(token) = vd.field_value("capital") {
-            data.verify_exists(Item::Title, token);
-            if Tier::try_from(token) != Ok(Tier::County) {
-                let msg = "capital must be a county";
-                err(ErrorKey::TitleTier).msg(msg).loc(token).push();
-            }
-        }
         vd.field_bool("definite_form");
         vd.field_bool("ruler_uses_title_name");
         vd.field_bool("can_be_named_after_dynasty");
@@ -271,13 +281,30 @@ impl Title {
             });
         });
 
+        let mut has_de_jure_land = false;
         // The blocks are validated by the next level Title
         vd.unknown_block_fields(|key, _| {
             if Tier::try_from(key).is_err() {
                 let msg = format!("unknown field `{key}`");
                 warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
+            } else {
+                has_de_jure_land = true;
             }
         });
+        // Check capital after the above loop, to have the has_de_jure_land result.
+        if let Some(token) = vd.field_value("capital") {
+            data.verify_exists(Item::Title, token);
+            if Tier::try_from(token) != Ok(Tier::County) {
+                let msg = "capital must be a county";
+                err(ErrorKey::TitleTier).msg(msg).loc(token).push();
+            } else if self.tier == Tier::Duchy
+                && has_de_jure_land
+                && !data.titles.is_de_jure(self.key.as_str(), token.as_str())
+            {
+                let msg = format!("capital `{token}` is not in de jure `{}`", self.key);
+                warn(ErrorKey::TitleTier).msg(msg).loc(token).push();
+            }
+        }
     }
 
     fn capital_of(&self) -> Option<&str> {
