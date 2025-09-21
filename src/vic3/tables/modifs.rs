@@ -1082,10 +1082,10 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
             .union(ModifKinds::InterestGroup)
             .union(ModifKinds::MilitaryFormation)
             .union(ModifKinds::PoliticalMovement)
-            .union(ModifKinds::Tax)
             // From State
             .union(ModifKinds::Building)
             .union(ModifKinds::Battle)
+            .union(ModifKinds::Tax)
             // From Building
             .union(ModifKinds::Goods)
             // From MilitaryFormation
@@ -1098,6 +1098,7 @@ const MODIF_FLOW_TABLE: &[(ModifKinds, ModifKinds)] = &[
             // Direct nodes
             .union(ModifKinds::Building)
             .union(ModifKinds::Battle)
+            .union(ModifKinds::Tax)
             // From Building
             .union(ModifKinds::Goods)
             // From Battle
