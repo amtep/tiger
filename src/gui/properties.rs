@@ -63,6 +63,8 @@ pub enum GuiValidation {
     CVector3f,
     /// A block with 4 numbers, or a [`Datatype::CVector4f`] expression.
     CVector4f,
+    /// A block with a series of blocks with 2 numbers, or a datatype expression.
+    PointsList,
     /// A block with 4 numbers (RGBA), or a [`Datatype::CVector4f`] expression.
     /// The difference with [`GuiValidation::CVector4f`] is in the error messages.
     Color,
@@ -666,7 +668,7 @@ impl GuiValidation {
             parentanchor => Align,
             password => Boolean,
             plotpoints => DatatypeExpr,
-            points => DatatypeExpr,
+            points => PointsList,
             pop_out => Boolean,
             pop_out_v => NumberOrInt32,
             portrait_context => DatatypeExpr,

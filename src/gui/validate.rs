@@ -218,6 +218,20 @@ pub fn validate_property(
                 vd.req_tokens_numbers_exactly(4);
             }
         },
+        GuiValidation::PointsList => match bv {
+            BV::Value(_) => {
+                validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+            }
+            BV::Block(block) => {
+                let mut vd = Validator::new(block, data);
+                vd.set_max_severity(Severity::Warning);
+                for block in vd.blocks() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_max_severity(Severity::Warning);
+                    vd.req_tokens_numbers_exactly(2);
+                }
+            }
+        },
         GuiValidation::Color => match bv {
             BV::Value(_) => {
                 // TODO: can be CVector4f or CString
