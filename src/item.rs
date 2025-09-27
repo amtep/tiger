@@ -1125,7 +1125,8 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::CultureHistory => "history/cultures/",
             #[cfg(feature = "ck3")]
-            Item::CultureParameter => "common/culture/",
+            // This is ugly since it isn't a path, but the path won't be used except in messages.
+            Item::CultureParameter => "common/culture/ parameters blocks",
             #[cfg(feature = "ck3")]
             Item::CulturePillar => "common/culture/pillars/",
             #[cfg(feature = "ck3")]
@@ -1857,6 +1858,7 @@ impl Item {
             | Item::BuildingGfx
             | Item::ClothingGfx
             | Item::CoaGfx
+            | Item::CultureParameter
             | Item::MemoryCategory
             | Item::UnitGfx => Confidence::Weak,
 
