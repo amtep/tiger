@@ -364,9 +364,33 @@ fn lookup_engine_modif(
         }
     }
 
+    // country_fervor_target_$Culture$_add
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_") {
+        if let Some(part) = part.strip_suffix_unchecked("_add") {
+            maybe_warn(Item::Culture, &part, name, data, warn);
+            return Some(ModifKinds::Country);
+        }
+    }
+
+    // country_$SocialClass$_cultural_acceptance_add
+    // country_$Culture$_cultural_acceptance_add
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
+        if let Some(part) = part.strip_suffix_unchecked("_cultural_acceptance_add") {
+            if let Some(sev) = warn {
+                if !data.item_exists_lc(Item::SocialClass, &part)
+                    && !data.item_exists_lc(Item::Culture, &part)
+                {
+                    let msg = format!("{part} not found as culture or social class");
+                    let info = format!("so the modifier {name} will have no effect");
+                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
+                }
+            }
+            return Some(ModifKinds::Country);
+        }
+    }
+
     // country_$SocialClass$_acceptance_max_add
     // country_$SocialClass$_acceptance_min_add
-    // country_$SocialClass$_cultural_acceptance_add
     // country_$SocialClass$_cultural_acceptance_mult
     // country_$SocialClass$_education_access_add
     // country_$SocialClass$_education_access_mult
@@ -470,6 +494,14 @@ fn lookup_engine_modif(
                 }
                 return Some(ModifKinds::State);
             }
+        }
+    }
+
+    // state_sell_orders_$Goods$_add
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_sell_orders_") {
+        if let Some(part) = part.strip_suffix_unchecked("_add") {
+            maybe_warn(Item::Goods, &part, name, data, warn);
+            return Some(ModifKinds::State);
         }
     }
 
@@ -686,13 +718,20 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("character_interception_add", ModifKinds::Character),
     ("character_popularity_add", ModifKinds::Character),
     ("character_supply_route_cost_mult", ModifKinds::MilitaryFormation),
-    ("country_acceptance_culture_base_add", ModifKinds::Country),
+    ("country_acceptance_homeland_add", ModifKinds::Country),
+    ("country_acceptance_no_shared_heritage_trait_add", ModifKinds::Country),
+    ("country_acceptance_no_shared_language_trait_add", ModifKinds::Country),
+    ("country_acceptance_no_shared_religious_trait_add", ModifKinds::Country),
+    ("country_acceptance_no_shared_tradition_trait_add", ModifKinds::Country),
+    ("country_acceptance_not_homeland_add", ModifKinds::Country),
     ("country_acceptance_primary_culture_add", ModifKinds::Country),
-    ("country_acceptance_religion_base_add", ModifKinds::Country),
-    ("country_acceptance_shared_cultural_trait_add", ModifKinds::Country),
-    ("country_acceptance_shared_heritage_and_cultural_trait_add", ModifKinds::Country),
     ("country_acceptance_shared_heritage_trait_add", ModifKinds::Country),
+    ("country_acceptance_shared_heritage_trait_group_add", ModifKinds::Country),
+    ("country_acceptance_shared_language_trait_add", ModifKinds::Country),
+    ("country_acceptance_shared_language_trait_group_add", ModifKinds::Country),
     ("country_acceptance_shared_religious_trait_add", ModifKinds::Country),
+    ("country_acceptance_shared_religious_trait_group_add", ModifKinds::Country),
+    ("country_acceptance_shared_tradition_trait_add", ModifKinds::Country),
     ("country_acceptance_state_religion_add", ModifKinds::Country),
     ("country_agitator_slots_add", ModifKinds::Country),
     ("country_ahead_of_time_research_penalty_mult", ModifKinds::Country),
@@ -716,7 +755,9 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_cannot_enact_laws_bool", ModifKinds::Country),
     ("country_cannot_start_law_enactment_bool", ModifKinds::Country),
     ("country_company_construction_efficiency_bonus_add", ModifKinds::Country),
+    ("country_company_government_dividends_add", ModifKinds::Country),
     ("country_company_throughput_bonus_add", ModifKinds::Country),
+    ("country_company_worker_dividends_add", ModifKinds::Country),
     ("country_construction_add", ModifKinds::Country),
     ("country_construction_goods_cost_mult", ModifKinds::Country),
     ("country_consumption_tax_cost_mult", ModifKinds::Country),
@@ -736,6 +777,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_disallow_trade_bool", ModifKinds::Country),
     ("country_disallow_trade_outside_canton_bool", ModifKinds::Country),
     ("country_economic_dependence_on_overlord_add", ModifKinds::Country),
+    ("country_education_fervor_add", ModifKinds::Country),
     ("country_expedition_events_explorer_mult", ModifKinds::Country),
     ("country_expenses_add", ModifKinds::Country),
     ("country_free_charters_add", ModifKinds::Country),
@@ -797,6 +839,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_military_tech_research_speed_mult", ModifKinds::Country),
     ("country_military_tech_spread_mult", ModifKinds::Country),
     ("country_military_wages_mult", ModifKinds::Country),
+    ("country_min_cultural_acceptance_add", ModifKinds::Country),
     ("country_minting_add", ModifKinds::Country),
     ("country_minting_mult", ModifKinds::Country),
     ("country_must_have_movement_to_enact_laws_bool", ModifKinds::Country),
@@ -813,6 +856,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_prestige_from_army_power_projection_mult", ModifKinds::Country),
     ("country_prestige_from_navy_power_projection_mult", ModifKinds::Country),
     ("country_prestige_mult", ModifKinds::Country),
+    ("country_primary_culture_fervor_from_laws_add", ModifKinds::Country),
     ("country_private_construction_allocation_mult", ModifKinds::Country),
     ("country_production_tech_research_speed_mult", ModifKinds::Country),
     ("country_production_tech_spread_mult", ModifKinds::Country),
@@ -833,6 +877,8 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_subject_income_transfer_heathen_mult", ModifKinds::Country),
     ("country_subject_income_transfer_mult", ModifKinds::Country),
     ("country_support_independence_weekly_liberty_desire_add", ModifKinds::Country),
+    ("country_support_separatism_resistance_mult", ModifKinds::Country),
+    ("country_support_separatism_separatism_mult", ModifKinds::Country),
     ("country_suppression_attraction_factor", ModifKinds::Country),
     ("country_suppression_cost_mult", ModifKinds::Country),
     ("country_tax_income_add", ModifKinds::Country),
@@ -892,6 +938,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("power_bloc_mandate_progress_mult", ModifKinds::PowerBloc),
     ("power_bloc_target_sway_cost_mult", ModifKinds::PowerBloc),
     ("power_bloc_trade_advantage_add", ModifKinds::PowerBloc),
+    ("state_allow_assimilation_in_homeland_bool", ModifKinds::State),
     ("state_assimilation_mult", ModifKinds::State),
     ("state_birth_rate_mult", ModifKinds::State),
     ("state_bureaucracy_population_base_cost_factor_mult", ModifKinds::State),
@@ -922,6 +969,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("state_infrastructure_from_population_max_mult", ModifKinds::State),
     ("state_infrastructure_from_population_mult", ModifKinds::State),
     ("state_infrastructure_mult", ModifKinds::State),
+    ("state_institution_impact_add", ModifKinds::State),
     ("state_lower_strata_expected_sol_add", ModifKinds::State),
     ("state_lower_strata_standard_of_living_add", ModifKinds::State),
     ("state_loyalists_from_political_movements_mult", ModifKinds::State),
@@ -1330,4 +1378,5 @@ const MODIF_REMOVED_TABLE: &[(&str, &str)] = &[
     ("tariff_export_outside_power_bloc_mult", "removed in 1.9"),
     ("tariff_import_add", "removed in 1.9"),
     ("tariff_import_outside_power_bloc_mult", "removed in 1.9"),
+    ("country_acceptance_culture_base_add", "replaced with new acceptance system in 1.10"),
 ];

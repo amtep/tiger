@@ -866,8 +866,8 @@ fn match_trigger_bv(
                     match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
             }
         },
-        #[cfg(feature = "ck3")]
-        Trigger::CompareValueOrBlock(fields) => match bv {
+        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        Trigger::BlockOrCompareValue(fields) => match bv {
             BV::Value(t) => {
                 validate_target(t, data, sc, Scopes::Value);
                 must_be_eq = false;
@@ -1756,8 +1756,8 @@ pub enum Trigger {
     #[cfg(feature = "ck3")]
     ItemOrBlock(Item, &'static [(&'static str, Trigger)]),
     /// can be part of a scope chain but also a standalone trigger
-    #[cfg(feature = "ck3")]
-    CompareValueOrBlock(&'static [(&'static str, Trigger)]),
+    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    BlockOrCompareValue(&'static [(&'static str, Trigger)]),
     /// trigger takes a block of values of this scope type
     #[cfg(feature = "ck3")]
     ScopeList(Scopes),
@@ -1805,7 +1805,7 @@ pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
                 | Trigger::CompareValueWarnEq
                 | Trigger::CompareDate
                 | Trigger::SetValue
-                | Trigger::CompareValueOrBlock(_)
+                | Trigger::BlockOrCompareValue(_)
                 | Trigger::CompareChoice(_),
             )),
         ) => Some(s),
@@ -1816,6 +1816,7 @@ pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
                 s,
                 Trigger::CompareValue
                 | Trigger::CompareDate
+                | Trigger::BlockOrCompareValue(_)
                 | Trigger::ItemOrCompareValue(_)
                 | Trigger::CompareChoice(_)
                 | Trigger::CompareChoiceOrNumber(_),

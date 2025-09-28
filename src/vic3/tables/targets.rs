@@ -17,7 +17,7 @@ static SCOPE_TO_SCOPE_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>
         hash
     });
 
-/// LAST UPDATED VIC3 VERSION 1.7.6
+/// LAST UPDATED VIC3 VERSION 1.10.0
 /// See `event_targets.log` from the game data dumps
 /// These are scope transitions that can be chained like `root.joined_faction.faction_leader`
 const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
@@ -168,6 +168,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Party, "momentum", Scopes::Value),
     (Scopes::NewCombatUnit, "morale", Scopes::Value),
     (Scopes::PoliticalMovement, "most_desired_law", Scopes::LawType),
+    (Scopes::Culture, "national_awakening_state_region", Scopes::StateRegion),
     (Scopes::Province, "naval_controller_hq", Scopes::Hq),
     (Scopes::Province, "naval_hq", Scopes::Hq),
     (Scopes::Country, "navy_size", Scopes::Value),
@@ -315,6 +316,9 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "techs_researched", Scopes::Value),
     (Scopes::BattleSide.union(Scopes::State), "theater", Scopes::Theater),
     (Scopes::Country, "top_overlord", Scopes::Country),
+    (Scopes::Country, "total_export_value", Scopes::Value),
+    (Scopes::Country, "total_import_value", Scopes::Value),
+    (Scopes::Country, "total_trade_value", Scopes::Value),
     (Scopes::Market, "trade_center", Scopes::State),
     (Scopes::Building, "training_rate", Scopes::Value),
     (Scopes::TreatyArticle, "treaty", Scopes::Treaty),
@@ -365,7 +369,7 @@ static SCOPE_PREFIX_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes, Ar
         hash
     });
 
-/// LAST UPDATED VIC3 VERSION 1.7.6
+/// LAST UPDATED VIC3 VERSION 1.10.0
 /// See `event_targets.log` from the game data dumps
 /// These are absolute scopes (like character:100000) and scope transitions that require
 /// a key (like `root.cp:councillor_steward`)
@@ -504,6 +508,9 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::Country, "num_pending_events", Scopes::Value, Item(Item::EventCategory)),
         (Scopes::Country, "num_shared_rivals", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Front, "num_total_battalions", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_units", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_units_in_battle", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_units_not_in_battle", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::None, "p", Scopes::Province, Item(Item::Province)),
         (Scopes::None, "play_type", Scopes::DiplomaticPlayType, Item(Item::DiplomaticPlay)),
         (Scopes::None, "pop_type", Scopes::PopType, Item(Item::PopType)),

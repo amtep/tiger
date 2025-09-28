@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use crate::block::Block;
+use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
@@ -70,6 +71,14 @@ impl DbKind for Theme {
         });
 
         vd.field_item("dlc", Item::Dlc);
+        vd.field_value("bulk_selection_group");
+        let mut sc = ScopeContext::new(Scopes::Country, key);
+        vd.field_script_value_no_breakdown("dynamic_weight", &mut sc);
+
+        // undocumented
+
+        // TODO: is this only for main_menu_image_theme ?
+        vd.field_item("video", Item::File);
     }
 }
 
@@ -123,4 +132,6 @@ const THEME_CATEGORIES: &[&str] = &[
     "table_asset_4_theme",
     "table_asset_cloth_theme",
     "building_sets_themes",
+    // undocumented
+    "main_menu_image_theme",
 ];

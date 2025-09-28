@@ -104,6 +104,11 @@ impl DbKind for AiStrategy {
             sc.define_name("target_country", Scopes::Country, key);
             validate_script_value(bv, data, &mut sc);
         });
+        vd.field_script_value_no_breakdown_builder("interest_group_government_weight", |key| {
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("interest_group", Scopes::InterestGroup, key);
+            sc
+        });
         vd.field_validated_key("state_value", |key, bv, data| {
             let mut sc = ScopeContext::new(Scopes::Country, key);
             sc.define_name("target_state", Scopes::State, key);
@@ -160,6 +165,7 @@ impl DbKind for AiStrategy {
         vd.field_validated_key_block("goods_stances", validate_goods_stances);
 
         vd.field_script_value_rooted("colonial_interest_ratio", Scopes::Country);
+        vd.field_validated_block("liberate_country_scores", validate_liberate_country_scores);
         vd.field_validated_key_block("strategic_region_scores", validate_strategic_region_scores);
         vd.field_validated_key_block("secret_goal_scores", validate_secret_goal_scores);
         vd.field_validated_key_block("secret_goal_weights", validate_secret_goal_weights);
@@ -236,9 +242,11 @@ fn validate_secret_goal_scores(key: &Token, block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     let mut sc = ScopeContext::new(Scopes::Country, key);
     sc.define_name("target_country", Scopes::Country, key);
-    vd.unknown_fields(|key, bv| {
+    vd.unknown_block_fields(|key, block| {
         data.verify_exists(Item::SecretGoal, key);
-        validate_script_value(bv, data, &mut sc);
+        let mut vd = Validator::new(block, data);
+        vd.field_trigger("trigger", Tooltipped::No, &mut sc);
+        vd.field_script_value_no_breakdown("score", &mut sc);
     });
 }
 
@@ -274,5 +282,15 @@ fn validate_wargoal_weights(_key: &Token, block: &Block, data: &Everything) {
     vd.unknown_value_fields(|key, token| {
         data.verify_exists(Item::Wargoal, key);
         token.expect_number();
+    });
+}
+
+fn validate_liberate_country_scores(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.unknown_fields(|key, bv| {
+        data.verify_exists(Item::Country, key);
+        let mut sc = ScopeContext::new(Scopes::Country, key);
+        sc.define_name("target_country", Scopes::Country, key);
+        validate_script_value(bv, data, &mut sc);
     });
 }

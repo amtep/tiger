@@ -171,6 +171,8 @@ impl DbKind for CountryFormation {
 
         vd.field_integer("max_num_formation_candidates");
         vd.field_trigger_rooted("can_be_formation_candidate", Tooltipped::No, Scopes::Country);
+        vd.field_trigger_rooted("can_be_unification_target", Tooltipped::Yes, Scopes::Country);
+        vd.field_trigger_rooted("potential", Tooltipped::No, Scopes::Country);
     }
 }
 

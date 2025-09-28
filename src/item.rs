@@ -445,6 +445,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] DiplomaticCatalystCategory,
     #[cfg(feature = "vic3")] DiplomaticPlay,
     #[cfg(feature = "vic3")] DiscriminationTrait,
+    #[cfg(feature = "vic3")] DiscriminationTraitGroup,
     #[cfg(feature = "vic3")] DynamicCompanyName,
     #[cfg(feature = "vic3")] DynamicCountryMapColor,
     #[cfg(feature = "vic3")] DynamicCountryName,
@@ -456,12 +457,14 @@ pub enum Item {
     #[cfg(feature = "vic3")] Goods,
     #[cfg(feature = "vic3")] GradientBorderSettings,
     #[cfg(feature = "vic3")] HarvestConditionType,
+    #[cfg(feature = "vic3")] HeritageTrait,
     #[cfg(feature = "vic3")] InfamyThreshold,
     #[cfg(feature = "vic3")] Institution,
     #[cfg(feature = "vic3")] InterestGroup,
     #[cfg(feature = "vic3")] InterestGroupTrait,
     #[cfg(feature = "vic3")] JournalEntry,
     #[cfg(feature = "vic3")] JournalEntryGroup,
+    #[cfg(feature = "vic3")] LanguageTrait,
     #[cfg(feature = "vic3")] LawType,
     #[cfg(feature = "vic3")] LegitimacyLevel,
     #[cfg(feature = "vic3")] Level,
@@ -512,6 +515,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] TerrainMask,
     #[cfg(feature = "vic3")] TerrainMaterial,
     #[cfg(feature = "vic3")] Theme,
+    #[cfg(feature = "vic3")] TraditionTrait,
     #[cfg(feature = "vic3")] TransferOfPower,
     #[cfg(feature = "vic3")] TreatyArticle,
 
@@ -1471,6 +1475,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::DiscriminationTrait => "common/discrimination_traits/",
             #[cfg(feature = "vic3")]
+            Item::DiscriminationTraitGroup => "common/discrimination_trait_groups/",
+            #[cfg(feature = "vic3")]
             Item::DynamicCompanyName => "common/dynamic_company_names/",
             #[cfg(feature = "vic3")]
             Item::DynamicCountryMapColor => "common/dynamic_country_map_colors/",
@@ -1494,6 +1500,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::HarvestConditionType => "common/harvest_condition_types/",
             #[cfg(feature = "vic3")]
+            Item::HeritageTrait => "common/discrimination_traits/",
+            #[cfg(feature = "vic3")]
             Item::InfamyThreshold => "",
             #[cfg(feature = "vic3")]
             Item::Institution => "common/institutions/",
@@ -1507,6 +1515,8 @@ impl Item {
             Item::JournalEntryGroup => "common/journal_entry_groups/",
             #[cfg(feature = "vic3")]
             Item::LawType => "common/laws/",
+            #[cfg(feature = "vic3")]
+            Item::LanguageTrait => "common/discrimination_traits/",
             #[cfg(feature = "vic3")]
             Item::LegitimacyLevel => "common/legitimacy_levels/",
             #[cfg(feature = "vic3")]
@@ -1605,6 +1615,8 @@ impl Item {
             Item::TerrainMaterial => "gfx/map/terrain/materials.settings",
             #[cfg(feature = "vic3")]
             Item::Theme => "common/themes/",
+            #[cfg(feature = "vic3")]
+            Item::TraditionTrait => "common/discrimination_traits/",
             #[cfg(feature = "vic3")]
             Item::TransferOfPower => "",
             #[cfg(feature = "vic3")]

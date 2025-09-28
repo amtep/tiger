@@ -104,6 +104,7 @@ impl HistoryEffect {
 /// The order in which history files are processed by the game engine.
 /// It was determined by adding `debug_log` entries to the history files.
 /// LAST UPDATED VIC3 VERSION 1.9.7
+/// TODO: order was rearranged in 1.10
 const HISTORY_SEQUENCE: &[&str] = &[
     "STATES",
     "COUNTRIES",
@@ -127,4 +128,6 @@ const HISTORY_SEQUENCE: &[&str] = &[
     "GOVERNMENT",
     "GOVERNMENT_SETUP",
     "MILITARY_DEPLOYMENTS",
+    // new in 1.10
+    "CULTURES",
 ];

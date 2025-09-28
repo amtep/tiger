@@ -80,6 +80,7 @@ impl DbKind for CityCenterpiece {
         vd.multi_field_item("city_graphics_type", Item::CityGraphicsType);
         vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::StateRegion);
         vd.field_integer("priority");
+        vd.field_bool("should_update_on_pm_change");
 
         vd.field_list_integers_exactly("grid_size", 2); // undocumented
 
@@ -110,7 +111,9 @@ impl DbKind for CityCenterpiece {
                         composition_names.push(name.clone());
                     }
                 }
-                vd.req_field_one_of(&["levels", "ratios"]);
+                vd.req_field_one_of(&["levels", "ratios", "trigger"]);
+
+                vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::State);
 
                 let mut count = 0;
                 vd.field_validated_list("levels", |token, data| {

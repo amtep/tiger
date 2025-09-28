@@ -7,6 +7,7 @@ use crate::modif::validate_modifs;
 use crate::token::Token;
 use crate::validator::Validator;
 use crate::vic3::modif::ModifKinds;
+use crate::vic3::tables::misc::COMPANY_CATEGORIES;
 
 #[derive(Clone, Debug)]
 pub struct ProductionMethod {}
@@ -73,6 +74,7 @@ impl DbKind for ProductionMethod {
         vd.field_item("replacement_if_valid", Item::ProductionMethod);
         vd.field_bool("is_hidden_when_unavailable");
         vd.multi_field_item("required_input_goods", Item::Goods);
+        vd.field_list_choice("unlocking_company_categories", COMPANY_CATEGORIES);
     }
 }
 

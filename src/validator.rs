@@ -1368,7 +1368,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_validated_sc`], but expect any number of `name` fields in the block.
-    #[cfg(feature = "ck3")] // vic3 happens not to use; silence dead code warning
+    #[allow(dead_code)]
     pub fn multi_field_validated_sc<F>(
         &mut self,
         name: &str,

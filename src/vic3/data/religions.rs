@@ -35,8 +35,10 @@ impl DbKind for Religion {
         let modif = format!("{key}_standard_of_living_modifier_negative");
         data.verify_exists_implied(Item::Modifier, &modif, key);
 
-        vd.field_item("texture", Item::File);
-        vd.field_list_items("traits", Item::DiscriminationTrait);
+        vd.advice_field("texture", "replaced with `icon` in 1.10");
+        vd.field_item("icon", Item::File);
+        vd.field_item("heritage", Item::HeritageTrait);
+        vd.advice_field("traits", "replaced with just `heritage` in 1.10");
         vd.field_validated("color", validate_possibly_named_color);
         vd.field_list_items("taboos", Item::Goods);
     }

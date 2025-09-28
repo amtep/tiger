@@ -31,7 +31,7 @@ pub fn validate_activate_production_method(
     vd.field_item("production_method", Item::ProductionMethod);
 }
 
-pub fn validate_add_culture_sol_modifier(
+pub fn validate_add_culture_modifier(
     _key: &Token,
     _block: &Block,
     _data: &Everything,
@@ -385,8 +385,9 @@ pub fn validate_create_character(
     vd.field_validated("age", |bv, data| {
         match bv {
             BV::Value(value) => {
-                // age = integer or character scope
+                // age = integer or character scope or default
                 let mut vd = ValueValidator::new(value, data);
+                vd.maybe_is("default");
                 vd.maybe_integer();
                 vd.target(sc, Scopes::Character);
             }
@@ -1148,4 +1149,34 @@ pub fn validate_activate_building(
     _tooltipped: Tooltipped,
 ) {
     vd.multi_field_item("building", Item::BuildingType);
+}
+
+pub fn validate_execute_event_option(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    _sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("event");
+    vd.req_field("option");
+    vd.field_item("event", Item::Event);
+    // TODO: check that the event has the selected option
+    vd.field_integer_range("option", 0..);
+}
+
+pub fn validate_national_awakening(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("culture");
+    vd.req_field("months");
+    vd.field_target("culture", sc, Scopes::Culture);
+    vd.field_script_value("months", sc);
+    vd.field_target("state_region", sc, Scopes::StateRegion);
 }

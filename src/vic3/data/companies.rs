@@ -11,6 +11,7 @@ use crate::tooltipped::Tooltipped;
 use crate::validate::validate_duration;
 use crate::validator::Validator;
 use crate::vic3::modif::ModifKinds;
+use crate::vic3::tables::misc::COMPANY_CATEGORIES;
 
 #[derive(Clone, Debug)]
 pub struct CompanyType {}
@@ -95,6 +96,7 @@ impl DbKind for CompanyType {
 
         // undocumented
 
+        vd.field_choice("category", COMPANY_CATEGORIES);
         vd.field_list_items("unlocking_principles", Item::Principle);
     }
 }

@@ -407,4 +407,12 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = treaty
 		article = treaty_article
 	}
+	on_new_interest_group_leader = {
+		root = character
+	}
+	on_national_awakening_started = {
+		root = culture
+		region = state_region
+		culture = culture
+	}
 ";

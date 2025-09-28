@@ -1419,7 +1419,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "num_sinful_traits",
-        CompareValueOrBlock(&[("+value", CompareValue), ("faith", Scope(Scopes::Faith))]),
+        BlockOrCompareValue(&[("+value", CompareValue), ("faith", Scope(Scopes::Faith))]),
     ),
     (Scopes::Character, "num_taken_task_contracts", CompareValue),
     (Scopes::Character, "num_task_contracts", CompareValue),
@@ -1428,7 +1428,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "num_virtuous_traits",
-        CompareValueOrBlock(&[("+value", CompareValue), ("faith", Scope(Scopes::Faith))]),
+        BlockOrCompareValue(&[("+value", CompareValue), ("faith", Scope(Scopes::Faith))]),
     ),
     (
         Scopes::Character,

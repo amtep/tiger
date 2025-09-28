@@ -1,4 +1,12 @@
-// LAST UPDATED VIC3 VERSION 1.9.0
+pub const COMPANY_CATEGORIES: &[&str] = &[
+    "bureaucrat_owned",
+    "aristocrat_owned",
+    "shopkeeper_owned",
+    "academic_owned",
+    "capitalist_owned",
+];
+
+// LAST UPDATED VIC3 VERSION 1.10.0
 pub const DLC_FEATURES_VIC3: &[&str] = &[
     "voice_of_the_people_content",
     "voice_of_the_people_preorder",
@@ -18,6 +26,8 @@ pub const DLC_FEATURES_VIC3: &[&str] = &[
     "mp1_cosmetics",
     "mp1_monopolies",
     "mp1_prestige_goods",
+    "ip3_content",
+    "ip3_cosmetics",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
@@ -226,6 +236,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/diplomatic_catalyst_categories",
     "common/diplomatic_catalysts",
     "common/diplomatic_plays",
+    "common/discrimination_trait_groups",
     "common/discrimination_traits",
     "common/dna_data",
     "common/dynamic_company_names",

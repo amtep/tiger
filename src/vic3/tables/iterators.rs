@@ -16,7 +16,7 @@ static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = La
     hash
 });
 
-/// LAST UPDATED VIC3 VERSION 1.8.1
+/// LAST UPDATED VIC3 VERSION 1.10.0
 /// See `effects.log` from the game data dumps
 /// These are the list iterators. Every entry represents
 /// a every_, ordered_, random_, and any_ version.
@@ -117,7 +117,11 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         "scope_character",
         Scopes::Character,
     ),
-    (Scopes::Market.union(Scopes::StrategicRegion), "scope_country", Scopes::Country),
+    (
+        Scopes::Market.union(Scopes::StateRegion).union(Scopes::StrategicRegion),
+        "scope_country",
+        Scopes::Country,
+    ),
     (Scopes::Country.union(Scopes::State), "scope_culture", Scopes::Culture),
     (Scopes::Country, "scope_diplomatic_pact", Scopes::DiplomaticPact),
     (Scopes::War, "scope_front", Scopes::Front),
@@ -132,7 +136,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "scope_held_interest_marker", Scopes::InterestMarker),
     (Scopes::DiplomaticPlay, "scope_initiator_ally", Scopes::Country),
     (
-        Scopes::Country.union(Scopes::StrategicRegion),
+        Scopes::Country.union(Scopes::StateRegion).union(Scopes::StrategicRegion),
         "scope_interest_marker",
         Scopes::InterestMarker,
     ),

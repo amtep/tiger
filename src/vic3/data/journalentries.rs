@@ -61,9 +61,36 @@ impl DbKind for JournalEntry {
             data.mark_used(Item::Localization, &format!("{key}_status"));
         }
 
-        vd.field_validated_sc("event_outcome_completed_desc", &mut sc, validate_desc);
-        vd.field_validated_sc("event_outcome_failed_desc", &mut sc, validate_desc);
-        vd.field_validated_sc("event_outcome_timeout_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_sc("event_outcome_activated_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_block_sc(
+            "event_outcome_activated_effect_desc",
+            &mut sc,
+            validate_effect_desc,
+        );
+        vd.multi_field_validated_sc("event_outcome_invalidated_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_block_sc(
+            "event_outcome_invalidated_effect_desc",
+            &mut sc,
+            validate_effect_desc,
+        );
+        vd.multi_field_validated_sc("event_outcome_completed_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_block_sc(
+            "event_outcome_completed_effect_desc",
+            &mut sc,
+            validate_effect_desc,
+        );
+        vd.multi_field_validated_sc("event_outcome_failed_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_block_sc(
+            "event_outcome_failed_effect_desc",
+            &mut sc,
+            validate_effect_desc,
+        );
+        vd.multi_field_validated_sc("event_outcome_timeout_desc", &mut sc, validate_desc);
+        vd.multi_field_validated_block_sc(
+            "event_outcome_timeout_effect_desc",
+            &mut sc,
+            validate_effect_desc,
+        );
         vd.field_localization("custom_completion_header", &mut sc);
         vd.field_localization("custom_failure_header", &mut sc);
         vd.field_localization("custom_on_completion_header", &mut sc);
@@ -115,6 +142,7 @@ impl DbKind for JournalEntry {
         vd.field_integer("active_update_frequency");
         vd.field_bool("should_update_on_player_command");
         vd.field_bool("display_progressbar_as_months");
+        vd.field_trigger("is_shown_in_lobby", Tooltipped::No, &mut sc);
     }
 }
 
@@ -139,4 +167,11 @@ impl DbKind for JournalEntryGroup {
 
         data.verify_exists(Item::Localization, key);
     }
+}
+
+fn validate_effect_desc(block: &Block, data: &Everything, sc: &mut ScopeContext) {
+    let mut vd = Validator::new(block, data);
+
+    vd.field_localization("header", sc);
+    vd.field_effect("effect", Tooltipped::Yes, sc);
 }

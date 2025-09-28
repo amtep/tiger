@@ -27,7 +27,7 @@ static SCOPE_EFFECT_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Effect)>> 
         hash
     });
 
-// LAST UPDATED VIC3 VERSION 1.9.0
+// LAST UPDATED VIC3 VERSION 1.10.0
 // See `effects.log` from the game data dumps
 const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::InterestGroup, "abandon_revolution", Boolean),
@@ -55,11 +55,8 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::State, "add_cultural_community", Scope(Scopes::Culture)),
     (Scopes::Culture, "add_cultural_community_in_state", Scope(Scopes::State)),
     (Scopes::Culture, "add_cultural_obsession", Item(Item::Goods)),
-    (
-        Scopes::State,
-        "add_culture_standard_of_living_modifier",
-        Vb(validate_add_culture_sol_modifier),
-    ),
+    (Scopes::Country, "add_culture_acceptance_modifier", Vb(validate_add_culture_modifier)),
+    (Scopes::State, "add_culture_standard_of_living_modifier", Vb(validate_add_culture_modifier)),
     (Scopes::Country, "add_declared_interest", Item(Item::StrategicRegion)),
     (Scopes::StateRegion, "add_devastation", ScriptValue),
     (
@@ -74,6 +71,8 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::DiplomaticPlay, "add_escalation", Integer),
     (Scopes::Character, "add_experience", ScriptValue),
     (Scopes::StateGoods, "add_exports", ScriptValue),
+    (Scopes::Culture, "add_fervor", ScriptValue),
+    (Scopes::Country, "add_fervor_target_modifier", Vb(validate_add_culture_modifier)),
     (Scopes::StateRegion, "add_homeland", ScopeOrItem(Scopes::Culture, Item::Culture)),
     (Scopes::InterestGroup, "add_ideology", Item(Item::Ideology)),
     (Scopes::Party, "add_ig_to_party", Scope(Scopes::InterestGroup)),
@@ -128,6 +127,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "add_to_local_variable_list", Vb(validate_add_to_variable_list)),
     (Scopes::all(), "add_to_temporary_list", Vbv(validate_add_to_list)),
     (Scopes::None, "add_to_variable_list", Vb(validate_add_to_variable_list)),
+    (Scopes::Culture, "add_tradition_trait", Item(Item::TraditionTrait)),
     (Scopes::Character, "add_trait", Item(Item::CharacterTrait)),
     (Scopes::Country, "add_treasury", ScriptValue),
     (Scopes::War, "add_war_exhaustion", TargetValue("target", Scopes::Country, "value")),
@@ -216,9 +216,11 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "disinherit_character", Yes),
     (Scopes::None, "else", Control),
     (Scopes::None, "else_if", Control),
+    (Scopes::Country, "end_national_awakening", Scope(Scopes::Culture)),
     (Scopes::DiplomaticPlay, "end_play", Boolean),
     (Scopes::Country, "end_truce", Scope(Scopes::Country)),
     (Scopes::None, "error_log", UncheckedTodo),
+    (Scopes::None, "execute_event_option", Vb(validate_execute_event_option)),
     (Scopes::Character, "exile_character", Yes),
     (Scopes::StateRegion, "finish_harvest_condition", Item(Item::HarvestConditionType)),
     (Scopes::State, "force_resource_depletion", Item(Item::BuildingGroup)),
@@ -236,6 +238,9 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::State, "kill_population_in_state", Vb(validate_kill_population)),
     (Scopes::Country, "kill_population_percent", Vb(validate_kill_population)),
     (Scopes::State, "kill_population_percent_in_state", Vb(validate_kill_population)),
+    (Scopes::Country.union(Scopes::State), "liberate_slaves", Yes),
+    (Scopes::Country, "liberate_slaves_in_incorporated_states", Yes),
+    (Scopes::Country, "liberate_slaves_in_unincorporated_states", Yes),
     (Scopes::None, "lock_trade_route", Removed("1.9", "replaced with world trade system")),
     (Scopes::Country, "make_independent", Boolean),
     (Scopes::MilitaryFormation, "mobilize_army", Yes),
@@ -296,6 +301,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::StateRegion, "remove_state_trait", Item(Item::StateTrait)),
     (Scopes::DiplomaticPlay, "remove_target_backers", Vb(validate_addremove_backers)),
     (Scopes::Country, "remove_taxed_goods", Scope(Scopes::Goods)),
+    (Scopes::Culture, "remove_tradition_trait", Item(Item::TraditionTrait)),
     (Scopes::Character, "remove_trait", Item(Item::CharacterTrait)),
     (Scopes::None, "remove_variable", Identifier("variable name")),
     (Scopes::DiplomaticPlay, "remove_war_goal", Vb(validate_remove_war_goal)),
@@ -332,6 +338,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "set_diplomats_expelled", Scope(Scopes::Country)),
     (Scopes::Country, "set_export_tariff_level", Vb(validate_tariff_level)),
     (Scopes::StateGoods, "set_exports", ScriptValue),
+    (Scopes::Culture, "set_fervor", ScriptValue),
     (Scopes::None, "set_global_variable", Vbv(validate_set_variable)),
     (Scopes::Country, "set_government_wage_level", Item(Item::Level)),
     (Scopes::Country, "set_heir", Scope(Scopes::Character)),
@@ -409,6 +416,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::State, "start_building_construction", Item(Item::BuildingType)),
     (Scopes::Country, "start_enactment", Scope(Scopes::LawType)),
     (Scopes::StateRegion, "start_harvest_condition", Item(Item::HarvestConditionType)),
+    (Scopes::Country, "start_national_awakening", Vb(validate_national_awakening)),
     (Scopes::State, "start_privately_funded_building_construction", Item(Item::BuildingType)),
     (Scopes::Country, "start_research_random_technology", Yes),
     (Scopes::None, "start_tutorial_lesson", Vb(validate_start_tutorial)),

@@ -154,6 +154,7 @@ impl DbKind for PoliticalMovement {
         vd.field_trigger_rooted("disband_trigger", Tooltipped::No, Scopes::Country);
         vd.field_effect_rooted("on_disbanded", Tooltipped::No, Scopes::Country);
         vd.field_bool("can_have_slave_supporters");
+        vd.field_bool("can_cause_obstinance");
     }
 }
 

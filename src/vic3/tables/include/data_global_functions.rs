@@ -160,6 +160,7 @@
     ("GetEnabledDlcNames", Args::Args(&[]), Unknown),
     ("GetEnumIndex", Args::Args(&[DType(Unknown)]), CVector2i),
     ("GetEthnicities", Args::Args(&[]), Unknown),
+    ("GetEventOptionTextAlignment", Args::Args(&[]), Unknown),
     ("GetFlotillaGroupsList", Args::Args(&[]), CString),
     ("GetGameVersionDisplay", Args::Args(&[]), CString),
     ("GetGameVersionInfo", Args::Args(&[]), CString),
