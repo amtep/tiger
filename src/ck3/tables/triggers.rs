@@ -2020,6 +2020,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         ),
         (Scopes::Character, "stewardship_diff", Scope(Scopes::Character), Scopes::Value),
         (Scopes::Character, "tax_collector_aptitude", Item(Item::TaxSlotType), Scopes::Value),
+        (Scopes::Character, "tier_difference", Scope(Scopes::Character), Scopes::Value),
         (Scopes::Character, "time_to_hook_expiry", Scope(Scopes::Character), Scopes::Value),
         (
             Scopes::Character,
