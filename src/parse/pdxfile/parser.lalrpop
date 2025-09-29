@@ -105,7 +105,7 @@ FileItem: Option<BlockItem> = {
             // Handle a block with macro parameters
             let s = &inputs[0].as_str()[start + 1..end - 1];
             let mut loc = block.0.loc;
-            loc.column += 1;
+            loc.ptr.column += 1;
             let token = Token::from_static_str(s, loc);
             block.0.source = Some(Box::new((split_macros(&token), memory.get_local())));
         }
@@ -122,7 +122,7 @@ FileItem: Option<BlockItem> = {
             // Handle a block with macro parameters
             let s = &inputs[0].as_str()[start + 1..end - 1];
             let mut loc = block.0.loc;
-            loc.column += 1;
+            loc.ptr.column += 1;
             let token = Token::from_static_str(s, loc);
             block.0.source = Some(Box::new((split_macros(&token), memory.get_local())));
         }
@@ -249,7 +249,7 @@ MacroDefinition: () = {
         } else {
             let s = &inputs[0].as_str()[start + 1..end - 1];
             let mut loc = block.0.loc;
-            loc.column += 1;
+            loc.ptr.column += 1;
             let token = Token::from_static_str(s, loc);
             block.0.source = Some(Box::new((split_macros(&token), memory.get_local())));
         }

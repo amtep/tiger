@@ -38,7 +38,7 @@ pub struct Traits {
 impl Traits {
     fn load_item(&mut self, key: Token, block: Block) {
         if let Some(other) = self.traits.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
+            if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                 dup_error(&key, &other.key, "trait");
             }
         }

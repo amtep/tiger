@@ -25,7 +25,7 @@ impl Gfx {
     pub fn load_sprite(&mut self, key: Token, block: Block) {
         if let Some(name) = block.get_field_value("name") {
             if let Some(other) = self.sprites.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
+                if other.key.loc.ptr.kind >= name.loc.ptr.kind {
                     if other.block.equivalent(&block) {
                         exact_dup_advice(name, &other.key, "sprite");
                     } else {
@@ -40,7 +40,7 @@ impl Gfx {
     pub fn load_mesh(&mut self, key: Token, block: Block) {
         if let Some(name) = block.get_field_value("name") {
             if let Some(other) = self.meshes.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
+                if other.key.loc.ptr.kind >= name.loc.ptr.kind {
                     dup_error(name, &other.key, "pdxmesh");
                 }
             }
