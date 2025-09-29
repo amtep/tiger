@@ -70,7 +70,11 @@ impl DbKind for LawType {
         vd.field_list_items("requires_law_or", Item::LawType);
 
         vd.field_trigger_rooted("is_visible", Tooltipped::Yes, Scopes::Country);
-        vd.field_trigger_rooted("can_enact", Tooltipped::Yes, Scopes::Country);
+        vd.field_trigger_builder("can_enact", Tooltipped::Yes, |key| {
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("law", Scopes::LawType, key);
+            sc
+        });
         vd.field_effect_rooted("on_enact", Tooltipped::Yes, Scopes::Country);
         // TODO: what is the difference between on_enact and on_activate? Are they both valid?
         vd.field_effect_rooted("on_activate", Tooltipped::Yes, Scopes::Country);
