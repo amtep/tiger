@@ -187,7 +187,7 @@ impl DbKind for CharacterInteraction {
 
         // TODO: The ai_ name check is a heuristic. It would be better to check if the
         // is_shown trigger requires scope:actor to be is_ai = yes. But that's a long way off.
-        if !key.as_str().starts_with("ai_") {
+        if !key.as_str().starts_with("ai_") && !block.get_field_bool("hidden").unwrap_or(false) {
             if !block.has_key("name") {
                 data.verify_exists(Item::Localization, key);
             }
