@@ -175,6 +175,8 @@ impl DbKind for AiStrategy {
 
         vd.field_trigger_rooted("possible", Tooltipped::No, Scopes::Country); // TODO scope type
         vd.field_script_value_rooted("weight", Scopes::Country);
+
+        vd.field_script_value_rooted("economic_vs_government_spending_balance", Scopes::Country);
     }
 }
 
