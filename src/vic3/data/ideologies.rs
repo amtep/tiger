@@ -41,7 +41,7 @@ impl DbKind for Ideology {
             vd.field_trigger_rooted(
                 "interest_group_leader_trigger",
                 Tooltipped::No,
-                Scopes::Character,
+                Scopes::InterestGroup,
             );
             vd.field_trigger_rooted(
                 "non_interest_group_leader_trigger",
