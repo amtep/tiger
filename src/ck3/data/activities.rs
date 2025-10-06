@@ -437,6 +437,8 @@ pub fn validate_tes(key: &Token, block: &Block, data: &Everything, has_special_o
     let mut sc = ScopeContext::new(Scopes::Character, key);
     sc.define_name("host", Scopes::Character, key);
     sc.define_name("owner", Scopes::Character, key);
+    // TODO: is this available when called from the travel folder?
+    sc.define_list("special_guests", Scopes::Character, key);
     if has_special_option {
         sc.define_name("special_option", Scopes::Flag, key);
     }
