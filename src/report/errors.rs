@@ -316,32 +316,32 @@ pub fn add_loaded_dlc_root(label: String) {
 }
 
 /// Store an error report to be emitted when [`emit_reports`] is called.
-pub fn log((report, mut pointers): LogReport) {
-    let mut vec = Vec::new();
-    pointers.drain(..).for_each(|pointer| {
-        let index = vec.len();
-        recursive_pointed_msg_expansion(&mut vec, &pointer);
-        vec.insert(index, pointer);
-    });
-    pointers.extend(vec);
+pub fn log((report, pointers): LogReport) {
+    let pointers = pointed_msg_expansion(pointers);
     Errors::get_mut().push_report(report, pointers);
 }
 
-/// Expand `PointedMessage` recursively.
-/// That is; for the given `PointedMessage`, follow its location's link until such link is no
-/// longer available, adding a newly created `PointedMessage` to the given `Vec` for each linked
+/// Expand `Vec<PointedMessage>`.
+/// That is; for each `PointedMessage`, follow its location's link until such link is no
+/// longer available, adding a newly created `PointedMessage` to the returned `Vec` for each linked
 /// location.
-fn recursive_pointed_msg_expansion(vec: &mut LogReportPointers, pointer: &PointedMessage) {
-    if let Some(link) = pointer.loc.link_idx {
-        let from_here = PointedMessage {
-            loc: MACRO_MAP.get_loc(link).unwrap(),
-            length: 1,
-            msg: Some("from here".to_owned()),
-        };
-        let index = vec.len();
-        recursive_pointed_msg_expansion(vec, &from_here);
-        vec.insert(index, from_here);
-    }
+fn pointed_msg_expansion(pointers: Vec<PointedMessage>) -> Vec<PointedMessage> {
+    pointers
+        .into_iter()
+        .flat_map(|p| {
+            let mut next_loc = Some(p.loc);
+            std::iter::from_fn(move || match next_loc {
+                Some(mut stack) => {
+                    next_loc = stack.link_idx.and_then(|idx| MACRO_MAP.get_loc(idx));
+                    stack.link_idx = None;
+                    let next =
+                        PointedMessage { loc: stack, length: 1, msg: Some("from here".into()) };
+                    Some(next)
+                }
+                None => None,
+            })
+        })
+        .collect()
 }
 
 /// Tests whether the report might be printed. If false, the report will definitely not be printed.
