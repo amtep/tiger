@@ -13,6 +13,7 @@ use std::sync::{LazyLock, Mutex, MutexGuard};
 
 use encoding_rs::{UTF_8, WINDOWS_1252};
 
+use super::report_struct::{LogReportPointers, PointedMessage};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::macros::MACRO_MAP;
 use crate::parse::ignore::IgnoreFilter;
@@ -22,8 +23,8 @@ use crate::report::suppress::{Suppression, SuppressionKey};
 use crate::report::writer::{log_report, log_summary};
 use crate::report::writer_json::log_report_json;
 use crate::report::{
-    ErrorKey, FilterRule, LogReport, LogReportMetadata, LogReportPointers, LogReportStyle,
-    OutputStyle, PointedMessage,
+    ErrorKey, FilterRule, LogReport, LogReportMetadata, LogReportStyle, OutputStyle,
+    PointedMessageStack,
 };
 use crate::set;
 use crate::token::{leak, Loc};
@@ -316,37 +317,36 @@ pub fn add_loaded_dlc_root(label: String) {
 }
 
 /// Store an error report to be emitted when [`emit_reports`] is called.
-pub fn log((report, mut pointers): LogReport) {
-    let mut vec = Vec::new();
-    pointers.drain(..).for_each(|pointer| {
-        let index = vec.len();
-        recursive_pointed_msg_expansion(&mut vec, &pointer);
-        vec.insert(index, pointer);
-    });
-    pointers.extend(vec);
+pub fn log((report, pointers): LogReport) {
+    let pointers = pointed_msg_expansion(pointers);
     Errors::get_mut().push_report(report, pointers);
 }
 
-/// Expand `PointedMessage` recursively.
-/// That is; for the given `PointedMessage`, follow its location's link until such link is no
-/// longer available, adding a newly created `PointedMessage` to the given `Vec` for each linked
+/// Expand `Vec<PointedMessageStack>` to `Vec<PointedMessage>`.
+/// That is; for each `PointedMessageStack`, follow its location's link until such link is no
+/// longer available, adding a newly created `PointedMessage` to the returned `Vec` for each linked
 /// location.
-fn recursive_pointed_msg_expansion(vec: &mut LogReportPointers, pointer: &PointedMessage) {
-    if let Some(link) = pointer.loc.link_idx {
-        let from_here = PointedMessage {
-            loc: MACRO_MAP.get_loc(link).unwrap(),
-            length: 1,
-            msg: Some("from here".to_owned()),
-        };
-        let index = vec.len();
-        recursive_pointed_msg_expansion(vec, &from_here);
-        vec.insert(index, from_here);
-    }
+fn pointed_msg_expansion(pointers: Vec<PointedMessageStack>) -> Vec<PointedMessage> {
+    pointers
+        .into_iter()
+        .flat_map(|p| {
+            let mut next_loc = Some(p.loc);
+            std::iter::from_fn(move || match next_loc {
+                Some(stack) => {
+                    let next =
+                        PointedMessage { loc: stack.ptr, length: 1, msg: Some("from here".into()) };
+                    next_loc = stack.link_idx.and_then(|idx| MACRO_MAP.get_loc(idx));
+                    Some(next)
+                }
+                None => None,
+            })
+        })
+        .collect()
 }
 
 /// Tests whether the report might be printed. If false, the report will definitely not be printed.
 pub fn will_maybe_log<E: ErrorLoc>(eloc: E, key: ErrorKey) -> bool {
-    Errors::get().filter.should_maybe_print(key, eloc.into_loc())
+    Errors::get().filter.should_maybe_print(key, eloc.into_loc().ptr)
 }
 
 /// Print all the stored reports to the error output.

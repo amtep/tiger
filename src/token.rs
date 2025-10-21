@@ -1,7 +1,8 @@
-//! Contains the core [`Token`] and [`Loc`] types, which represent pieces of game script and where
+//! Contains the core [`Token`] and [`LocStack`] types, which represent pieces of game script and where
 //! in the game files they came from.
 
 use std::borrow::{Borrow, Cow};
+use std::cmp::Ordering;
 use std::ffi::OsStr;
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::hash::Hash;
@@ -14,29 +15,20 @@ use bumpalo::Bump;
 
 use crate::date::Date;
 use crate::fileset::{FileEntry, FileKind};
-use crate::macros::MacroMapIndex;
+use crate::macros::{MacroMapIndex, MACRO_MAP};
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{err, untidy, ErrorKey};
 
-#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Loc {
     pub(crate) idx: PathTableIndex,
     pub kind: FileKind,
     /// line 0 means the loc applies to the file as a whole.
     pub line: u32,
     pub column: u32,
-    /// Used in macro expansions to point to the macro invocation
-    /// in the macro table
-    pub link_idx: Option<MacroMapIndex>,
 }
 
 impl Loc {
-    #[must_use]
-    pub(crate) fn for_file(pathname: PathBuf, kind: FileKind, fullpath: PathBuf) -> Self {
-        let idx = PathTable::store(pathname, fullpath);
-        Loc { idx, kind, line: 0, column: 0, link_idx: None }
-    }
-
     pub fn filename(self) -> Cow<'static, str> {
         PathTable::lookup_path(self.idx)
             .file_name()
@@ -58,25 +50,18 @@ impl Loc {
     }
 }
 
-impl From<&FileEntry> for Loc {
-    fn from(entry: &FileEntry) -> Self {
-        if let Some(idx) = entry.path_idx() {
-            Loc { idx, kind: entry.kind(), line: 0, column: 0, link_idx: None }
-        } else {
-            Self::for_file(entry.path().to_path_buf(), entry.kind(), entry.fullpath().to_path_buf())
-        }
+impl PartialOrd for Loc {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
-impl From<&mut FileEntry> for Loc {
-    fn from(entry: &mut FileEntry) -> Self {
-        (&*entry).into()
-    }
-}
-
-impl From<FileEntry> for Loc {
-    fn from(entry: FileEntry) -> Self {
-        (&entry).into()
+impl Ord for Loc {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.idx
+            .cmp(&other.idx)
+            .then(self.line.cmp(&other.line))
+            .then(self.column.cmp(&other.column))
     }
 }
 
@@ -90,8 +75,78 @@ impl Debug for Loc {
             .field("kind", &self.kind)
             .field("line", &self.line)
             .field("column", &self.column)
-            .field("linkindex", &self.link_idx)
             .finish()
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub struct LocStack {
+    pub ptr: Loc,
+    /// Used in macro expansions to point to the macro invocation
+    /// in the macro table
+    pub link_idx: Option<MacroMapIndex>,
+}
+
+impl LocStack {
+    #[must_use]
+    pub(crate) fn for_file(pathname: PathBuf, kind: FileKind, fullpath: PathBuf) -> Self {
+        let idx = PathTable::store(pathname, fullpath);
+        LocStack { ptr: Loc { idx, kind, line: 0, column: 0 }, link_idx: None }
+    }
+
+    pub fn filename(self) -> Cow<'static, str> {
+        self.ptr.filename()
+    }
+
+    pub fn pathname(self) -> &'static Path {
+        self.ptr.pathname()
+    }
+
+    pub fn fullpath(self) -> &'static Path {
+        self.ptr.fullpath()
+    }
+
+    #[inline]
+    pub fn same_file(self, other: LocStack) -> bool {
+        self.ptr.same_file(other.ptr)
+    }
+}
+
+impl PartialOrd for LocStack {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LocStack {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.ptr.cmp(&other.ptr).then(
+            self.link_idx
+                .map(|link| MACRO_MAP.get_loc(link))
+                .cmp(&other.link_idx.map(|link| MACRO_MAP.get_loc(link))),
+        )
+    }
+}
+
+impl From<&FileEntry> for LocStack {
+    fn from(entry: &FileEntry) -> Self {
+        if let Some(idx) = entry.path_idx() {
+            LocStack { ptr: Loc { idx, kind: entry.kind(), line: 0, column: 0 }, link_idx: None }
+        } else {
+            Self::for_file(entry.path().to_path_buf(), entry.kind(), entry.fullpath().to_path_buf())
+        }
+    }
+}
+
+impl From<&mut FileEntry> for LocStack {
+    fn from(entry: &mut FileEntry) -> Self {
+        (&*entry).into()
+    }
+}
+
+impl From<FileEntry> for LocStack {
+    fn from(entry: FileEntry) -> Self {
+        (&entry).into()
     }
 }
 
@@ -129,23 +184,23 @@ pub(crate) fn bump(s: &str) -> &'static str {
 #[derive(Clone, Debug)]
 pub struct Token {
     s: &'static str,
-    pub loc: Loc,
+    pub loc: LocStack,
 }
 
 impl Token {
     #[must_use]
-    pub fn new(s: &str, loc: Loc) -> Self {
+    pub fn new(s: &str, loc: LocStack) -> Self {
         Token { s: bump(s), loc }
     }
 
     #[must_use]
-    pub fn from_static_str(s: &'static str, loc: Loc) -> Self {
+    pub fn from_static_str(s: &'static str, loc: LocStack) -> Self {
         Token { s, loc }
     }
 
     /// Create a `Token` from a substring of the given `Token`.
     #[must_use]
-    pub fn subtoken<R>(&self, range: R, loc: Loc) -> Token
+    pub fn subtoken<R>(&self, range: R, loc: LocStack) -> Token
     where
         R: RangeBounds<usize> + SliceIndex<str, Output = str>,
     {
@@ -155,7 +210,7 @@ impl Token {
     /// Create a `Token` from a subtring of the given `Token`,
     /// stripping any whitespace from the created token.
     #[must_use]
-    pub fn subtoken_stripped(&self, mut range: Range<usize>, mut loc: Loc) -> Token {
+    pub fn subtoken_stripped(&self, mut range: Range<usize>, mut loc: LocStack) -> Token {
         let mut start = match range.start_bound() {
             Bound::Included(&i) => i,
             Bound::Excluded(&i) => i + 1,
@@ -172,7 +227,7 @@ impl Token {
                 range = start..end;
                 break;
             }
-            loc.column += 1;
+            loc.ptr.column += 1;
         }
         for (i, c) in self.s[range.clone()].char_indices().rev() {
             if !c.is_whitespace() {
@@ -216,8 +271,8 @@ impl Token {
             if c == ch {
                 vec.push(self.subtoken(pos..i, loc));
                 pos = i + 1;
-                loc.column = self.loc.column + cols + 1;
-                loc.line = self.loc.line + lines;
+                loc.ptr.column = self.loc.ptr.column + cols + 1;
+                loc.ptr.line = self.loc.ptr.line + lines;
             }
             if c == '\n' {
                 lines += 1;
@@ -237,7 +292,7 @@ impl Token {
         #[allow(clippy::cast_possible_truncation)]
         self.s.strip_prefix(pfx).map(|sfx| {
             let mut loc = self.loc;
-            loc.column += pfx.chars().count() as u32;
+            loc.ptr.column += pfx.chars().count() as u32;
             Token::from_static_str(sfx, loc)
         })
     }
@@ -255,7 +310,7 @@ impl Token {
             if c == ch {
                 let token1 = self.subtoken(..i, self.loc);
                 let mut loc = self.loc;
-                loc.column += cols + 1;
+                loc.ptr.column += cols + 1;
                 let token2 = self.subtoken(i + 1.., loc);
                 return Some((token1, token2));
             }
@@ -278,7 +333,7 @@ impl Token {
                 let chlen = ch.len_utf8();
                 let token1 = self.subtoken(..i + chlen, self.loc);
                 let mut loc = self.loc;
-                loc.column += cols + chlen as u32;
+                loc.ptr.column += cols + chlen as u32;
                 let token2 = self.subtoken(i + chlen.., loc);
                 return Some((token1, token2));
             }
@@ -316,7 +371,7 @@ impl Token {
         }
         if let Some((cols, i)) = real_start {
             let mut loc = self.loc;
-            loc.column += cols;
+            loc.ptr.column += cols;
             self.subtoken(i..real_end, loc)
         } else {
             // all spaces
@@ -465,8 +520,8 @@ impl Borrow<str> for &Token {
     }
 }
 
-impl From<Loc> for Token {
-    fn from(loc: Loc) -> Self {
+impl From<LocStack> for Token {
+    fn from(loc: LocStack) -> Self {
         Token { s: "", loc }
     }
 }

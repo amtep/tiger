@@ -31,7 +31,7 @@ impl Coas {
             if let Some(block) = bv.expect_block() {
                 for (key, block) in block.iter_definitions_warn() {
                     if let Some(other) = self.templates.get(key.as_str()) {
-                        if other.key.loc.kind >= key.loc.kind {
+                        if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                             if let BV::Block(otherblock) = &other.bv {
                                 if otherblock.equivalent(block) {
                                     exact_dup_advice(key, &other.key, "coa template");
@@ -49,7 +49,7 @@ impl Coas {
             }
         } else {
             if let Some(other) = self.coas.get(key.as_str()) {
-                if other.key.loc.kind >= key.loc.kind {
+                if other.key.loc.ptr.kind >= key.loc.ptr.kind {
                     if other.bv.equivalent(bv) {
                         exact_dup_advice(key, &other.key, "coat of arms");
                     } else {

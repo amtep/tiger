@@ -807,7 +807,7 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
                     // because in loca the older definition overrides the later one.
                     if is_replace_path(entry.path()) {
                         occupied_entry.insert(loca);
-                    } else if other.key.loc.kind == entry.kind() && other.orig != loca.orig {
+                    } else if other.key.loc.ptr.kind == entry.kind() && other.orig != loca.orig {
                         dup_error(&other.key, &loca.key, "localization");
                     }
                 }

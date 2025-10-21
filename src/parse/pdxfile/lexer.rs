@@ -8,7 +8,7 @@ use crate::game::Game;
 use crate::parse::ignore::{parse_comment, IgnoreFilter, IgnoreSize};
 use crate::parse::pdxfile::{CharExt, Cob};
 use crate::report::{err, register_ignore_filter, untidy, warn, ErrorKey};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 /// ^Z is by convention an end-of-text marker, and the game engine treats it as such.
 const CONTROL_Z: char = '\u{001A}';
@@ -76,8 +76,8 @@ impl Lexeme {
         }
     }
 
-    /// Return the [`Loc`] of this lexeme.
-    pub fn get_loc(&self) -> Loc {
+    /// Return the [`LocStack`] of this lexeme.
+    pub fn get_loc(&self) -> LocStack {
         match self {
             Lexeme::General(token)
             | Lexeme::Comparator(_, token)
@@ -136,7 +136,7 @@ pub struct Lexer<'input> {
     /// The current index into the `inputs` array.
     inputs_index: usize,
     /// Tracking file, line, and column of the current char.
-    loc: Loc,
+    loc: LocStack,
     /// Iterator over the current `inputs` token.
     iter: Peekable<CharIndices<'input>>,
     /// How many nested braces are around the current char.
@@ -197,10 +197,10 @@ impl<'input> Lexer<'input> {
         if self.peek().is_some() {
             let (_, c) = self.iter.next().unwrap();
             if c == '\n' {
-                self.loc.line += 1;
-                self.loc.column = 1;
+                self.loc.ptr.line += 1;
+                self.loc.ptr.column = 1;
             } else {
-                self.loc.column += 1;
+                self.loc.ptr.column += 1;
             }
         }
     }
@@ -233,7 +233,7 @@ impl<'input> Lexer<'input> {
 
     /// Apply the pending line-ignores to the current line.
     fn apply_line_ignores(&mut self) {
-        let line = self.loc.line;
+        let line = self.loc.ptr.line;
         let path = self.loc.pathname();
         for filter in self.pending_line_ignores.drain(..) {
             register_ignore_filter(path, line..=line, filter);
@@ -243,7 +243,7 @@ impl<'input> Lexer<'input> {
     /// Apply the pending block-ignores to the current open brace.
     fn apply_block_ignores(&mut self) {
         for filter in self.pending_block_ignores.drain(..) {
-            self.active_block_ignores.push((self.brace_depth, self.loc.line, filter));
+            self.active_block_ignores.push((self.brace_depth, self.loc.ptr.line, filter));
         }
     }
 
@@ -252,7 +252,7 @@ impl<'input> Lexer<'input> {
         let path = self.loc.pathname();
         while let Some((depth, line, filter)) = self.active_block_ignores.last() {
             if self.brace_depth == *depth {
-                register_ignore_filter(path, *line..=self.loc.line, filter.clone());
+                register_ignore_filter(path, *line..=self.loc.ptr.line, filter.clone());
                 self.active_block_ignores.pop();
             } else {
                 break;
@@ -544,13 +544,18 @@ impl Iterator for Lexer<'_> {
                                 register_ignore_filter(path, .., spec.filter);
                             }
                             IgnoreSize::Begin => {
-                                self.active_range_ignores.push((self.loc.line + 1, spec.filter));
+                                self.active_range_ignores
+                                    .push((self.loc.ptr.line + 1, spec.filter));
                             }
                             IgnoreSize::End => {
                                 if let Some((start_line, filter)) = self.active_range_ignores.pop()
                                 {
                                     let path = self.loc.pathname();
-                                    register_ignore_filter(path, start_line..self.loc.line, filter);
+                                    register_ignore_filter(
+                                        path,
+                                        start_line..self.loc.ptr.line,
+                                        filter,
+                                    );
                                 }
                             }
                         }
@@ -603,7 +608,7 @@ impl Iterator for Lexer<'_> {
                     if self.brace_depth > 0 {
                         self.brace_depth -= 1;
                     }
-                    if self.loc.column == 1 && self.brace_depth > 0 {
+                    if self.loc.ptr.column == 1 && self.brace_depth > 0 {
                         let msg = "possible brace error";
                         let info = "This closing brace is at the start of the line but does not close a top-level block.";
                         warn(ErrorKey::BracePlacement)

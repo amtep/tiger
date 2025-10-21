@@ -1,13 +1,13 @@
 use std::mem::take;
 
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 /// Copy on boundary type used for when a token may cross multiple parts of the input.
 #[derive(Clone, Debug)]
 pub(crate) enum Cob {
     Uninit,
-    Borrowed(&'static str, usize, usize, Loc),
-    Owned(String, Loc),
+    Borrowed(&'static str, usize, usize, LocStack),
+    Owned(String, LocStack),
 }
 
 impl Default for Cob {
@@ -22,7 +22,7 @@ impl Cob {
     }
 
     #[inline]
-    pub(crate) fn set(&mut self, str: &'static str, index: usize, loc: Loc) {
+    pub(crate) fn set(&mut self, str: &'static str, index: usize, loc: LocStack) {
         *self = Self::Borrowed(str, index, index, loc);
     }
 

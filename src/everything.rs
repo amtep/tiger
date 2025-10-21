@@ -80,7 +80,7 @@ use crate::pdxfile::PdxFile;
 use crate::report::err;
 use crate::report::{report, set_output_style, ErrorKey, OutputStyle, Severity};
 use crate::rivers::Rivers;
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::variables::Variables;
 #[cfg(feature = "vic3")]
 use crate::vic3::data::{
@@ -263,7 +263,7 @@ impl Everything {
             Self::read_config(config_file_name, &config_file)
                 .ok_or(FilesError::ConfigUnreadable { path: config_file })?
         } else {
-            Block::new(Loc::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
+            Block::new(LocStack::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
         };
 
         fileset.config(config.clone(), workshop_dir, paradox_dir)?;

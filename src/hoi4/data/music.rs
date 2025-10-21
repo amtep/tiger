@@ -23,7 +23,7 @@ pub struct Hoi4Musics {
 impl Hoi4Musics {
     pub fn load_item(&mut self, key: Token, block: Block, station: Option<Token>) {
         if let Some(other) = self.musics.get(key.as_str()) {
-            if other.key.loc.kind == key.loc.kind {
+            if other.key.loc.ptr.kind == key.loc.ptr.kind {
                 dup_error(&key, &other.key, "music");
             }
         }

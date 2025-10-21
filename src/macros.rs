@@ -1,17 +1,17 @@
-//! [`MacroCache`] to cache macro expansions, and [`MacroMap`] to track [`Loc`] use across macro expansions.
+//! [`MacroCache`] to cache macro expansions, and [`MacroMap`] to track [`LocStack`] use across macro expansions.
 
 use std::hash::Hash;
 use std::num::NonZeroU32;
 use std::sync::{LazyLock, RwLock};
 
 use crate::helpers::{BiTigerHashMap, TigerHashMap};
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 use crate::tooltipped::Tooltipped;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 struct MacroKey {
     /// the loc of the call site
-    loc: Loc,
+    loc: LocStack,
     /// lexically sorted macro arguments
     args: Vec<(&'static str, &'static str)>,
     tooltipped: Tooltipped,
@@ -21,7 +21,7 @@ struct MacroKey {
 
 impl MacroKey {
     pub fn new(
-        mut loc: Loc,
+        mut loc: LocStack,
         args: &[(&'static str, Token)],
         tooltipped: Tooltipped,
         negated: bool,
@@ -89,7 +89,7 @@ pub struct MacroMap(RwLock<MacroMapInner>);
 /// to the block containing the macros.
 pub struct MacroMapInner {
     counter: NonZeroU32,
-    bi_map: BiTigerHashMap<NonZeroU32, Loc>,
+    bi_map: BiTigerHashMap<NonZeroU32, LocStack>,
 }
 
 impl Default for MacroMapInner {
@@ -100,16 +100,16 @@ impl Default for MacroMapInner {
 
 impl MacroMap {
     /// Get the loc associated with the index
-    pub fn get_loc(&self, index: MacroMapIndex) -> Option<Loc> {
+    pub fn get_loc(&self, index: MacroMapIndex) -> Option<LocStack> {
         self.0.read().unwrap().bi_map.get_by_left(&index.0).copied()
     }
     /// Get the index associated with the loc
-    pub fn get_index(&self, loc: Loc) -> Option<MacroMapIndex> {
+    pub fn get_index(&self, loc: LocStack) -> Option<MacroMapIndex> {
         self.0.read().unwrap().bi_map.get_by_right(&loc).copied().map(MacroMapIndex)
     }
 
     /// Insert a loc that is not expected to be in the map yet, and return its index.
-    pub fn insert_or_get_loc(&self, loc: Loc) -> MacroMapIndex {
+    pub fn insert_or_get_loc(&self, loc: LocStack) -> MacroMapIndex {
         let mut guard = self.0.write().unwrap();
         let counter = guard.counter;
         if guard.bi_map.insert_no_overwrite(counter, loc).is_err() {
@@ -122,7 +122,7 @@ impl MacroMap {
     }
 
     /// Get the index of a loc, inserting it if it was not yet stored
-    pub fn get_or_insert_loc(&self, loc: Loc) -> MacroMapIndex {
+    pub fn get_or_insert_loc(&self, loc: LocStack) -> MacroMapIndex {
         // First try with just a read lock, which allows for more parallelism than using a write lock.
         if let Some(index) = self.get_index(loc) {
             index

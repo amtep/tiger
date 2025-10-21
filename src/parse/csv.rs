@@ -8,11 +8,11 @@ use encoding_rs::WINDOWS_1252;
 
 use crate::fileset::FileEntry;
 use crate::report::ErrorLoc;
-use crate::token::{Loc, Token};
+use crate::token::{LocStack, Token};
 
 #[derive(Clone, Debug)]
 struct CsvParser<'a> {
-    loc: Loc,
+    loc: LocStack,
     offset: usize,
     content: &'a str,
     header_lines: usize,
@@ -20,9 +20,9 @@ struct CsvParser<'a> {
 }
 
 impl<'a> CsvParser<'a> {
-    fn new(mut loc: Loc, header_lines: usize, content: &'a str) -> Self {
-        loc.line = 1;
-        loc.column = 1;
+    fn new(mut loc: LocStack, header_lines: usize, content: &'a str) -> Self {
+        loc.ptr.line = 1;
+        loc.ptr.column = 1;
         let chars = content.chars().peekable();
         Self { loc, offset: 0, content, header_lines, chars }
     }
@@ -32,10 +32,10 @@ impl<'a> CsvParser<'a> {
         if let Some(c) = self.chars.next() {
             self.offset += c.len_utf8();
             if c == '\n' {
-                self.loc.line += 1;
-                self.loc.column = 1;
+                self.loc.ptr.line += 1;
+                self.loc.ptr.column = 1;
             } else {
-                self.loc.column += 1;
+                self.loc.ptr.column += 1;
             }
         }
     }
