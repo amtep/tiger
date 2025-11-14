@@ -1,13 +1,13 @@
 [package]
 name = "tiger-bin-shared"
 version = "1.13.0"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0-or-later"
 description = "Shared binary library for ck3-tiger, vic3-tiger, and imperator-tiger."
 homepage = "https://github.com/amtep/tiger"
 repository = "https://github.com/amtep/tiger"
 readme = "../README.md"
-rust-version = "1.84"
+rust-version = "1.85"
 
 [dependencies]
 tiger-lib = { path = "..", version = "1.13.0", default-features = false }
@@ -21,12 +21,6 @@ home = "0.5"
 regex = "1.10"
 steamlocate = "2.0"
 thiserror = "2.0"
-
-litemap = "0.8"
-zerofrom = "0.1"
-
-# indirect dependency of self_update, held back for msrv
-base64ct = "=1.7.3"
 
 [target.'cfg(windows)'.dependencies]
 ansiterm = "0.12.2"

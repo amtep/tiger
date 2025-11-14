@@ -3,17 +3,12 @@ use std::mem::take;
 use crate::token::{Loc, Token};
 
 /// Copy on boundary type used for when a token may cross multiple parts of the input.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) enum Cob {
+    #[default]
     Uninit,
     Borrowed(&'static str, usize, usize, Loc),
     Owned(String, Loc),
-}
-
-impl Default for Cob {
-    fn default() -> Self {
-        Self::Uninit
-    }
 }
 
 impl Cob {

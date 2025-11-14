@@ -5,8 +5,8 @@ use std::borrow::Cow;
 use std::mem::take;
 
 use crate::game::Game;
-use crate::helpers::{stringify_choices, ActionOrEvent, TigerHashMap};
-use crate::report::{err, warn, ErrorKey, ReportBuilderFull};
+use crate::helpers::{ActionOrEvent, TigerHashMap, stringify_choices};
+use crate::report::{ErrorKey, ReportBuilderFull, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 
@@ -799,7 +799,7 @@ impl ScopeContext {
                     _ => unreachable!(),
                 }
             }
-            Some(ScopeEntry::Scope(s, ref reason)) => (*s, reason),
+            Some(ScopeEntry::Scope(s, reason)) => (*s, reason),
             Some(_) => unreachable!(),
         }
     }
@@ -844,7 +844,7 @@ impl ScopeContext {
     #[doc(hidden)]
     fn expect_check(e: &mut ScopeEntry, scopes: Scopes, reason: &Reason) {
         match e {
-            ScopeEntry::Scope(ref mut s, ref mut r) => {
+            ScopeEntry::Scope(s, r) => {
                 if s.intersects(scopes) {
                     // if s is narrowed by the scopes info, remember why
                     if (*s & scopes) != *s {
@@ -871,7 +871,7 @@ impl ScopeContext {
         report: &str,
     ) {
         match e {
-            ScopeEntry::Scope(ref mut s, ref mut r) => {
+            ScopeEntry::Scope(s, r) => {
                 if s.intersects(scopes) {
                     // if s is narrowed by the scopes info, remember its token
                     if (*s & scopes) != *s {

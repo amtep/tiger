@@ -65,7 +65,7 @@ impl Rivers {
     pub fn handle_image(&mut self, loaded: &[u8], entry: &FileEntry) {
         #[cfg(feature = "jomini")]
         if Game::is_jomini() {
-            let decoder = Decoder::new(loaded);
+            let decoder = Decoder::new(std::io::Cursor::new(loaded));
             let mut reader = match decoder.read_info() {
                 Ok(r) => r,
                 Err(e) => {
@@ -95,7 +95,7 @@ impl Rivers {
             self.height = info.height;
             let color_type = info.color_type;
 
-            self.pixels = vec![0; reader.output_buffer_size()];
+            self.pixels = vec![0; reader.output_buffer_size().unwrap()];
             let frame_info = match reader.next_frame(&mut self.pixels) {
                 Ok(i) => i,
                 Err(e) => {
