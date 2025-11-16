@@ -13,7 +13,7 @@ use crate::game::Game;
 use crate::hoi4::tables::modifs::modif_loc_hoi4;
 #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
 use crate::item::Item;
-use crate::report::{err, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err};
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_non_dynamic_script_value;
 use crate::token::Token;

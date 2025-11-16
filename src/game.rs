@@ -3,7 +3,7 @@
 use std::fmt::{Display, Formatter};
 use std::sync::OnceLock;
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use bitflags::bitflags;
 
 use crate::helpers::display_choices;

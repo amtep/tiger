@@ -1,6 +1,6 @@
 //! Validate effects, which are parts of the script that change the game state.
 
-use crate::block::{Block, Comparator, Eq::*, BV};
+use crate::block::{BV, Block, Comparator, Eq::*};
 use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
 use crate::data::effect_localization::EffectLocalization;
@@ -11,8 +11,8 @@ use crate::game::Game;
 use crate::hoi4::variables::validate_variable;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{err, fatal, tips, warn, ErrorKey, Severity};
-use crate::scopes::{scope_iterator, Scopes};
+use crate::report::{ErrorKey, Severity, err, fatal, tips, warn};
+use crate::scopes::{Scopes, scope_iterator};
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
 use crate::token::Token;
@@ -27,8 +27,8 @@ use crate::validate::validate_modifiers;
 #[cfg(feature = "jomini")]
 use crate::validate::validate_scripted_modifier_call;
 use crate::validate::{
-    precheck_iterator_fields, validate_identifier, validate_ifelse_sequence,
-    validate_inside_iterator, validate_iterator_fields, validate_scope_chain, ListType,
+    ListType, precheck_iterator_fields, validate_identifier, validate_ifelse_sequence,
+    validate_inside_iterator, validate_iterator_fields, validate_scope_chain,
 };
 use crate::validator::{Validator, ValueValidator};
 

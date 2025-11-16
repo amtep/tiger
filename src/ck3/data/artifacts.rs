@@ -1,4 +1,4 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::ck3::modif::ModifKinds;
 use crate::ck3::tables::misc::{ARTIFACT_RARITIES, SUPPORT_TYPES};
 use crate::context::ScopeContext;
@@ -7,7 +7,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::{validate_modifs, verify_modif_exists};
-use crate::report::{warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

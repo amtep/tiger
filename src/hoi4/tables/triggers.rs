@@ -1,8 +1,8 @@
 use std::sync::LazyLock;
 
 use crate::everything::Everything;
-use crate::helpers::expand_scopes_hoi4;
 use crate::helpers::TigerHashMap;
+use crate::helpers::expand_scopes_hoi4;
 use crate::item::Item;
 use crate::scopes::*;
 use crate::token::Token;

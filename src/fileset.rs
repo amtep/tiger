@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::string::ToString;
 use std::sync::RwLock;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
@@ -24,7 +24,7 @@ use crate::modfile::ModFile;
 use crate::parse::ParserMemory;
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{
-    add_loaded_dlc_root, add_loaded_mod_root, err, fatal, report, ErrorKey, Severity,
+    ErrorKey, Severity, add_loaded_dlc_root, add_loaded_mod_root, err, fatal, report,
 };
 use crate::token::Token;
 use crate::util::fix_slashes_for_target_platform;
@@ -131,11 +131,7 @@ impl Ord for FileEntry {
         };
 
         // For same paths, the later [`FileKind`] wins.
-        if path_ord == Ordering::Equal {
-            self.kind.cmp(&other.kind)
-        } else {
-            path_ord
-        }
+        if path_ord == Ordering::Equal { self.kind.cmp(&other.kind) } else { path_ord }
     }
 }
 
@@ -318,7 +314,9 @@ impl Fileset {
                     add_loaded_mod_root(label);
                     self.loaded_mods.push(loaded_mod);
                 } else {
-                    bail!("could not load secondary mod from config; missing valid `modfile` or `workshop_id` field");
+                    bail!(
+                        "could not load secondary mod from config; missing valid `modfile` or `workshop_id` field"
+                    );
                 }
             } else if Game::is_vic3() {
                 #[cfg(feature = "vic3")]
@@ -351,7 +349,9 @@ impl Fileset {
                         }
                     }
                 } else {
-                    bail!("could not load secondary mod from config; missing valid `mod` or `workshop_id` field");
+                    bail!(
+                        "could not load secondary mod from config; missing valid `mod` or `workshop_id` field"
+                    );
                 }
             }
         }
@@ -625,7 +625,7 @@ impl Fileset {
             if !entry.path.to_string_lossy().ends_with(".txt") {
                 continue;
             }
-            if entry.path == PathBuf::from("common/achievement_groups.txt") {
+            if entry.path == OsStr::new("common/achievement_groups.txt") {
                 continue;
             }
             #[cfg(feature = "hoi4")]

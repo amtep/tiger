@@ -1,10 +1,10 @@
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::pdxfile::PdxEncoding;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 use crate::validate::validate_color;
 use crate::validator::Validator;

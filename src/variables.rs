@@ -1,9 +1,9 @@
 //! A registry of all the script variables that have been defined somewhere.
 
-use crate::block::{Block, Comparator, Eq::Single, Field, BV};
+use crate::block::{BV, Block, Comparator, Eq::Single, Field};
 use crate::game::{Game, GameFlags};
 use crate::helpers::{TigerHashMap, TigerHashSet};
-use crate::report::{report, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, report};
 use crate::token::Token;
 
 #[derive(Debug)]
@@ -175,11 +175,7 @@ fn filter_table(
 
 /// Return the variable name with any preceding `FROM.` etc removed.
 fn remove_qualifiers(name: &str) -> &str {
-    if let Some((_, name)) = name.rsplit_once('.') {
-        name
-    } else {
-        name
-    }
+    if let Some((_, name)) = name.rsplit_once('.') { name } else { name }
 }
 
 /// If the variable name has a country tag at the end, return it with that tag removed.

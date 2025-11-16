@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 
 use tiger_lib::{
-    take_reports, Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet,
+    Everything, LogReportMetadata, LogReportPointers, TigerHashMap, TigerHashSet, take_reports,
 };
 
 static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
@@ -13,7 +13,7 @@ fn check_mod_helper(
     let _guard = TEST_MUTEX.lock().unwrap();
 
     let vanilla_dir = PathBuf::from("tests/files/ck3");
-    let mod_root = PathBuf::from(format!("tests/files/{}", modname));
+    let mod_root = PathBuf::from(format!("tests/files/{modname}"));
 
     let mut everything =
         Everything::new(None, Some(&vanilla_dir), None, None, &mod_root, Vec::new()).unwrap();
@@ -32,7 +32,7 @@ fn take_report_contains(
     storage.retain(|report, occurrences| {
         if report.msg.contains(msg_contains) {
             if let Some(pointers) =
-                occurrences.extract_if(|p| p[0].loc.pathname() == PathBuf::from(pathname)).next()
+                occurrences.extract_if(|p| p[0].loc.pathname() == pathname).next()
             {
                 result = Some(((*report).clone(), pointers));
                 if occurrences.is_empty() {
@@ -54,7 +54,7 @@ fn take_report(
     storage.retain(|report, occurrences| {
         if report.msg == msg {
             if let Some(pointers) =
-                occurrences.extract_if(|p| p[0].loc.pathname() == PathBuf::from(pathname)).next()
+                occurrences.extract_if(|p| p[0].loc.pathname() == pathname).next()
             {
                 result = Some(((*report).clone(), pointers));
                 if occurrences.is_empty() {
@@ -79,7 +79,7 @@ fn take_report_pointer(
         if report.msg == msg {
             if let Some(pointers) = occurrences
                 .extract_if(|p| {
-                    p[0].loc.pathname() == PathBuf::from(pathname)
+                    p[0].loc.pathname() == pathname
                         && p[0].loc.line == line
                         && p[0].loc.column == column
                 })
@@ -101,7 +101,7 @@ fn ignore_reports(
     pathname: &str,
 ) {
     storage.retain(|_, occurrences| {
-        occurrences.retain(|p| p[0].loc.pathname() != PathBuf::from(pathname));
+        occurrences.retain(|p| p[0].loc.pathname() != pathname);
         if occurrences.is_empty() {
             return false;
         }

@@ -1,5 +1,4 @@
 [workspace]
-
 members = [
     "ck3-tiger",
     "vic3-tiger",
@@ -13,13 +12,13 @@ members = [
 [package]
 name = "tiger-lib"
 version = "1.13.0"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0-or-later"
 description = "Library used by the tools ck3-tiger, vic3-tiger, and imperator-tiger. This library holds the bulk of the code for them. It can be built either for ck3-tiger with the feature ck3, or for vic3-tiger with the feature vic3, or for imperator-tiger with the feature imperator, but not both at the same time."
 homepage = "https://github.com/amtep/tiger"
 repository = "https://github.com/amtep/tiger"
 readme = "README.md"
-rust-version = "1.84"
+rust-version = "1.85"
 
 [features]
 default = ["ck3"]
@@ -47,15 +46,15 @@ anyhow = "1"
 as-any = "0.3.0"
 atomic_enum = "0.3.0"
 bimap = "0.6.3"
-bitflags = "2.9"
+bitflags = "2.10"
 bitvec = "1.0"
 bumpalo = "3.16"
 encoding_rs = "0.8.32"
 image = { version = "0.25", features = ["dds"], default-features = false, optional = true }
 inventory = "0.3.11"
 lalrpop-util = { version = "0.22.0", features = ["unicode", "lexer"] }
-phf = { version = "0.12", features = ["macros"] }
-png = { version = "0.17.6", optional = true }
+phf = { version = "0.13", features = ["macros"] }
+png = { version = "0.18", optional = true }
 rayon = "1.7.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -120,7 +119,7 @@ rc_buffer = "warn"
 rc_mutex = "warn"
 rest_pat_in_fully_bound_structs = "warn"
 string_add = "warn"
-string_to_string = "warn"
+implicit_clone = "warn"
 todo = "warn"
 
 [workspace.lints.rust]

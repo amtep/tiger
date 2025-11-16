@@ -11,20 +11,16 @@ use png::{ColorType, Decoder};
 #[cfg(feature = "hoi4")]
 use tinybmp::{Bpp, CompressionMethod, RawBmp};
 
+use crate::Game;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::parse::ParserMemory;
-use crate::report::{err, warn, will_maybe_log, ErrorKey};
-use crate::Game;
+use crate::report::{ErrorKey, err, warn, will_maybe_log};
 
 #[inline]
 fn river_image_path() -> &'static str {
-    if Game::is_hoi4() {
-        "map/rivers.bmp"
-    } else {
-        "map_data/rivers.png"
-    }
+    if Game::is_hoi4() { "map/rivers.bmp" } else { "map_data/rivers.png" }
 }
 
 /// The `rivers.png/bmp` has an indexed palette where the colors don't matter, only the index values
@@ -65,7 +61,7 @@ impl Rivers {
     pub fn handle_image(&mut self, loaded: &[u8], entry: &FileEntry) {
         #[cfg(feature = "jomini")]
         if Game::is_jomini() {
-            let decoder = Decoder::new(loaded);
+            let decoder = Decoder::new(std::io::Cursor::new(loaded));
             let mut reader = match decoder.read_info() {
                 Ok(r) => r,
                 Err(e) => {
@@ -95,7 +91,7 @@ impl Rivers {
             self.height = info.height;
             let color_type = info.color_type;
 
-            self.pixels = vec![0; reader.output_buffer_size()];
+            self.pixels = vec![0; reader.output_buffer_size().unwrap()];
             let frame_info = match reader.next_frame(&mut self.pixels) {
                 Ok(i) => i,
                 Err(e) => {

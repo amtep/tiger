@@ -1,7 +1,7 @@
 use crate::block::Block;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::validator::Validator;
 
 pub fn validate_rules(block: &Block, data: &Everything) {

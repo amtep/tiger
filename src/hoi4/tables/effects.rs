@@ -2,8 +2,8 @@ use std::sync::LazyLock;
 
 use crate::effect::Effect;
 use crate::everything::Everything;
-use crate::helpers::expand_scopes_hoi4;
 use crate::helpers::TigerHashMap;
+use crate::helpers::expand_scopes_hoi4;
 use crate::hoi4::effect_validation::*;
 use crate::item::Item;
 use crate::scopes::*;
