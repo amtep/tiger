@@ -1,6 +1,6 @@
 use std::sync::LazyLock;
 
-use crate::helpers::{expand_scopes_hoi4, TigerHashMap};
+use crate::helpers::{TigerHashMap, expand_scopes_hoi4};
 use crate::scopes::{ArgumentValue, Scopes};
 
 #[inline]

@@ -1,5 +1,5 @@
-use crate::block::{Block, Comparator, Eq::*, Field, BV};
-use crate::report::{err, ErrorKey};
+use crate::block::{BV, Block, Comparator, Eq::*, Field};
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 
 #[derive(Debug, Clone)]
@@ -31,11 +31,7 @@ impl BlockItem {
     }
 
     pub fn get_field(&self) -> Option<&Field> {
-        if let BlockItem::Field(field) = self {
-            Some(field)
-        } else {
-            None
-        }
+        if let BlockItem::Field(field) = self { Some(field) } else { None }
     }
 
     #[allow(dead_code)]
@@ -44,11 +40,7 @@ impl BlockItem {
     }
 
     pub fn get_value(&self) -> Option<&Token> {
-        if let BlockItem::Value(token) = self {
-            Some(token)
-        } else {
-            None
-        }
+        if let BlockItem::Value(token) = self { Some(token) } else { None }
     }
 
     pub fn expect_value(&self) -> Option<&Token> {
@@ -73,11 +65,7 @@ impl BlockItem {
 
     #[allow(dead_code)] // It's here for symmetry
     pub fn get_block(&self) -> Option<&Block> {
-        if let BlockItem::Block(block) = self {
-            Some(block)
-        } else {
-            None
-        }
+        if let BlockItem::Block(block) = self { Some(block) } else { None }
     }
 
     pub fn expect_block(&self) -> Option<&Block> {
@@ -101,11 +89,7 @@ impl BlockItem {
     }
 
     pub fn get_definition(&self) -> Option<(&Token, &Block)> {
-        if let Some(field) = self.get_field() {
-            field.get_definition()
-        } else {
-            None
-        }
+        if let Some(field) = self.get_field() { field.get_definition() } else { None }
     }
 
     pub fn expect_into_definition(self) -> Option<(Token, Block)> {
@@ -117,11 +101,7 @@ impl BlockItem {
     }
 
     pub fn expect_definition(&self) -> Option<(&Token, &Block)> {
-        if let Some(field) = self.expect_field() {
-            field.expect_definition()
-        } else {
-            None
-        }
+        if let Some(field) = self.expect_field() { field.expect_definition() } else { None }
     }
 
     pub fn expect_into_assignment(self) -> Option<(Token, Token)> {
@@ -137,7 +117,7 @@ impl BlockItem {
             #[allow(clippy::single_match_else)] // too complicated for a `let`
             match field {
                 Field(key, Comparator::Equals(Single | Question), BV::Value(token)) => {
-                    return Some((key, token))
+                    return Some((key, token));
                 }
                 _ => {
                     let msg = format!("expected assignment, found {}", field.describe());

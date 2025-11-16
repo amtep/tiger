@@ -7,7 +7,7 @@ use crate::hoi4::modif::ModifKinds;
 use crate::hoi4::validate::validate_equipment_bonus;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::validate::validate_modifiers_with_base;

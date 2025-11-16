@@ -7,7 +7,7 @@ use crate::hoi4::modif::ModifKinds;
 use crate::hoi4::tables::modifs::lookup_modif;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{err, warn, ErrorKey};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;

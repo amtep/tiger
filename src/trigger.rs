@@ -4,7 +4,7 @@ use bitflags::bitflags;
 
 use std::str::FromStr;
 
-use crate::block::{Block, Comparator, Eq::*, Field, BV};
+use crate::block::{BV, Block, Comparator, Eq::*, Field};
 use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
 use crate::data::genes::Gene;
@@ -24,17 +24,17 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 #[cfg(any(feature = "vic3", feature = "imperator"))]
 use crate::modif::verify_modif_exists;
-use crate::report::{err, fatal, tips, warn, ErrorKey, Severity};
+use crate::report::{ErrorKey, Severity, err, fatal, tips, warn};
 use crate::scopes::{
-    needs_prefix, scope_iterator, scope_prefix, scope_to_scope, ArgumentValue, Scopes,
+    ArgumentValue, Scopes, needs_prefix, scope_iterator, scope_prefix, scope_to_scope,
 };
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
 use crate::token::{Loc, Token};
 use crate::tooltipped::Tooltipped;
 use crate::validate::{
-    precheck_iterator_fields, validate_identifier, validate_ifelse_sequence,
-    validate_inside_iterator, validate_iterator_fields, ListType,
+    ListType, precheck_iterator_fields, validate_identifier, validate_ifelse_sequence,
+    validate_inside_iterator, validate_iterator_fields,
 };
 use crate::validator::Validator;
 
@@ -962,7 +962,9 @@ fn match_trigger_bv(
 
                         if tooltipped.is_tooltipped() {
                             if let Some(firstpart) = token.as_str().strip_suffix(".holder") {
-                                let msg = format!("could rewrite this as `{firstpart} = {{ is_title_created = yes }}`");
+                                let msg = format!(
+                                    "could rewrite this as `{firstpart} = {{ is_title_created = yes }}`"
+                                );
                                 let info = "it gives a nicer tooltip";
                                 tips(ErrorKey::Tooltip).msg(msg).info(info).loc(name).push();
                             }
@@ -1184,7 +1186,9 @@ fn match_trigger_bv(
 
     if matches!(cmp, Comparator::Equals(_)) {
         if warn_if_eq {
-            let msg = format!("`{name} {cmp}` means exactly equal to that amount, which is usually not what you want");
+            let msg = format!(
+                "`{name} {cmp}` means exactly equal to that amount, which is usually not what you want"
+            );
             warn(ErrorKey::Logic).msg(msg).loc(name).push();
         }
     } else if must_be_eq {

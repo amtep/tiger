@@ -16,9 +16,9 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
-use crate::parse::csv::{parse_csv, read_csv};
 use crate::parse::ParserMemory;
-use crate::report::{err, report, untidy, warn, ErrorKey, Severity};
+use crate::parse::csv::{parse_csv, read_csv};
+use crate::report::{ErrorKey, Severity, err, report, untidy, warn};
 use crate::token::Token;
 
 use super::terrain::Terrain;
@@ -249,7 +249,9 @@ impl Hoi4Provinces {
                             && right_color != down_right_color
                             && color != down_right_color
                         {
-                            let msg = format!("four provinces share a common corner in `provinces.bmp` around [({x},{y}), ({right}, {down})]");
+                            let msg = format!(
+                                "four provinces share a common corner in `provinces.bmp` around [({x},{y}), ({right}, {down})]"
+                            );
                             let info = "the game connects the bottom left and the top right provinces but this can be confusing";
                             warn(ErrorKey::Validation).msg(msg).info(info).loc(entry).push();
                         }
@@ -321,8 +323,7 @@ impl FileHandler<FileContent> for Hoi4Provinces {
                             file.read_exact(&mut buf).unwrap();
                             // DIB header size
                             if buf[0] != 40 {
-                                let msg =
-                                "bitmap has wrong DIB header format, should be BITMAPINFOHEADER";
+                                let msg = "bitmap has wrong DIB header format, should be BITMAPINFOHEADER";
                                 let info =
                                     "see https://hoi4.paradoxwikis.com/Map_modding#BMP_format";
                                 err(ErrorKey::ImageFormat).msg(msg).info(info).loc(entry).push();
@@ -516,8 +517,7 @@ impl Adjacency {
                 }
 
                 if !is_bordering && self.through.is_none() {
-                    let msg =
-                        "from and to non-bordering provinces must have a through province for sea adjacency";
+                    let msg = "from and to non-bordering provinces must have a through province for sea adjacency";
                     err(ErrorKey::Validation).msg(msg).loc(&self.key).push();
                 }
             }

@@ -1,17 +1,17 @@
 use std::path::PathBuf;
 
-use crate::block::{Block, BV};
+use crate::block::{BV, Block};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::game::Game;
-use crate::helpers::{dup_error, TigerHashMap};
+use crate::helpers::{TigerHashMap, dup_error};
 #[cfg(feature = "ck3")]
 use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 #[cfg(feature = "ck3")]
 use crate::report::Severity;
-use crate::report::{err, ErrorKey};
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 
 #[derive(Clone, Debug, Default)]
