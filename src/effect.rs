@@ -24,6 +24,8 @@ use crate::trigger::{validate_target, validate_trigger};
 use crate::validate::validate_compare_duration;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use crate::validate::validate_modifiers;
+#[cfg(feature = "ck3")]
+use crate::validate::validate_possibly_named_color;
 #[cfg(feature = "jomini")]
 use crate::validate::validate_scripted_modifier_call;
 use crate::validate::{
@@ -385,6 +387,10 @@ pub fn validate_effect_field(
                     validate_target(token, data, sc, Scopes::Value);
                 }
             }
+            #[cfg(feature = "ck3")]
+            Effect::Color => {
+                validate_possibly_named_color(bv, data);
+            }
             Effect::Removed(version, explanation) => {
                 let msg = format!("`{key}` was removed in {version}");
                 warn(ErrorKey::Removed).msg(msg).info(explanation).loc(key).push();
@@ -610,8 +616,12 @@ pub fn validate_effect_control(
         vd.field_validated_sc("tooltip", &mut loca_sc, validate_desc);
         loca_sc.destroy();
 
-        let icon_scopes =
-            Scopes::Character | Scopes::LandedTitle | Scopes::Artifact | Scopes::Faith;
+        let icon_scopes = Scopes::Character
+            | Scopes::LandedTitle
+            | Scopes::Artifact
+            | Scopes::Faith
+            | Scopes::Dynasty
+            | Scopes::DynastyHouse;
         if let Some(token) = vd.field_value("left_icon") {
             validate_target_ok_this(token, data, sc, icon_scopes);
         }
@@ -745,4 +755,7 @@ pub enum Effect {
     /// This is for Hoi4 which doesn't have script values.
     #[cfg(feature = "hoi4")]
     Value,
+    /// The effect takes a possibly named color value
+    #[cfg(feature = "ck3")]
+    Color,
 }

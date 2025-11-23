@@ -323,4 +323,24 @@ pub const SCRIPTED_RULES: &str = "
 		root = character
 		province = province
 	}
+
+	can_start_bartering = {
+		root = character
+	}
+
+	ai_should_create_title = {
+		root = character
+		title = landed_title
+	}
+
+	ai_should_hire_title_maa = {
+		root = character
+		title = landed_title
+		can_afford_personal_maa = boolean
+		has_personal_maa_space = boolean
+		personal_maa_maintenance = value
+		title_maa_maintenance = value
+		personal_maa_cap = value
+		title_maa_cap = value
+	}
 ";

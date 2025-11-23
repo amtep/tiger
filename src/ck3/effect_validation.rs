@@ -97,6 +97,14 @@ pub fn validate_add_from_contribution(
     vd.field_script_value("prestige", sc);
     vd.field_script_value("gold", sc);
     vd.field_script_value("piety", sc);
+    vd.field_script_value("influence", sc);
+    vd.field_script_value("merit", sc);
+    vd.field_script_value("renown", sc);
+    vd.field_script_value("treasury", sc);
+    vd.field_script_value("herd", sc);
+    vd.field_script_value("provisions", sc);
+    // TODO: barter_goods is not in the example for defenders. Is it available?
+    vd.field_script_value("barter_goods", sc);
     vd.field_validated_block("opinion", |block, data| {
         let mut vd = Validator::new(block, data);
         vd.field_item("modifier", Item::OpinionModifier);
@@ -665,7 +673,10 @@ pub fn validate_create_confederation(
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
+    vd.req_field("name");
     vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_item("type", Item::ConfederationType);
+    vd.field_target("leader", sc, Scopes::DynastyHouse);
     sc.define_name("new_confederation", Scopes::Confederation, key);
 }
 
@@ -890,15 +901,19 @@ pub fn validate_make_pregnant(
     vd.field_bool("known_bastard");
 }
 
-pub fn validate_move_budget_gold(
-    _key: &Token,
+pub fn validate_move_budget(
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
-    vd.field_script_value("gold", sc);
+    if key.is("move_budget_gold") {
+        vd.field_script_value_no_breakdown("gold", sc);
+    } else if key.is("move_budget_treasury") {
+        vd.field_script_value_no_breakdown("treasury", sc);
+    }
     let choices = &["budget_war_chest", "budget_reserved", "budget_short_term", "budget_long_term"];
     vd.field_choice("from", choices);
     vd.field_choice("to", choices);
@@ -1223,6 +1238,9 @@ pub fn validate_start_scheme(
     vd.field_target("target_culture", sc, Scopes::Culture);
     vd.field_target("target_faith", sc, Scopes::Faith);
     vd.field_bool("targets_nothing");
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Scheme, name);
+    }
 
     // undocumented
 
@@ -1503,6 +1521,7 @@ pub fn validate_change_first_name(
     sc: &mut ScopeContext,
     _tooltipped: Tooltipped,
 ) {
+    // TODO: docs now say change_first_name = <dynamic_description> but no uses in vanilla
     match bv {
         BV::Value(token) => {
             if data.item_exists(Item::Localization, token.as_str()) {
@@ -1986,6 +2005,7 @@ pub fn validate_give_noble_family_title(
     _tooltipped: Tooltipped,
 ) {
     vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_choice("tier", &["county", "duchy"]);
     vd.field_validated_sc("article", sc, validate_desc);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
@@ -2159,7 +2179,7 @@ pub fn validate_start_situation(
 }
 
 pub fn validate_situation_catalyst(
-    _key: &Token,
+    key: &Token,
     bv: &BV,
     data: &Everything,
     sc: &mut ScopeContext,
@@ -2174,6 +2194,135 @@ pub fn validate_situation_catalyst(
             vd.req_field("catalyst");
             vd.field_item("catalyst", Item::SituationCatalyst);
             vd.field_target("character", sc, Scopes::Character);
+            if key.is("trigger_situation_catalyst") {
+                // TODO: verify if "county" really takes a province
+                vd.field_target("county", sc, Scopes::Province);
+            }
         }
+    }
+}
+
+pub fn validate_add_subject_standing(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_script_value_no_breakdown("add", sc);
+    vd.field_script_value_no_breakdown("max", sc);
+}
+
+pub fn validate_house_relation_level(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_script_value_no_breakdown("steps", sc);
+    vd.field_validated_sc("description", sc, validate_desc);
+    vd.field_bool("notification");
+}
+
+pub fn validate_create_cadet_branch(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_item("coat_of_arms", Item::Coa);
+    vd.field_bool("spread_to_descendants");
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::DynastyHouse, name);
+    }
+}
+
+pub fn validate_create_dynasty(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_item("prefix", Item::Localization);
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_item("coat_of_arms", Item::Coa);
+    vd.field_bool("spread_to_descendants");
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Dynasty, name);
+    }
+}
+
+pub fn validate_contribution(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("contribution");
+    vd.field_target("contribution", sc, Scopes::ProjectContribution);
+    vd.field_bool("cost");
+    vd.field_bool("check_can_contribute");
+}
+
+pub fn validate_situation_special_event(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    // TODO: "Only applies to situations that support full history"
+    vd.field_target("actor", sc, Scopes::Character);
+    vd.field_item("phase", Item::SituationPhase);
+    let mut loca_sc = sc.clone();
+    vd.field_validated_block("variables", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.unknown_value_fields(|key, value| {
+            let scopes = validate_target_ok_this(value, data, sc, Scopes::all());
+            loca_sc.define_name(key.as_str(), scopes, value);
+        });
+    });
+    vd.field_localization("key", &mut loca_sc);
+    loca_sc.destroy();
+}
+
+pub fn validate_appointment_timeout(
+    _key: &Token,
+    block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_validated_sc("desc", sc, validate_desc);
+    validate_mandatory_duration(block, &mut vd, sc);
+}
+
+pub fn validate_house_relation(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_target("target", sc, Scopes::DynastyHouse);
+    vd.field_item("type", Item::HouseRelationType);
+    vd.field_script_value_no_breakdown("level", sc);
+    vd.field_validated_sc("description", sc, validate_desc);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::HouseRelation, name);
     }
 }

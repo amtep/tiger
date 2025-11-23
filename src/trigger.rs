@@ -866,6 +866,14 @@ fn match_trigger_bv(
                     match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
             }
         },
+        #[cfg(feature = "ck3")]
+        Trigger::IdentifierOrBlock(kind, fields) => match bv {
+            BV::Value(token) => validate_identifier(token, kind, Severity::Error),
+            BV::Block(block) => {
+                side_effects |=
+                    match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
+            }
+        },
         #[cfg(any(feature = "ck3", feature = "vic3"))]
         Trigger::BlockOrCompareValue(fields) => match bv {
             BV::Value(t) => {
@@ -1759,6 +1767,9 @@ pub enum Trigger {
     /// trigger takes a block with these fields
     #[cfg(feature = "ck3")]
     ItemOrBlock(Item, &'static [(&'static str, Trigger)]),
+    /// trigger takes a single identifier or a block with these fields
+    #[cfg(feature = "ck3")]
+    IdentifierOrBlock(&'static str, &'static [(&'static str, Trigger)]),
     /// can be part of a scope chain but also a standalone trigger
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     BlockOrCompareValue(&'static [(&'static str, Trigger)]),
