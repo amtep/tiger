@@ -617,12 +617,6 @@ pub const ON_ACTION_SCOPES: &str = "
 		old_employer = character
 	}
 
-	on_confederation_join = {
-		root = character
-		confederation = confederation
-	}
-	on_confederation_leave = on_confederation_join
-
 	on_combat_unit_join_side = {
 		root = combat_side
 		army = army
@@ -681,5 +675,63 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = landed_title
 		actor = character
 		recipient = character
+	}
+
+	on_great_building_rebuilt = {
+		root = character
+		province = province
+	}
+
+	on_primary_title_change = {
+		root = character
+		previous_title = landed_title
+	}
+
+	on_apply_inherited_confederation = {
+		root = character
+	}
+
+	on_barter_action_start = {
+		root = army
+		barterer = character
+		barony = landed_title
+		county = landed_title
+	}
+	on_barter_action_completion = {
+		root = army
+		barterer = character
+		barony = landed_title
+		county = landed_title
+		value = value
+	}
+	on_barter_action_weekly = on_barter_action_start
+
+	on_house_relation_created = {
+		root = house_relation
+	}
+	on_house_relation_level_changed = on_house_relation_created
+	on_house_relation_destroyed = on_house_relation_created
+
+	on_house_aspiration_upgraded = {
+		root = character
+		house = dynasty_house
+	}
+	on_house_aspiration_changed = on_house_aspiration_upgraded
+
+	on_merit_level_gain = {
+		root = character
+	}
+	on_merit_level_loss = on_merit_level_gain
+
+	on_defeat_barter_army = {
+		root = army
+		barterer = character
+		receiver = character
+		barter_loot = value
+	}
+	on_barter_loot_delivered = {
+		root = army
+		barterer = character
+		barter_loot = value
 	}
 ";
