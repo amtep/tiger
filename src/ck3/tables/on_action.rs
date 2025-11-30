@@ -734,4 +734,10 @@ pub const ON_ACTION_SCOPES: &str = "
 		barterer = character
 		barter_loot = value
 	}
+
+	on_councillors_swapped = {
+		root = character
+		councillor = character
+		councillor_liege = character
+	}
 ";

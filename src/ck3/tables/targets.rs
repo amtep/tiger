@@ -56,6 +56,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Character, "confederation", Scopes::Confederation),
     (Scopes::Confederation, "confederation_type", Scopes::ConfederationType),
     (Scopes::ProjectContribution, "contributor", Scopes::Character),
+    (Scopes::Character, "council_owner", Scopes::Character),
     (Scopes::Character, "council_task", Scopes::CouncilTask), // also has a prefix form
     (Scopes::CouncilTask, "councillor", Scopes::Character),
     (Scopes::Character, "councillor_task_target", Scopes::all()), // output scope depends on task
