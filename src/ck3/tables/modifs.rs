@@ -465,6 +465,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
         ModifKinds::Character.union(ModifKinds::Province).union(ModifKinds::County),
     ),
     ("build_speed", ModifKinds::Character.union(ModifKinds::Province).union(ModifKinds::County)),
+    ("can_vassals_be_attacked", ModifKinds::Character),
     (
         "capital_additional_fort_level",
         ModifKinds::Character.union(ModifKinds::Province).union(ModifKinds::County),

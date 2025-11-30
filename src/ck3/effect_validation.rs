@@ -2326,3 +2326,23 @@ pub fn validate_house_relation(
         sc.define_name_token(name.as_str(), Scopes::HouseRelation, name);
     }
 }
+
+pub fn validate_set_activity_intent(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(value) => {
+            data.verify_exists(Item::ActivityIntent, value);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("intent");
+            vd.field_item("intent", Item::ActivityIntent);
+            vd.field_target("target", sc, Scopes::Character);
+        }
+    }
+}
