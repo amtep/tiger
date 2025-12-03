@@ -29,8 +29,10 @@ impl Government {
 
 impl DbKind for Government {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
-        for token in block.get_field_values("flag") {
-            db.add_flag(Item::GovernmentFlag, token.clone());
+        if let Some(vec) = block.get_field_list("flags") {
+            for token in vec {
+                db.add_flag(Item::GovernmentFlag, token.clone());
+            }
         }
     }
 

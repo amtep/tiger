@@ -46,7 +46,7 @@ impl DbKind for Flavorization {
             vd.ban_field("special", || "type = character");
         }
         if flavor_type == "character" || flavor_type == "title" {
-            vd.field_choice("tier", &["empire", "kingdom", "duchy", "county", "barony", "none"]);
+            vd.field_choice("tier", &["hegemony", "empire", "kingdom", "duchy", "county", "barony", "none"]);
         } else {
             vd.ban_field("tier", || "type = character or title");
         }

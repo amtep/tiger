@@ -37,7 +37,7 @@ impl DbKind for CourtPosition {
         vd.field_item("skill", Item::Skill);
         vd.field_integer("max_available_positions");
         vd.advice_field("category", "removed in 1.15");
-        vd.field_choice("minimum_rank", &["county", "duchy", "kingdom", "empire"]);
+        vd.field_choice("minimum_rank", &["county", "duchy", "kingdom", "empire", "hegemony"]);
         vd.field_bool("is_travel_related");
 
         vd.multi_field_validated_block("court_position_asset", |block, data| {

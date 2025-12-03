@@ -690,7 +690,7 @@ pub fn validate_create_dynamic_title(
 ) {
     vd.req_field("tier");
     vd.req_field("name");
-    vd.field_choice("tier", &["duchy", "kingdom", "empire"]);
+    vd.field_choice("tier", &["duchy", "kingdom", "empire", "hegemony"]);
     vd.field_validated_sc("name", sc, validate_desc);
     vd.advice_field("adjective", "changed to adj in 1.13");
     vd.field_validated_sc("adj", sc, validate_desc);
