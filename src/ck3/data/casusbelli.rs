@@ -168,7 +168,7 @@ impl DbKind for CasusBelli {
             "independence_domain",
         ];
         vd.field_choice("target_titles", choices);
-        let choices = &["all", "barony", "county", "duchy", "kingdom", "empire"];
+        let choices = &["all", "barony", "county", "duchy", "kingdom", "empire", "hegemony"];
         vd.field_choice("target_title_tier", choices);
         vd.field_bool("target_de_jure_regions_above");
         vd.field_bool("use_de_jure_wargoal_only");

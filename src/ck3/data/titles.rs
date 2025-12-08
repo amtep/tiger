@@ -32,6 +32,7 @@ pub enum Tier {
     Duchy,
     Kingdom,
     Empire,
+    Hegemony,
 }
 
 impl TryFrom<&Token> for Tier {
@@ -48,6 +49,8 @@ impl TryFrom<&Token> for Tier {
             Ok(Tier::Kingdom)
         } else if s.starts_with("e_") {
             Ok(Tier::Empire)
+        } else if s.starts_with("h_") {
+            Ok(Tier::Hegemony)
         } else {
             Err(std::fmt::Error)
         }
@@ -69,6 +72,7 @@ impl Display for Tier {
             Tier::Duchy => write!(f, "duchy"),
             Tier::Kingdom => write!(f, "kingdom"),
             Tier::Empire => write!(f, "empire"),
+            Tier::Hegemony => write!(f, "hegemony"),
         }
     }
 }

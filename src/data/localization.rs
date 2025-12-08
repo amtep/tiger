@@ -85,7 +85,7 @@ pub enum Language {
     SimpChinese,
     #[cfg(any(feature = "vic3", feature = "hoi4"))]
     BrazPor,
-    #[cfg(any(feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
     Japanese,
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
     Polish,
