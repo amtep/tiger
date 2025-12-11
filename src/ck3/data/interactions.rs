@@ -43,6 +43,7 @@ impl DbKind for CharacterInteraction {
         // TODO: figure out when these are available
         sc.define_name("secondary_actor", Scopes::Character, key);
         sc.define_name("secondary_recipient", Scopes::Character, key);
+        sc.define_name("intermediary", Scopes::Character, key);
         // TODO: figure out if there's a better way than exhaustively matching on "interface" and "special_interaction"
         if let Some(target_type) = block.get_field_value("target_type") {
             if target_type.is("artifact") {
@@ -133,7 +134,7 @@ impl DbKind for CharacterInteraction {
         vd.field_value("interface"); // TODO
         vd.field_list_choice(
             "custom_character_sort",
-            &["candidate_score", "governor_efficiency", "obedience"],
+            &["candidate_score", "governor_efficiency", "obedience", "merit"],
         );
         vd.field_item("scheme", Item::Scheme);
         vd.field_bool("popup_on_receive");
@@ -265,6 +266,17 @@ impl DbKind for CharacterInteraction {
         vd.field_effect("on_intermediary_decline", Tooltipped::Yes, &mut sc);
 
         vd.field_integer("ai_frequency"); // months
+        vd.field_validated_key_block("ai_frequency_by_tier", |key, b, data| {
+            let mut vd = Validator::new(b, data);
+            for tier in &["barony", "county", "duchy", "kingdom", "empire", "hegemony"] {
+                vd.req_field(tier);
+                vd.field_integer(tier);
+            }
+            if block.has_key("ai_frequency") {
+                let msg = "must not have both `ai_frequency` and `ai_frequency_by_tier`";
+                warn(ErrorKey::Validation).msg(msg).loc(key).push();
+            }
+        });
 
         // This is in character scope with no other named scopes builtin
         vd.field_trigger_rooted("ai_potential", Tooltipped::Yes, Scopes::Character);
@@ -275,7 +287,10 @@ impl DbKind for CharacterInteraction {
                 let msg = "`ai_potential` will not be used if `ai_frequency` is 0";
                 warn(ErrorKey::Unneeded).msg(msg).loc(token).push();
             }
+            let msg = "should use `is_available` instead of `ai_potential`";
+            warn(ErrorKey::Deprecated).msg(msg).loc(token).push();
         }
+        vd.field_trigger_rooted("is_available", Tooltipped::Yes, Scopes::Character);
         vd.field_validated_sc("ai_intermediary_accept", &mut sc.clone(), validate_ai_chance);
 
         // These seem to be in character scope

@@ -16,12 +16,15 @@ pub const AI_TARGETS: &[&str] = &[
     "courtiers",
     "councillors",
     "prisoners",
+    "confederation_house_heads",
     "sub_realm_characters",
     "realm_characters",
     "vassals",
     "tributaries",
     "liege",
+    "top_liege",
     "suzerain",
+    "top_suzerain",
     "self",
     "head_of_faith",
     "spouses",
@@ -41,6 +44,7 @@ pub const AI_TARGETS: &[&str] = &[
     "top_realm_domicile_owners",
     "sub_realm_domicile_owners",
     "nearby_domicile_owners",
+    "situation_participant_group",
     // undocumented
     "diarch",
 ];

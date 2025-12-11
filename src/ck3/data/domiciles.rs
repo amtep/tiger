@@ -155,6 +155,7 @@ impl DbKind for DomicileBuilding {
         data.localization.suggest(&loca, key);
 
         vd.field_trigger_rooted("can_construct", Tooltipped::Yes, Scopes::Character);
+        vd.field_trigger_rooted("can_construct_potential", Tooltipped::No, Scopes::Character);
 
         for field in &["on_start", "on_canceled", "on_complete"] {
             vd.field_effect_builder(field, Tooltipped::No, sc_domicile_owner);
@@ -182,6 +183,7 @@ impl DbKind for DomicileBuilding {
         // TODO: verify scope type
         let mut sc = ScopeContext::new(Scopes::Character, key);
         vd.field_validated_block_sc("cost", &mut sc, validate_cost);
+        vd.field_validated_block_sc("refund", &mut sc, validate_cost);
 
         vd.field_validated_block("character_modifier", |block, data| {
             let vd = Validator::new(block, data);

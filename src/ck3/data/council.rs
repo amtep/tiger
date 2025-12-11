@@ -291,6 +291,9 @@ impl DbKind for CouncilTask {
         }
         vd.field_item("custom_other_loc", Item::Localization);
         vd.field_validated_sc("effect_desc", &mut sc, validate_desc);
+        // TODO: the cloned task must be filled out (you cannot build clone chains where A clones B and B clones C)
+        // TODO: you cannot redefine anything else than the court position, and that field MUST be redefined.
+        vd.field_item("clone", Item::CouncilTask);
 
         // undocumented
         vd.field_script_value("ai_will_do", &mut sc);

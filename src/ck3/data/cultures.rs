@@ -122,12 +122,22 @@ impl DbKind for Culture {
         vd.field_item("head_determination", Item::HeadDetermination);
 
         vd.field_list_items("traditions", Item::CultureTradition);
+        vd.field_value("name_order_convention");
         vd.multi_field_item("name_list", Item::NameList);
 
         vd.multi_field_list_items("coa_gfx", Item::Localization);
         vd.field_list_items("building_gfx", Item::Localization);
         vd.multi_field_list_items("clothing_gfx", Item::Localization);
         vd.field_list_items("unit_gfx", Item::Localization);
+
+        for field in &["house_coa_frame", "dynasty_coa_frame"] {
+            if let Some(token) = vd.field_value(field) {
+                let pathname = format!("gfx/interface/coat_of_arms/frames/{token}.dds");
+                data.verify_exists_implied(Item::File, &pathname, token);
+                let pathname = format!("gfx/interface/coat_of_arms/frames/{token}_mask.dds");
+                data.verify_exists_implied(Item::File, &pathname, token);
+            }
+        }
 
         vd.field_validated_block("ethnicities", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -208,10 +218,6 @@ impl DbKind for CulturePillar {
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
-        vd.multi_field_validated_block("character_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
         validate_modifiers(&mut vd);
 
         let mut sc = ScopeContext::new(Scopes::Culture, key);
@@ -347,10 +353,21 @@ impl DbKind for CultureTradition {
     }
 }
 
+const INTEGER_PARAMETERS: &[&str] = &[
+    "number_of_spouses",
+    "number_of_consorts",
+    "number_of_consorts_barony",
+    "number_of_consorts_county",
+    "number_of_consorts_duchy",
+    "number_of_consorts_kingdom",
+    "number_of_consorts_empire",
+    "number_of_consorts_hegemony",
+];
+
 fn validate_parameters(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.unknown_value_fields(|key, value| {
-        if matches!(key.as_str(), "number_of_spouses" | "number_of_consorts") {
+        if INTEGER_PARAMETERS.contains(&key.as_str()) {
             ValueValidator::new(value, data).integer_range(0..);
         } else {
             ValueValidator::new(value, data).bool();

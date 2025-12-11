@@ -65,11 +65,13 @@ impl DbKind for CourtPosition {
             validate_cost(block, data, sc);
         });
 
-        vd.field_validated_key_block("salary", |key, block, data| {
-            let mut sc = ScopeContext::new(Scopes::None, key);
-            sc.define_name("liege", Scopes::Character, key);
-            validate_cost(block, data, &mut sc);
-        });
+        for field in &["salary", "received_salary"] {
+            vd.field_validated_key_block(field, |key, block, data| {
+                let mut sc = ScopeContext::new(Scopes::None, key);
+                sc.define_name("liege", Scopes::Character, key);
+                validate_cost(block, data, &mut sc);
+            });
+        }
 
         vd.field_validated_block("base_employer_modifier", |block, data| {
             let vd = Validator::new(block, data);
@@ -124,11 +126,18 @@ impl DbKind for CourtPosition {
             vd.field_effect(field, Tooltipped::No, &mut sc);
         }
 
-        vd.field_validated_key("candidate_score", |key, bv, data| {
+        vd.field_script_value_no_breakdown_builder("ai_position_score", |key| {
+            let mut sc = ScopeContext::new(Scopes::None, key);
+            sc.define_name("liege", Scopes::Character, key);
+            sc.define_name("monthly_character_expenses", Scopes::Value, key);
+            sc
+        });
+
+        vd.advice_field("candidate_score", "replaced by `ai_candidate_score`");
+        vd.field_validated_key("ai_candidate_score", |key, bv, data| {
             let mut sc = ScopeContext::new(Scopes::None, key);
             sc.define_name("liege", Scopes::Character, key);
             sc.define_name("employee", Scopes::Character, key);
-            sc.define_name("base_value", Scopes::Value, key);
             sc.define_name("firing_court_position", Scopes::Bool, key);
             sc.define_name("percent_of_monthly_gold_income", Scopes::Value, key);
             sc.define_name("percent_of_positive_monthly_prestige_balance", Scopes::Value, key);
@@ -144,8 +153,13 @@ impl DbKind for CourtPosition {
                 Scopes::Value,
                 key,
             );
-            sc.define_name("highest_available_aptitude", Scopes::Value, key); // undocumented
-            sc.define_name("employee_aptitude", Scopes::Value, key); // undocumented
+
+            // undocumented
+
+            sc.define_name("base_value", Scopes::Value, key);
+            sc.define_name("highest_available_aptitude", Scopes::Value, key);
+            sc.define_name("employee_aptitude", Scopes::Value, key);
+
             validate_script_value(bv, data, &mut sc);
         });
 
@@ -223,11 +237,13 @@ impl DbKind for CourtPositionTask {
             vd.field_item("background", Item::File);
         });
 
-        vd.field_validated_key_block("cost", |key, block, data| {
-            let mut sc = ScopeContext::new(Scopes::None, key);
-            sc.define_name("liege", Scopes::Character, key);
-            validate_cost(block, data, &mut sc);
-        });
+        for field in &["cost", "received_cost"] {
+            vd.field_validated_key_block(field, |key, block, data| {
+                let mut sc = ScopeContext::new(Scopes::None, key);
+                sc.define_name("liege", Scopes::Character, key);
+                validate_cost(block, data, &mut sc);
+            });
+        }
 
         vd.field_validated_block("employee_modifier", |block, data| {
             let vd = Validator::new(block, data);
