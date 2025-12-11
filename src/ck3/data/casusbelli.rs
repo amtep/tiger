@@ -202,6 +202,13 @@ impl DbKind for CasusBelli {
         vd.field_trigger_rooted("ai_can_target_all_titles", Tooltipped::No, Scopes::Character);
         vd.field_bool("ai");
 
+        vd.field_script_value_no_breakdown_builder("ai_overlord_defensive_power_impact", |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("attacker", Scopes::Character, key);
+            sc.define_name("defender", Scopes::Character, key);
+            sc.define_name("overlord", Scopes::Character, key);
+            sc
+        });
         vd.field_bool("white_peace_possible");
         vd.field_bool("check_all_defenders_for_ticking_war_score");
         vd.field_bool("ticking_war_score_targets_entire_realm");

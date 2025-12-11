@@ -133,6 +133,11 @@ fn validate_bookmark_character(
     vd.field_item("religion", Item::Faith);
     vd.field_item("difficulty", Item::Localization);
     vd.field_item("history_id", Item::Character);
+    // TODO: For 'new_landless_adventurer' and 'new_noble_family', the starting location 'title' needs to configured
+    vd.field_choice(
+        "bookmark_type",
+        &["existing_ruler", "new_landless_adventurer", "new_noble_family"],
+    );
     vd.field_item("animation", Item::PortraitAnimation);
     vd.field_validated_block("position", |block, data| {
         let mut vd = Validator::new(block, data);
