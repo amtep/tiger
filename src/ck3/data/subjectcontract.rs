@@ -69,9 +69,11 @@ impl DbKind for SubjectContract {
             }
         }
 
-        vd.field_choice("display_mode", &["tree", "list", "radiobutton", "checkbox"]);
-        vd.field_item("icon", Item::TextIcon);
         vd.field_trigger("is_shown", Tooltipped::No, &mut sc);
+        vd.field_choice("display_mode", &["tree", "radiobutton", "checkbox", "hidden"]);
+        vd.field_bool("defaults_to_highest_valid_level");
+        vd.field_trigger("can_be_changed", Tooltipped::Yes, &mut sc);
+        vd.field_item("icon", Item::TextIcon);
 
         vd.field_validated_block("obligation_levels", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -91,10 +93,12 @@ impl DbKind for SubjectContract {
                 vd.field_script_value("levies", &mut sc);
                 vd.field_script_value("tax", &mut sc);
                 vd.field_script_value("herd", &mut sc);
+                vd.field_script_value("barter_goods", &mut sc);
                 vd.field_script_value("prestige", &mut sc);
                 vd.field_script_value("min_levies", &mut sc);
                 vd.field_script_value("min_tax", &mut sc);
                 vd.field_script_value("min_herd", &mut sc);
+                vd.field_script_value("min_barter_goods", &mut sc);
                 vd.field_validated_sc("contribution_desc", &mut sc, validate_desc);
                 vd.field_item("tax_contribution_postfix", Item::Localization);
                 vd.field_item("levies_contribution_postfix", Item::Localization);
@@ -104,6 +108,7 @@ impl DbKind for SubjectContract {
                 vd.advice_field("vassal_opinion", "replaced with `subject_opinion` in 1.16");
                 vd.field_integer("subject_opinion");
                 vd.multi_field_value("flag");
+                vd.multi_field_value("gui_tags");
                 vd.field_integer("score");
                 vd.field_validated("color", validate_possibly_named_color);
                 vd.field_script_value("ai_liege_desire", &mut sc);
@@ -120,9 +125,12 @@ impl DbKind for SubjectContract {
                 });
                 vd.field_trigger("is_shown", Tooltipped::No, &mut sc);
                 vd.field_trigger("is_valid", Tooltipped::Yes, &mut sc);
+                vd.field_bool("enable_title_maa");
+                vd.field_bool("enable_character_maa");
                 vd.field_script_value("tax_factor", &mut sc);
                 vd.field_script_value("levies_factor", &mut sc);
                 vd.field_script_value("herd_factor", &mut sc);
+                vd.field_item("appointment_trait_flag", Item::TraitFlag);
             });
         });
     }
@@ -135,6 +143,8 @@ impl DbKind for SubjectContractGroup {
         data.verify_exists_implied(Item::Localization, &loca, key);
 
         let mut vd = Validator::new(block, data);
+
+        vd.field_item("admin_province_contract", Item::SubjectContract);
         vd.field_list_items("contracts", Item::SubjectContract);
         vd.field_value("modify_contract_layout");
         vd.field_bool("is_tributary");

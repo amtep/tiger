@@ -56,6 +56,10 @@ impl DbKind for LawGroup {
         vd.field_bool("cumulative");
 
         vd.multi_field_value("flag");
+
+        vd.field_bool("is_treasury_budget_group");
+        vd.field_trigger_rooted("can_change_law_group", Tooltipped::Yes, Scopes::Character);
+
         // The laws. They are validated in the Law class.
         vd.unknown_block_fields(|_, _| ());
     }
@@ -86,6 +90,7 @@ impl DbKind for Law {
         vd.field_trigger_rooted("can_pass", Tooltipped::Yes, Scopes::Character);
         vd.field_trigger_rooted("should_start_with", Tooltipped::Yes, Scopes::Character);
         vd.field_trigger_rooted("can_title_have", Tooltipped::Yes, Scopes::LandedTitle);
+        vd.field_trigger_rooted("can_realm_have", Tooltipped::Yes, Scopes::Character);
         vd.field_trigger_rooted("should_show_for_title", Tooltipped::No, Scopes::LandedTitle);
         vd.field_trigger_rooted("can_remove_from_title", Tooltipped::Yes, Scopes::LandedTitle);
 
@@ -115,7 +120,9 @@ impl DbKind for Law {
             sc
         };
 
+        vd.field_bool("shown_in_encyclopedia");
         vd.field_effect_builder("on_pass", Tooltipped::Yes, sc_builder);
+        vd.field_effect_builder("on_after_pass", Tooltipped::Yes, sc_builder);
         vd.field_effect_builder("on_revoke", Tooltipped::Yes, sc_builder);
 
         vd.field_validated_block("succession", |block, data| {
@@ -138,10 +145,13 @@ impl DbKind for Law {
             let order_of_succession =
                 block.get_field_value("order_of_succession").map_or("none", Token::as_str);
 
-            if order_of_succession == "inheritance" {
+            if order_of_succession == "inheritance" || order_of_succession == "noble_family" {
                 vd.field_choice("title_division", &["partition", "single_heir"]);
             } else {
-                vd.ban_field("title_division", || "order_of_succession = inheritance");
+                vd.ban_field(
+                    "title_division",
+                    || "order_of_succession = inheritance or noble_family",
+                );
             }
 
             // TODO: children may only be used if title_division == partition
@@ -195,7 +205,6 @@ impl DbKind for Law {
 
         // undocumented
 
-        vd.field_bool("shown_in_encyclopedia");
         vd.field_integer("title_allegiance_opinion");
         vd.field_trigger_rooted("potential", Tooltipped::No, Scopes::Character);
         vd.field_trigger_rooted("requires_approve", Tooltipped::No, Scopes::Character);

@@ -5,6 +5,7 @@ use std::sync::Arc;
 use crate::block::Block;
 use crate::ck3::data::provinces::ProvId;
 use crate::context::ScopeContext;
+use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, dup_error};
@@ -241,10 +242,13 @@ impl Title {
 
         vd.field_validated("color", validate_possibly_named_color);
         vd.advice_field("color2", "no longer used");
+        vd.field_bool("figurehead");
+        vd.field_bool("allow_domicile");
         vd.field_bool("definite_form");
         vd.field_bool("ruler_uses_title_name");
         vd.field_bool("can_be_named_after_dynasty");
         vd.field_bool("landless");
+        vd.field_bool("require_landless");
         vd.field_bool("no_automatic_claims");
         vd.field_bool("always_follows_primary_heir");
         vd.field_bool("destroy_if_invalid_heir");
@@ -253,12 +257,31 @@ impl Title {
         vd.field_bool("delete_on_gain_same_tier");
         vd.field_bool("de_jure_drift_disabled");
         vd.field_bool("ignore_titularity_for_title_weighting");
-        vd.field_bool("require_landless");
         vd.field_bool("noble_family");
         vd.field_bool("can_use_nomadic_naming");
 
-        vd.field_list_items("male_names", Item::Localization);
-        vd.field_list_items("female_names", Item::Localization);
+        let mut sc_entry = ScopeContext::new(Scopes::Character, &self.key);
+        sc_entry.define_name("target", Scopes::Character, &self.key);
+        sc_entry.define_name("title", Scopes::LandedTitle, &self.key);
+        sc_entry.define_name("liege", Scopes::Character, &self.key);
+        sc_entry.define_name("vassal", Scopes::Character, &self.key);
+        vd.field_validated_sc("personal_relation_entry", &mut sc_entry, validate_desc);
+        vd.field_trigger_rooted("personal_relation_vassal", Tooltipped::No, Scopes::Character);
+
+        vd.advice_field(
+            "male_names",
+            "replaced with `holding_regnal_male_names` and `posthumous_regnal_male_names`",
+        );
+        vd.advice_field(
+            "female_names",
+            "replaced with `holding_regnal_female_names` and `posthumous_regnal_female_names`",
+        );
+        vd.field_list_items("holding_regnal_male_names", Item::Localization);
+        vd.field_list_items("posthumous_regnal_male_names", Item::Localization);
+        vd.field_list_items("holding_regnal_female_names", Item::Localization);
+        vd.field_list_items("posthumous_regnal_female_names", Item::Localization);
+
+        vd.field_bool("enable_regnal_numbers");
 
         if Tier::try_from(&self.key) == Ok(Tier::Barony) {
             // TODO: check that no two baronies have the same province

@@ -29,9 +29,11 @@ impl DbKind for SuccessionAppointment {
 
         vd.field_script_value("candidate_score", &mut sc);
         vd.field_list_choice("default_candidates", CANDIDATE_TYPES);
-        vd.field_list_choice("invested_candidates", CANDIDATE_TYPES);
+        vd.advice_field("invested_candidates", "removed in 1.18");
+        vd.field_choice("level", &["merit", "prestige", "piety", "influence"]);
 
         vd.field_bool("allow_children");
+        vd.field_bool("allow_same_tier_candidates");
     }
 }
 

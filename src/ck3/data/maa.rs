@@ -169,6 +169,13 @@ impl MenAtArmsType {
         let loca = format!("{}_flavor", &self.key);
         data.verify_exists_implied(Item::Localization, &loca, &self.key);
 
+        vd.multi_field_validated_block("illustration", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Culture);
+            vd.field_icon("reference", "NGameIcons|REGIMENTYPE_HORIZONTAL_IMAGE_PATH", ".dds");
+            vd.field_icon("reference", "NGameIcons|REGIMENTYPE_VERTICAL_IMAGE_PATH", ".dds");
+        });
+
         if let Some(icon) = vd.field_value("icon") {
             data.verify_icon("NGameIcons|REGIMENTYPE_ICON_PATH", icon, ".dds");
             data.verify_icon("NGameIcons|REGIMENTYPE_HORIZONTAL_IMAGE_PATH", icon, ".dds");
@@ -195,6 +202,8 @@ impl MenAtArmsType {
             }
         }
 
+        // TODO: "use this instead of `can_recruit = { always = no }`"
+        vd.field_bool("special_recruit_only");
         // TODO: "Mutually exclusive with being unlocked by innovation"
         vd.field_trigger_builder("can_recruit", Tooltipped::Yes, |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);

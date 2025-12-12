@@ -101,7 +101,10 @@ impl DbKind for Situation {
         let loca = format!("situation_type_{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        vd.field_choice("window", &["situation", "the_great_steppe"]);
+        vd.field_choice(
+            "window",
+            &["situation", "the_great_steppe", "silk_road", "dynastic_cycle"],
+        );
         if let Some(token) = vd.field_value("gui_window_name") {
             let pathname = format!("gui/{token}.gui");
             data.verify_exists_implied(Item::File, &pathname, token);
@@ -110,8 +113,20 @@ impl DbKind for Situation {
             let pathname = format!("gui/{token}.gui");
             data.verify_exists_implied(Item::File, &pathname, token);
         }
+
+        vd.field_bool("gui_tooltip_group_focused");
+        vd.field_item("illustration", Item::File);
+        vd.multi_field_validated_block("icon", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Situation);
+            vd.field_item("reference", Item::File);
+        });
+        vd.field_item("situation_group_type", Item::SituationGroupType);
+        vd.field_integer("sort_order");
+
         vd.field_choice("map_mode", &["participant_groups", "sub_regions"]);
 
+        // TODO: You are restricted to max 255 sub-regions
         vd.req_field("sub_regions");
         vd.field_validated_block("sub_regions", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -126,6 +141,7 @@ impl DbKind for Situation {
             }
         });
 
+        // TODO: You are restricted to max 255 participant groups
         vd.req_field("participant_groups");
         vd.field_validated_block("participant_groups", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -207,10 +223,12 @@ fn validate_participant_group(key: &Token, block: &Block, data: &Everything, sit
 
     vd.field_item("icon", Item::File);
     vd.field_bool("auto_add_rulers");
+    vd.field_bool("auto_add_landless_rulers");
     vd.field_validated("map_color", validate_possibly_named_color);
     vd.field_bool("require_capital_in_sub_region");
     vd.field_bool("require_domain_in_sub_region");
     vd.field_bool("require_realm_in_sub_region");
+    vd.field_bool("require_domicile_in_sub_region");
 
     vd.field_trigger_builder("is_character_valid", Tooltipped::Yes, sc_builder);
     vd.field_effect_builder("on_join", Tooltipped::Yes, sc_with_group);
