@@ -285,7 +285,7 @@ static SCOPE_PREFIX_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes, Ar
         hash
     });
 
-/// LAST UPDATED CK3 VERSION 1.16.0
+/// LAST UPDATED CK3 VERSION 1.18.0
 /// See `event_targets.log` from the game data dumps
 /// These are absolute scopes (like character:100000) and scope transitions that require
 /// a key (like `root.cp:councillor_steward`)
@@ -427,7 +427,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Scope(Scopes::Character),
         ),
         (Scopes::Activity, "special_guest", Scopes::Character, Item(Item::SpecialGuest)),
-        (Scopes::Character, "story", Scopes::StoryCycle, Item(Item::Story)),
+        (Scopes::Character, "story", Scopes::StoryCycle, Removed("1.18", "")),
         (Scopes::None, "struggle", Scopes::Struggle, Item(Item::Struggle)),
         (
             Scopes::SituationSubRegion,

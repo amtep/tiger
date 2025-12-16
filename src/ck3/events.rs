@@ -194,6 +194,7 @@ fn validate_event_option(
     vd.multi_field_item("skill", Item::Skill);
 
     vd.field_validated_sc("ai_chance", sc, validate_ai_chance);
+    vd.field_script_value_no_breakdown("ai_will_select", sc);
 
     // TODO: check what this does.
     vd.field_bool("exclusive");

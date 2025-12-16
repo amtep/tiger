@@ -477,6 +477,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "domain_limit_percentage", CompareValue),
     (Scopes::Character, "domain_size", CompareValue),
     (Scopes::Character, "domain_size_excluding_grace_period", CompareValue),
+    (Scopes::Domicile, "domicile_building_has_free_internal_slot", Item(Item::DomicileBuilding)),
     (Scopes::Domicile, "domicile_uses_culture_and_faith", Boolean),
     (Scopes::Domicile, "domicile_uses_provisions", Boolean),
     // NOTE: documentation says `character` but it's `dreaded_character`

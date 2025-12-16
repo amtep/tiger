@@ -281,7 +281,8 @@ impl Title {
         vd.field_list_items("holding_regnal_female_names", Item::Localization);
         vd.field_list_items("posthumous_regnal_female_names", Item::Localization);
 
-        vd.field_bool("enable_regnal_numbers");
+        vd.field_bool("disable_regnal_numbers");
+        vd.advice_field("enable_regnal_numbers", "replaced with `disable_regnal_numbers` in 1.18");
 
         if Tier::try_from(&self.key) == Ok(Tier::Barony) {
             // TODO: check that no two baronies have the same province

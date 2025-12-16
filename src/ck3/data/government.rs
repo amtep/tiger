@@ -127,6 +127,7 @@ impl DbKind for Government {
         });
 
         vd.field_choice("royal_court", &["none", "any", "top_liege"]);
+        vd.field_list_items("blocked_subject_courts", Item::GovernmentType);
         vd.field_choice("main_administrative_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("min_appointment_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("minimum_provincial_maa_tier", &["county", "duchy", "kingdom"]);

@@ -336,6 +336,9 @@ pub enum ArgumentValue {
     Identifier(&'static str),
     /// The value can be anything
     UncheckedValue,
+    /// This trigger no longer exists. Arguments are version and explanation
+    #[cfg(feature = "ck3")]
+    Removed(&'static str, &'static str),
 }
 
 /// Look up an "event link", which is a script token that looks up something related

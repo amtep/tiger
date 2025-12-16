@@ -121,7 +121,7 @@ impl DbKind for CharacterInteraction {
         });
 
         vd.field_trigger("is_highlighted", Tooltipped::No, &mut sc.clone());
-        vd.field_item("highlighted_reason", Item::Localization);
+        vd.field_validated_sc("highlighted_reason", &mut sc, validate_desc);
 
         vd.field_value("special_interaction");
         vd.field_value("special_ai_interaction");

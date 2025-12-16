@@ -232,6 +232,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Province, "neighboring_province", Scopes::Province),
     (Scopes::Character, "neighboring_realm_owner", Scopes::Character),
     (Scopes::Character, "neighboring_realm_same_rank_owner", Scopes::Character),
+    (Scopes::Character, "neighboring_realm_with_tributaries_owner", Scopes::Character),
     (Scopes::Character, "neighboring_top_liege_realm", Scopes::LandedTitle),
     (Scopes::Character, "neighboring_top_liege_realm_owner", Scopes::Character),
     (Scopes::Character, "neighboring_top_suzerain_realm", Scopes::LandedTitle),

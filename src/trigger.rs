@@ -1639,6 +1639,11 @@ fn validate_argument_internal(
             validate_identifier(arg, kind, Severity::Error);
         }
         ArgumentValue::UncheckedValue => (),
+        #[cfg(feature = "ck3")]
+        ArgumentValue::Removed(version, info) => {
+            let msg = format!("removed in {version}");
+            err(ErrorKey::Removed).msg(msg).info(info).loc(arg).push();
+        }
     }
 }
 

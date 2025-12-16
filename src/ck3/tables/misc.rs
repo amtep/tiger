@@ -277,6 +277,7 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "buildings",
     "count_tributaries_for_title_requirements",
     "radiance",
+    "disable_regnal_numbers",
 ];
 
 // LAST UPDATED CK3 VERSION 1.12.1
