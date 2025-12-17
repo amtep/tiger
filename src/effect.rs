@@ -621,7 +621,8 @@ pub fn validate_effect_control(
             | Scopes::Artifact
             | Scopes::Faith
             | Scopes::Dynasty
-            | Scopes::DynastyHouse;
+            | Scopes::DynastyHouse
+            | Scopes::Confederation;
         if let Some(token) = vd.field_value("left_icon") {
             validate_target_ok_this(token, data, sc, icon_scopes);
         }

@@ -675,7 +675,7 @@ pub fn validate_create_confederation(
 ) {
     vd.req_field("name");
     vd.field_validated_sc("name", sc, validate_desc);
-    vd.field_item("type", Item::ConfederationType);
+    vd.field_target("type", sc, Scopes::ConfederationType);
     vd.field_target("leader", sc, Scopes::DynastyHouse);
     sc.define_name("new_confederation", Scopes::Confederation, key);
 }

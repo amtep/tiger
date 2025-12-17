@@ -308,7 +308,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         ),
         (
             Scopes::None,
-            "confederation:type",
+            "confederation_type",
             Scopes::ConfederationType,
             Item(Item::ConfederationType),
         ),
