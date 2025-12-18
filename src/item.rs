@@ -310,6 +310,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] GeneticConstraint,
     #[cfg(feature = "ck3")] GovernmentFlag,
     #[cfg(feature = "ck3")] GraphicalFaith,
+    #[cfg(feature = "ck3")] GraphicalUnitType,
     #[cfg(feature = "ck3")] GreatProjectType,
     #[cfg(feature = "ck3")] GuestInviteRule,
     #[cfg(feature = "ck3")] GuestSubset,
@@ -1221,6 +1222,8 @@ impl Item {
             Item::GovernmentFlag => "common/governments/",
             #[cfg(feature = "ck3")]
             Item::GraphicalFaith => "common/religion/religions/",
+            #[cfg(feature = "ck3")]
+            Item::GraphicalUnitType => "common/graphical_unit_types/",
             #[cfg(feature = "ck3")]
             Item::GreatProjectType => "common/great_projects/types/",
             #[cfg(feature = "ck3")]
