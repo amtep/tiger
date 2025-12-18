@@ -258,6 +258,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] CombatEffect,
     #[cfg(feature = "ck3")] CombatPhaseEvent,
     #[cfg(feature = "ck3")] ConfederationType,
+    #[cfg(feature = "ck3")] ConnectionArrow,
     #[cfg(feature = "ck3")] CouncilPosition,
     #[cfg(feature = "ck3")] CouncilTask,
     #[cfg(feature = "ck3")] Countermeasure,
@@ -1115,6 +1116,8 @@ impl Item {
             Item::CombatPhaseEvent => "common/combat_phase_events/",
             #[cfg(feature = "ck3")]
             Item::ConfederationType => "common/confederation_types/",
+            #[cfg(feature = "ck3")]
+            Item::ConnectionArrow => "common/connection_arrows/",
             #[cfg(feature = "ck3")]
             Item::CouncilPosition => "common/council_positions/",
             #[cfg(feature = "ck3")]

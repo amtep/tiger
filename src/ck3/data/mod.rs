@@ -12,6 +12,7 @@ pub mod climate;
 pub mod combat;
 pub mod combat_effects;
 pub mod confederations;
+pub mod connection_arrows;
 pub mod council;
 pub mod court_scene;
 pub mod court_type;
