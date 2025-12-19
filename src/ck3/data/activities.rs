@@ -1,5 +1,6 @@
 use crate::block::{BV, Block};
 use crate::ck3::data::scripted_animations::validate_scripted_animation;
+use crate::ck3::tables::misc::PROVINCE_FILTERS;
 use crate::ck3::validate::{
     validate_ai_targets, validate_cost_with_renown, validate_quick_trigger,
 };
@@ -212,25 +213,8 @@ impl DbKind for ActivityType {
         vd.field_effect_builder("on_invalidated", Tooltipped::No, ac_host_activity_sc);
         vd.field_effect_builder("on_host_death", Tooltipped::No, ac_host_activity_sc);
 
-        let filters = &[
-            "capital",
-            "domain",
-            "realm",
-            "top_realm",
-            "holy_sites",
-            "holy_sites_domain",
-            "holy_sites_realm",
-            "domicile",
-            "domicile_domain",
-            "domicile_realm",
-            "top_liege_border_inner",
-            "top_liege_border_outer",
-            "landed_title",
-            "geographical_region",
-            "all",
-        ];
-        vd.field_choice("province_filter", filters);
-        vd.field_choice("ai_province_filter", filters);
+        vd.field_choice("province_filter", PROVINCE_FILTERS);
+        vd.field_choice("ai_province_filter", PROVINCE_FILTERS);
         let province_filter = block.get_field_value("province_filter");
         let ai_province_filter = block.get_field_value("ai_province_filter");
         if province_filter.is_some_and(|t| t.is("landed_title"))

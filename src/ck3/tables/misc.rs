@@ -291,6 +291,25 @@ pub const REWARD_ITEMS: &[&str] = &["newsletter_crown"];
 // Gathered from vanilla game files
 pub const PRISON_TYPES: &[&str] = &["dungeon", "house_arrest"];
 
+// Gathered from common/activities/activity_types/_activity_type.info
+pub const PROVINCE_FILTERS: &[&str] = &[
+    "capital",
+    "domain",
+    "realm",
+    "top_realm",
+    "holy_sites",
+    "holy_sites_domain",
+    "holy_sites_realm",
+    "domicile",
+    "domicile_domain",
+    "domicile_realm",
+    "top_liege_border_inner",
+    "top_liege_border_outer",
+    "landed_title",
+    "geographical_region",
+    "all",
+];
+
 // LAST UPDATED CK3 VERSION 1.12.1
 pub const SKILLS: &[&str] =
     &["diplomacy", "intrigue", "learning", "martial", "prowess", "stewardship"];

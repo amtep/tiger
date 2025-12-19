@@ -40,6 +40,7 @@ pub mod gameconcepts;
 pub mod gamerules;
 pub mod government;
 pub mod graphical_unit_types;
+pub mod greatprojects;
 pub mod holdings;
 pub mod holysites;
 pub mod hooks;

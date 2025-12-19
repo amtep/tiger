@@ -1047,7 +1047,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Scopes::Character,
         "has_trait_xp",
         Block(&[
-            ("trait", Item(Item::Trait)),
+            ("trait", ScopeOrItem(Scopes::Trait, Item::Trait)),
             ("?track", Item(Item::TraitTrack)),
             ("+value", CompareValue),
         ]),
