@@ -7,6 +7,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
+use crate::report::Severity;
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -147,5 +148,73 @@ impl DbKind for HouseAspiration {
                 sc
             });
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct HouseRelationType {}
+
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Ck3, Item::HouseRelationType, HouseRelationType::add)
+}
+
+impl HouseRelationType {
+    pub fn add(db: &mut Db, key: Token, block: Block) {
+        db.add(Item::HouseRelationType, key, block, Box::new(Self {}));
+    }
+}
+
+impl DbKind for HouseRelationType {
+    fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
+        if let Some(block) = block.get_field_block("levels") {
+            for (key, block) in block.iter_definitions() {
+                db.add_flag(Item::HouseRelationLevel, key.clone());
+                if let Some(block) = block.get_field_block("parameters") {
+                    for value in block.iter_values() {
+                        db.add_flag(Item::BooleanHouseRelationParameter, value.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        data.verify_exists(Item::Localization, key);
+
+        let mut vd = Validator::new(block, data);
+        // TODO: check that the level is part of this relation type
+        vd.field_item("neutral_level", Item::HouseRelationLevel);
+
+        vd.req_field("levels");
+        vd.field_validated_block("levels", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_block_fields(|k, block| {
+                let loca = format!("{key}_level_{k}");
+                data.verify_exists_implied(Item::Localization, &loca, key);
+                let loca = format!("{key}_level_{k}_desc");
+                data.verify_exists_implied(Item::Localization, &loca, key);
+                if let Some(icon_path) = data.get_defined_string_warn(
+                    k,
+                    "NGameIcons|HOUSE_RELATION_LEVEL_RENDERED_ICON_PATH",
+                ) {
+                    let pathname = format!("{icon_path}/{key}_level_{k}_rendered_icon.dds");
+                    data.verify_exists_implied_max_sev(Item::File, &pathname, k, Severity::Warning);
+                }
+                if let Some(icon_path) = data
+                    .get_defined_string_warn(k, "NGameIcons|HOUSE_RELATION_LEVEL_FLAT_ICON_PATH")
+                {
+                    let pathname = format!("{icon_path}/{key}_level_{k}_flat_icon.dds");
+                    data.verify_exists_implied_max_sev(Item::File, &pathname, k, Severity::Warning);
+                }
+
+                let mut vd = Validator::new(block, data);
+                vd.field_integer("opinion");
+                vd.field_integer("cohesion_contribution");
+                vd.field_validated_list("parameters", |value, data| {
+                    let loca = format!("house_relation_parameter_{value}");
+                    data.verify_exists_implied(Item::Localization, &loca, value);
+                });
+            });
+        });
     }
 }

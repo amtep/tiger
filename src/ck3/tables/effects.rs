@@ -195,7 +195,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Culture, "add_spread_progress_time", ScriptValue),
     (Scopes::Character, "add_stewardship_skill", ScriptValue),
     (Scopes::Character, "add_stress", ScriptValue),
-    (Scopes::Character, "add_subject_standing", Vb(validate_add_subject_standing)),
+    (Scopes::Character, "add_subject_standing", ScriptValue),
     (Scopes::Army, "add_supply", NonNegativeValue),
     (
         Scopes::SituationSubRegion,

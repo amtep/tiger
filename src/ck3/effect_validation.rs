@@ -2202,18 +2202,6 @@ pub fn validate_situation_catalyst(
     }
 }
 
-pub fn validate_add_subject_standing(
-    _key: &Token,
-    _block: &Block,
-    _data: &Everything,
-    sc: &mut ScopeContext,
-    mut vd: Validator,
-    _tooltipped: Tooltipped,
-) {
-    vd.field_script_value_no_breakdown("add", sc);
-    vd.field_script_value_no_breakdown("max", sc);
-}
-
 pub fn validate_house_relation_level(
     _key: &Token,
     _block: &Block,
@@ -2320,7 +2308,8 @@ pub fn validate_house_relation(
     vd.req_field("target");
     vd.field_target("target", sc, Scopes::DynastyHouse);
     vd.field_item("type", Item::HouseRelationType);
-    vd.field_script_value_no_breakdown("level", sc);
+    // TODO: check that level is part of type
+    vd.field_item("level", Item::HouseRelationLevel);
     vd.field_validated_sc("description", sc, validate_desc);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
         sc.define_name_token(name.as_str(), Scopes::HouseRelation, name);

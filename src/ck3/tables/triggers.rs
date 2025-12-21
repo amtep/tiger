@@ -805,7 +805,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         ]),
     ),
     (Scopes::DynastyHouse, "has_house_power_parameter", Item(Item::BooleanHousePowerParameter)),
-    (Scopes::HouseRelation, "has_house_relation_level", CompareValue),
+    (Scopes::HouseRelation, "has_house_relation_level", Item(Item::HouseRelationLevel)),
     (
         Scopes::HouseRelation,
         "has_house_relation_parameter",
