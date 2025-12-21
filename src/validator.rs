@@ -677,16 +677,12 @@ impl<'a> Validator<'a> {
                             Bound::Excluded(&n) => Some(n - 1),
                         };
                         let msg;
-                        if low.is_some() && high.is_some() {
-                            msg = format!(
-                                "should be between {} and {} (inclusive)",
-                                low.unwrap(),
-                                high.unwrap()
-                            );
-                        } else if low.is_some() {
-                            msg = format!("should be at least {}", low.unwrap());
-                        } else if high.is_some() {
-                            msg = format!("should be at most {}", high.unwrap());
+                        if let (Some(low), Some(high)) = (low, high) {
+                            msg = format!("should be between {low} and {high} (inclusive)");
+                        } else if let Some(low) = low {
+                            msg = format!("should be at least {low}");
+                        } else if let Some(high) = high {
+                            msg = format!("should be at most {high}");
                         } else {
                             unreachable!(); // could not have failed the contains check
                         }
@@ -758,13 +754,12 @@ impl<'a> Validator<'a> {
                             Bound::Excluded(f) => Some(format!("{f}")),
                         };
                         let msg;
-                        if low.is_some() && high.is_some() {
-                            msg =
-                                format!("should be between {} and {}", low.unwrap(), high.unwrap());
-                        } else if low.is_some() {
-                            msg = format!("should be at least {}", low.unwrap());
-                        } else if high.is_some() {
-                            msg = format!("should be at most {}", high.unwrap());
+                        if let (Some(low), Some(high)) = (low.as_ref(), high.as_ref()) {
+                            msg = format!("should be between {low} and {high}");
+                        } else if let Some(low) = low {
+                            msg = format!("should be at least {low}");
+                        } else if let Some(high) = high {
+                            msg = format!("should be at most {high}");
                         } else {
                             unreachable!(); // could not have failed the contains check
                         }
