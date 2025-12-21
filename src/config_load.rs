@@ -232,7 +232,19 @@ fn load_ignore_keys_in_files(bv: &BV) -> Option<FilterRule> {
             files = load_files_array(array_block);
         }
     }
-    if keys.is_none() {
+    if let Some(keys) = keys {
+        if let Some(files) = files {
+            Some(FilterRule::Negation(Box::new(FilterRule::Conjunction(vec![keys, files]))))
+        } else {
+            err(ErrorKey::Config)
+            .strong()
+            .msg("There are no valid files. This `ignore_keys_in_files` trigger will be ignored.")
+            .info("Add at least one file. Example: ignore_keys_in_files = { files = { common/ }")
+            .loc(block)
+            .push();
+            None
+        }
+    } else {
         err(ErrorKey::Config)
             .strong()
             .msg("There are no valid keys. This `ignore_keys_in_files` trigger will be ignored.")
@@ -242,19 +254,6 @@ fn load_ignore_keys_in_files(bv: &BV) -> Option<FilterRule> {
             .loc(block)
             .push();
         None
-    } else if files.is_none() {
-        err(ErrorKey::Config)
-            .strong()
-            .msg("There are no valid files. This `ignore_keys_in_files` trigger will be ignored.")
-            .info("Add at least one file. Example: ignore_keys_in_files = { files = { common/ }")
-            .loc(block)
-            .push();
-        None
-    } else {
-        Some(FilterRule::Negation(Box::new(FilterRule::Conjunction(vec![
-            keys.expect("Should exist."),
-            files.expect("Should exist."),
-        ]))))
     }
 }
 

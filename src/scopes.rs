@@ -374,6 +374,7 @@ pub fn scope_to_scope(name: &Token, inscopes: Scopes) -> Option<(Scopes, Scopes)
     };
 
     let name_lc = name.as_str().to_ascii_lowercase();
+    #[allow(unused_assignments)] // `from` only used for vic3
     if let scopes @ Some((from, _)) = scope_to_scope(&name_lc) {
         #[cfg(feature = "vic3")]
         if Game::is_vic3() && name_lc == "type" {
