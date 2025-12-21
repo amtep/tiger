@@ -128,7 +128,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::GreatProject, "great_project_founder", Scopes::Character),
     (Scopes::GreatProject, "great_project_location", Scopes::Province),
     (Scopes::GreatProject, "great_project_owner", Scopes::Character),
-    (Scopes::GreatProject, "great_project_type", Scopes::GreatProjectType),
+    // Overridden by the trigger of the same name
+    // (Scopes::GreatProject, "great_project_type", Scopes::GreatProjectType),
     (Scopes::LandedTitle.union(Scopes::Province), "hegemony", Scopes::LandedTitle),
     (Scopes::LandedTitle, "holder", Scopes::Character),
     (Scopes::Province, "holding_type", Scopes::HoldingType),

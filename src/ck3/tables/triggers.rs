@@ -548,8 +548,14 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Choice(&["planned", "in_progress", "completed"]),
     ),
     (Scopes::GreatProject, "great_project_days_to_completion", CompareValue),
-    (Scopes::GreatProject, "great_project_type", Item(Item::GreatProjectType)),
-    (Scopes::GreatProject, "great_project_type_is_important", Boolean),
+    // There's a trigger that takes an Item and an event target of the same name that returns a Scope.
+    // Handle the name collistion by deleting the event target and making the trigger accept both.
+    (
+        Scopes::GreatProject,
+        "great_project_type",
+        ScopeOrItem(Scopes::GreatProjectType, Item::GreatProjectType),
+    ),
+    (Scopes::GreatProjectType, "great_project_type_is_important", Boolean),
     (Scopes::Character, "has_access_to_maa", Item(Item::MenAtArms)),
     (Scopes::Accolade, "has_accolade_category", Item(Item::AccoladeCategory)),
     (Scopes::Accolade, "has_accolade_parameter", Item(Item::AccoladeParameter)),
