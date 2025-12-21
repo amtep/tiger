@@ -323,7 +323,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] Hook,
     #[cfg(feature = "ck3")] House,
     #[cfg(feature = "ck3")] HouseAspiration,
-    #[cfg(feature = "ck3")] HousePowerBonus,
     #[cfg(feature = "ck3")] HouseRelationLevel,
     #[cfg(feature = "ck3")] HouseRelationType,
     #[cfg(feature = "ck3")] HouseUnity,
@@ -1248,8 +1247,6 @@ impl Item {
             Item::House => "common/dynasty_houses/",
             #[cfg(feature = "ck3")]
             Item::HouseAspiration => "common/house_aspirations/",
-            #[cfg(feature = "ck3")]
-            Item::HousePowerBonus => "common/house_power_bonus/",
             #[cfg(feature = "ck3")]
             Item::HouseRelationLevel => "common/house_relation_types/",
             #[cfg(feature = "ck3")]
