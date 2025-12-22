@@ -516,7 +516,7 @@ pub fn validate_inside_iterator(
         }
 
         if name == "county_province_epidemic" || name == "province_epidemic" {
-            vd.field_choice("intensity", OUTBREAK_INTENSITIES);
+            vd.multi_field_choice_any_cmp("intensity", OUTBREAK_INTENSITIES);
         } else {
             vd.ban_field("intensity", || {
                 format!("`{listtype}_county_province_epidemic` or `{listtype}_province_epidemic`")
