@@ -35,6 +35,8 @@ const BUILTIN_MACROS: &[&str] = &[
     "ALLY_BREAKDOWN_TAG",
     "ALLY_SCORE",
     "ALPHA",
+    "AMENDMENT",
+    "AMENDMENT_TYPE",
     "AMOUNT",
     "AMOUNT_MAX",
     "AMOUNT_PERCENT",
