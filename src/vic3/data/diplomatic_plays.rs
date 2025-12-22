@@ -39,7 +39,7 @@ impl DbKind for DiplomaticPlay {
         let loca = format!("{key}_tooltip");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        vd.field_item("war_goal", Item::Wargoal);
+        vd.field_item("war_goal", Item::WarGoalType);
         vd.field_item("texture", Item::File);
 
         vd.field_bool("requires_interest_marker");

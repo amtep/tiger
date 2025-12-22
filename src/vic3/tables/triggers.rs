@@ -578,7 +578,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_overlapping_interests", Scope(Scopes::Country)),
     (Scopes::InterestGroup, "has_party", Boolean),
     (Scopes::Party, "has_party_member", Scope(Scopes::InterestGroup)),
-    (Scopes::DiplomaticPlay, "has_play_goal", Item(Item::Wargoal)),
+    (Scopes::DiplomaticPlay, "has_play_goal", Item(Item::WarGoalType)),
     (Scopes::Country, "has_political_movement", Removed("1.8", "")),
     (Scopes::Pop, "has_pop_culture", Item(Item::Culture)),
     (Scopes::Pop, "has_pop_religion", Item(Item::Religion)),
@@ -653,7 +653,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "has_war_exhaustion",
         Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
     ),
-    (Scopes::War, "has_war_goal", Item(Item::Wargoal)),
+    (Scopes::War, "has_war_goal", Item(Item::WarGoalType)),
     (
         Scopes::War,
         "has_war_support",
@@ -1276,12 +1276,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Country,
         "play_participant_has_war_goal_of_type_against",
-        Block(&[("type", Item(Item::Wargoal)), ("target", Scope(Scopes::Country))]),
+        Block(&[("type", Item(Item::WarGoalType)), ("target", Scope(Scopes::Country))]),
     ),
     (
         Scopes::Country,
         "play_side_has_war_goal_of_type_against",
-        Block(&[("type", Item(Item::Wargoal)), ("target", Scope(Scopes::Country))]),
+        Block(&[("type", Item(Item::WarGoalType)), ("target", Scope(Scopes::Country))]),
     ),
     (Scopes::PoliticalMovement, "political_movement_identity_support", CompareValue),
     (Scopes::PoliticalMovement, "political_movement_military_support", CompareValue),
@@ -1658,12 +1658,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Country,
         "war_participant_has_war_goal_of_type_against",
-        Block(&[("type", Item(Item::Wargoal)), ("target", Scope(Scopes::Country))]),
+        Block(&[("type", Item(Item::WarGoalType)), ("target", Scope(Scopes::Country))]),
     ),
     (
         Scopes::Country,
         "war_side_has_war_goal_of_type_against",
-        Block(&[("type", Item(Item::Wargoal)), ("target", Scope(Scopes::Country))]),
+        Block(&[("type", Item(Item::WarGoalType)), ("target", Scope(Scopes::Country))]),
     ),
     (Scopes::Character, "was_exiled", Boolean),
     (Scopes::Country, "was_formed_from", Item(Item::Country)),

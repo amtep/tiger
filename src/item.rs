@@ -204,7 +204,7 @@ pub enum Item {
     TutorialLessonChain,
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     TutorialLessonStep,
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
+    #[cfg(feature = "imperator")]
     Wargoal,
 
     // Items for ck3
@@ -518,6 +518,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] TraditionTrait,
     #[cfg(feature = "vic3")] TransferOfPower,
     #[cfg(feature = "vic3")] TreatyArticle,
+    #[cfg(feature = "vic3")] WarGoalType,
 
     // Items specific to imperator
     #[cfg(feature = "imperator")] Ambition,
@@ -992,10 +993,8 @@ impl Item {
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
-            #[cfg(any(feature = "vic3", feature = "imperator"))]
+            #[cfg(feature = "imperator")]
             Item::Wargoal => match Game::game() {
-                #[cfg(feature = "vic3")]
-                Game::Vic3 => "",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/wargoals",
                 #[allow(unreachable_patterns)]
@@ -1621,6 +1620,8 @@ impl Item {
             Item::TransferOfPower => "",
             #[cfg(feature = "vic3")]
             Item::TreatyArticle => "common/treaty_articles/",
+            #[cfg(feature = "vic3")]
+            Item::WarGoalType => "common/war_goal_types/",
 
             #[cfg(feature = "imperator")]
             Item::AiPlanGoals => "common/ai_plan_goals/",
