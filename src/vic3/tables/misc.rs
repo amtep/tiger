@@ -141,44 +141,6 @@ pub const TREATY_ARTICLE_CATEGORIES: &[&str] = &[
     "other",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.8.1
-// Taken from `localization/english/diplomatic_plays_l_english.yml` entries
-// that start with `war_goal_`.
-pub const WARGOALS: &[&str] = &[
-    "annex_country",
-    "ban_slavery",
-    "colonization_rights",
-    "conquer_state",
-    "contain_threat",
-    "enforce_treaty_article",
-    "force_nationalization",
-    "force_recognition",
-    "foreign_investment_rights",
-    "humiliation",
-    "increase_autonomy",
-    "independence",
-    "join_power_bloc",
-    "leave_power_bloc",
-    "liberate_country",
-    "liberate_subject",
-    "make_dominion",
-    "make_protectorate",
-    "make_tributary",
-    "open_market",
-    "reduce_autonomy",
-    "regime_change",
-    "return_state",
-    "revoke_all_claims",
-    "revoke_claim",
-    "revolution",
-    "secession",
-    "take_treaty_port",
-    "transfer_subject",
-    "unification",
-    "unification_leadership",
-    // war_reparations was removed in 1.9
-];
-
 // LAST UPDATED VIC3 VERSION 1.3.6
 // TODO: maybe ruler and heir too?
 pub const CHARACTER_ROLES: &[&str] = &["admiral", "agitator", "general", "politician", "executive"];

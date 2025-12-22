@@ -274,7 +274,7 @@ fn validate_wargoal_scores(key: &Token, block: &Block, data: &Everything) {
     sc.define_name("target_country", Scopes::Country, key);
     sc.define_name("target_state", Scopes::State, key); // might not be set
     vd.unknown_fields(|key, bv| {
-        data.verify_exists(Item::Wargoal, key);
+        data.verify_exists(Item::WarGoalType, key);
         validate_script_value(bv, data, &mut sc);
     });
 }
@@ -282,7 +282,7 @@ fn validate_wargoal_scores(key: &Token, block: &Block, data: &Everything) {
 fn validate_wargoal_weights(_key: &Token, block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.unknown_value_fields(|key, token| {
-        data.verify_exists(Item::Wargoal, key);
+        data.verify_exists(Item::WarGoalType, key);
         token.expect_number();
     });
 }

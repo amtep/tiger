@@ -162,7 +162,7 @@ pub fn validate_add_war_goal(
     vd.req_field("holder");
     vd.field_item_or_target("holder", sc, Item::Country, Scopes::Country);
     vd.req_field("type");
-    vd.field_item("type", Item::Wargoal);
+    vd.field_item("type", Item::WarGoalType);
     vd.field_target("state", sc, Scopes::State);
     // TODO: verify this; there's only one example in vanilla
     vd.advice_field("country", "docs say `country` but it's `target_country`");
@@ -188,7 +188,7 @@ pub fn validate_remove_war_goal(
     vd.req_field("who");
     vd.field_item_or_target("who", sc, Item::Country, Scopes::Country);
     vd.req_field("war_goal");
-    vd.field_item("war_goal", Item::Wargoal);
+    vd.field_item("war_goal", Item::WarGoalType);
 }
 
 pub fn validate_addremove_backers(
@@ -509,7 +509,7 @@ fn validate_war_goal(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     let mut vd = Validator::new(block, data);
     vd.set_case_sensitive(false);
     vd.field_item_or_target_ok_this("holder", sc, Item::Country, Scopes::Country);
-    vd.field_item("type", Item::Wargoal);
+    vd.field_item("type", Item::WarGoalType);
     vd.advice_field("state", "docs say `state` but it's `target_state`");
     vd.field_target("target_state", sc, Scopes::State);
     vd.advice_field("country", "docs say `country` but it's `target_country`");
