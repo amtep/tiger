@@ -68,3 +68,4 @@ pub mod technology;
 pub mod terrain;
 pub mod themes;
 pub mod treaty_articles;
+pub mod war_goal_types;

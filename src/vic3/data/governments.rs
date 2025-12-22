@@ -100,7 +100,7 @@ impl DbKind for LibertyDesireLevel {
 
         let mut vd = Validator::new(block, data);
         vd.field_integer("threshold");
-        vd.field_list_items("valid_sway_wargoals_against_overlord", Item::Wargoal);
+        vd.field_list_items("valid_sway_wargoals_against_overlord", Item::WarGoalType);
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Country, vd);
