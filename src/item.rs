@@ -374,6 +374,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] RelationFlag,
     #[cfg(feature = "ck3")] ReligionFamily,
     #[cfg(feature = "ck3")] RewardItem,
+    #[cfg(feature = "ck3")] RulerObjectiveType,
     #[cfg(feature = "ck3")] Scheme,
     #[cfg(feature = "ck3")] SchemePulseAction,
     #[cfg(feature = "ck3")] ScriptedAnimation,
@@ -1350,6 +1351,8 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::RewardItem => "",
             #[cfg(feature = "ck3")]
+            Item::RulerObjectiveType => "common/ruler_objective_advice_types/",
+            #[cfg(feature = "ck3")]
             Item::SubjectContract => "common/subject_contracts/contracts/",
             #[cfg(feature = "ck3")]
             Item::SubjectContractFlag => "common/subject_contracts/contracts/",
@@ -1985,6 +1988,7 @@ impl Item {
             | Item::Motto
             | Item::Music
             | Item::Nickname
+            | Item::RulerObjectiveType
             | Item::ScriptedIllustration
             | Item::UnitGfx => Severity::Warning,
 

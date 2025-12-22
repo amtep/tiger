@@ -80,6 +80,7 @@ pub mod raids;
 pub mod regions;
 pub mod relations;
 pub mod religions;
+pub mod ruler_objectives;
 pub mod schemes;
 pub mod scripted_animations;
 pub mod scripted_costs;
