@@ -3,7 +3,7 @@ use std::fs::{File, read_dir, read_to_string};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
 use strum_macros::Display;
 
@@ -130,31 +130,29 @@ impl Global {
 fn load_globals(fname: &Path, game: Game) -> Result<HashMap<String, Global>> {
     let mut globals = HashMap::new();
     let global = read_to_string(fname)?;
-    if let Some((_, middle)) = global.split_once("[\n") {
-        if let Some((middle, _)) = middle.rsplit_once(']') {
-            for line in middle.lines() {
-                let line = line.strip_prefix("    (\"").context("parse error1")?;
-                let (name, line) = line.split_once("\", Args::Args(&[").context("parse error2")?;
-                let line = line.strip_suffix("),").context("parse error3")?;
-                let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
-                let args: Vec<_> = if line.is_empty() {
-                    Vec::new()
-                } else {
-                    line.split(", ").map(ToOwned::to_owned).collect()
-                };
-                let mut rtype = remove_game_wrapper(rtype);
-                let store;
-                if !GENERIC_TYPES.contains(&rtype) {
-                    store = format!("{game}({rtype})");
-                    rtype = &store;
-                }
-                globals
-                    .insert(name.to_owned(), Global::new(name.to_owned(), args, rtype.to_owned()));
-            }
-            return Ok(globals);
+    for line in global.lines() {
+        // Skip header and footer lines
+        if !line.starts_with(' ') {
+            continue;
         }
+        let line = line.strip_prefix("    (\"").context("parse error1")?;
+        let (name, line) = line.split_once("\", Args::Args(&[").context("parse error2")?;
+        let line = line.strip_suffix("),").context("parse error3")?;
+        let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
+        let args: Vec<_> = if line.is_empty() {
+            Vec::new()
+        } else {
+            line.split(", ").map(ToOwned::to_owned).collect()
+        };
+        let mut rtype = remove_game_wrapper(rtype);
+        let store;
+        if !GENERIC_TYPES.contains(&rtype) {
+            store = format!("{game}({rtype})");
+            rtype = &store;
+        }
+        globals.insert(name.to_owned(), Global::new(name.to_owned(), args, rtype.to_owned()));
     }
-    bail!("could not parse globals from {}", fname.display());
+    Ok(globals)
 }
 
 fn merge_globals(globals: &mut HashMap<String, Global>, mut new_globals: HashMap<String, Global>) {
@@ -211,41 +209,38 @@ impl NonGlobal {
 fn load_nonglobals(fname: &Path, game: Game) -> Result<HashMap<String, NonGlobal>> {
     let mut nonglobals = HashMap::new();
     let nonglobal = read_to_string(fname)?;
-    if let Some((_, middle)) = nonglobal.split_once("[\n") {
-        if let Some((middle, _)) = middle.rsplit_once(']') {
-            for line in middle.lines() {
-                let line = line.strip_prefix("    (\"").context("parse error1")?;
-                let (name, line) = line.split_once("\", ").context("parse error2")?;
-                let (dtype, line) = line.split_once(", Args::Args(&[").context("parse error2b")?;
-                let line = line.strip_suffix("),").context("parse error3")?;
-                let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
-                let mut dtype = remove_game_wrapper(dtype);
-                let mut rtype = remove_game_wrapper(rtype);
-                let store;
-                if !GENERIC_TYPES.contains(&rtype) {
-                    store = format!("{game}({rtype})");
-                    rtype = &store;
-                }
-                let args: Vec<_> = if line.is_empty() {
-                    Vec::new()
-                } else {
-                    line.split(", ").map(ToOwned::to_owned).collect()
-                };
-                let idx = format!("{dtype}.{name}");
-                let store2;
-                if !GENERIC_TYPES.contains(&dtype) {
-                    store2 = format!("{game}({dtype})");
-                    dtype = &store2;
-                }
-                nonglobals.insert(
-                    idx,
-                    NonGlobal::new(name.to_owned(), dtype.to_owned(), args, rtype.to_owned()),
-                );
-            }
-            return Ok(nonglobals);
+    for line in nonglobal.lines() {
+        // Skip header and footer lines
+        if !line.starts_with(' ') {
+            continue;
         }
+        let line = line.strip_prefix("    (\"").context("parse error1")?;
+        let (name, line) = line.split_once("\", ").context("parse error2")?;
+        let (dtype, line) = line.split_once(", Args::Args(&[").context("parse error2b")?;
+        let line = line.strip_suffix("),").context("parse error3")?;
+        let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
+        let mut dtype = remove_game_wrapper(dtype);
+        let mut rtype = remove_game_wrapper(rtype);
+        let store;
+        if !GENERIC_TYPES.contains(&rtype) {
+            store = format!("{game}({rtype})");
+            rtype = &store;
+        }
+        let args: Vec<_> = if line.is_empty() {
+            Vec::new()
+        } else {
+            line.split(", ").map(ToOwned::to_owned).collect()
+        };
+        let idx = format!("{dtype}.{name}");
+        let store2;
+        if !GENERIC_TYPES.contains(&dtype) {
+            store2 = format!("{game}({dtype})");
+            dtype = &store2;
+        }
+        nonglobals
+            .insert(idx, NonGlobal::new(name.to_owned(), dtype.to_owned(), args, rtype.to_owned()));
     }
-    bail!("could not parse nonglobals from {}", fname.display());
+    Ok(nonglobals)
 }
 
 fn merge_nonglobals(
