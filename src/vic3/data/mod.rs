@@ -2,6 +2,7 @@ pub mod acceptance;
 pub mod ai_strategies;
 pub mod air_graphics;
 pub mod alerts;
+pub mod amendments;
 pub mod battle_conditions;
 pub mod buildings;
 pub mod buy_packages;

@@ -534,6 +534,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] TransferOfPower,
     #[cfg(feature = "vic3")] TreatyArticle,
     #[cfg(feature = "vic3")] WarGoalType,
+    #[cfg(feature = "vic3")] Amendment,
 
     // Items specific to imperator
     #[cfg(feature = "imperator")] Ambition,
@@ -1667,6 +1668,8 @@ impl Item {
             Item::TreatyArticle => "common/treaty_articles/",
             #[cfg(feature = "vic3")]
             Item::WarGoalType => "common/war_goal_types/",
+            #[cfg(feature = "vic3")]
+            Item::Amendment => "common/amendments/",
 
             #[cfg(feature = "imperator")]
             Item::AiPlanGoals => "common/ai_plan_goals/",
