@@ -24,6 +24,9 @@ pub struct SituationCatalyst {}
 #[derive(Clone, Debug)]
 pub struct SituationHistory {}
 
+#[derive(Clone, Debug)]
+pub struct SituationGroupType {}
+
 inventory::submit! {
     ItemLoader::Normal(GameFlags::Ck3, Item::Situation, Situation::add)
 }
@@ -34,6 +37,10 @@ inventory::submit! {
 
 inventory::submit! {
     ItemLoader::Full(GameFlags::Ck3, Item::SituationHistory, PdxEncoding::Utf8Bom, ".txt", LoadAsFile::Yes, Recursive::No,  SituationHistory::add)
+}
+
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Ck3, Item::SituationGroupType, SituationGroupType::add)
 }
 
 impl Situation {
@@ -51,6 +58,12 @@ impl SituationCatalyst {
 impl SituationHistory {
     pub fn add(db: &mut Db, file: Token, block: Block) {
         db.add(Item::SituationHistory, file, block, Box::new(Self {}));
+    }
+}
+
+impl SituationGroupType {
+    pub fn add(db: &mut Db, file: Token, block: Block) {
+        db.add(Item::SituationGroupType, file, block, Box::new(Self {}));
     }
 }
 
@@ -198,6 +211,15 @@ impl DbKind for SituationHistory {
             let mut vd = Validator::new(block, data);
             vd.field_effect_rooted("effect", Tooltipped::No, Scopes::None);
         });
+    }
+}
+
+impl DbKind for SituationGroupType {
+    fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+
+        vd.field_integer("sort_order");
+        vd.field_list("gui_tags");
     }
 }
 
