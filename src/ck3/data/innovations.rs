@@ -31,6 +31,11 @@ impl DbKind for Innovation {
         for token in block.get_field_values("flag") {
             db.add_flag(Item::InnovationFlag, token.clone());
         }
+        if let Some(block) = block.get_field_block("parameters") {
+            for (key, _) in block.iter_assignments() {
+                db.add_flag(Item::InnovationParameter, key.clone());
+            }
+        }
     }
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
@@ -91,7 +96,9 @@ impl DbKind for Innovation {
 
         vd.field_validated_block("parameters", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.unknown_value_fields(|_, value| {
+            vd.unknown_value_fields(|key, value| {
+                let loca = format!("culture_parameter_{key}");
+                data.verify_exists_implied(Item::Localization, &loca, key);
                 let mut vvd = ValueValidator::new(value, data);
                 vvd.bool();
             });

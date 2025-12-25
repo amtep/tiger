@@ -86,6 +86,8 @@ fn validate_bookmark_character(
     toplevel: bool,
     start_date: Option<Date>,
 ) {
+    let existing_ruler =
+        !block.get_field_value("character_design_type").is_some_and(|t| t.is("noble_family"));
     let mut vd = Validator::new(block, data);
     vd.field_bool("tutorial");
     vd.field_bool("test_default");
@@ -95,7 +97,7 @@ fn validate_bookmark_character(
     } else {
         vd.field_item("name", Item::Localization);
         if let Some(name) = block.get_field_value("name") {
-            if !data.item_exists(Item::BookmarkPortrait, name.as_str()) {
+            if existing_ruler && !data.item_exists(Item::BookmarkPortrait, name.as_str()) {
                 let msg =
                     format!("bookmark portrait for {name} not found in common/bookmark_portraits");
                 let info = "This causes a crash in CK3 1.13";
@@ -130,19 +132,21 @@ fn validate_bookmark_character(
     vd.field_item("government", Item::GovernmentType);
     vd.field_item("fallback_government", Item::GovernmentType);
     vd.field_item("culture", Item::Culture);
-    vd.field_item("religion", Item::Faith);
+    if existing_ruler {
+        vd.field_item("religion", Item::Faith);
+    } else {
+        vd.field_item("religion", Item::Localization);
+    }
     vd.field_item("difficulty", Item::Localization);
     vd.field_item("history_id", Item::Character);
-    // TODO: For 'new_landless_adventurer' and 'new_noble_family', the starting location 'title' needs to configured
-    vd.field_choice(
-        "bookmark_type",
-        &["existing_ruler", "new_landless_adventurer", "new_noble_family"],
-    );
     vd.field_item("animation", Item::PortraitAnimation);
     vd.field_validated_block("position", |block, data| {
         let mut vd = Validator::new(block, data);
         vd.req_tokens_integers_exactly(2);
     });
+    // TODO: acceptable values?
+    vd.field_value("character_design_type");
+    vd.field_item("target_title", Item::Title);
     if let Some(start_date) = start_date {
         if let Some(id) = block.get_field_value("history_id") {
             let name = block.get_field_value("name");

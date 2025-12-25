@@ -91,7 +91,10 @@ impl DbKind for Situation {
                         for (_, block) in block.iter_definitions() {
                             if let Some(block) = block.get_field_block("parameters") {
                                 for (key, _) in block.iter_assignments() {
-                                    db.add_flag(Item::SituationPhaseParameter, key.clone());
+                                    db.add_flag(
+                                        Item::SituationParticipantGroupParameter,
+                                        key.clone(),
+                                    );
                                 }
                             }
                         }
@@ -137,7 +140,11 @@ impl DbKind for Situation {
         vd.field_item("situation_group_type", Item::SituationGroupType);
         vd.field_integer("sort_order");
 
-        vd.field_choice("map_mode", &["participant_groups", "sub_regions"]);
+        vd.field_validated_value("map_mode", |_, mut vvd| {
+            vvd.maybe_is("participant_groups");
+            vvd.maybe_is("sub_regions");
+            vvd.item(Item::MapMode);
+        });
 
         // TODO: You are restricted to max 255 sub-regions
         vd.req_field("sub_regions");
