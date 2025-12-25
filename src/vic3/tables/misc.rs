@@ -157,13 +157,14 @@ pub const TERRAIN_KEYS: &[&str] = &[
     "travel_harsh_environment",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.7.0
+// LAST UPDATED VIC3 VERSION 1.12.2
 pub const COMMON_DIRS: &[&str] = &[
     "common/acceptance_statuses",
     "common/achievements",
     "common/ai_strategies",
     "common/alert_groups",
     "common/alert_types",
+    "common/amendments",
     "common/battle_conditions",
     "common/building_groups",
     "common/buildings",
@@ -211,6 +212,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/game_concepts",
     "common/game_rules",
     "common/genes",
+    "common/geographic_regions",
     "common/goods",
     "common/government_types",
     "common/harvest_condition_types",
@@ -283,6 +285,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/trigger_localization",
     "common/tutorial_lesson_chains",
     "common/tutorial_lessons",
+    "common/war_goal_types",
 ];
 
 // LAST UPDATED VIC3 VERSION 1.7.6
