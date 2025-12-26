@@ -343,4 +343,14 @@ pub const SCRIPTED_RULES: &str = "
 		personal_maa_cap = value
 		title_maa_cap = value
 	}
+
+	can_build_in_tributaries = {
+		root = character
+	}
+	can_build_in_liege_tributaries = {
+		root = character
+	}
+	can_build_in_same_realm = {
+		root = character
+	}
 ";

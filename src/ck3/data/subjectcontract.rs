@@ -108,7 +108,7 @@ impl DbKind for SubjectContract {
                 vd.advice_field("vassal_opinion", "replaced with `subject_opinion` in 1.16");
                 vd.field_integer("subject_opinion");
                 vd.multi_field_value("flag");
-                vd.multi_field_value("gui_tags");
+                vd.field_list("gui_tags");
                 vd.field_integer("score");
                 vd.field_validated("color", validate_possibly_named_color);
                 vd.field_script_value("ai_liege_desire", &mut sc);

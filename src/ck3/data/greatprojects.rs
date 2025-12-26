@@ -1,4 +1,4 @@
-use crate::block::Block;
+use crate::block::{BV, Block};
 use crate::ck3::tables::misc::PROVINCE_FILTERS;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
@@ -46,8 +46,27 @@ impl DbKind for GreatProjectType {
 
         let mut vd = Validator::new(block, data);
 
-        let icon = vd.field_value("icon").unwrap_or(key);
-        data.verify_icon("NGameIcons|GREAT_PROJECT_TYPE_ICON_PATH", icon, ".dds");
+        if !block.has_key("icon") {
+            data.verify_icon("NGameIcons|GREAT_PROJECT_TYPE_ICON_PATH", key, ".dds");
+        }
+
+        vd.multi_field_validated("icon", |bv, data| match bv {
+            BV::Value(value) => {
+                data.verify_exists(Item::File, value);
+            }
+            BV::Block(block) => {
+                let mut vd = Validator::new(block, data);
+                vd.field_trigger_builder("trigger", Tooltipped::No, |key| {
+                    let mut sc = ScopeContext::new(Scopes::GreatProject, key);
+                    sc.define_name("province", Scopes::Province, key);
+                    sc.define_name("great_project", Scopes::GreatProject, key);
+                    sc.define_name("owner", Scopes::Character, key);
+                    sc.define_name("founder", Scopes::Character, key);
+                    sc
+                });
+                vd.field_item("reference", Item::File);
+            }
+        });
 
         vd.multi_field_validated_block("illustration", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -62,10 +81,15 @@ impl DbKind for GreatProjectType {
             vd.field_item("reference", Item::File);
         });
 
-        vd.multi_field_validated_block("name", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
-            vd.field_item("desc", Item::Localization);
+        vd.multi_field_validated("name", |bv, data| match bv {
+            BV::Value(value) => {
+                data.verify_exists(Item::Localization, value);
+            }
+            BV::Block(block) => {
+                let mut vd = Validator::new(block, data);
+                vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
+                vd.field_item("desc", Item::Localization);
+            }
         });
 
         vd.field_trigger_builder("is_shown", Tooltipped::No, |key| {

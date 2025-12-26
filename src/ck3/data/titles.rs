@@ -121,7 +121,7 @@ impl Titles {
                 is_county_capital = false;
             }
         }
-        if is_county_capital {
+        if is_county_capital && !block.get_field_bool("landless").unwrap_or(false) {
             err(ErrorKey::Validation).msg("county with no baronies!").loc(key).push();
         }
     }

@@ -1021,6 +1021,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "has_strong_usable_hook", Scope(Scopes::Character)),
     (Scopes::Struggle, "has_struggle_phase_parameter", Item(Item::StrugglePhaseParameter)),
     (
+        Scopes::Situation,
+        "has_situation_top_phase_parameter",
+        Item(Item::SituationParticipantGroupParameter),
+    ),
+    (
         Scopes::SituationSubRegion,
         "has_sub_region_phase_parameter",
         Item(Item::SituationParticipantGroupParameter),
@@ -1399,7 +1404,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_performing_council_task", Item(Item::CouncilTask)),
     (Scopes::Character, "is_performing_council_task_or_clone", Item(Item::CouncilTask)),
     (Scopes::Regiment, "is_personal_maa_regiment", Boolean),
-    (Scopes::Character, "is_planning_great_project", Scope(Scopes::GreatProjectType)),
+    (Scopes::Character, "is_planning_great_project", Item(Item::GreatProjectType)),
     (Scopes::Character, "is_player_heir_of", Scope(Scopes::Character)),
     (Scopes::None, "is_player_selected", Boolean),
     (Scopes::Character, "is_player_tutorial_character", Boolean),
@@ -1592,6 +1597,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "maa_regiments_max_count", CompareValue),
     (Scopes::Regiment, "maa_max_troops_count", CompareValue),
     (Scopes::Regiment, "maa_size", CompareValue),
+    (Scopes::Character, "main_administrative_tier", CompareValue),
     (Scopes::Character, "martial", CompareValue),
     (
         Scopes::Character,
@@ -1613,7 +1619,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "max_number_maa_soldiers_of_type",
-        Block(&[("type", Item(Item::MenAtArms)), ("+value", CompareValue)]),
+        Block(&[("target", Item(Item::MenAtArms)), ("+value", CompareValue)]),
     ),
     (Scopes::Character, "max_number_of_concubines", CompareValue),
     (Scopes::Character, "max_number_of_knights", CompareValue),

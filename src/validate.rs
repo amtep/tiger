@@ -527,10 +527,17 @@ pub fn validate_inside_iterator(
             vd.field_item("type", Item::Secret);
         }
 
-        if name == "task_contract" {
+        if name == "scheme" {
+            vd.field_item("type", Item::Scheme);
+        }
+
+        if name == "task_contract"
+            || name == "character_task_contract"
+            || name == "character_active_contract"
+        {
             vd.field_item("task_contract_type", Item::TaskContractType);
         } else {
-            vd.ban_field("task_contract_type", || format!("`{listtype}_{name}`"));
+            vd.ban_field("task_contract_type", || format!("`{listtype}_task_contract`, `{listtype}_character_task_contract` or `{listtype}_character_active_contract`"));
         }
 
         if name == "memory" {

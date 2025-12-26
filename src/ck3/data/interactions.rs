@@ -283,6 +283,7 @@ impl DbKind for CharacterInteraction {
         if let Some(token) = block.get_key("ai_potential") {
             if block.get_field_integer("ai_frequency").unwrap_or(0) == 0
                 && !key.is("revoke_title_interaction")
+                && !block.has_key("ai_frequency_by_tier")
             {
                 let msg = "`ai_potential` will not be used if `ai_frequency` is 0";
                 warn(ErrorKey::Unneeded).msg(msg).loc(token).push();

@@ -52,4 +52,6 @@ const CANDIDATE_TYPES: &[&str] = &[
     "holder_councilor",
     "holder_court_position",
     "direct_subject",
+    // undocumented
+    "direct_landed_vassal",
 ];

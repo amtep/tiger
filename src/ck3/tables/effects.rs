@@ -842,6 +842,8 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "send_interface_message", Control),
     (Scopes::Character, "send_interface_popup", Control),
     (Scopes::Character, "send_interface_toast", Control),
+    (Scopes::None, "send_china_tutorial_finished_telemetry", Yes),
+    (Scopes::None, "send_china_tutorial_started_telemetry", Yes),
     (Scopes::None, "send_long_tutorial_finished_telemetry", Yes),
     (Scopes::None, "send_long_tutorial_started_telemetry", Yes),
     (Scopes::None, "send_short_tutorial_finished_telemetry", Yes),
