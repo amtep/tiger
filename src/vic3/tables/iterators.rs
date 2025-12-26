@@ -16,7 +16,7 @@ static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = La
     hash
 });
 
-/// LAST UPDATED VIC3 VERSION 1.10.0
+/// LAST UPDATED VIC3 VERSION 1.12.0
 /// See `effects.log` from the game data dumps
 /// These are the list iterators. Every entry represents
 /// a every_, ordered_, random_, and any_ version.
@@ -83,6 +83,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::DiplomaticPact, "participant", Scopes::Country),
     (Scopes::Country.union(Scopes::InterestGroup), "political_lobby", Scopes::PoliticalLobby),
     (Scopes::Country, "political_movement", Scopes::PoliticalMovement),
+    (Scopes::Law, "possible_amendment_type", Scopes::AmendmentType),
     (Scopes::Country, "potential_party", Scopes::Party),
     (Scopes::None, "power_bloc", Scopes::PowerBloc),
     (Scopes::PowerBloc, "power_bloc_member", Scopes::Country),
@@ -102,6 +103,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         Scopes::Character,
     ),
     (Scopes::Country, "scope_ally", Scopes::Country),
+    (Scopes::Law, "scope_amendment", Scopes::Amendment),
     (Scopes::Treaty, "scope_article", Scopes::TreatyArticle),
     (
         Scopes::TreatyOptions.union(Scopes::Treaty),
@@ -140,6 +142,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         "scope_interest_marker",
         Scopes::InterestMarker,
     ),
+    (Scopes::JournalEntry, "scope_je_involved", Scopes::Country),
     (Scopes::DiplomaticPlay, "scope_play_involved", Scopes::Country),
     (
         Scopes::Country
@@ -180,7 +183,6 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::PoliticalMovement, "supporting_character", Scopes::Character),
     (Scopes::None, "treaty", Scopes::Treaty),
     (Scopes::Country, "valid_mass_migration_culture", Scopes::Culture),
-    (Scopes::War, "war_participant", Scopes::Country),
 ];
 
 pub fn iterator_removed(name: &str) -> Option<(&'static str, &'static str)> {

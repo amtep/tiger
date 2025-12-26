@@ -17,7 +17,7 @@ static SCOPE_TO_SCOPE_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>
         hash
     });
 
-/// LAST UPDATED VIC3 VERSION 1.10.0
+/// LAST UPDATED VIC3 VERSION 1.12.2
 /// See `event_targets.log` from the game data dumps
 /// These are scope transitions that can be chained like `root.joined_faction.faction_leader`
 const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
@@ -351,6 +351,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::DiplomaticPlay, "war", Scopes::War),
     (Scopes::Company, "weekly_prosperity_change", Scopes::Value),
     (Scopes::Pop, "workplace", Scopes::Building),
+    (Scopes::State, "world_market_hub", Scopes::State),
     (Scopes::None, "yes", Scopes::Bool),
     (Scopes::None, "YES", Scopes::Bool),
 ];

@@ -1180,3 +1180,53 @@ pub fn validate_national_awakening(
     vd.field_script_value("months", sc);
     vd.field_target("state_region", sc, Scopes::StateRegion);
 }
+
+pub fn validate_add_amendment(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.req_field("sponsor");
+    vd.field_item("type", Item::Amendment);
+    vd.field_target("sponsor", sc, Scopes::InterestGroup);
+    vd.field_script_value("cooldown", sc);
+    vd.field_script_value("timeout", sc);
+}
+
+pub fn validate_spawn_entity_effect(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("name");
+    vd.req_field("duration");
+    vd.field_item("name", Item::Entity);
+    vd.field_script_value("duration", sc);
+}
+
+pub fn validate_teleport_to_front(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(token) => {
+            let mut vd = ValueValidator::new(token, data);
+            vd.target(sc, Scopes::Front);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.field_target("front", sc, Scopes::Front);
+            vd.field_target("base_camp", sc, Scopes::Province);
+        }
+    }
+}
