@@ -210,6 +210,8 @@ bitflags! {
         #[cfg(feature = "vic3")] const Treaty = 0x0000_0000_0400_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const BuildingGroup = 0x0000_0000_0800_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const Amendment = 0x0000_0000_1000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const AmendmentType = 0x0000_0000_1200_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const GeographicRegion = 0x0000_0000_1400_0000_0000_0000_0000_0000;
 
         #[cfg(feature = "imperator")] const Area = 0x0001_0000;
         #[cfg(feature = "imperator")] const CountryCulture = 0x0002_0000;

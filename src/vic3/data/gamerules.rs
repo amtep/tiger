@@ -20,7 +20,7 @@ impl GameRule {
     }
 }
 
-/// LAST UPDATED VIC3 VERSION 1.6.0
+/// LAST UPDATED VIC3 VERSION 1.12.2
 /// Taken from `common/game_rules/_game_rules.info`
 const SIMPLE_GAME_RULE_FLAGS: &[&str] = &[
     "blocks_achievements",
@@ -44,6 +44,10 @@ const SIMPLE_GAME_RULE_FLAGS: &[&str] = &[
     "no_fantastical_content",
     "use_custom_rng_seed",
     "no_dynamic_naming",
+    "free_construction_scaled_player_exemption",
+    "free_construction_unscaled",
+    "give_fantastical_content",
+    "no_ruler_selector",
 ];
 
 impl DbKind for GameRule {
