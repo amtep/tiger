@@ -46,19 +46,19 @@ impl DbKind for StateRegion {
         }
 
         vd.field_integer("arable_land");
-        vd.field_list_items("arable_resources", Item::BuildingGroup);
+        vd.field_list_items("arable_resources", Item::BuildingType);
         vd.field_validated_block("capped_resources", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.unknown_value_fields(|key, value| {
-                data.verify_exists(Item::BuildingGroup, key);
+                data.verify_exists(Item::BuildingType, key);
                 value.expect_integer();
             });
         });
         vd.multi_field_validated_block("resource", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.req_field("type");
-            vd.field_item("type", Item::BuildingGroup);
-            vd.field_item("depleted_type", Item::BuildingGroup);
+            vd.field_item("type", Item::BuildingType);
+            vd.field_item("depleted_type", Item::BuildingType);
             vd.field_integer("discovered_amount");
             vd.field_integer("undiscovered_amount");
         });

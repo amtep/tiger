@@ -6,7 +6,7 @@ pub const COMPANY_CATEGORIES: &[&str] = &[
     "capitalist_owned",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.10.0
+// LAST UPDATED VIC3 VERSION 1.12.2
 pub const DLC_FEATURES_VIC3: &[&str] = &[
     "voice_of_the_people_content",
     "voice_of_the_people_preorder",
@@ -28,6 +28,8 @@ pub const DLC_FEATURES_VIC3: &[&str] = &[
     "mp1_prestige_goods",
     "ip3_content",
     "ip3_cosmetics",
+    "ip4_content",
+    "ip4_cosmetics",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them

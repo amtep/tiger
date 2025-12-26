@@ -101,9 +101,11 @@ impl DbKind for AlertGroup {
     }
 }
 
-// LAST UPDATED VIC3 VERSION 1.6.0
+// LAST UPDATED VIC3 VERSION 1.12.2
 const SCRIPT_CONTEXTS: &[(&str, Scopes)] = &[
     ("player_country", Scopes::Country),
+    ("player_decision", Scopes::Country),
+    ("player_country_formation", Scopes::Country),
     ("player_diplomatic_play", Scopes::DiplomaticPlay),
     ("player_diplomatic_pact", Scopes::DiplomaticPact),
     ("player_diplomatic_action", Scopes::DiplomaticAction),

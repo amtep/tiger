@@ -30,7 +30,6 @@ impl DbKind for Amendment {
         data.verify_exists(Item::Localization, key);
         data.verify_exists_implied(Item::Localization, &format!("{key}_desc"), key);
 
-        vd.req_field("parent");
         vd.field_item("parent", Item::LawType);
 
         vd.field_list_items("allowed_laws", Item::LawType);
@@ -71,5 +70,7 @@ impl DbKind for Amendment {
         vd.field_trigger_rooted("would_sponsor", Tooltipped::Yes, Scopes::InterestGroup);
 
         vd.field_trigger_rooted("ai_will_revoke", Tooltipped::Yes, Scopes::Country);
+
+        vd.field_numeric("amendment_activism_multiplier");
     }
 }
