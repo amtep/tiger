@@ -248,5 +248,9 @@ impl DbKind for CasusBelliGroup {
         vd.field_trigger_rooted("allowed_for_character", Tooltipped::No, Scopes::Character);
         vd.field_bool("should_check_for_interface_availability");
         vd.field_bool("can_only_start_via_script");
+
+        // undocumented
+
+        vd.field_bool("debug");
     }
 }

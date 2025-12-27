@@ -198,9 +198,11 @@ impl DbKind for Situation {
         vd.field_effect_rooted("on_leave", Tooltipped::Yes, Scopes::Situation);
 
         vd.field_bool("is_unique");
+        vd.field_bool("keep_full_history");
         vd.field_bool("migration");
         // TODO: check that the start phase is part of this situation's phases
         vd.field_item("start_phase", Item::SituationPhase);
+        vd.field_bool("use_situation_phase_flat_icons");
     }
 }
 
@@ -355,6 +357,10 @@ fn validate_sub_region(key: &Token, block: &Block, data: &Everything, situation:
     vd.field_item("icon", Item::File);
     vd.field_validated("map_color", validate_possibly_named_color);
     vd.field_list_items("geographical_regions", Item::Region);
+
+    // undocumented
+
+    vd.field_item("capital_province", Item::Province);
 }
 
 fn validate_modifier_set(block: &Block, data: &Everything) {

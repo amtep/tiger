@@ -94,6 +94,7 @@ impl DbKind for SubjectContract {
                 vd.field_script_value("tax", &mut sc);
                 vd.field_script_value("herd", &mut sc);
                 vd.field_script_value("barter_goods", &mut sc);
+                vd.field_script_value("piety", &mut sc);
                 vd.field_script_value("prestige", &mut sc);
                 vd.field_script_value("min_levies", &mut sc);
                 vd.field_script_value("min_tax", &mut sc);

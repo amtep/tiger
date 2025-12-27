@@ -1,9 +1,7 @@
 use crate::block::{BV, Block};
 use crate::ck3::data::scripted_animations::validate_scripted_animation;
 use crate::ck3::tables::misc::PROVINCE_FILTERS;
-use crate::ck3::validate::{
-    validate_ai_targets, validate_cost_with_renown, validate_quick_trigger,
-};
+use crate::ck3::validate::{validate_ai_targets, validate_cost, validate_quick_trigger};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
@@ -107,7 +105,7 @@ impl DbKind for ActivityType {
         }
 
         vd.field_integer("sort_order");
-        vd.field_bool("notify_can_join_open_activity");
+        vd.field_bool("notify_player_can_join_activity");
         vd.field_item("activity_group_type", Item::ActivityGroupType);
 
         // undocumented
@@ -297,11 +295,11 @@ impl DbKind for ActivityType {
             }
             sc.define_name("province", Scopes::Province, key);
             sc.define_list("provinces", Scopes::Province, key);
-            validate_cost_with_renown(block, data, &mut sc);
+            validate_cost(block, data, &mut sc);
         });
 
         let mut sc = ScopeContext::new(Scopes::Character, key);
-        vd.field_validated_block_sc("ui_predicted_cost", &mut sc, validate_cost_with_renown);
+        vd.field_validated_block_sc("ui_predicted_cost", &mut sc, validate_cost);
 
         vd.field_script_value("max_guests", &mut max_guests_sc);
         // TODO: check if this must be an integer
@@ -577,7 +575,7 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, has_special_opt
     if has_special_option {
         sc.define_name("special_option", Scopes::Flag, key);
     }
-    vd.field_validated_block_sc("cost", &mut sc, validate_cost_with_renown);
+    vd.field_validated_block_sc("cost", &mut sc, validate_cost);
 }
 
 fn validate_special_guest(
@@ -847,7 +845,7 @@ fn validate_option(
     vd.field_list_items("blocked_phases", Item::ActivityPhase);
 
     let mut sc = ScopeContext::new(Scopes::Character, key);
-    vd.field_validated_block_sc("cost", &mut sc, validate_cost_with_renown);
+    vd.field_validated_block_sc("cost", &mut sc, validate_cost);
 
     vd.field_validated_key_block("travel_entourage_selection", |key, block, data| {
         validate_tes(key, block, data, has_special_option);

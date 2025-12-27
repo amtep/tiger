@@ -166,7 +166,14 @@ impl DbKind for Building {
             });
         }
 
+        // TODO: only for Great Buildings
         vd.field_item("great_project_type", Item::GreatProjectType);
+
+        // undocumented
+
+        // TODO: only for Great Buildings
+        vd.field_validated_block_rooted("rebuild_cost", Scopes::Character, validate_cost);
+        vd.field_bool("is_mandala_capital");
     }
 
     fn set_property(&mut self, _key: &Token, _block: &Block, property: &str) {

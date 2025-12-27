@@ -126,22 +126,15 @@ pub fn validate_camera_color(block: &Block, data: &Everything) {
 
 pub fn validate_cost(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     let mut vd = Validator::new(block, data);
-    vd.field_script_value("gold", sc);
-    vd.field_script_value("herd", sc);
-    vd.field_script_value("influence", sc);
-    vd.field_script_value("prestige", sc);
-    vd.field_script_value("piety", sc);
-    vd.field_bool("round");
-}
-
-pub fn validate_cost_with_renown(block: &Block, data: &Everything, sc: &mut ScopeContext) {
-    let mut vd = Validator::new(block, data);
+    vd.field_script_value("barter_goods", sc);
     vd.field_script_value("gold", sc);
     vd.field_script_value("herd", sc);
     vd.field_script_value("influence", sc);
     vd.field_script_value("prestige", sc);
     vd.field_script_value("piety", sc);
     vd.field_script_value("renown", sc);
+    vd.field_script_value("treasury", sc);
+    vd.field_script_value("treasury_or_gold", sc);
     vd.field_bool("round");
 }
 
@@ -336,4 +329,15 @@ pub fn validate_ai_targets(block: &Block, data: &Everything) {
     vd.multi_field_choice("ai_recipients", AI_TARGETS);
     vd.field_integer_range("max", 0..);
     vd.field_numeric_range("chance", 0.0..=1.0);
+
+    let mut found = false;
+    for value in block.get_field_values("ai_recipients") {
+        if value.is("situation_participant_group") {
+            vd.field_item("parameter", Item::Situation);
+            found = true;
+        }
+    }
+    if !found {
+        vd.ban_field("parameter", || "`ai_recipients = situation_participant_group`");
+    }
 }

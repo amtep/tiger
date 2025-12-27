@@ -267,7 +267,7 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "noble_families",
     "house_aspirations",
     "replace_gold_cost_by_treasury",
-    "block_allliance_child_marriage",
+    "block_alliance_child_marriage",
     "block_alliance_non_dominant_gender_child_marriage",
     "always_use_patronym",
     "affected_by_development",
@@ -278,6 +278,11 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "count_tributaries_for_title_requirements",
     "radiance",
     "disable_regnal_numbers",
+    // undocumented
+    "gain_legitimacy_becoming_tributary",
+    "regiments_use_barter_goods_as_gold",
+    "government_ignores_rightful_liege_penalties",
+    "dynasty_named_non_independent_landed_rulers",
 ];
 
 // LAST UPDATED CK3 VERSION 1.12.1

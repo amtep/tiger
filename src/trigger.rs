@@ -468,17 +468,12 @@ pub fn validate_trigger_key_bv(
                     if is_event_id {
                         arg = key.split_once(':').unwrap().1;
                     }
-                    // known prefix
-                    if let Some(entry) = scope_prefix(&prefix) {
-                        validate_argument_scope(part_flags, entry, &prefix, &arg, data, sc);
-                        if is_event_id {
-                            break; // force last part
-                        }
-                    } else {
-                        let msg = format!("unknown prefix `{prefix}:`");
-                        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
                         sc.close();
                         return side_effects;
+                    }
+                    if is_event_id {
+                        break; // force last part
                     }
                 } else if part_lc == "root" {
                     sc.replace_root();
@@ -1270,17 +1265,12 @@ pub fn validate_target_ok_this(
                     if is_event_id {
                         arg = token.split_once(':').unwrap().1;
                     }
-                    // known prefix
-                    if let Some(entry) = scope_prefix(&prefix) {
-                        validate_argument_scope(part_flags, entry, &prefix, &arg, data, sc);
-                        if is_event_id {
-                            break; // force last part
-                        }
-                    } else {
-                        let msg = format!("unknown prefix `{prefix}:`");
-                        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
                         sc.close();
                         return Scopes::all();
+                    }
+                    if is_event_id {
+                        break; // force last part
                     }
                 } else if part_lc == "root" {
                     sc.replace_root();
@@ -1720,8 +1710,48 @@ pub fn validate_argument(
     } else if let Some(entry) = scope_prefix(func) {
         validate_argument_scope(part_flags, entry, func, arg, data, sc);
     } else {
-        let msg = format!("unknown token `{func}`");
+        let msg = format!("unknown token `{func}:`");
         err(ErrorKey::Validation).msg(msg).loc(func).push();
+    }
+}
+
+/// Validate a `prefix:value` construct in a trigger.
+///
+/// Very similar to `validate_argument` because the notations are almost interchangeable in script.
+#[allow(unreachable_code, unused_variables)]
+pub fn validate_prefix(
+    part_flags: PartFlags,
+    prefix: &Token,
+    arg: &Token,
+    data: &Everything,
+    sc: &mut ScopeContext,
+) -> bool {
+    fn scope_trigger_complex(prefix: &str) -> Option<(Scopes, ArgumentValue, Scopes)> {
+        match Game::game() {
+            #[cfg(feature = "ck3")]
+            Game::Ck3 => crate::ck3::tables::triggers::scope_trigger_complex(prefix),
+            #[cfg(feature = "vic3")]
+            Game::Vic3 => crate::vic3::tables::triggers::scope_trigger_complex(prefix),
+            #[cfg(feature = "imperator")]
+            Game::Imperator => None,
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => None,
+        }
+    }
+
+    let prefix_lc = prefix.as_str().to_ascii_lowercase();
+    if let Some((inscopes, validation, outscopes)) = scope_trigger_complex(&prefix_lc) {
+        sc.expect(inscopes, &Reason::Token(prefix.clone()));
+        validate_argument_internal(arg, validation, data, sc);
+        sc.replace(outscopes, prefix.clone());
+        true
+    } else if let Some(entry) = scope_prefix(prefix) {
+        validate_argument_scope(part_flags, entry, prefix, arg, data, sc);
+        true
+    } else {
+        let msg = format!("unknown prefix `{prefix:}`");
+        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+        false
     }
 }
 

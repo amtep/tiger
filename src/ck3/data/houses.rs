@@ -148,6 +148,10 @@ impl DbKind for HouseAspiration {
                 sc
             });
         }
+
+        // undocumented
+
+        vd.field_item("confederation_type", Item::ConfederationType);
     }
 }
 

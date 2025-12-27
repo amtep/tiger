@@ -141,6 +141,11 @@ fn validate_portrait_modifier(
         sc.define_name("pop", Scopes::Pop, key);
     }
     vd.multi_field_validated_block_sc("weight", sc, validate_modifiers_with_base);
+
+    #[cfg(feature = "ck3")]
+    if Game::is_ck3() {
+        vd.field_bool("skip_if_overridden");
+    }
 }
 
 fn validate_add_accessory_modifiers(

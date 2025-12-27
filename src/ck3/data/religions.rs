@@ -115,7 +115,6 @@ impl DbKind for Religion {
 }
 
 fn validate_doctrines(iname: &str, data: &Everything, vd: &mut Validator) {
-    vd.req_field("doctrine");
     let mut categories: TigerHashMap<&str, Vec<Token>> = TigerHashMap::default();
     vd.multi_field_validated_value("doctrine", |_, mut vd| {
         vd.item(Item::Doctrine);

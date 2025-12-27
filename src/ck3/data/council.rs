@@ -104,7 +104,7 @@ impl DbKind for CouncilPosition {
             sc
         });
 
-        vd.advice_field("use_for_scheme_power", "replaced with use_for_scheme_phase_duration");
+        vd.replaced_field("use_for_scheme_power", "use_for_scheme_phase_duration");
         vd.field_bool("use_for_scheme_phase_duration");
         vd.field_bool("use_for_scheme_resistance");
 

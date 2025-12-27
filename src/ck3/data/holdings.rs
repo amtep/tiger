@@ -60,7 +60,7 @@ impl DbKind for HoldingType {
         }
 
         let mut vd = Validator::new(block, data);
-        vd.advice_field("flag", "replaced with parameters block in 1.16");
+        vd.replaced_field("flag", "`parameters` block");
         vd.req_field("primary_building");
         vd.field_item("primary_building", Item::Building);
         vd.field_list_items("buildings", Item::Building);

@@ -33,6 +33,7 @@ impl DbKind for Faction {
         }
 
         // TODO: docs say description but vanilla uses desc. Verify.
+        vd.field_validated_rooted("desc", Scopes::Faction, validate_desc);
         if !vd.field_validated_rooted("description", Scopes::Faction, validate_desc) {
             let loca = format!("{key}_desc");
             data.verify_exists_implied(Item::Localization, &loca, key);

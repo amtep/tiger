@@ -1738,7 +1738,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "number_maa_regiments_of_type",
-        Block(&[("type", Item(Item::MenAtArms)), ("+value", CompareValue)]),
+        Block(&[("target", Item(Item::MenAtArms)), ("+value", CompareValue)]),
     ),
     (
         Scopes::Character,
@@ -1748,7 +1748,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "number_maa_soldiers_of_type",
-        Block(&[("type", Item(Item::MenAtArms)), ("+value", CompareValue)]),
+        Block(&[("target", Item(Item::MenAtArms)), ("+value", CompareValue)]),
     ),
     (Scopes::Province, "number_of_characters_in_pool", CompareValue),
     (Scopes::Character, "number_of_commander_traits", CompareValue),
@@ -1807,7 +1807,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "number_title_maa_regiments_of_type",
-        Block(&[("type", Item(Item::MenAtArms)), ("+value", CompareValue)]),
+        Block(&[("target", Item(Item::MenAtArms)), ("+value", CompareValue)]),
     ),
     (Scopes::VassalObligationLevel, "obligation_level_score", CompareValue),
     (
@@ -2429,6 +2429,18 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::Value,
         ),
         (Scopes::Character, "perks_in_tree", Item(Item::PerkTree), Scopes::Value),
+        (
+            Scopes::SituationSubRegion,
+            "phase_takeover_duration_days",
+            Item(Item::SituationPhase),
+            Scopes::Value,
+        ),
+        (
+            Scopes::SituationSubRegion,
+            "phase_takeover_points",
+            Item(Item::SituationPhase),
+            Scopes::Value,
+        ),
         (
             Scopes::LandedTitle,
             "place_in_line_of_succession",

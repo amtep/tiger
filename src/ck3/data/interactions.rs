@@ -1,7 +1,6 @@
 use crate::block::{BV, Block};
 use crate::ck3::validate::{
-    validate_ai_targets, validate_cost_with_renown, validate_quick_trigger,
-    validate_theme_background,
+    validate_ai_targets, validate_cost, validate_quick_trigger, validate_theme_background,
 };
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
@@ -358,8 +357,10 @@ impl DbKind for CharacterInteraction {
         vd.field_trigger("can_be_picked_artifact", Tooltipped::Yes, &mut sc.clone());
         vd.field_trigger("can_be_picked_regiment", Tooltipped::Yes, &mut sc.clone());
 
+        vd.field_trigger("needs_confirmation", Tooltipped::No, &mut sc.clone());
+
         // Experimentation showed that even the cost block has scope none
-        vd.field_validated_block_rerooted("cost", &sc, Scopes::None, validate_cost_with_renown);
+        vd.field_validated_block_rerooted("cost", &sc, Scopes::None, validate_cost);
 
         vd.field_list("filter_tags");
     }

@@ -133,7 +133,7 @@ impl DbKind for CourtPosition {
             sc
         });
 
-        vd.advice_field("candidate_score", "replaced by `ai_candidate_score`");
+        vd.replaced_field("candidate_score", "ai_candidate_score");
         vd.field_validated_key("ai_candidate_score", |key, bv, data| {
             let mut sc = ScopeContext::new(Scopes::None, key);
             sc.define_name("liege", Scopes::Character, key);

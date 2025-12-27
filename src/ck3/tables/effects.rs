@@ -642,11 +642,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
         TargetValue("target", Scopes::Character, "treasury"),
     ),
     (Scopes::Character, "pay_war_chest_treasury_income", Vb(validate_pay_income)),
-    (
-        Scopes::Province,
-        "plan_great_project",
-        ItemTarget("great_project_type", Item::GreatProjectType, "founder", Scopes::Character),
-    ),
+    (Scopes::Province, "plan_great_project", Vb(validate_plan_great_project)),
     (Scopes::Character, "play_music_cue", Item(Item::Music)),
     (Scopes::Character, "play_sound_effect", Item(Item::Sound)),
     (Scopes::GreatHolyWar, "pledge_attacker", Scope(Scopes::Character)),

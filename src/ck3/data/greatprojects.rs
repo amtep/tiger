@@ -3,6 +3,7 @@ use crate::ck3::tables::misc::PROVINCE_FILTERS;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
+use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
@@ -81,15 +82,10 @@ impl DbKind for GreatProjectType {
             vd.field_item("reference", Item::File);
         });
 
-        vd.multi_field_validated("name", |bv, data| match bv {
-            BV::Value(value) => {
-                data.verify_exists(Item::Localization, value);
-            }
-            BV::Block(block) => {
-                let mut vd = Validator::new(block, data);
-                vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
-                vd.field_item("desc", Item::Localization);
-            }
+        // docs say it's like the previous 2 fields, but it seems to be a normal triggered desc.
+        vd.field_validated_key("name", |key, bv, data| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            validate_desc(bv, data, &mut sc);
         });
 
         vd.field_trigger_builder("is_shown", Tooltipped::No, |key| {
@@ -154,7 +150,11 @@ impl DbKind for GreatProjectType {
             sc
         });
         vd.field_numeric("contribution_threshold");
-        vd.field_script_value_builder("investor_cooldown", |key| {
+        vd.advice_field(
+            "investor_cooldown",
+            "docs say `investor_cooldown` but it's `contributor_cooldown`",
+        );
+        vd.field_script_value_builder("contributor_cooldown", |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("great_project", Scopes::GreatProject, key);
             sc

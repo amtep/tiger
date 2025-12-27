@@ -138,6 +138,8 @@ impl DbKind for Culture {
                 data.verify_exists_implied(Item::File, &pathname, token);
             }
         }
+        vd.field_list_numeric_exactly("house_coa_mask_offset", 2);
+        vd.field_list_numeric_exactly("house_coa_mask_scale", 2);
 
         vd.field_validated_block("ethnicities", |block, data| {
             let mut vd = Validator::new(block, data);

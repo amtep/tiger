@@ -131,8 +131,12 @@ impl DbKind for Government {
         vd.field_choice("main_administrative_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("min_appointment_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("minimum_provincial_maa_tier", &["county", "duchy", "kingdom"]);
-        vd.field_choice(
+        vd.advice_field(
             "title_maa_setup",
+            "docs say `title_maa_setup` but vanilla uses `administrative_title_maa_setup`",
+        );
+        vd.field_choice(
+            "administrative_title_maa_setup",
             &[
                 "main_administrative_tier_and_top_liege",
                 "vassals_and_top_liege",
@@ -222,12 +226,14 @@ impl DbKind for Government {
             Scopes::Character,
         );
 
-        vd.advice_field("flag", "replaced with `flags` list in 1.18");
+        vd.replaced_field("flag", "`flags` list");
         vd.field_list("flags");
 
         // undocumented
 
         vd.field_item("tax_slot_type", Item::TaxSlotType);
+        vd.field_list_numeric_exactly("realm_mask_offset", 2);
+        vd.field_list_numeric_exactly("realm_mask_scale", 2);
     }
 }
 

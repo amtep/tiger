@@ -34,6 +34,18 @@ impl DbKind for MapEnvironment {
         vd.field_list_precise_numeric_exactly("sun_direction", 3);
         vd.field_list_precise_numeric_exactly("water_sun_direction_offset", 3);
         vd.field_list_precise_numeric_exactly("shadow_direction_offset", 3);
+        vd.field_precise_numeric("terrain_sunny_sun_azimuth");
+        vd.field_precise_numeric("terrain_sunny_sun_elevation");
+        vd.field_precise_numeric("terrain_overcast_sun_azimuth");
+        vd.field_precise_numeric("terrain_overcast_sun_elevation");
+        vd.field_precise_numeric("map_objects_sunny_sun_azimuth");
+        vd.field_precise_numeric("map_objects_sunny_sun_elevation");
+        vd.field_precise_numeric("map_objects_overcast_sun_azimuth");
+        vd.field_precise_numeric("map_objects_overcast_sun_elevation");
+        vd.field_precise_numeric("water_sunny_sun_azimuth");
+        vd.field_precise_numeric("water_sunny_sun_elevation");
+        vd.field_precise_numeric("water_overcast_sun_azimuth");
+        vd.field_precise_numeric("water_overcast_sun_elevation");
 
         vd.field_precise_numeric("shadowmap_depthbias");
         vd.field_precise_numeric("shadowmap_kernelscale");

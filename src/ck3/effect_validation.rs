@@ -283,6 +283,7 @@ pub fn validate_add_modifier(
                 data.database.validate_property_use(Item::Modifier, token, data, key, key.as_str());
             }
             vd.field_validated_sc("desc", sc, validate_desc);
+            vd.field_validated_sc("duration_desc", sc, validate_desc);
             validate_optional_duration(&mut vd, sc);
         }
     }
@@ -2223,6 +2224,7 @@ pub fn validate_create_cadet_branch(
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
+    vd.field_item("prefix", Item::Localization);
     vd.field_validated_sc("name", sc, validate_desc);
     vd.field_item("coat_of_arms", Item::Coa);
     vd.field_bool("spread_to_descendants");
@@ -2333,5 +2335,22 @@ pub fn validate_set_activity_intent(
             vd.field_item("intent", Item::ActivityIntent);
             vd.field_target("target", sc, Scopes::Character);
         }
+    }
+}
+
+pub fn validate_plan_great_project(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("great_project_type");
+    vd.req_field("founder");
+    vd.field_item("great_project_type", Item::GreatProjectType);
+    vd.field_target("founder", sc, Scopes::Character);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::GreatProject, name);
     }
 }
