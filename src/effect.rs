@@ -3,7 +3,7 @@
 use crate::block::{BV, Block, Comparator, Eq::*};
 use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
-use crate::data::effect_localization::EffectLocalization;
+use crate::data::effect_localization::validate_effect_localization;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::Game;
@@ -485,11 +485,7 @@ pub fn validate_effect_control(
                 data.validate_localization_sc(value.as_str(), sc);
             }
         } else if let Some(token) = vd.field_value("text") {
-            data.verify_exists(Item::EffectLocalization, token);
-            if let Some((key, block)) = data.get_key_block(Item::EffectLocalization, token.as_str())
-            {
-                EffectLocalization::validate_use(key, block, data, token, tooltipped);
-            }
+            validate_effect_localization(token, data, tooltipped);
         }
         vd.field_target_ok_this("subject", sc, Scopes::non_primitive());
         tooltipped = Tooltipped::No;

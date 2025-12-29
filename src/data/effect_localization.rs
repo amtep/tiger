@@ -1,7 +1,7 @@
 use crate::block::Block;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
-use crate::game::GameFlags;
+use crate::game::{Game, GameFlags};
 use crate::item::{Item, ItemLoader};
 use crate::report::{ErrorKey, warn};
 use crate::token::Token;
@@ -77,5 +77,47 @@ impl DbKind for EffectLocalization {
         vd.field_item("third_past", Item::Localization);
         vd.field_item("third_neg", Item::Localization);
         vd.field_item("third_past_neg", Item::Localization);
+    }
+}
+
+pub fn validate_effect_localization(caller: &Token, data: &Everything, tooltipped: Tooltipped) {
+    if let Some((key, block)) = data.get_key_block(Item::EffectLocalization, caller.as_str()) {
+        EffectLocalization::validate_use(key, block, data, caller, tooltipped);
+        return;
+    }
+
+    // As of CK3 1.18, effect localizations don't have to be defined and can just be present as
+    // localizations.
+    if Game::is_ck3() {
+        match tooltipped {
+            Tooltipped::No => (),
+            Tooltipped::Yes | Tooltipped::FailuresOnly => {
+                if data.item_exists(Item::Localization, caller.as_str()) {
+                    return;
+                }
+                for sfx in &["global", "first", "third"] {
+                    let loca = format!("{caller}_{sfx}");
+                    if data.item_exists(Item::Localization, &loca) {
+                        return;
+                    }
+                }
+                let msg = "missing present perspective";
+                warn(ErrorKey::MissingPerspective).msg(msg).loc(caller).push();
+            }
+            Tooltipped::Past => {
+                for sfx in &["global_part", "first_part", "third_past"] {
+                    let loca = format!("{caller}_{sfx}");
+                    if data.item_exists(Item::Localization, &loca) {
+                        return;
+                    }
+                }
+                let msg = "missing past perspective";
+                warn(ErrorKey::MissingPerspective).msg(msg).loc(caller).push();
+            }
+            #[cfg(feature = "hoi4")]
+            Tooltipped::Inner => unimplemented!(),
+        }
+    } else {
+        data.verify_exists(Item::EffectLocalization, caller);
     }
 }

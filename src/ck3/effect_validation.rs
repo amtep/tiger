@@ -7,6 +7,7 @@ use crate::ck3::validate::{
     validate_random_culture, validate_random_faith, validate_random_traits_list,
 };
 use crate::context::ScopeContext;
+use crate::data::effect_localization::validate_effect_localization;
 use crate::desc::validate_desc;
 use crate::effect::{validate_effect, validate_effect_internal};
 use crate::effect_validation::validate_random_list;
@@ -812,7 +813,9 @@ pub fn validate_duel(
     vd.field_list_items("skills", Item::Skill);
     vd.field_target("target", sc, Scopes::Character);
     vd.field_script_value("value", sc);
-    vd.field_item("localization", Item::EffectLocalization);
+    if let Some(value) = vd.field_value("localization") {
+        validate_effect_localization(value, data, tooltipped);
+    }
     vd.field_validated_value("challenge_variable", |_, mut vd| {
         vd.identifier("variable name");
         let loca = format!("{}_name", vd.value());

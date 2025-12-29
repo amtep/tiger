@@ -1,7 +1,7 @@
 use crate::block::Block;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
-use crate::game::GameFlags;
+use crate::game::{Game, GameFlags};
 use crate::item::{Item, ItemLoader};
 use crate::report::{ErrorKey, warn};
 use crate::token::Token;
@@ -69,5 +69,48 @@ impl DbKind for TriggerLocalization {
         vd.field_item("third_not", Item::Localization);
         vd.field_item("none", Item::Localization);
         vd.field_item("none_not", Item::Localization);
+    }
+}
+
+pub fn validate_trigger_localization(
+    caller: &Token,
+    data: &Everything,
+    tooltipped: Tooltipped,
+    negated: bool,
+) {
+    if let Some((key, block)) = data.get_key_block(Item::TriggerLocalization, caller.as_str()) {
+        TriggerLocalization::validate_use(key, block, data, caller, tooltipped, negated);
+        return;
+    }
+
+    // As of CK3 1.18, trigger localizations don't have to be defined and can just be present as
+    // localizations.
+    if Game::is_ck3() {
+        if tooltipped.is_tooltipped() {
+            if negated {
+                for sfx in &["global_not", "first_not", "third_not", "none_not"] {
+                    let loca = format!("{caller}_{sfx}");
+                    if data.item_exists(Item::Localization, &loca) {
+                        return;
+                    }
+                }
+                let msg = format!("missing negated perspective for {caller}");
+                warn(ErrorKey::MissingPerspective).msg(msg).loc(caller).push();
+            } else {
+                if data.item_exists(Item::Localization, caller.as_str()) {
+                    return;
+                }
+                for sfx in &["global", "first", "third", "none"] {
+                    let loca = format!("{caller}_{sfx}");
+                    if data.item_exists(Item::Localization, &loca) {
+                        return;
+                    }
+                }
+                let msg = format!("missing positive perspective for {caller}");
+                warn(ErrorKey::MissingPerspective).msg(msg).loc(caller).push();
+            }
+        }
+    } else {
+        data.verify_exists(Item::TriggerLocalization, caller);
     }
 }

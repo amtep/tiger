@@ -9,7 +9,7 @@ use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
 use crate::data::genes::Gene;
 #[cfg(feature = "jomini")]
-use crate::data::trigger_localization::TriggerLocalization;
+use crate::data::trigger_localization::validate_trigger_localization;
 use crate::date::Date;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
@@ -219,12 +219,7 @@ pub fn validate_trigger_internal(
             if caller == "custom_tooltip" {
                 vd.field_item("text", Item::Localization);
             } else if let Some(token) = vd.field_value("text") {
-                data.verify_exists_max_sev(Item::TriggerLocalization, token, max_sev);
-                if let Some((key, block)) =
-                    data.get_key_block(Item::TriggerLocalization, token.as_str())
-                {
-                    TriggerLocalization::validate_use(key, block, data, token, tooltipped, negated);
-                }
+                validate_trigger_localization(token, data, tooltipped, negated);
             }
             vd.field_target_ok_this("subject", sc, Scopes::non_primitive());
         } else {

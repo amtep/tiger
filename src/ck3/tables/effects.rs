@@ -118,7 +118,11 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "add_focus_progress", ScriptValue),
     (Scopes::CasusBelli, "add_from_contribution_attackers", Vb(validate_add_from_contribution)),
     (Scopes::CasusBelli, "add_from_contribution_defenders", Vb(validate_add_from_contribution)),
-    (Scopes::SituationSubRegion, "add_geographical_region", Item(Item::Region)),
+    (
+        Scopes::SituationSubRegion,
+        "add_geographical_region",
+        ScopeOrItem(Scopes::GeographicalRegion, Item::Region),
+    ),
     (Scopes::Accolade, "add_glory", ScriptValue),
     (Scopes::Character, "add_gold", NonNegativeValue),
     // TODO: check that these have type = great_building

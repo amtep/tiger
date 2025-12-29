@@ -34,6 +34,7 @@ impl DbKind for Innovation {
         if let Some(block) = block.get_field_block("parameters") {
             for (key, _) in block.iter_assignments() {
                 db.add_flag(Item::InnovationParameter, key.clone());
+                db.add_flag(Item::CultureParameter, key.clone());
             }
         }
     }
@@ -97,13 +98,13 @@ impl DbKind for Innovation {
         vd.field_validated_block("parameters", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.unknown_value_fields(|key, value| {
-                let loca = format!("culture_parameter_{key}");
+                // only bool parameters supported here
+                ValueValidator::new(value, data).bool();
+                // culture parameter loca are lowercased, verified in 1.11
+                let loca = format!("culture_parameter_{}", key.as_str().to_ascii_lowercase());
                 data.verify_exists_implied(Item::Localization, &loca, key);
-                let mut vvd = ValueValidator::new(value, data);
-                vvd.bool();
             });
         });
-
         vd.multi_field_value("flag");
 
         vd.multi_field_item("unlock_building", Item::Building);
