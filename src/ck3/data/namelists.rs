@@ -38,6 +38,9 @@ impl DbKind for NameList {
         vd.field_item("patronym_suffix_female", Item::Localization);
 
         vd.field_bool("founder_named_dynasties");
+        vd.field_bool("house_based_map_names");
+        vd.field_bool("suggest_family_names");
+        vd.field_bool("suggest_ancestor_names");
         vd.field_item("bastard_dynasty_prefix", Item::Localization);
 
         // TODO: these should sum to <= 100

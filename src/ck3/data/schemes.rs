@@ -166,6 +166,7 @@ impl DbKind for Scheme {
         vd.field_bool("freeze_scheme_when_traveling_target");
         vd.field_bool("cancel_scheme_when_traveling");
         vd.field_bool("cancel_scheme_when_traveling_target");
+        vd.field_bool("hide_target_name");
 
         vd.field_script_value("speed_per_skill_point", &mut sc);
         vd.field_script_value("speed_per_target_skill_point", &mut sc);

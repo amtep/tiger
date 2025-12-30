@@ -63,6 +63,10 @@ impl DbKind for Struggle {
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
+        vd.field_item("illustration", Item::File);
+        vd.field_item("situation_group_type", Item::SituationGroupType);
+        vd.field_integer("sort_order");
+
         vd.field_list_items("cultures", Item::Culture);
         vd.field_list_items("faiths", Item::Faith);
         vd.field_list_items("regions", Item::Region);

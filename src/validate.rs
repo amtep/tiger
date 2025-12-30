@@ -4,6 +4,8 @@ use std::fmt::{Display, Formatter};
 
 use crate::block::{BV, Block};
 #[cfg(feature = "ck3")]
+use crate::ck3::tables::misc::OUTBREAK_INTENSITIES;
+#[cfg(feature = "ck3")]
 use crate::ck3::validate::{
     validate_activity_modifier, validate_ai_value_modifier, validate_compare_modifier,
     validate_compatibility_modifier, validate_opinion_modifier, validate_scheme_modifier,
@@ -506,20 +508,76 @@ pub fn validate_inside_iterator(
             vd.ban_field("filter", only_for);
             vd.ban_field("continue", only_for);
         }
-    }
 
-    #[cfg(feature = "ck3")]
-    if Game::is_ck3() {
+        if name == "active_accolade" {
+            vd.field_item("accolade_parameter", Item::AccoladeParameter);
+        } else {
+            vd.ban_field("accolade_parameter", || format!("`{listtype}_{name}`"));
+        }
+
+        if name == "county_province_epidemic" || name == "province_epidemic" {
+            vd.multi_field_choice_any_cmp("intensity", OUTBREAK_INTENSITIES);
+        } else {
+            vd.ban_field("intensity", || {
+                format!("`{listtype}_county_province_epidemic` or `{listtype}_province_epidemic`")
+            });
+        }
+
+        if name == "secret" {
+            vd.field_item("type", Item::Secret);
+        }
+
+        if name == "scheme" {
+            vd.field_item("type", Item::Scheme);
+        }
+
+        if name == "task_contract"
+            || name == "character_task_contract"
+            || name == "character_active_contract"
+        {
+            vd.field_item("task_contract_type", Item::TaskContractType);
+        } else {
+            vd.ban_field("task_contract_type", || format!("`{listtype}_task_contract`, `{listtype}_character_task_contract` or `{listtype}_character_active_contract`"));
+        }
+
+        if name == "memory" {
+            vd.field_item("memory_type", Item::MemoryType);
+        } else {
+            vd.ban_field("memory_type", || format!("`{listtype}_{name}`"));
+        }
+
+        if name == "targeting_faction" {
+            vd.field_item("faction_type", Item::Faction);
+        } else {
+            vd.ban_field("faction_type", || format!("`{listtype}_{name}`"));
+        }
+
+        if name == "vassal" || name == "vassal_or_below" {
+            vd.field_item("vassal_stance", Item::VassalStance);
+        } else {
+            vd.ban_field("vassal_stance", || {
+                format!("`{listtype}_vassal` or `{listtype}_vassal_or_below`")
+            });
+        }
+
+        if name == "owned_story" {
+            vd.field_item("type", Item::Story);
+        }
+
+        if name == "held_title" {
+            // TODO: actually check the value
+            vd.field_any_cmp("title_tier");
+        } else {
+            vd.ban_field("title_tier", || format!("`{listtype}_{name}`"));
+        }
+
         if name == "county_in_region" {
             vd.req_field("region");
             vd.multi_field_value("region"); // prechecked
         } else {
             vd.ban_field("region", || format!("`{listtype}_county_in_region`"));
         }
-    }
 
-    #[cfg(feature = "ck3")]
-    if Game::is_ck3() {
         if name == "court_position_candidate" {
             vd.req_field("court_position_type");
             vd.field_item_or_target(
@@ -528,9 +586,13 @@ pub fn validate_inside_iterator(
                 Item::CourtPosition,
                 Scopes::CourtPositionType,
             );
-        } else if name == "court_position_holder" {
+        }
+
+        if name == "court_position_holder" {
             vd.field_item("type", Item::CourtPosition);
-        } else if name == "relation" {
+        }
+
+        if name == "relation" {
             if !block.has_key("type") {
                 let msg = "required field `type` missing";
                 let info = format!(
@@ -539,10 +601,6 @@ pub fn validate_inside_iterator(
                 err(ErrorKey::FieldMissing).strong().msg(msg).info(info).loc(block).push();
             }
             vd.multi_field_item("type", Item::Relation);
-        } else {
-            vd.ban_field("type", || {
-                format!("`{listtype}_court_position_holder` or `{listtype}_relation`")
-            });
         }
     }
 

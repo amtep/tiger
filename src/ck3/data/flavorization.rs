@@ -46,7 +46,10 @@ impl DbKind for Flavorization {
             vd.ban_field("special", || "type = character");
         }
         if flavor_type == "character" || flavor_type == "title" {
-            vd.field_choice("tier", &["empire", "kingdom", "duchy", "county", "barony", "none"]);
+            vd.field_choice(
+                "tier",
+                &["hegemony", "empire", "kingdom", "duchy", "county", "barony", "none"],
+            );
         } else {
             vd.ban_field("tier", || "type = character or title");
         }
@@ -73,6 +76,8 @@ impl DbKind for Flavorization {
         vd.field_list_items("de_jure_liege", Item::Title);
         vd.field_item("holding", Item::HoldingType);
         vd.field_list_items("titles", Item::Title);
+        // TODO: this allows vassal contract flags but what else?
+        vd.field_list("subject_contract_obligation_flags");
 
         vd.advice_field("top_liege", "moved into flavorization_rules");
         vd.advice_field("only_holder", "moved into flavorization_rules");

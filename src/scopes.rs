@@ -123,7 +123,16 @@ bitflags! {
         #[cfg(feature = "ck3")] const SituationParticipantGroup = 0x0000_0000_0000_0004_0000_0000_0000_0000;
         #[cfg(feature = "ck3")] const SituationSubRegion = 0x0000_0000_0000_0008_0000_0000_0000_0000;
         #[cfg(feature = "ck3")] const Confederation = 0x0000_0000_0000_0010_0000_0000_0000_0000;
-
+        // CK3 1.18
+        #[cfg(feature = "ck3")] const HouseAspiration = 0x0000_0000_0000_0020_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const HouseRelation = 0x0000_0000_0000_0040_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const HouseRelationType = 0x0000_0000_0000_0080_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const HouseRelationLevel = 0x0000_0000_0000_0100_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const ConfederationType = 0x0000_0000_0000_0200_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const GreatProject = 0x0000_0000_0000_0400_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const ProjectContribution = 0x0000_0000_0000_0800_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const CultureInnovation = 0x0000_0000_0000_1000_0000_0000_0000_0000;
+        #[cfg(feature = "ck3")] const GreatProjectType = 0x0000_0000_0000_2000_0000_0000_0000_0000;
 
         #[cfg(feature = "vic3")] const Battle = 0x0001_0000;
         #[cfg(feature = "vic3")] const BattleSide = 0x0002_0000;
@@ -327,6 +336,9 @@ pub enum ArgumentValue {
     Identifier(&'static str),
     /// The value can be anything
     UncheckedValue,
+    /// This trigger no longer exists. Arguments are version and explanation
+    #[cfg(feature = "ck3")]
+    Removed(&'static str, &'static str),
 }
 
 /// Look up an "event link", which is a script token that looks up something related

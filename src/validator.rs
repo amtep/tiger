@@ -1122,6 +1122,26 @@ impl<'a> Validator<'a> {
         })
     }
 
+    /// Just like [`Validator::multi_field_choice`], but allow other comparators than `=`
+    #[allow(dead_code)]
+    pub fn multi_field_choice_any_cmp(&mut self, name: &str, choices: &[&str]) -> bool {
+        let mut found = false;
+        let sev = Severity::Error.at_most(self.max_severity);
+        for Field(key, _, bv) in self.block.iter_fields() {
+            if key.is(name) {
+                self.known_fields.push(key.as_str());
+                found = true;
+                if let Some(token) = bv.expect_value() {
+                    if !choices.contains(&token.as_str()) {
+                        let msg = format!("expected one of {}", choices.join(", "));
+                        report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
+                    }
+                }
+            }
+        }
+        found
+    }
+
     /// Expect field `name`, if present, to be of the form `name = { value value value ... }` with any number of values.
     /// Expect no more than one `name` field in the block.
     /// Returns true iff the field is present.

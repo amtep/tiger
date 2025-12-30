@@ -3,7 +3,7 @@
 use crate::block::{BV, Block, Comparator, Eq::*};
 use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
-use crate::data::effect_localization::EffectLocalization;
+use crate::data::effect_localization::validate_effect_localization;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::Game;
@@ -24,6 +24,8 @@ use crate::trigger::{validate_target, validate_trigger};
 use crate::validate::validate_compare_duration;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use crate::validate::validate_modifiers;
+#[cfg(feature = "ck3")]
+use crate::validate::validate_possibly_named_color;
 #[cfg(feature = "jomini")]
 use crate::validate::validate_scripted_modifier_call;
 use crate::validate::{
@@ -385,6 +387,10 @@ pub fn validate_effect_field(
                     validate_target(token, data, sc, Scopes::Value);
                 }
             }
+            #[cfg(feature = "ck3")]
+            Effect::Color => {
+                validate_possibly_named_color(bv, data);
+            }
             Effect::Removed(version, explanation) => {
                 let msg = format!("`{key}` was removed in {version}");
                 warn(ErrorKey::Removed).msg(msg).info(explanation).loc(key).push();
@@ -479,11 +485,7 @@ pub fn validate_effect_control(
                 data.validate_localization_sc(value.as_str(), sc);
             }
         } else if let Some(token) = vd.field_value("text") {
-            data.verify_exists(Item::EffectLocalization, token);
-            if let Some((key, block)) = data.get_key_block(Item::EffectLocalization, token.as_str())
-            {
-                EffectLocalization::validate_use(key, block, data, token, tooltipped);
-            }
+            validate_effect_localization(token, data, tooltipped);
         }
         vd.field_target_ok_this("subject", sc, Scopes::non_primitive());
         tooltipped = Tooltipped::No;
@@ -610,8 +612,13 @@ pub fn validate_effect_control(
         vd.field_validated_sc("tooltip", &mut loca_sc, validate_desc);
         loca_sc.destroy();
 
-        let icon_scopes =
-            Scopes::Character | Scopes::LandedTitle | Scopes::Artifact | Scopes::Faith;
+        let icon_scopes = Scopes::Character
+            | Scopes::LandedTitle
+            | Scopes::Artifact
+            | Scopes::Faith
+            | Scopes::Dynasty
+            | Scopes::DynastyHouse
+            | Scopes::Confederation;
         if let Some(token) = vd.field_value("left_icon") {
             validate_target_ok_this(token, data, sc, icon_scopes);
         }
@@ -745,4 +752,7 @@ pub enum Effect {
     /// This is for Hoi4 which doesn't have script values.
     #[cfg(feature = "hoi4")]
     Value,
+    /// The effect takes a possibly named color value
+    #[cfg(feature = "ck3")]
+    Color,
 }

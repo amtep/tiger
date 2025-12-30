@@ -9,6 +9,7 @@ use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
 use crate::scopes::Scopes;
+use crate::script_value::validate_non_dynamic_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::validate_modifiers_with_base;
@@ -81,11 +82,15 @@ impl DbKind for Building {
 
         vd.field_icon("type_icon", "NGameIcons|BUILDING_TYPE_ICON_PATH", "");
 
-        vd.field_script_value_rooted("levy", Scopes::None);
-        vd.field_script_value_rooted("max_garrison", Scopes::None);
-        vd.field_script_value_rooted("garrison_reinforcement_factor", Scopes::None);
-        vd.field_script_value_rooted("construction_time", Scopes::None);
-        vd.field_choice("type", &["regular", "special", "duchy_capital"]);
+        // TODO: int
+        vd.field_validated("levy", validate_non_dynamic_script_value);
+        // TODO: int
+        vd.field_validated("max_garrison", validate_non_dynamic_script_value);
+        // TODO: 0..1
+        vd.field_validated("garrison_reinforcement_factor", validate_non_dynamic_script_value);
+        // TODO: int
+        vd.field_validated("construction_time", validate_non_dynamic_script_value);
+        vd.field_choice("type", &["regular", "special", "duchy_capital", "great_building"]);
 
         vd.multi_field_validated_block("asset", validate_asset);
 
@@ -94,6 +99,9 @@ impl DbKind for Building {
             if graphical_only { Tooltipped::No } else { Tooltipped::FailuresOnly },
             sc_builder,
         );
+
+        // TODO: only for Great Buildings
+        vd.field_trigger_builder("can_rebuild", Tooltipped::Yes, sc_builder);
 
         // For buildings that are upgrades, can_construct_potential is added to can_construct_showing_failures_only so it will be tooltipped
         vd.field_trigger_builder(
@@ -123,124 +131,11 @@ impl DbKind for Building {
         vd.field_item("next_building", Item::Building);
         vd.field_validated_rooted("effect_desc", Scopes::None, validate_desc);
 
-        vd.multi_field_validated_block("character_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-        vd.multi_field_validated_block("character_culture_modifier", |block, data| {
+        let is_duchy_capital = block.get_field_value("type").is_some_and(|t| t.is("duchy_capital"));
+        validate_modifiers(&mut vd, is_duchy_capital);
+        vd.field_validated_block("fallback", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::CultureParameter);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-        vd.multi_field_validated_block("character_dynasty_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("county_holder_dynasty_perk");
-            vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-        vd.multi_field_validated_block("character_faith_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::DoctrineParameter);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-
-        vd.multi_field_validated_block("province_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Province, vd);
-        });
-        vd.multi_field_validated_block("province_culture_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::CultureParameter);
-            validate_modifs(block, data, ModifKinds::Province, vd);
-        });
-        vd.multi_field_validated_block("province_faith_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::DoctrineParameter);
-            validate_modifs(block, data, ModifKinds::Province, vd);
-        });
-        vd.multi_field_validated_block("province_terrain_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_item("parameter", Item::CultureParameter);
-            vd.field_item("terrain", Item::Terrain);
-            vd.field_bool("is_coastal");
-            validate_modifs(block, data, ModifKinds::Province, vd);
-        });
-        vd.multi_field_validated_block("province_dynasty_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("county_holder_dynasty_perk");
-            vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
-            validate_modifs(block, data, ModifKinds::Province, vd);
-        });
-
-        vd.multi_field_validated_block("county_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::County, vd);
-        });
-        vd.multi_field_validated_block("county_culture_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::CultureParameter);
-            validate_modifs(block, data, ModifKinds::County, vd);
-        });
-        vd.multi_field_validated_block("county_faith_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("parameter");
-            vd.field_item("parameter", Item::DoctrineParameter);
-            validate_modifs(block, data, ModifKinds::County, vd);
-        });
-
-        if let Some(token) = block.get_field_value("type") {
-            if token.is("duchy_capital") {
-                vd.multi_field_validated_block("duchy_capital_county_modifier", |block, data| {
-                    let vd = Validator::new(block, data);
-                    validate_modifs(block, data, ModifKinds::County, vd);
-                });
-                vd.multi_field_validated_block(
-                    "duchy_capital_county_culture_modifier",
-                    |block, data| {
-                        let mut vd = Validator::new(block, data);
-                        vd.req_field("parameter");
-                        vd.field_item("parameter", Item::CultureParameter);
-                        validate_modifs(block, data, ModifKinds::County, vd);
-                    },
-                );
-                vd.multi_field_validated_block(
-                    "duchy_capital_county_faith_modifier",
-                    |block, data| {
-                        let mut vd = Validator::new(block, data);
-                        vd.req_field("parameter");
-                        vd.field_item("parameter", Item::DoctrineParameter);
-                        validate_modifs(block, data, ModifKinds::County, vd);
-                    },
-                );
-            } else {
-                vd.ban_field("duchy_capital_county_modifier", || "duchy_capital buildings");
-                vd.ban_field("duchy_capital_county_culture_modifier", || "duchy_capital buildings");
-            }
-        } else {
-            vd.ban_field("duchy_capital_county_modifier", || "duchy_capital buildings");
-            vd.ban_field("duchy_capital_county_culture_modifier", || "duchy_capital buildings");
-        }
-
-        vd.multi_field_validated_block("county_holding_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("holding");
-            vd.field_item("holding", Item::HoldingType);
-            validate_modifs(block, data, ModifKinds::County, vd);
-        });
-        vd.multi_field_validated_block("county_dynasty_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("county_holder_dynasty_perk");
-            vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
-            validate_modifs(block, data, ModifKinds::County, vd);
-        });
-        vd.multi_field_validated_block("county_holder_character_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Character, vd);
+            validate_modifiers(&mut vd, is_duchy_capital);
         });
 
         vd.multi_field_value("flag");
@@ -253,8 +148,9 @@ impl DbKind for Building {
             }
             BV::Block(block) => {
                 let mut sc = ScopeContext::new(Scopes::Province, key);
+                // TODO: docs say scope:character but script uses holder
                 sc.define_name("holder", Scopes::Character, key);
-                sc.define_name("county", Scopes::LandedTitle, key);
+                sc.define_name("holding", Scopes::HoldingType, key);
                 validate_modifiers_with_base(block, data, &mut sc);
             }
         });
@@ -265,9 +161,19 @@ impl DbKind for Building {
             vd.field_effect_builder(field, Tooltipped::No, |key| {
                 let mut sc = ScopeContext::new(Scopes::Province, key);
                 sc.define_name("character", Scopes::Character, key);
+                sc.define_name("holding", Scopes::HoldingType, key);
                 sc
             });
         }
+
+        // TODO: only for Great Buildings
+        vd.field_item("great_project_type", Item::GreatProjectType);
+
+        // undocumented
+
+        // TODO: only for Great Buildings
+        vd.field_validated_block_rooted("rebuild_cost", Scopes::Character, validate_cost);
+        vd.field_bool("is_mandala_capital");
     }
 
     fn set_property(&mut self, _key: &Token, _block: &Block, property: &str) {
@@ -285,15 +191,14 @@ fn validate_asset(block: &Block, data: &Everything) {
     let meshes = block.field_value_is("type", "pdxmesh");
     let itype = if meshes { Item::Pdxmesh } else { Item::Entity };
 
-    vd.req_field_one_of(&["name", "names"]);
-    vd.field_item("name", itype);
+    vd.multi_field_item("name", itype);
     vd.field_list_items("names", itype);
 
     vd.field_item("domicile_building", Item::DomicileBuilding);
 
     vd.field_item("illustration", Item::File);
 
-    vd.field_validated("soundeffect", |bv, data| {
+    vd.multi_field_validated("soundeffect", |bv, data| {
         match bv {
             BV::Value(token) => data.verify_exists(Item::Sound, token),
             BV::Block(block) => {
@@ -312,4 +217,158 @@ fn validate_asset(block: &Block, data: &Everything) {
     vd.field_list_items("governments", Item::GovernmentType);
 
     vd.field_item("requires_dlc_flag", Item::DlcFeature);
+}
+
+fn validate_modifiers(vd: &mut Validator, is_duchy_capital: bool) {
+    vd.multi_field_validated_block("character_modifier", |block, data| {
+        let vd = Validator::new(block, data);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+    vd.multi_field_validated_block("character_culture_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::CultureParameter);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+    vd.multi_field_validated_block("character_dynasty_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("county_holder_dynasty_perk");
+        vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+    vd.multi_field_validated_block("character_faith_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::DoctrineParameter);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+
+    vd.multi_field_validated_block("province_modifier", |block, data| {
+        let vd = Validator::new(block, data);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+    vd.multi_field_validated_block("province_culture_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::CultureParameter);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+    vd.multi_field_validated_block("province_faith_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::DoctrineParameter);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+    vd.multi_field_validated_block("province_terrain_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.field_item("parameter", Item::CultureParameter);
+        vd.field_item("terrain", Item::Terrain);
+        vd.field_bool("is_coastal");
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+    vd.multi_field_validated_block("province_dynasty_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("county_holder_dynasty_perk");
+        vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+
+    vd.multi_field_validated_block("county_modifier", |block, data| {
+        let vd = Validator::new(block, data);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+    vd.multi_field_validated_block("county_culture_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::CultureParameter);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+    vd.multi_field_validated_block("county_faith_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::DoctrineParameter);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+
+    if is_duchy_capital {
+        vd.multi_field_validated_block("duchy_capital_county_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::County, vd);
+        });
+        vd.multi_field_validated_block("duchy_capital_county_culture_modifier", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("parameter");
+            vd.field_item("parameter", Item::CultureParameter);
+            validate_modifs(block, data, ModifKinds::County, vd);
+        });
+        vd.multi_field_validated_block("duchy_capital_county_faith_modifier", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("parameter");
+            vd.field_item("parameter", Item::DoctrineParameter);
+            validate_modifs(block, data, ModifKinds::County, vd);
+        });
+
+        vd.multi_field_validated_block("duchy_capital_county_situation_modifier", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("parameter");
+            vd.field_item("parameter", Item::SituationPhaseParameter);
+            validate_modifs(block, data, ModifKinds::County, vd);
+        });
+    } else {
+        vd.ban_field("duchy_capital_county_modifier", || "duchy_capital buildings");
+        vd.ban_field("duchy_capital_county_culture_modifier", || "duchy_capital buildings");
+        vd.ban_field("duchy_capital_county_situation_modifier", || "duchy_capital buildings");
+    }
+
+    vd.multi_field_validated_block("county_situation_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::SituationPhaseParameter);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+
+    vd.multi_field_validated_block("province_situation_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::SituationPhaseParameter);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+
+    vd.multi_field_validated_block("character_situation_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::SituationPhaseParameter);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+
+    vd.multi_field_validated_block("county_holding_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("holding");
+        vd.field_item("holding", Item::HoldingType);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+    vd.multi_field_validated_block("county_dynasty_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("county_holder_dynasty_perk");
+        vd.field_item("county_holder_dynasty_perk", Item::DynastyPerk);
+        validate_modifs(block, data, ModifKinds::County, vd);
+    });
+    vd.multi_field_validated_block("county_holder_character_modifier", |block, data| {
+        let vd = Validator::new(block, data);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+
+    vd.multi_field_validated_block("province_government_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::GovernmentFlag);
+        validate_modifs(block, data, ModifKinds::Province, vd);
+    });
+
+    vd.multi_field_validated_block("character_government_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.req_field("parameter");
+        vd.field_item("parameter", Item::GovernmentFlag);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
 }

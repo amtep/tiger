@@ -25,6 +25,93 @@ impl DbKind for MapEnvironment {
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
+        vd.field_precise_numeric("cubemap_intensity");
+        vd.field_item("cubemap", Item::File);
+
+        vd.field_precise_numeric("sun_intensity");
+        vd.field_validated_block("sun_color", validate_camera_color);
+
+        vd.field_list_precise_numeric_exactly("sun_direction", 3);
+        vd.field_list_precise_numeric_exactly("water_sun_direction_offset", 3);
+        vd.field_list_precise_numeric_exactly("shadow_direction_offset", 3);
+        vd.field_precise_numeric("terrain_sunny_sun_azimuth");
+        vd.field_precise_numeric("terrain_sunny_sun_elevation");
+        vd.field_precise_numeric("terrain_overcast_sun_azimuth");
+        vd.field_precise_numeric("terrain_overcast_sun_elevation");
+        vd.field_precise_numeric("map_objects_sunny_sun_azimuth");
+        vd.field_precise_numeric("map_objects_sunny_sun_elevation");
+        vd.field_precise_numeric("map_objects_overcast_sun_azimuth");
+        vd.field_precise_numeric("map_objects_overcast_sun_elevation");
+        vd.field_precise_numeric("water_sunny_sun_azimuth");
+        vd.field_precise_numeric("water_sunny_sun_elevation");
+        vd.field_precise_numeric("water_overcast_sun_azimuth");
+        vd.field_precise_numeric("water_overcast_sun_elevation");
+
+        vd.field_precise_numeric("shadowmap_depthbias");
+        vd.field_precise_numeric("shadowmap_kernelscale");
+        vd.field_precise_numeric("shadowmap_fadefactor");
+
+        vd.field_precise_numeric("map_objects_diffuse_light_scale");
+        vd.field_precise_numeric("map_objects_diffuse_ibl_scale");
+        vd.field_precise_numeric("map_objects_specular_light_scale");
+        vd.field_precise_numeric("map_objects_specular_ibl_scale");
+
+        vd.field_validated_block("fog_color", validate_camera_color);
+        vd.field_precise_numeric("fog_begin");
+        vd.field_precise_numeric("fog_end");
+        vd.field_precise_numeric("fog_max");
+
+        vd.field_validated_block("relative_fog_color", validate_camera_color);
+        vd.field_precise_numeric("relative_fog_begin");
+        vd.field_precise_numeric("relative_fog_end");
+        vd.field_precise_numeric("relative_fog_height_begin");
+        vd.field_precise_numeric("relative_fog_height_end");
+
+        vd.field_precise_numeric("exposure");
+        vd.field_precise_numeric("contrast");
+        vd.field_precise_numeric("pivot");
+
+        vd.field_choice(
+            "tonemap_function",
+            &[
+                "TonyMcMapface",
+                "AgX",
+                "Uchimura",
+                "FilmicACES_Narkowicz",
+                "FilmicACES_Hill",
+                "Uncharted",
+                "Reinhard",
+                "ReinhardModified",
+                "Filmic",
+            ],
+        );
+        if block.get_field_value("tonemap_function").is_some_and(|v| v.is("Uncharted")) {
+            vd.field_validated_block("tonemap_curve", validate_curve);
+        } else {
+            vd.ban_field("tonemap_curve", || "tonemap_function = Uncharted");
+        }
+
+        vd.field_precise_numeric("saturation_scale");
+        vd.field_precise_numeric("value_scale");
+        vd.field_precise_numeric("hue_offset");
+
+        vd.field_list_precise_numeric_exactly("colorbalance", 3);
+        vd.field_validated_block("levels_min", validate_camera_color);
+        vd.field_validated_block("levels_max", validate_camera_color);
+
+        vd.field_precise_numeric("bloom_width");
+        vd.field_precise_numeric("bloom_scale");
+        vd.field_precise_numeric("bright_threshold");
+
+        vd.field_validated_block("depthoffield", validate_dof);
+
+        vd.field_validated_block("fogblur", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_bool("enabled");
+        });
+
+        // undocumented follow
+
         vd.field_validated_block("ambient_pos_x", validate_camera_color);
         vd.field_validated_block("ambient_neg_x", validate_camera_color);
         vd.field_validated_block("ambient_pos_y", validate_camera_color);
@@ -39,48 +126,16 @@ impl DbKind for MapEnvironment {
         vd.field_validated_block("shadow_ambient_pos_z", validate_camera_color);
         vd.field_validated_block("shadow_ambient_neg_z", validate_camera_color);
 
-        vd.field_validated_block("sun_color", validate_camera_color);
-        vd.field_precise_numeric("sun_intensity");
-        vd.field_list_precise_numeric_exactly("sun_direction", 3);
-        vd.field_list_precise_numeric_exactly("shadow_direction_offset", 3);
-        vd.field_precise_numeric("cubemap_intensity");
-        vd.field_item("cubemap", Item::File);
-        vd.field_numeric_range("cubemap_y_rotation", 0.0..360.0);
-
-        vd.field_validated_block("fog_color", validate_camera_color);
-        vd.field_precise_numeric("fog_begin");
-        vd.field_precise_numeric("fog_end");
-        vd.field_precise_numeric("fog_max");
-
-        vd.field_list_precise_numeric_exactly("water_sun_direction_offset", 3);
-
-        vd.field_precise_numeric("hue_offset");
-        vd.field_precise_numeric("saturation_scale");
-        vd.field_precise_numeric("value_scale");
-        vd.field_list_precise_numeric_exactly("colorbalance", 3);
-        vd.field_validated_block("levels_min", validate_camera_color);
-        vd.field_validated_block("levels_max", validate_camera_color);
-
-        vd.field_precise_numeric("bloom_width");
-        vd.field_precise_numeric("bloom_scale");
-        vd.field_precise_numeric("bright_threshold");
+        vd.advice_field("cubemap_y_rotation", "removed in 1.18");
 
         vd.field_precise_numeric("hdr_min_adjustment");
         vd.field_precise_numeric("hdr_max_adjustment");
         vd.field_precise_numeric("hdr_adjustment_speed");
+
         vd.field_precise_numeric("tonemap_middlegrey");
         vd.field_precise_numeric("tonemap_whiteluminance");
 
         vd.field_value("exposure_function"); // TODO
-        vd.field_precise_numeric("exposure");
-
-        vd.field_choice(
-            "tonemap_function",
-            &["Uncharted", "Reinhard", "ReinhardModified", "Filmic", ""],
-        );
-        vd.field_validated_block("tonemap_curve", validate_curve);
-
-        vd.field_validated_block("depthoffield", validate_dof);
     }
 }
 

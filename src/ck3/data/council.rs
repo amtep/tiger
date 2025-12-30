@@ -38,11 +38,16 @@ impl DbKind for CouncilPosition {
         data.verify_exists(Item::Localization, key);
         let loca = format!("{key}_possessive");
         data.verify_exists_implied(Item::Localization, &loca, key);
-        vd.field_validated_sc("name", &mut sc, validate_desc);
+
+        let mut sc_name = ScopeContext::new(Scopes::Character, key);
+        sc_name.define_name("councillor", Scopes::Character, key);
+        vd.field_validated_sc("name", &mut sc_name, validate_desc);
         vd.field_validated_sc("tooltip", &mut sc, validate_desc);
 
         vd.field_item("skill", Item::Skill);
         vd.field_validated_sc("auto_fill", &mut sc, validate_yes_no_trigger);
+        vd.field_bool("fill_from_pool");
+        vd.field_bool("is_clergy_position");
         vd.field_validated_sc("inherit", &mut sc, validate_yes_no_trigger);
         vd.field_validated_sc("can_fire", &mut sc, validate_yes_no_trigger);
         vd.field_validated_sc("can_reassign", &mut sc, validate_yes_no_trigger);
@@ -77,14 +82,29 @@ impl DbKind for CouncilPosition {
             },
         );
 
-        vd.field_trigger("valid_position", Tooltipped::No, &mut sc);
+        vd.field_trigger_rooted("valid_position", Tooltipped::No, Scopes::Character);
         vd.field_trigger("valid_character", Tooltipped::No, &mut sc);
 
-        vd.field_effect("on_get_position", Tooltipped::No, &mut sc);
-        vd.field_effect("on_lose_position", Tooltipped::No, &mut sc);
-        vd.field_effect("on_fired_from_position", Tooltipped::No, &mut sc);
+        vd.field_effect_builder("on_get_position", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("councillor_liege", Scopes::Character, key);
+            // TODO: figure out scope type here
+            sc.define_name("swapped_position", Scopes::all(), key);
+            sc
+        });
+        vd.field_effect_builder("on_lose_position", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("councillor_liege", Scopes::Character, key);
+            sc
+        });
+        vd.field_effect_builder("on_fired_from_position", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("councillor_liege", Scopes::Character, key);
+            sc.define_name("new_councillor", Scopes::Character, key);
+            sc
+        });
 
-        vd.advice_field("use_for_scheme_power", "replaced with use_for_scheme_phase_duration");
+        vd.replaced_field("use_for_scheme_power", "use_for_scheme_phase_duration");
         vd.field_bool("use_for_scheme_phase_duration");
         vd.field_bool("use_for_scheme_resistance");
 
@@ -97,7 +117,6 @@ impl DbKind for CouncilPosition {
 
         // undocumented
 
-        vd.field_bool("fill_from_pool");
         vd.field_script_value("councillor_cooldown_days", &mut sc);
         vd.field_item("pool_character_config", Item::PoolSelector);
     }
@@ -272,6 +291,9 @@ impl DbKind for CouncilTask {
         }
         vd.field_item("custom_other_loc", Item::Localization);
         vd.field_validated_sc("effect_desc", &mut sc, validate_desc);
+        // TODO: the cloned task must be filled out (you cannot build clone chains where A clones B and B clones C)
+        // TODO: you cannot redefine anything else than the court position, and that field MUST be redefined.
+        vd.field_item("clone", Item::CouncilTask);
 
         // undocumented
         vd.field_script_value("ai_will_do", &mut sc);

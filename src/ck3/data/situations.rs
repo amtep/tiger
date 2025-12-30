@@ -24,6 +24,9 @@ pub struct SituationCatalyst {}
 #[derive(Clone, Debug)]
 pub struct SituationHistory {}
 
+#[derive(Clone, Debug)]
+pub struct SituationGroupType {}
+
 inventory::submit! {
     ItemLoader::Normal(GameFlags::Ck3, Item::Situation, Situation::add)
 }
@@ -34,6 +37,10 @@ inventory::submit! {
 
 inventory::submit! {
     ItemLoader::Full(GameFlags::Ck3, Item::SituationHistory, PdxEncoding::Utf8Bom, ".txt", LoadAsFile::Yes, Recursive::No,  SituationHistory::add)
+}
+
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Ck3, Item::SituationGroupType, SituationGroupType::add)
 }
 
 impl Situation {
@@ -51,6 +58,12 @@ impl SituationCatalyst {
 impl SituationHistory {
     pub fn add(db: &mut Db, file: Token, block: Block) {
         db.add(Item::SituationHistory, file, block, Box::new(Self {}));
+    }
+}
+
+impl SituationGroupType {
+    pub fn add(db: &mut Db, file: Token, block: Block) {
+        db.add(Item::SituationGroupType, file, block, Box::new(Self {}));
     }
 }
 
@@ -78,7 +91,10 @@ impl DbKind for Situation {
                         for (_, block) in block.iter_definitions() {
                             if let Some(block) = block.get_field_block("parameters") {
                                 for (key, _) in block.iter_assignments() {
-                                    db.add_flag(Item::SituationPhaseParameter, key.clone());
+                                    db.add_flag(
+                                        Item::SituationParticipantGroupParameter,
+                                        key.clone(),
+                                    );
                                 }
                             }
                         }
@@ -101,7 +117,10 @@ impl DbKind for Situation {
         let loca = format!("situation_type_{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        vd.field_choice("window", &["situation", "the_great_steppe"]);
+        vd.field_choice(
+            "window",
+            &["situation", "the_great_steppe", "silk_road", "dynastic_cycle"],
+        );
         if let Some(token) = vd.field_value("gui_window_name") {
             let pathname = format!("gui/{token}.gui");
             data.verify_exists_implied(Item::File, &pathname, token);
@@ -110,8 +129,24 @@ impl DbKind for Situation {
             let pathname = format!("gui/{token}.gui");
             data.verify_exists_implied(Item::File, &pathname, token);
         }
-        vd.field_choice("map_mode", &["participant_groups", "sub_regions"]);
 
+        vd.field_bool("gui_tooltip_group_focused");
+        vd.field_item("illustration", Item::File);
+        vd.multi_field_validated_block("icon", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Situation);
+            vd.field_item("reference", Item::File);
+        });
+        vd.field_item("situation_group_type", Item::SituationGroupType);
+        vd.field_integer("sort_order");
+
+        vd.field_validated_value("map_mode", |_, mut vvd| {
+            vvd.maybe_is("participant_groups");
+            vvd.maybe_is("sub_regions");
+            vvd.item(Item::MapMode);
+        });
+
+        // TODO: You are restricted to max 255 sub-regions
         vd.req_field("sub_regions");
         vd.field_validated_block("sub_regions", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -126,6 +161,7 @@ impl DbKind for Situation {
             }
         });
 
+        // TODO: You are restricted to max 255 participant groups
         vd.req_field("participant_groups");
         vd.field_validated_block("participant_groups", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -162,9 +198,11 @@ impl DbKind for Situation {
         vd.field_effect_rooted("on_leave", Tooltipped::Yes, Scopes::Situation);
 
         vd.field_bool("is_unique");
+        vd.field_bool("keep_full_history");
         vd.field_bool("migration");
         // TODO: check that the start phase is part of this situation's phases
         vd.field_item("start_phase", Item::SituationPhase);
+        vd.field_bool("use_situation_phase_flat_icons");
     }
 }
 
@@ -182,6 +220,15 @@ impl DbKind for SituationHistory {
             let mut vd = Validator::new(block, data);
             vd.field_effect_rooted("effect", Tooltipped::No, Scopes::None);
         });
+    }
+}
+
+impl DbKind for SituationGroupType {
+    fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+
+        vd.field_integer("sort_order");
+        vd.field_list("gui_tags");
     }
 }
 
@@ -207,10 +254,12 @@ fn validate_participant_group(key: &Token, block: &Block, data: &Everything, sit
 
     vd.field_item("icon", Item::File);
     vd.field_bool("auto_add_rulers");
+    vd.field_bool("auto_add_landless_rulers");
     vd.field_validated("map_color", validate_possibly_named_color);
     vd.field_bool("require_capital_in_sub_region");
     vd.field_bool("require_domain_in_sub_region");
     vd.field_bool("require_realm_in_sub_region");
+    vd.field_bool("require_domicile_in_sub_region");
 
     vd.field_trigger_builder("is_character_valid", Tooltipped::Yes, sc_builder);
     vd.field_effect_builder("on_join", Tooltipped::Yes, sc_with_group);
@@ -308,6 +357,10 @@ fn validate_sub_region(key: &Token, block: &Block, data: &Everything, situation:
     vd.field_item("icon", Item::File);
     vd.field_validated("map_color", validate_possibly_named_color);
     vd.field_list_items("geographical_regions", Item::Region);
+
+    // undocumented
+
+    vd.field_item("capital_province", Item::Province);
 }
 
 fn validate_modifier_set(block: &Block, data: &Everything) {

@@ -181,6 +181,23 @@ impl DbKind for TutorialLessonStep {
             vd.ban_field("force_pause_game", || "gamestate tutorial chains");
             vd.ban_field("effect", || "gamestate tutorial chains");
         }
+
+        #[cfg(feature = "ck3")]
+        vd.field_validated_block("highlight_widget_with_index", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_value_fields(|_, value| {
+                // TODO: validate key against widget names
+                let mut vvd = ValueValidator::new(value, data);
+                vvd.integer();
+            });
+        });
+        #[cfg(feature = "ck3")]
+        vd.field_validated_block("highlight_child_widget_of", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_value_fields(|_, _| {
+                // TODO: validate key and value against widget names
+            });
+        });
     }
 }
 

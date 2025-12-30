@@ -50,8 +50,11 @@ impl DbKind for LineType {
         vd.multi_field_validated_block("layer", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_item("diffuse", Item::File);
+            vd.field_item("normal", Item::File);
             vd.field_item("mask", Item::File);
+            vd.field_item("properties", Item::File);
             vd.field_value("shader"); // TODO what are the options here
+            vd.field_value("shadow_shader"); // TODO what are the options here
             vd.field_integer("priority");
             vd.field_validated_block("tintcolor", validate_color);
             vd.field_validated("width", validate_zoom_levels);

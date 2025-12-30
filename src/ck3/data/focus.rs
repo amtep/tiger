@@ -40,7 +40,7 @@ impl DbKind for Focus {
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
-        vd.advice_field("education", "replaced with `type`");
+        vd.replaced_field("education", "type");
         vd.field_choice("type", &["education", "lifestyle"]);
 
         let education = block.get_field_value("type").is_some_and(|token| token.is("education"));

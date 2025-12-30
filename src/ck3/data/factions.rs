@@ -33,6 +33,7 @@ impl DbKind for Faction {
         }
 
         // TODO: docs say description but vanilla uses desc. Verify.
+        vd.field_validated_rooted("desc", Scopes::Faction, validate_desc);
         if !vd.field_validated_rooted("description", Scopes::Faction, validate_desc) {
             let loca = format!("{key}_desc");
             data.verify_exists_implied(Item::Localization, &loca, key);
@@ -41,11 +42,21 @@ impl DbKind for Faction {
         vd.req_field("short_effect_desc");
         vd.field_validated_rooted("short_effect_desc", Scopes::Faction, validate_desc);
 
+        vd.field_bool("claimant");
+        vd.field_item("character_interaction", Item::CharacterInteraction);
+
+        vd.field_effect_rooted("on_creation", Tooltipped::No, Scopes::Faction);
+        vd.field_effect_rooted("on_destroy", Tooltipped::No, Scopes::Faction);
+
         vd.field_effect_rooted("demand", Tooltipped::No, Scopes::Faction);
         vd.field_effect_rooted("update_effect", Tooltipped::No, Scopes::Faction);
         // docs say "on_declaration"
         vd.field_effect_rooted("on_war_start", Tooltipped::No, Scopes::Faction);
-        vd.field_effect_rooted("character_leaves", Tooltipped::No, Scopes::Faction);
+        vd.field_effect_builder("character_leaves", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Faction, key);
+            sc.define_name("faction_member", Scopes::Character, key);
+            sc
+        });
         vd.field_effect_builder("leader_leaves", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Faction, key);
             sc.define_name("faction_member", Scopes::Character, key);
@@ -59,9 +70,10 @@ impl DbKind for Faction {
         vd.field_validated_key_block("ai_create_score", |key, block, data| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("target", Scopes::Character, key);
-            // TODO: check if it's a claimant faction before setting claimant and title
-            sc.define_name("claimant", Scopes::Character, key);
-            sc.define_name("title", Scopes::LandedTitle, key);
+            if block.get_field_bool("claimant") == Some(true) {
+                sc.define_name("claimant", Scopes::Character, key);
+                sc.define_name("title", Scopes::LandedTitle, key);
+            }
             validate_modifiers_with_base(block, data, &mut sc);
         });
         vd.field_validated_key_block("county_join_score", |key, block, data| {
@@ -90,6 +102,7 @@ impl DbKind for Faction {
             BV::Block(b) => validate_modifiers_with_base(b, data, sc),
         });
         vd.field_trigger_rooted("is_valid", Tooltipped::No, Scopes::Faction);
+        vd.field_trigger_rooted("is_shown", Tooltipped::No, Scopes::Character);
         vd.field_trigger_builder("is_character_valid", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("faction", Scopes::Faction, key);
@@ -150,9 +163,5 @@ impl DbKind for Faction {
         vd.field_bool("county_can_switch_to_other_faction");
         vd.field_integer("sort_order");
         vd.field_bool("show_special_title");
-
-        // undocumented fields follow
-        vd.field_effect_rooted("on_creation", Tooltipped::No, Scopes::Faction);
-        vd.field_effect_rooted("on_destroy", Tooltipped::No, Scopes::Faction);
     }
 }

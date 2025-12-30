@@ -1,15 +1,14 @@
 use crate::block::{BV, Block};
 use crate::ck3::data::scripted_animations::validate_scripted_animation;
-use crate::ck3::validate::{
-    validate_ai_targets, validate_cost_with_renown, validate_quick_trigger,
-};
+use crate::ck3::tables::misc::PROVINCE_FILTERS;
+use crate::ck3::validate::{validate_ai_targets, validate_cost, validate_quick_trigger};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::report::{ErrorKey, warn};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -106,6 +105,7 @@ impl DbKind for ActivityType {
         }
 
         vd.field_integer("sort_order");
+        vd.field_bool("notify_player_can_join_activity");
         vd.field_item("activity_group_type", Item::ActivityGroupType);
 
         // undocumented
@@ -151,6 +151,9 @@ impl DbKind for ActivityType {
         }
         special_guests_sc.define_list("special_guests", Scopes::Character, key);
 
+        // TODO: figure out root type here
+        let mut max_guests_sc = ScopeContext::new(Scopes::all(), key);
+
         if let Some(block) = block.get_field_block("special_guests") {
             for (key, _) in block.iter_definitions() {
                 join_chance_sc.define_name(key.as_str(), Scopes::Character, key);
@@ -161,6 +164,7 @@ impl DbKind for ActivityType {
             for (_, block) in block.iter_definitions() {
                 for (key, _) in block.iter_definitions() {
                     join_chance_sc.define_name(key.as_str(), Scopes::Flag, key);
+                    max_guests_sc.define_name(key.as_str(), Scopes::Flag, key);
                 }
             }
         }
@@ -190,27 +194,57 @@ impl DbKind for ActivityType {
 
         vd.field_script_value_no_breakdown("ai_will_do", &mut sc);
         vd.field_integer("ai_check_interval");
+        vd.field_validated_key_block("ai_check_interval_by_tier", |key, b, data| {
+            let mut vd = Validator::new(b, data);
+            for tier in &["barony", "county", "duchy", "kingdom", "empire", "hegemony"] {
+                vd.req_field(tier);
+                vd.field_integer(tier);
+            }
+            if block.has_key("ai_check_interval") {
+                let msg = "must not have both `ai_check_interval` and `ai_check_interval_by_tier`";
+                warn(ErrorKey::Validation).msg(msg).loc(key).push();
+            }
+        });
         vd.field_script_value_no_breakdown("ai_select_num_provinces", &mut sc);
 
         vd.field_trigger_builder("is_valid", Tooltipped::No, ac_host_activity_sc);
         vd.field_effect_builder("on_invalidated", Tooltipped::No, ac_host_activity_sc);
         vd.field_effect_builder("on_host_death", Tooltipped::No, ac_host_activity_sc);
 
-        let filters = &[
-            "capital",
-            "domain",
-            "realm",
-            "top_realm",
-            "holy_sites",
-            "holy_sites_domain",
-            "holy_sites_realm",
-            "domicile",
-            "domicile_domain",
-            "domicile_realm",
-            "all",
-        ];
-        vd.field_choice("province_filter", filters);
-        vd.field_choice("ai_province_filter", filters);
+        vd.field_choice("province_filter", PROVINCE_FILTERS);
+        vd.field_choice("ai_province_filter", PROVINCE_FILTERS);
+        let province_filter = block.get_field_value("province_filter");
+        let ai_province_filter = block.get_field_value("ai_province_filter");
+        if province_filter.is_some_and(|t| t.is("landed_title"))
+            || ai_province_filter.is_some_and(|t| t.is("landed_title"))
+        {
+            if let Some(province_filter) = province_filter {
+                if let Some(ai_province_filter) = ai_province_filter {
+                    if province_filter != ai_province_filter {
+                        let msg = "for `landed_title`, `province_filter` and `ai_province_filter` must be the same";
+                        err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
+                    }
+                }
+            }
+            vd.field_item("province_filter_target", Item::Title);
+        } else if province_filter.is_some_and(|t| t.is("geographical_region"))
+            || ai_province_filter.is_some_and(|t| t.is("geographical_region"))
+        {
+            if let Some(province_filter) = province_filter {
+                if let Some(ai_province_filter) = ai_province_filter {
+                    if province_filter != ai_province_filter {
+                        let msg = "for `geographical_region`, `province_filter` and `ai_province_filter` must be the same";
+                        err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
+                    }
+                }
+            }
+            vd.field_item("province_filter_target", Item::Region);
+        } else {
+            vd.ban_field(
+                "province_filter_target",
+                || "`landed_title` or `geographical_region` filters",
+            );
+        }
 
         let mut sc = ScopeContext::new(Scopes::Province, key);
         sc.define_name("host", Scopes::Character, key);
@@ -261,13 +295,15 @@ impl DbKind for ActivityType {
             }
             sc.define_name("province", Scopes::Province, key);
             sc.define_list("provinces", Scopes::Province, key);
-            validate_cost_with_renown(block, data, &mut sc);
+            validate_cost(block, data, &mut sc);
         });
 
         let mut sc = ScopeContext::new(Scopes::Character, key);
-        vd.field_validated_block_sc("ui_predicted_cost", &mut sc, validate_cost_with_renown);
+        vd.field_validated_block_sc("ui_predicted_cost", &mut sc, validate_cost);
 
-        vd.field_integer("max_guests");
+        vd.field_script_value("max_guests", &mut max_guests_sc);
+        // TODO: check if this must be an integer
+        vd.field_script_value("reserved_guest_slots", &mut max_guests_sc);
         vd.field_bool("allow_zero_guest_invites");
 
         vd.field_validated_block("guest_invite_rules", |block, data| {
@@ -539,7 +575,7 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, has_special_opt
     if has_special_option {
         sc.define_name("special_option", Scopes::Flag, key);
     }
-    vd.field_validated_block_sc("cost", &mut sc, validate_cost_with_renown);
+    vd.field_validated_block_sc("cost", &mut sc, validate_cost);
 }
 
 fn validate_special_guest(
@@ -649,6 +685,8 @@ impl DbKind for GuestInviteRule {
 
         vd.field_effect_builder("effect", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
+            // TODO: scope:special_option
+            // TODO: option category flags
             sc.define_list("characters", Scopes::Character, key);
             sc
         });
@@ -802,10 +840,12 @@ fn validate_option(
         }
     });
 
+    // TODO: check that these intents and phases belong to this activity
     vd.field_list_items("blocked_intents", Item::ActivityIntent);
+    vd.field_list_items("blocked_phases", Item::ActivityPhase);
 
     let mut sc = ScopeContext::new(Scopes::Character, key);
-    vd.field_validated_block_sc("cost", &mut sc, validate_cost_with_renown);
+    vd.field_validated_block_sc("cost", &mut sc, validate_cost);
 
     vd.field_validated_key_block("travel_entourage_selection", |key, block, data| {
         validate_tes(key, block, data, has_special_option);

@@ -85,6 +85,8 @@ impl GuiCategories {
             WidgetProperty::close_sound => GuiCategories::Unknown,
             WidgetProperty::coat_of_arms => GuiCategories::Unknown,
             WidgetProperty::coat_of_arms_mask => GuiCategories::Unknown,
+            WidgetProperty::coat_of_arms_offset => GuiCategories::Unknown,
+            WidgetProperty::coat_of_arms_scale => GuiCategories::Unknown,
             WidgetProperty::coat_of_arms_slot => GuiCategories::Widget,
             WidgetProperty::color => GuiCategories::Unknown,
             WidgetProperty::colorpicker_reticule_icon => GuiCategories::Unknown,

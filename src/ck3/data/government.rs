@@ -29,14 +29,15 @@ impl Government {
 
 impl DbKind for Government {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
-        for token in block.get_field_values("flag") {
-            db.add_flag(Item::GovernmentFlag, token.clone());
+        if let Some(vec) = block.get_field_list("flags") {
+            for token in vec {
+                db.add_flag(Item::GovernmentFlag, token.clone());
+            }
         }
     }
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
-        let mut sc = ScopeContext::new(Scopes::Character, key);
 
         // let modif = format!("{key}_levy_contribution_add");
         // data.verify_exists_implied(Item::ModifierFormat, &modif, key);
@@ -77,11 +78,28 @@ impl DbKind for Government {
             vd.field_bool(field);
         }
 
-        vd.field_bool("always_use_patronym");
-        vd.field_bool("affected_by_development");
+        vd.field_choice(
+            "mechanic_type",
+            &[
+                "feudal",
+                "mercenary",
+                "holy_order",
+                "clan",
+                "theocracy",
+                "administrative",
+                "landless_adventurer",
+                "herder",
+                "nomad",
+                "mandala",
+            ],
+        );
+        // TODO: "All government types listed above should have one default"
+        vd.field_bool("is_mechanic_type_default");
+
         vd.field_integer("fallback");
 
-        vd.field_trigger("can_get_government", Tooltipped::No, &mut sc);
+        vd.field_trigger_rooted("can_get_government", Tooltipped::No, Scopes::Character);
+        vd.field_trigger_rooted("can_move_realm_capital", Tooltipped::Yes, Scopes::Character);
 
         vd.field_item("primary_holding", Item::HoldingType);
         vd.field_list_items("valid_holdings", Item::HoldingType);
@@ -108,6 +126,24 @@ impl DbKind for Government {
             }
         });
 
+        vd.field_choice("royal_court", &["none", "any", "top_liege"]);
+        vd.field_list_items("blocked_subject_courts", Item::GovernmentType);
+        vd.field_choice("main_administrative_tier", &["county", "duchy", "kingdom"]);
+        vd.field_choice("min_appointment_tier", &["county", "duchy", "kingdom"]);
+        vd.field_choice("minimum_provincial_maa_tier", &["county", "duchy", "kingdom"]);
+        vd.advice_field(
+            "title_maa_setup",
+            "docs say `title_maa_setup` but vanilla uses `administrative_title_maa_setup`",
+        );
+        vd.field_choice(
+            "administrative_title_maa_setup",
+            &[
+                "main_administrative_tier_and_top_liege",
+                "vassals_and_top_liege",
+                "top_vassals_and_top_liege",
+            ],
+        );
+
         vd.field_integer("max_dread");
 
         vd.advice_field(
@@ -117,17 +153,7 @@ impl DbKind for Government {
         vd.field_item("vassal_contract_group", Item::SubjectContractGroup);
         vd.field_item("house_unity", Item::HouseUnity);
         vd.field_item("domicile_type", Item::DomicileType);
-        vd.field_validated_block("ai", validate_ai);
-        vd.multi_field_validated_block("character_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-        vd.field_validated_block("color", validate_color);
-        vd.multi_field_value("flag");
 
-        // undocumented
-
-        vd.field_item("tax_slot_type", Item::TaxSlotType);
         vd.field_script_value_builder("opinion_of_liege", |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("vassal", Scopes::Character, key);
@@ -140,6 +166,74 @@ impl DbKind for Government {
             sc.define_name("liege", Scopes::Character, key);
             validate_desc(bv, data, &mut sc);
         });
+        vd.field_script_value_builder("opinion_of_suzerain", |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("suzerain", Scopes::Character, key);
+            sc.define_name("tributary", Scopes::Character, key);
+            sc
+        });
+        vd.field_validated_key("opinion_of_suzerain_desc", |key, bv, data| {
+            let mut sc = ScopeContext::new(Scopes::None, key);
+            sc.define_name("suzerain", Scopes::Character, key);
+            sc.define_name("tributary", Scopes::Character, key);
+            validate_desc(bv, data, &mut sc);
+        });
+        vd.field_script_value_builder("opinion_of_overlord", |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("overlord", Scopes::Character, key);
+            sc.define_name("subject", Scopes::Character, key);
+            sc
+        });
+        vd.field_validated_key("opinion_of_overlord_desc", |key, bv, data| {
+            let mut sc = ScopeContext::new(Scopes::None, key);
+            sc.define_name("overlord", Scopes::Character, key);
+            sc.define_name("subject", Scopes::Character, key);
+            validate_desc(bv, data, &mut sc);
+        });
+
+        vd.field_validated_block("currency_levels_cap", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_integer("piety");
+            vd.field_integer("prestige");
+            vd.field_integer("influence");
+            vd.field_integer("merit");
+        });
+
+        vd.field_list_items("compatible_government_type_succession", Item::GovernmentType);
+
+        vd.field_validated_block("ai", validate_ai);
+        vd.multi_field_validated_block("character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.multi_field_validated_block("top_liege_character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.field_validated_block("color", validate_color);
+
+        vd.field_script_value_no_breakdown_rooted(
+            "ai_ruler_desired_kingdom_titles",
+            Scopes::Character,
+        );
+        vd.field_script_value_no_breakdown_rooted(
+            "ai_ruler_desired_empire_titles",
+            Scopes::Character,
+        );
+        vd.field_trigger_rooted(
+            "ai_can_reassign_council_positions",
+            Tooltipped::No,
+            Scopes::Character,
+        );
+
+        vd.replaced_field("flag", "`flags` list");
+        vd.field_list("flags");
+
+        // undocumented
+
+        vd.field_item("tax_slot_type", Item::TaxSlotType);
+        vd.field_list_numeric_exactly("realm_mask_offset", 2);
+        vd.field_list_numeric_exactly("realm_mask_scale", 2);
     }
 }
 
@@ -152,6 +246,7 @@ fn validate_ai(block: &Block, data: &Everything) {
     vd.field_bool("use_scripted_guis");
     vd.field_bool("use_legends");
     vd.field_bool("perform_religious_reformation");
+    vd.field_bool("use_great_projects");
     // TODO: test whether this was removed in 1.13
     vd.field_bool("imprison");
     // TODO: test whether this was removed in 1.13

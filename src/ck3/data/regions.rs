@@ -52,6 +52,7 @@ impl DbKind for Region {
         vd.field_bool("generate_modifiers");
         vd.field_bool("graphical");
         vd.field_validated_block("color", validate_color);
+        vd.field_bool("should_remember_counties_order");
         vd.field_validated_list("counties", |token, data| {
             if !token.starts_with("c_") {
                 let msg = "only counties can be listed in the counties field";
@@ -62,6 +63,13 @@ impl DbKind for Region {
         vd.field_validated_list("duchies", |token, data| {
             if !token.starts_with("d_") {
                 let msg = "only duchies can be listed in the duchies field";
+                err(ErrorKey::Validation).msg(msg).loc(token).push();
+            }
+            data.verify_exists(Item::Title, token);
+        });
+        vd.field_validated_list("kingdoms", |token, data| {
+            if !token.starts_with("k_") {
+                let msg = "only kingdoms can be listed in the kingdoms field";
                 err(ErrorKey::Validation).msg(msg).loc(token).push();
             }
             data.verify_exists(Item::Title, token);

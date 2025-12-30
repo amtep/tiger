@@ -58,10 +58,23 @@ impl DbKind for Decision {
         vd.field_item("extra_picture", Item::File);
         vd.advice_field("major", "Replaced with decision_group_type");
         vd.field_item("decision_group_type", Item::DecisionGroup);
+        vd.field_script_value_rooted("progress", Scopes::Character);
+        vd.field_validated_block("advice", validate_advice);
         vd.field_integer("sort_order");
         vd.field_bool("is_invisible");
         vd.field_bool("ai_goal");
         vd.field_integer("ai_check_interval");
+        vd.field_validated_key_block("ai_check_interval_by_tier", |key, b, data| {
+            let mut vd = Validator::new(b, data);
+            for tier in &["barony", "county", "duchy", "kingdom", "empire", "hegemony"] {
+                vd.req_field(tier);
+                vd.field_integer(tier);
+            }
+            if block.has_key("ai_check_interval") {
+                let msg = "must not have both `ai_check_interval` and `ai_check_interval_by_tier`";
+                warn(ErrorKey::Validation).msg(msg).loc(key).push();
+            }
+        });
         if block.get_field_bool("ai_goal").unwrap_or(false) {
             vd.advice_field("ai_check_interval", "not needed if ai_goal = yes");
         }
@@ -242,4 +255,20 @@ impl DbKind for DecisionGroup {
         vd.field_list("gui_tags");
         vd.field_bool("important_decision_group");
     }
+}
+
+fn validate_advice(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.field_item("region", Item::Region);
+    vd.field_validated_key_block("per_title_hint", |key, block, data| {
+        let mut sc = ScopeContext::new(Scopes::Character, key);
+        sc.define_name("title", Scopes::LandedTitle, key);
+        sc.define_name("doing", Scopes::Bool, key);
+        let mut vd = Validator::new(block, data);
+        vd.field_trigger("is_valid", Tooltipped::No, &mut sc);
+        vd.field_trigger("is_doing", Tooltipped::No, &mut sc);
+        vd.field_script_value_no_breakdown("relevance", &mut sc);
+        vd.field_validated_sc("summary", &mut sc, validate_desc);
+        vd.field_validated_sc("description", &mut sc, validate_desc);
+    });
 }

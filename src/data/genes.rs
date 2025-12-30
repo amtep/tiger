@@ -629,12 +629,17 @@ fn validate_gene_setting(block: &Block, data: &Everything) {
     vd.req_field("attribute");
     vd.req_field_one_of(&["value", "curve"]);
     vd.field_item("attribute", Item::GeneAttribute);
-    vd.field_validated_block("value", |block, data| {
-        let mut vd = Validator::new(block, data);
-        vd.req_field("min");
-        vd.req_field("max");
-        vd.field_numeric("min");
-        vd.field_numeric("max");
+    vd.field_validated("value", |bv, data| match bv {
+        BV::Value(value) => {
+            value.expect_integer();
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("min");
+            vd.req_field("max");
+            vd.field_numeric("min");
+            vd.field_numeric("max");
+        }
     });
     vd.field_validated_block("curve", validate_curve);
     #[cfg(feature = "imperator")]

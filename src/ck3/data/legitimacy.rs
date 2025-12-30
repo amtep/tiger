@@ -3,6 +3,7 @@ use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
+use crate::desc::validate_desc;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
@@ -53,6 +54,8 @@ impl DbKind for LegitimacyType {
         vd.multi_field_validated_block("level", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_script_value_rooted("threshold", Scopes::Character);
+            vd.field_effect_rooted("on_level_entered", Tooltipped::No, Scopes::Character);
+            vd.field_validated_rooted("on_level_entered_desc", Scopes::Character, validate_desc);
             vd.field_validated_block("modifier", |block, data| {
                 let vd = Validator::new(block, data);
                 validate_modifs(block, data, ModifKinds::Character, vd);

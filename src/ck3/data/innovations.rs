@@ -7,11 +7,11 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{ErrorKey, err};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validator::Validator;
+use crate::validator::{Validator, ValueValidator};
 
 #[derive(Clone, Debug)]
 pub struct Innovation {}
@@ -31,6 +31,12 @@ impl DbKind for Innovation {
         for token in block.get_field_values("flag") {
             db.add_flag(Item::InnovationFlag, token.clone());
         }
+        if let Some(block) = block.get_field_block("parameters") {
+            for (key, _) in block.iter_assignments() {
+                db.add_flag(Item::InnovationParameter, key.clone());
+                db.add_flag(Item::CultureParameter, key.clone());
+            }
+        }
     }
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
@@ -46,6 +52,25 @@ impl DbKind for Innovation {
             &["culture_group_military", "culture_group_civic", "culture_group_regional"],
         );
         vd.field_item("icon", Item::File);
+        vd.field_item("skill", Item::Skill);
+
+        vd.field_script_value_no_breakdown_rooted("ai_weight_for_spread", Scopes::Character);
+        vd.field_script_value_no_breakdown_builder("ai_weight_for_fascination", |key| {
+            let mut sc = ScopeContext::new(Scopes::Culture, key);
+            sc.define_name("character", Scopes::Character, key);
+            sc
+        });
+
+        vd.multi_field_validated_key_block("asset", |key, block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Culture);
+            if !block.has_key("name") && !block.has_key("icon") {
+                let msg = "asset must have `name` or `icon";
+                warn(ErrorKey::FieldMissing).msg(msg).loc(key).push();
+            }
+            vd.field_item("name", Item::Localization);
+            vd.field_item("icon", Item::File);
+        });
 
         vd.field_item("region", Item::Region);
         vd.field_trigger("potential", Tooltipped::No, &mut sc);
@@ -70,6 +95,16 @@ impl DbKind for Innovation {
             validate_modifs(block, data, ModifKinds::Province, vd);
         });
 
+        vd.field_validated_block("parameters", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_value_fields(|key, value| {
+                // only bool parameters supported here
+                ValueValidator::new(value, data).bool();
+                // culture parameter loca are lowercased, verified in 1.11
+                let loca = format!("culture_parameter_{}", key.as_str().to_ascii_lowercase());
+                data.verify_exists_implied(Item::Localization, &loca, key);
+            });
+        });
         vd.multi_field_value("flag");
 
         vd.multi_field_item("unlock_building", Item::Building);

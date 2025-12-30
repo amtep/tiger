@@ -9,7 +9,7 @@ use crate::context::{Reason, ScopeContext};
 #[cfg(feature = "jomini")]
 use crate::data::genes::Gene;
 #[cfg(feature = "jomini")]
-use crate::data::trigger_localization::TriggerLocalization;
+use crate::data::trigger_localization::validate_trigger_localization;
 use crate::date::Date;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
@@ -219,12 +219,7 @@ pub fn validate_trigger_internal(
             if caller == "custom_tooltip" {
                 vd.field_item("text", Item::Localization);
             } else if let Some(token) = vd.field_value("text") {
-                data.verify_exists_max_sev(Item::TriggerLocalization, token, max_sev);
-                if let Some((key, block)) =
-                    data.get_key_block(Item::TriggerLocalization, token.as_str())
-                {
-                    TriggerLocalization::validate_use(key, block, data, token, tooltipped, negated);
-                }
+                validate_trigger_localization(token, data, tooltipped, negated);
             }
             vd.field_target_ok_this("subject", sc, Scopes::non_primitive());
         } else {
@@ -468,17 +463,12 @@ pub fn validate_trigger_key_bv(
                     if is_event_id {
                         arg = key.split_once(':').unwrap().1;
                     }
-                    // known prefix
-                    if let Some(entry) = scope_prefix(&prefix) {
-                        validate_argument_scope(part_flags, entry, &prefix, &arg, data, sc);
-                        if is_event_id {
-                            break; // force last part
-                        }
-                    } else {
-                        let msg = format!("unknown prefix `{prefix}:`");
-                        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
                         sc.close();
                         return side_effects;
+                    }
+                    if is_event_id {
+                        break; // force last part
                     }
                 } else if part_lc == "root" {
                     sc.replace_root();
@@ -861,6 +851,14 @@ fn match_trigger_bv(
         #[cfg(feature = "ck3")]
         Trigger::ItemOrBlock(i, fields) => match bv {
             BV::Value(token) => data.verify_exists_max_sev(*i, token, max_sev),
+            BV::Block(block) => {
+                side_effects |=
+                    match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
+            }
+        },
+        #[cfg(feature = "ck3")]
+        Trigger::IdentifierOrBlock(kind, fields) => match bv {
+            BV::Value(token) => validate_identifier(token, kind, Severity::Error),
             BV::Block(block) => {
                 side_effects |=
                     match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
@@ -1262,17 +1260,12 @@ pub fn validate_target_ok_this(
                     if is_event_id {
                         arg = token.split_once(':').unwrap().1;
                     }
-                    // known prefix
-                    if let Some(entry) = scope_prefix(&prefix) {
-                        validate_argument_scope(part_flags, entry, &prefix, &arg, data, sc);
-                        if is_event_id {
-                            break; // force last part
-                        }
-                    } else {
-                        let msg = format!("unknown prefix `{prefix}:`");
-                        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
                         sc.close();
                         return Scopes::all();
+                    }
+                    if is_event_id {
+                        break; // force last part
                     }
                 } else if part_lc == "root" {
                     sc.replace_root();
@@ -1631,6 +1624,11 @@ fn validate_argument_internal(
             validate_identifier(arg, kind, Severity::Error);
         }
         ArgumentValue::UncheckedValue => (),
+        #[cfg(feature = "ck3")]
+        ArgumentValue::Removed(version, info) => {
+            let msg = format!("removed in {version}");
+            err(ErrorKey::Removed).msg(msg).info(info).loc(arg).push();
+        }
     }
 }
 
@@ -1707,8 +1705,48 @@ pub fn validate_argument(
     } else if let Some(entry) = scope_prefix(func) {
         validate_argument_scope(part_flags, entry, func, arg, data, sc);
     } else {
-        let msg = format!("unknown token `{func}`");
+        let msg = format!("unknown token `{func}:`");
         err(ErrorKey::Validation).msg(msg).loc(func).push();
+    }
+}
+
+/// Validate a `prefix:value` construct in a trigger.
+///
+/// Very similar to `validate_argument` because the notations are almost interchangeable in script.
+#[allow(unreachable_code, unused_variables)]
+pub fn validate_prefix(
+    part_flags: PartFlags,
+    prefix: &Token,
+    arg: &Token,
+    data: &Everything,
+    sc: &mut ScopeContext,
+) -> bool {
+    fn scope_trigger_complex(prefix: &str) -> Option<(Scopes, ArgumentValue, Scopes)> {
+        match Game::game() {
+            #[cfg(feature = "ck3")]
+            Game::Ck3 => crate::ck3::tables::triggers::scope_trigger_complex(prefix),
+            #[cfg(feature = "vic3")]
+            Game::Vic3 => crate::vic3::tables::triggers::scope_trigger_complex(prefix),
+            #[cfg(feature = "imperator")]
+            Game::Imperator => None,
+            #[cfg(feature = "hoi4")]
+            Game::Hoi4 => None,
+        }
+    }
+
+    let prefix_lc = prefix.as_str().to_ascii_lowercase();
+    if let Some((inscopes, validation, outscopes)) = scope_trigger_complex(&prefix_lc) {
+        sc.expect(inscopes, &Reason::Token(prefix.clone()));
+        validate_argument_internal(arg, validation, data, sc);
+        sc.replace(outscopes, prefix.clone());
+        true
+    } else if let Some(entry) = scope_prefix(prefix) {
+        validate_argument_scope(part_flags, entry, prefix, arg, data, sc);
+        true
+    } else {
+        let msg = format!("unknown prefix `{prefix:}`");
+        err(ErrorKey::Validation).msg(msg).loc(prefix).push();
+        false
     }
 }
 
@@ -1759,6 +1797,9 @@ pub enum Trigger {
     /// trigger takes a block with these fields
     #[cfg(feature = "ck3")]
     ItemOrBlock(Item, &'static [(&'static str, Trigger)]),
+    /// trigger takes a single identifier or a block with these fields
+    #[cfg(feature = "ck3")]
+    IdentifierOrBlock(&'static str, &'static [(&'static str, Trigger)]),
     /// can be part of a scope chain but also a standalone trigger
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     BlockOrCompareValue(&'static [(&'static str, Trigger)]),

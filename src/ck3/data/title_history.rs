@@ -58,9 +58,9 @@ impl TitleHistories {
         }
     }
 
-    pub fn verify_has_holder(&self, key: &Token, date: Date, data: &Everything) {
+    pub fn verify_has_holder(&self, key: &Token, date: Date, data: &Everything, overlord: &str) {
         if let Some(item) = self.histories.get(key.as_str()) {
-            item.verify_has_holder(key, date, data);
+            item.verify_has_holder(key, date, data, overlord);
         } else {
             let msg = format!("{key} has no title history");
             err(ErrorKey::MissingItem).msg(msg).loc(key).push();
@@ -105,8 +105,8 @@ impl TitleHistory {
         Self { key, block, tier }
     }
 
-    pub fn verify_has_holder(&self, token: &Token, date: Date, data: &Everything) {
-        let info = "setting the liege will not have effect here";
+    pub fn verify_has_holder(&self, token: &Token, date: Date, data: &Everything, overlord: &str) {
+        let info = format!("setting the {overlord} will not have effect here");
 
         if let Some(holder) = self.block.get_field_at_date("holder", date) {
             // if holder is not a value then we already warned about that
@@ -153,7 +153,7 @@ impl TitleHistory {
                         let msg = format!("liege must be higher tier than {}", self.key);
                         err(ErrorKey::TitleTier).msg(msg).loc(token).push();
                     }
-                    data.title_history.verify_has_holder(token, date, data);
+                    data.title_history.verify_has_holder(token, date, data, "liege");
                 }
             }
         }
@@ -169,6 +169,15 @@ impl TitleHistory {
                 }
             }
         }
+
+        vd.field_validated_block("tributary_of", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_validated_value("suzerain", |_, mut vvd| {
+                vvd.item(Item::Title);
+                data.title_history.verify_has_holder(vvd.value(), date, data, "suzerain");
+            });
+            vd.field_item("contract_group", Item::SubjectContractGroup);
+        });
 
         vd.field_item("government", Item::GovernmentType);
 
