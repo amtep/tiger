@@ -1332,7 +1332,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_hostage_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_hostage_warden", Boolean),
     (Scopes::Scheme, "is_hostile", Boolean),
-    (Scopes::LandedTitle, "is_house_based", Boolean),
+    (Scopes::Confederation, "is_house_based", Boolean),
     (Scopes::Culture, "is_hybrid_culture", Boolean),
     (Scopes::Character, "is_immortal", Boolean),
     (Scopes::Character, "is_important_decision", Scope(Scopes::Decision)),
