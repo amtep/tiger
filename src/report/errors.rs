@@ -330,12 +330,17 @@ fn pointed_msg_expansion(pointers: Vec<PointedMessage>) -> Vec<PointedMessage> {
         .into_iter()
         .flat_map(|p| {
             let mut next_loc = Some(p.loc);
+            let mut first = true;
             std::iter::from_fn(move || match next_loc {
                 Some(mut stack) => {
                     next_loc = stack.link_idx.and_then(|idx| MACRO_MAP.get_loc(idx));
                     stack.link_idx = None;
-                    let next =
-                        PointedMessage { loc: stack, length: 1, msg: Some("from here".into()) };
+                    let next = if first {
+                        PointedMessage { loc: stack, length: p.length, msg: p.msg.clone() }
+                    } else {
+                        PointedMessage { loc: stack, length: 1, msg: Some("from here".into()) }
+                    };
+                    first = false;
                     Some(next)
                 }
                 None => None,

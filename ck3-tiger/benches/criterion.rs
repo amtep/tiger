@@ -24,11 +24,7 @@ struct Config {
 
 fn workspace_path(s: &str) -> PathBuf {
     let p = PathBuf::from(s);
-    if p.is_relative() {
-        PathBuf::from("..").join(p)
-    } else {
-        p
-    }
+    if p.is_relative() { PathBuf::from("..").join(p) } else { p }
 }
 
 fn bench_multiple(c: &mut Criterion) {

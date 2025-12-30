@@ -15,7 +15,7 @@ use bumpalo::Bump;
 
 use crate::date::Date;
 use crate::fileset::{FileEntry, FileKind};
-use crate::macros::{MacroMapIndex, MACRO_MAP};
+use crate::macros::{MACRO_MAP, MacroMapIndex};
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{ErrorKey, err, untidy};
 
