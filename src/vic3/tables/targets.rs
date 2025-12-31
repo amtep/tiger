@@ -24,9 +24,12 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Treaty.union(Scopes::TreatyOptions), "amended_treaty", Scopes::Treaty),
     (Scopes::Country, "army_size", Scopes::Value),
     (Scopes::Country, "army_size_including_conscripts", Scopes::Value),
+    (Scopes::Country, "army_size_including_raised_conscripts", Scopes::Value),
+    (Scopes::Amendment, "attached_law", Scopes::Law),
     (Scopes::Battle, "attacker_side", Scopes::BattleSide),
     (Scopes::War, "attacker_warleader", Scopes::Country),
     (Scopes::Country.union(Scopes::State), "average_expected_sol", Scopes::Value),
+    (Scopes::Character.union(Scopes::InterestGroup), "average_progressiveness", Scopes::Value),
     (Scopes::Country.union(Scopes::State), "average_sol", Scopes::Value),
     (Scopes::Goods, "base_price", Scopes::Value),
     (Scopes::BattleSide, "battle", Scopes::Battle),
@@ -72,7 +75,6 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Treaty, "enforced_on_country", Scopes::Country),
     (Scopes::Treaty, "enforcer_country", Scopes::Country),
     (Scopes::Company, "executive", Scopes::Character),
-    (Scopes::Country, "expenses", Scopes::Value),
     (
         Scopes::DiplomaticPact
             .union(Scopes::TreatyArticle)
@@ -82,7 +84,6 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         "first_country",
         Scopes::Country,
     ),
-    (Scopes::Country, "fixed_expenses", Scopes::Value),
     (
         Scopes::Battle
             .union(Scopes::Character)
@@ -140,6 +141,9 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::None, "je_tutorial", Scopes::JournalEntry),
     (Scopes::Province.union(Scopes::State), "land_controller_hq", Scopes::Hq),
     (Scopes::Province.union(Scopes::State), "land_hq", Scopes::Hq),
+    (Scopes::MarketGoods, "largest_exporting_market", Scopes::Market),
+    (Scopes::MarketGoods, "largest_importing_market", Scopes::Market),
+    (Scopes::Law, "law_type", Scopes::LawType),
     (Scopes::InterestGroup, "leader", Scopes::Character),
     (Scopes::Country, "legitimacy", Scopes::Value),
     (Scopes::Building, "level", Scopes::Value),
@@ -243,6 +247,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         Scopes::Country,
     ),
     (Scopes::Country, "owning_company", Scopes::Company),
+    (Scopes::Amendment, "parent_law_type", Scopes::LawType),
     (Scopes::Market, "participants", Scopes::Value),
     (Scopes::InterestGroup, "party", Scopes::Party),
     (Scopes::None, "player", Scopes::Country), // TODO "do not use this outside tutorial"
@@ -278,6 +283,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         Scopes::Religion,
     ),
     (Scopes::TreatyOptions.union(Scopes::Treaty), "remaining_binding_period", Scopes::Value),
+    (Scopes::BuildingType, "required_construction", Scopes::Value),
     (Scopes::Country, "ruler", Scopes::Character),
     (Scopes::DiplomaticRelations, "scope_relations", Scopes::Value),
     (Scopes::DiplomaticRelations, "scope_tension", Scopes::Value),
@@ -297,6 +303,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::BuildingType, "slaves_role", Scopes::PopType),
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "source_country", Scopes::Country),
+    (Scopes::Amendment, "sponsor", Scopes::InterestGroup),
     (
         Scopes::Building.union(Scopes::Market).union(Scopes::Pop).union(Scopes::Province),
         "state",
@@ -335,7 +342,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::InterestGroup)
             .union(Scopes::Law)
             .union(Scopes::PoliticalMovement)
-            .union(Scopes::HarvestCondition),
+            .union(Scopes::HarvestCondition)
+            .union(Scopes::Amendment),
         "type",
         Scopes::BuildingType
             .union(Scopes::CompanyType)
@@ -346,7 +354,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::InterestGroupType)
             .union(Scopes::LawType)
             .union(Scopes::PoliticalMovementType)
-            .union(Scopes::HarvestConditionType),
+            .union(Scopes::HarvestConditionType)
+            .union(Scopes::AmendmentType),
     ),
     (Scopes::DiplomaticPlay, "war", Scopes::War),
     (Scopes::Company, "weekly_prosperity_change", Scopes::Value),
@@ -393,6 +402,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::State, "ai_treaty_port_value", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::MarketGoods, "ai_treaty_trade_value", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Country, "ai_treaty_value", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::None, "amendment_type", Scopes::AmendmentType, Item(Item::Amendment)),
         (Scopes::None, "array_define", Scopes::Value, UncheckedValue),
         (Scopes::Front, "average_defense", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Front, "average_offense", Scopes::Value, Scope(Scopes::Country)),
@@ -566,4 +576,6 @@ const SCOPE_TO_SCOPE_REMOVED: &[(&str, &str, &str)] = &[
     ("num_trade_routes", "1.9", "replaced by world market system"),
     ("num_treaty_ports", "1.9", "replaced by world market system"),
     ("target_market", "1.9", "replaced by world market system"),
+    ("expenses", "1.12", ""),
+    ("fixed_expenses", "1.12", ""),
 ];
