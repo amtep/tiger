@@ -63,6 +63,8 @@ bitflags! {
         const War = 0x0000_2000;
         #[cfg(any(feature = "vic3", feature = "hoi4"))]
         const StrategicRegion = 0x0000_4000;
+        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        const Decision = 0x0000_8000;
 
         // Scope types for CK3
         #[cfg(feature = "ck3")] const Accolade = 0x0001_0000;
@@ -78,7 +80,6 @@ bitflags! {
         #[cfg(feature = "ck3")] const CouncilTask = 0x0400_0000;
         #[cfg(feature = "ck3")] const CulturePillar = 0x0800_0000;
         #[cfg(feature = "ck3")] const CultureTradition = 0x1000_0000;
-        #[cfg(feature = "ck3")] const Decision = 0x2000_0000;
         #[cfg(feature = "ck3")] const Doctrine = 0x4000_0000;
         #[cfg(feature = "ck3")] const Dynasty = 0x8000_0000;
         #[cfg(feature = "ck3")] const DynastyHouse = 0x0000_0001_0000_0000;
@@ -210,8 +211,10 @@ bitflags! {
         #[cfg(feature = "vic3")] const Treaty = 0x0000_0000_0400_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const BuildingGroup = 0x0000_0000_0800_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const Amendment = 0x0000_0000_1000_0000_0000_0000_0000_0000;
-        #[cfg(feature = "vic3")] const AmendmentType = 0x0000_0000_1200_0000_0000_0000_0000_0000;
-        #[cfg(feature = "vic3")] const GeographicRegion = 0x0000_0000_1400_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const AmendmentType = 0x0000_0000_2000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const GeographicRegion = 0x0000_0000_4000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const WarGoal = 0x0000_0000_8000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const WarGoalType = 0x0000_0001_0000_0000_0000_0000_0000_0000;
 
         #[cfg(feature = "imperator")] const Area = 0x0001_0000;
         #[cfg(feature = "imperator")] const CountryCulture = 0x0002_0000;
