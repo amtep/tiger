@@ -73,6 +73,7 @@ impl DbKind for HarvestConditionType {
                 "locust_swarm",
                 "heatwave",
                 "disease_outbreak",
+                "earthquake",
             ],
         );
 
