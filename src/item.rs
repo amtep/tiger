@@ -204,8 +204,6 @@ pub enum Item {
     TutorialLessonChain,
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     TutorialLessonStep,
-    #[cfg(feature = "imperator")]
-    Wargoal,
 
     // Items for ck3
     #[cfg(feature = "ck3")] AccoladeCategory,
@@ -578,6 +576,7 @@ pub enum Item {
     #[cfg(feature = "imperator")] Treasure,
     #[cfg(feature = "imperator")] Unit,
     #[cfg(feature = "imperator")] UnitAbility,
+    #[cfg(feature = "imperator")] Wargoal,
 
     #[cfg(feature = "hoi4")] Ability,
     #[cfg(feature = "hoi4")] Acclimatation,
@@ -1010,13 +1009,6 @@ impl Item {
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
-            #[cfg(feature = "imperator")]
-            Item::Wargoal => match Game::game() {
-                #[cfg(feature = "imperator")]
-                Game::Imperator => "common/wargoals",
-                #[allow(unreachable_patterns)]
-                _ => unreachable!(),
-            },
 
             #[cfg(feature = "ck3")]
             Item::AccoladeCategory => "common/accolade_types/",
@@ -1455,6 +1447,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::AlertGroup => "common/alert_groups",
             #[cfg(feature = "vic3")]
+            Item::Amendment => "common/amendments/",
+            #[cfg(feature = "vic3")]
             Item::Approval => "",
             #[cfg(feature = "vic3")]
             Item::ArmyDiorama => "gfx/map/army_dioramas/",
@@ -1538,6 +1532,8 @@ impl Item {
             Item::FleetDiorama => "gfx/map/fleet_dioramas/",
             #[cfg(feature = "vic3")]
             Item::FrontGraphics => "gfx/map/borders/front_graphics/",
+            #[cfg(feature = "vic3")]
+            Item::GeographicRegion => "common/geographic_regions/",
             #[cfg(feature = "vic3")]
             Item::Goods => "common/goods/",
             #[cfg(feature = "vic3")]
@@ -1669,10 +1665,6 @@ impl Item {
             Item::TreatyArticle => "common/treaty_articles/",
             #[cfg(feature = "vic3")]
             Item::WarGoalType => "common/war_goal_types/",
-            #[cfg(feature = "vic3")]
-            Item::Amendment => "common/amendments/",
-            #[cfg(feature = "vic3")]
-            Item::GeographicRegion => "common/geographic_regions/",
 
             #[cfg(feature = "imperator")]
             Item::AiPlanGoals => "common/ai_plan_goals/",
@@ -1754,6 +1746,8 @@ impl Item {
             Item::Unit => "common/units/",
             #[cfg(feature = "imperator")]
             Item::UnitAbility => "common/unit_abilities/",
+            #[cfg(feature = "imperator")]
+            Item::Wargoal => "common/wargoals",
 
             #[cfg(feature = "hoi4")]
             Item::Ability => "common/abilities/",
