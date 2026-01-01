@@ -9,6 +9,7 @@ use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::{camel_case_to_separated_words, display_choices, snake_case_to_camel_case};
 use crate::item::Item;
+use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, err};
 use crate::token::Token;
 
@@ -510,11 +511,11 @@ pub fn scope_iterator(
         Game::Hoi4 => crate::hoi4::tables::iterators::iterator_removed,
     };
 
-    let name_lc = name.as_str().to_ascii_lowercase();
-    if let scopes @ Some(_) = scope_iterator(&name_lc) {
+    let name_lc = Lowercase::new(name.as_str());
+    if let scopes @ Some(_) = scope_iterator(&name_lc, name, data) {
         return scopes;
     }
-    if let Some((version, explanation)) = scope_iterator_removed(&name_lc) {
+    if let Some((version, explanation)) = scope_iterator_removed(name_lc.as_str()) {
         let msg = format!("`{name}` iterators were removed in {version}");
         err(ErrorKey::Removed).strong().msg(msg).info(explanation).loc(name).push();
         return Some((Scopes::all(), Scopes::all()));
@@ -525,7 +526,7 @@ pub fn scope_iterator(
         return data
             .scripted_lists
             .base(name)
-            .and_then(|base| scope_iterator(&base.as_str().to_ascii_lowercase()));
+            .and_then(|base| scope_iterator(&Lowercase::new(base.as_str()), base, data));
     }
     #[cfg(feature = "hoi4")]
     let _ = &data; // mark parameter used
