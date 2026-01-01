@@ -187,8 +187,8 @@ pub fn validate_remove_war_goal(
 ) {
     vd.req_field("who");
     vd.field_item_or_target("who", sc, Item::Country, Scopes::Country);
-    vd.req_field("war_goal");
-    vd.field_item("war_goal", Item::WarGoalType);
+    vd.req_field("type");
+    vd.field_item("type", Item::WarGoalType);
 }
 
 pub fn validate_addremove_backers(

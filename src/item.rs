@@ -425,6 +425,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] AirGraphics,
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
+    #[cfg(feature = "vic3")] Amendment,
     #[cfg(feature = "vic3")] Approval,
     #[cfg(feature = "vic3")] ArmyDiorama,
     #[cfg(feature = "vic3")] Attitude,
@@ -467,6 +468,8 @@ pub enum Item {
     #[cfg(feature = "vic3")] FlagDefinition,
     #[cfg(feature = "vic3")] FleetDiorama,
     #[cfg(feature = "vic3")] FrontGraphics,
+    #[cfg(feature = "vic3")] GeographicRegion,
+    #[cfg(feature = "vic3")] GeographicRegionShortKey,
     #[cfg(feature = "vic3")] Goods,
     #[cfg(feature = "vic3")] GradientBorderSettings,
     #[cfg(feature = "vic3")] HarvestConditionType,
@@ -532,8 +535,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] TransferOfPower,
     #[cfg(feature = "vic3")] TreatyArticle,
     #[cfg(feature = "vic3")] WarGoalType,
-    #[cfg(feature = "vic3")] Amendment,
-    #[cfg(feature = "vic3")] GeographicRegion,
 
     // Items specific to imperator
     #[cfg(feature = "imperator")] Ambition,
@@ -1534,6 +1535,8 @@ impl Item {
             Item::FrontGraphics => "gfx/map/borders/front_graphics/",
             #[cfg(feature = "vic3")]
             Item::GeographicRegion => "common/geographic_regions/",
+            #[cfg(feature = "vic3")]
+            Item::GeographicRegionShortKey => "common/geographic_regions/",
             #[cfg(feature = "vic3")]
             Item::Goods => "common/goods/",
             #[cfg(feature = "vic3")]

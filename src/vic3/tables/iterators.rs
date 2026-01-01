@@ -1,11 +1,35 @@
 use std::sync::LazyLock;
 
+use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
+use crate::item::Item;
+use crate::lowercase::Lowercase;
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
+use crate::token::Token;
+
+const GEOGRAPHIC_REGION_ITERATORS: &[(Scopes, &str, Scopes)] = &[
+    (Scopes::None, "country_in_", Scopes::Country),
+    (Scopes::None, "province_in_", Scopes::Province),
+    (Scopes::None, "state_in_", Scopes::State),
+    (Scopes::None, "state_region_in_", Scopes::StateRegion),
+    (Scopes::None, "strategic_region_in_", Scopes::StrategicRegion),
+];
 
 #[inline]
-pub fn iterator(name: &str) -> Option<(Scopes, Scopes)> {
-    ITERATOR_MAP.get(name).copied()
+pub fn iterator(name_lc: &Lowercase, name: &Token, data: &Everything) -> Option<(Scopes, Scopes)> {
+    for (inscope, pfx, outscope) in GEOGRAPHIC_REGION_ITERATORS.iter().copied() {
+        if let Some(part) = name_lc.strip_prefix_unchecked(pfx) {
+            if !data.item_exists(Item::GeographicRegionShortKey, part.as_str()) {
+                let msg = format!("could not find geographic region short key {part}");
+                let info = format!("so the iterator {name} does not exist");
+                err(ErrorKey::MissingItem).strong().msg(msg).info(info).loc(name).push();
+            }
+            return Some((inscope, outscope));
+        }
+    }
+
+    ITERATOR_MAP.get(name_lc.as_str()).copied()
 }
 
 static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = LazyLock::new(|| {

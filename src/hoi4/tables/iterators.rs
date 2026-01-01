@@ -1,11 +1,18 @@
 use std::sync::LazyLock;
 
+use crate::everything::Everything;
 use crate::helpers::{TigerHashMap, expand_scopes_hoi4};
+use crate::lowercase::Lowercase;
 use crate::scopes::Scopes;
+use crate::token::Token;
 
 #[inline]
-pub fn iterator(name: &str) -> Option<(Scopes, Scopes)> {
-    ITERATOR_MAP.get(name).copied()
+pub fn iterator(
+    name_lc: &Lowercase,
+    _name: &Token,
+    _data: &Everything,
+) -> Option<(Scopes, Scopes)> {
+    ITERATOR_MAP.get(name_lc.as_str()).copied()
 }
 
 static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = LazyLock::new(|| {

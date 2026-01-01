@@ -20,6 +20,12 @@ impl GeographicRegion {
 }
 
 impl DbKind for GeographicRegion {
+    fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
+        if let Some(key) = block.get_field_value("short_key") {
+            db.add_flag(Item::GeographicRegionShortKey, key.clone());
+        }
+    }
+
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
