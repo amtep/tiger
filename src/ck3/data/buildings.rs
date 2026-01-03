@@ -140,8 +140,6 @@ impl DbKind for Building {
 
         vd.multi_field_value("flag");
 
-        vd.field_effect_rooted("on_complete", Tooltipped::No, Scopes::Province);
-
         vd.field_validated_key("ai_value", |key, bv, data| match bv {
             BV::Value(token) => {
                 token.expect_integer();
