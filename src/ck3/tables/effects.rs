@@ -274,7 +274,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Province, "begin_create_holding", Vbv(validate_begin_create_holding)),
     (Scopes::Character, "break_alliance", Scope(Scopes::Character)),
     (Scopes::Character, "break_betrothal", Scope(Scopes::Character)),
-    (Scopes::None, "cancel_great_project", Scope(Scopes::GreatProjectType)),
+    (Scopes::None, "cancel_great_project", Scope(Scopes::GreatProject)),
     (Scopes::TravelPlan, "cancel_travel_plan", Boolean),
     (Scopes::Character, "cancel_truce_both_ways", Scope(Scopes::Character)),
     (Scopes::Character, "cancel_truce_one_way", Scope(Scopes::Character)),
