@@ -523,7 +523,10 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "fund_great_project_contribution", Vb(validate_contribution)),
     (Scopes::Province, "generate_building", Yes),
     (
-        Scopes::LandedTitle.union(Scopes::Dynasty).union(Scopes::DynastyHouse),
+        Scopes::LandedTitle
+            .union(Scopes::Dynasty)
+            .union(Scopes::DynastyHouse)
+            .union(Scopes::Confederation),
         "generate_coa",
         Vv(validate_generate_coa),
     ),
@@ -807,7 +810,14 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
         Removed("1.15", "replaced with return_home character effect"),
     ),
     (Scopes::Character, "reset_beneficiary", Yes),
-    (Scopes::LandedTitle.union(Scopes::Dynasty).union(Scopes::DynastyHouse), "reset_coa", Yes),
+    (
+        Scopes::LandedTitle
+            .union(Scopes::Dynasty)
+            .union(Scopes::DynastyHouse)
+            .union(Scopes::Confederation),
+        "reset_coa",
+        Yes,
+    ),
     (Scopes::Culture, "reset_culture_creation_date", Yes),
     (Scopes::GreatHolyWar, "reset_designated_winner", Yes),
     (Scopes::Scheme, "reset_scheme_progress", Yes),
@@ -880,7 +890,10 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "set_character_secret_faith", Scope(Scopes::Faith)),
     (Scopes::Character, "set_child_of_concubine_on_pregnancy", Boolean),
     (
-        Scopes::LandedTitle.union(Scopes::Dynasty).union(Scopes::DynastyHouse),
+        Scopes::LandedTitle
+            .union(Scopes::Dynasty)
+            .union(Scopes::DynastyHouse)
+            .union(Scopes::Confederation),
         "set_coa",
         Vv(validate_set_coa),
     ),
