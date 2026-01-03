@@ -470,7 +470,7 @@ fn lookup_engine_modif(
             "_min_import_tariffs_level_add",
         ] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
-                maybe_warn(Item::LawType, &part, name, data, warn);
+                maybe_warn(Item::Goods, &part, name, data, warn);
                 return Some(ModifKinds::Country);
             }
         }
@@ -1282,11 +1282,9 @@ static MODIF_FLOW_SUGGEST: LazyLock<TigerHashMap<&str, (&str, ModifKinds)>> = La
 });
 
 const MODIF_FLOW_SUGGEST_TABLE: &[(&str, &str)] = &[
-    ("unit_advancement_speed_mult", "character_advancement_speed_add"),
     ("unit_blockade_mult", "character_blockade_mult"),
     ("unit_convoy_defense_mult", "character_convoy_protection_mult"),
     ("unit_convoy_raiding_mult", "character_convoy_raiding_mult"),
-    ("unit_convoy_requirements_mult", "character_supply_route_cost_mult"),
     ("unit_convoy_raiding_interception_mult", "character_interception_add"),
     ("unit_supply_consumption_mult", "building_mobilization_cost_mult"),
 ];
