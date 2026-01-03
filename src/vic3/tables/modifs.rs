@@ -54,7 +54,7 @@ fn lookup_modif_prefix(name: &Token) -> ModifKinds {
 
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.
 /// Returns None otherwise.
-fn lookup_engine_modif(
+pub fn lookup_engine_modif(
     name: &Token,
     name_lc: &Lowercase,
     data: &Everything,
