@@ -268,7 +268,7 @@ fn validate_participant_group(key: &Token, block: &Block, data: &Everything, sit
 
 fn validate_phase(key: &Token, block: &Block, data: &Everything, situation: &Token) {
     fn sc_builder(key: &Token) -> ScopeContext {
-        let mut sc = ScopeContext::new(Scopes::Character, key);
+        let mut sc = ScopeContext::new(Scopes::Situation, key);
         sc.define_name("situation", Scopes::Situation, key);
         sc.define_name("situation_sub_region", Scopes::SituationSubRegion, key);
         sc
