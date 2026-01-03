@@ -186,6 +186,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/commander_ranks",
     "common/company_charter_types",
     "common/company_types",
+    "common/console_command_macros",
     "common/country_creation",
     "common/country_definitions",
     "common/country_formation",
