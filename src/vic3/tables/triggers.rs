@@ -41,7 +41,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character.union(Scopes::InterestGroup).union(Scopes::PoliticalMovement),
         "amendment_stance",
-        Block(&[("amendment", Scope(Scopes::Amendment)), ("value", CompareValue)]),
+        Block(&[
+            ("amendment", Scope(Scopes::Amendment)),
+            ("value", CompareChoiceOrNumber(APPROVALS)),
+        ]),
     ),
     (Scopes::Country, "additional_war_exhaustion", CompareValue),
     (Scopes::Country, "additional_war_exhaustion", CompareValue),
@@ -256,13 +259,13 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (
         Scopes::Country,
-        "country_average_religious_acceptance",
-        Block(&[("target", Scope(Scopes::Religion)), ("value", CompareValue)]),
+        "country_average_religion_pop_acceptance",
+        Block(&[("religion", Scope(Scopes::Religion)), ("value", CompareValue)]),
     ),
     (
         Scopes::Country,
-        "country_average_religion_pop_acceptance",
-        Block(&[("religion", Scope(Scopes::Religion)), ("value", CompareValue)]),
+        "country_average_religious_acceptance",
+        Block(&[("target", Scope(Scopes::Religion)), ("value", CompareValue)]),
     ),
     (Scopes::Country, "country_can_have_mass_migration_to", Scope(Scopes::Country)), // undocumented
     (Scopes::CountryDefinition, "country_definition_has_culture", Scope(Scopes::Culture)),
@@ -389,8 +392,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "experience_level", CompareValue),
     (Scopes::StateGoods, "export_advantage", CompareValue),
     (Scopes::StateGoods, "export_tariff_level", CompareValue),
-    (Scopes::Country, "fixed_expenses", CompareValue),
-    (Scopes::Country, "fixed_income", CompareValue),
+    (Scopes::Country, "fixed_expenses", CompareValueWarnEq),
+    (Scopes::Country, "fixed_income", CompareValueWarnEq),
     (Scopes::Country, "flotilla_manpower", Removed("1.6", "")),
     (Scopes::Pop, "food_security", CompareValue),
     (
@@ -868,7 +871,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "is_lens_open", Block(&[("lens", UncheckedTodo), ("?tab_name", UncheckedTodo)])),
     (Scopes::Country, "is_local_player", Boolean),
     (Scopes::Country, "is_losing_power_rank", Boolean),
-    (Scopes::CountryDefinition, "is_major_formation", Boolean),
+    (Scopes::CountryFormation, "is_major_formation", Boolean),
     (Scopes::InterestGroup, "is_marginal", Boolean),
     (Scopes::Country, "is_market_reachable_for_trade", Scope(Scopes::Market)),
     (Scopes::Country, "is_mass_migration_origin", Boolean),
@@ -1257,8 +1260,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "neighbors_any_power_bloc", Boolean),
     (Scopes::Country, "neighbors_member_of_same_power_bloc", Boolean),
     (Scopes::Country, "neighbors_power_bloc", Scope(Scopes::PowerBloc)),
-    (Scopes::Country, "net_fixed_income", CompareValue),
-    (Scopes::Country, "net_total_income", CompareValue),
+    (Scopes::Country, "net_fixed_income", CompareValueWarnEq),
+    (Scopes::Country, "net_total_income", CompareValueWarnEq),
     (Scopes::None, "night_value", CompareValue),
     (Scopes::None, "nor", Control),
     (Scopes::None, "not", Control),
@@ -1853,6 +1856,18 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         ),
         (
             Scopes::Country,
+            "country_average_culture_pop_acceptance",
+            Scope(Scopes::Culture),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "country_average_religion_pop_acceptance",
+            Scope(Scopes::Religion),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
             "country_average_religious_acceptance",
             Scope(Scopes::Religion),
             Scopes::Value,
@@ -1958,7 +1973,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (Scopes::War, "num_country_wounded", Scope(Scopes::Country), Scopes::Value),
         // TODO: check that the DiplomaticAction has a pact
         (Scopes::Country, "num_diplomatic_pacts", Item(Item::DiplomaticAction), Scopes::Value),
-        // TODO: "will return an error if used on building groups that are not level capped"
+        // TODO: "will return an error if used on building types that are not level capped"
         (
             Scopes::State,
             "num_potential_resources",
@@ -2095,6 +2110,18 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::JournalEntry,
             "scripted_bar_progress",
             Item(Item::ScriptedProgressBar),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "state_average_culture_pop_acceptance",
+            Scope(Scopes::Culture),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "state_average_religion_pop_acceptance",
+            Scope(Scopes::Religion),
             Scopes::Value,
         ),
         (Scopes::State, "state_cultural_acceptance", Scope(Scopes::Culture), Scopes::Value),
