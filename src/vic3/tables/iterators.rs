@@ -207,6 +207,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::PoliticalMovement, "supporting_character", Scopes::Character),
     (Scopes::None, "treaty", Scopes::Treaty),
     (Scopes::Country, "valid_mass_migration_culture", Scopes::Culture),
+    (Scopes::War, "war_participant", Scopes::Country),
 ];
 
 pub fn iterator_removed(name: &str) -> Option<(&'static str, &'static str)> {
