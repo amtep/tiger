@@ -37,6 +37,7 @@ const SIMPLE_GAME_RULE_FLAGS: &[&str] = &[
     "moderate_pop_consolidation",
     "aggressive_pop_consolidation",
     "directly_controlled_investment",
+    "give_ruler_selector",
     "loyalties_grace_period_none",
     "loyalties_grace_period_short",
     "loyalties_grace_period_long",
