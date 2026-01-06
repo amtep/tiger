@@ -72,7 +72,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Province,
         "distance_from",
-        Block(&[("province", ScopeOrItem(Scopes::Province, Item::Province)), ("value", CompareValue)]),
+        Block(&[
+            ("province", ScopeOrItem(Scopes::Province, Item::Province)),
+            ("value", CompareValue),
+        ]),
     ),
     (
         Scopes::Country,
