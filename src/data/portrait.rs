@@ -60,7 +60,7 @@ impl DbKind for PortraitModifierGroup {
             }
         }
 
-        if !caller.is_empty() {
+        if !Game::is_imperator() && !caller.is_empty() {
             let loca = format!("PORTRAIT_MODIFIER_{key}");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
@@ -123,7 +123,7 @@ fn validate_portrait_modifier(
             caller = "";
         }
     }
-    if !caller.is_empty() {
+    if !Game::is_imperator() && !caller.is_empty() {
         let loca = format!("PORTRAIT_MODIFIER_{caller}_{key}");
         data.verify_exists_implied(Item::Localization, &loca, key);
     }
