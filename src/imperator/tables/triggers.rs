@@ -69,7 +69,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::State, "has_capital_bonus_for_trade_good", Item(Item::TradeGood)),
     (Scopes::State, "has_capital_surplus", Boolean),
     (Scopes::State, "is_automated_trading", Boolean),
-    (Scopes::Province, "distance_from", ScopeOrItem(Scopes::Province, Item::Province)),
+    (
+        Scopes::Province,
+        "distance_from",
+        Block(&[("province", ScopeOrItem(Scopes::Province, Item::Province)), ("value", CompareValue)]),
+    ),
     (
         Scopes::Country,
         "can_unlock_invention",
