@@ -502,7 +502,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Province, "has_province_rank", Item(Item::ProvinceRank)),
     (Scopes::Province, "has_road_towards", ScopeOrItem(Scopes::Province, Item::Province)),
     (Scopes::Province, "has_siege", Boolean),
-    (Scopes::Province, "has_specific_construction", Boolean),
+    (Scopes::Province, "has_specific_construction", Item(Item::Building)),
     (Scopes::Province, "has_winter", Boolean),
     (Scopes::Province, "is_adjacent_to_major_river", Boolean),
     (Scopes::Province, "is_capital", Boolean),
