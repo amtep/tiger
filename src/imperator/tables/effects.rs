@@ -275,7 +275,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Province, "set_trade_goods", Item(Item::TradeGood)),
     (Scopes::Province, "show_animated_text", Unchecked),
     (Scopes::Province, "show_model", Unchecked),
-    (Scopes::Province, "cancel_building_construction", Item(Item::Building)),
+    (Scopes::Province, "start_building_construction", Item(Item::Building)),
     (Scopes::CountryCulture, "add_country_culture_modifier", Vbv(validate_add_modifier)),
     (Scopes::CountryCulture, "add_integration_progress", ScriptValue),
     (Scopes::CountryCulture, "remove_country_culture_modifier", Item(Item::Modifier)),
