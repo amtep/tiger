@@ -252,6 +252,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Province, "add_state_loyalty", ScriptValue),
     (Scopes::Province, "add_vfx", Unchecked),
     (Scopes::Province, "begin_great_work_construction", Vb(validate_great_work_construction)),
+    (Scopes::Province, "start_building_construction", Item(Item::Building)),
     (Scopes::Province, "cancel_building_construction", Item(Item::Building)),
     (Scopes::Province, "change_climate", Unchecked),
     (Scopes::Province, "change_province_name", Item(Item::Localization)),
