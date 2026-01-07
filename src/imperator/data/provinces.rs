@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use image::{DynamicImage, Rgb};
+use image::{DynamicImage, Rgb, RgbImage};
 use itertools::Itertools;
 
 use crate::block::Block;
@@ -22,6 +22,9 @@ pub struct ImperatorProvinces {
     /// Colors in the provinces.png
     colors: TigerHashSet<Rgb<u8>>,
 
+    /// Kept for adjacency coordinate validation.
+    provinces_png: Option<RgbImage>,
+
     /// Provinces defined in definition.csv.
     /// Imperator requires uninterrupted indices starting at 0, but we want to be able to warn
     /// and continue if they're not, so it's a hashmap.
@@ -38,6 +41,26 @@ pub struct ImperatorProvinces {
 }
 
 impl ImperatorProvinces {
+    fn province_color(&self, provid: ProvId) -> Option<Rgb<u8>> {
+        self.provinces.get(&provid).map(|p| p.color)
+    }
+
+    fn provinces_png_pixel(&self, coords: &Coords) -> Option<Rgb<u8>> {
+        let img = self.provinces_png.as_ref()?;
+        if coords.x < 0 || coords.y < 0 {
+            return None;
+        }
+
+        // Map pixels are addressed as x,y from the top-left corner.
+        let x = coords.x as u32;
+        let y = coords.y as u32;
+        if x >= img.width() || y >= img.height() {
+            return None;
+        }
+
+        Some(*img.get_pixel(x, y))
+    }
+
     fn parse_definition(&mut self, csv: &[Token]) {
         if let Some(province) = Province::parse(csv) {
             if self.provinces.contains_key(&province.id) {
@@ -266,6 +289,9 @@ impl FileHandler<FileContent> for ImperatorProvinces {
                     for pixel in img.pixels().dedup() {
                         self.colors.insert(*pixel);
                     }
+
+                    // Keep the full image for validating adjacency coordinates.
+                    self.provinces_png = Some(img);
                 }
             }
             FileContent::DefaultMap(block) => self.load_impassable(&block),
@@ -316,6 +342,12 @@ pub struct Coords {
     y: i32,
 }
 
+impl Coords {
+    fn is_sentinel(&self) -> bool {
+        self.x == -1 && self.y == -1
+    }
+}
+
 #[allow(dead_code)] // TODO
 #[derive(Clone, Debug)]
 pub struct Adjacency {
@@ -326,7 +358,7 @@ pub struct Adjacency {
     /// sea or `river_large`
     kind: Token,
     through: ProvId,
-    /// TODO: check start and stop are map coordinates and have the right color on province.png
+    /// start and stop are map coordinates (should be within provinces.png bounds) and should have the right color on province.png
     /// They can be -1 -1 though.
     start: Coords,
     stop: Coords,
@@ -380,6 +412,61 @@ impl Adjacency {
             if !provinces.provinces.contains_key(prov) {
                 let msg = format!("province id {prov} not defined in definitions.csv");
                 fatal(ErrorKey::Crash).msg(msg).loc(self.line).push();
+            }
+        }
+
+        if self.start.is_sentinel() && self.stop.is_sentinel() {
+            return;
+        }
+
+        let Some(img) = provinces.provinces_png.as_ref() else {
+            // Can't validate coordinates without provinces.png.
+            return;
+        };
+
+        let (w, h) = (img.width() as i32, img.height() as i32);
+        for (label, coords) in [("start", &self.start), ("stop", &self.stop)] {
+            if coords.is_sentinel() {
+                continue;
+            }
+            if coords.x < 0 || coords.y < 0 || coords.x >= w || coords.y >= h {
+                let msg = format!(
+                    "{label} coordinate ({}, {}) is out of bounds (image size {}x{})",
+                    coords.x, coords.y, w, h
+                );
+                err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
+            }
+        }
+
+        if !self.start.is_sentinel() {
+            let Some(expected_start) = provinces.province_color(self.from) else {
+                return;
+            };
+            if let Some(actual) = provinces.provinces_png_pixel(&self.start) {
+                if actual != expected_start {
+                    let Rgb([er, eg, eb]) = expected_start;
+                    let Rgb([ar, ag, ab]) = actual;
+                    let msg = format!(
+                        "start coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
+                    );
+                    err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
+                }
+            }
+        }
+
+        if !self.stop.is_sentinel() {
+            let Some(expected_stop) = provinces.province_color(self.to) else {
+                return;
+            };
+            if let Some(actual) = provinces.provinces_png_pixel(&self.stop) {
+                if actual != expected_stop {
+                    let Rgb([er, eg, eb]) = expected_stop;
+                    let Rgb([ar, ag, ab]) = actual;
+                    let msg = format!(
+                        "stop coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
+                    );
+                    err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
+                }
             }
         }
     }
