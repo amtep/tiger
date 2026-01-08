@@ -358,7 +358,7 @@ pub struct Adjacency {
     /// sea or `river_large`
     kind: Token,
     through: ProvId,
-    /// start and stop are map coordinates (should be within provinces.png bounds) and should have the right color on province.png
+    /// start and stop are map coordinates (should be within provinces.png bounds) and should have the right color on provinces.png
     /// They can be -1 -1 though.
     start: Coords,
     stop: Coords,
@@ -498,5 +498,123 @@ impl Province {
         let b = verify(&csv[3], "expected blue value")?;
         let color = Rgb::from([r, g, b]);
         Some(Province { key: csv[0].clone(), id, color, comment: csv[4].clone() })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::path::PathBuf;
+
+    use crate::fileset::FileKind;
+    use crate::report::take_reports;
+
+    fn loc(line: u32, column: u32) -> Loc {
+        let mut loc = Loc::for_file(
+            PathBuf::from("map_data/adjacencies.csv"),
+            FileKind::Mod,
+            PathBuf::from("C:/test/map_data/adjacencies.csv"),
+        );
+        loc.line = line;
+        loc.column = column;
+        loc
+    }
+
+    fn tok(s: &str, line: u32, column: u32) -> Token {
+        Token::new(s, loc(line, column))
+    }
+
+    fn base_provinces(img: RgbImage, from_color: Rgb<u8>, to_color: Rgb<u8>) -> ImperatorProvinces {
+        let _ = take_reports();
+
+        let mut provinces = ImperatorProvinces::default();
+        provinces.provinces_png = Some(img);
+        provinces.provinces.insert(
+            1,
+            Province { key: tok("1", 1, 1), id: 1, color: from_color, comment: tok("c", 1, 1) },
+        );
+        provinces.provinces.insert(
+            2,
+            Province { key: tok("2", 1, 1), id: 2, color: to_color, comment: tok("c", 1, 1) },
+        );
+        provinces
+    }
+
+    fn adjacency(start: Coords, stop: Coords) -> Adjacency {
+        Adjacency {
+            line: loc(1, 1),
+            from: 1,
+            to: 2,
+            kind: tok("sea", 1, 5),
+            through: 1,
+            start,
+            stop,
+            comment: tok("comment", 1, 10),
+        }
+    }
+
+    fn take_msgs() -> Vec<String> {
+        take_reports().into_iter().map(|(meta, _)| meta.msg).collect()
+    }
+
+    #[test]
+    fn adjacency_start_out_of_bounds_errors() {
+        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+
+        let adj = adjacency(Coords { x: 5, y: 0 }, Coords { x: -1, y: -1 });
+        adj.validate(&provinces);
+
+        let msgs = take_msgs();
+        assert!(
+            msgs.iter().any(|m| m.contains("start coordinate (5, 0) is out of bounds")),
+            "reports were: {msgs:?}"
+        );
+    }
+
+    #[test]
+    fn adjacency_start_wrong_color_errors() {
+        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+        img.put_pixel(0, 0, Rgb([9, 9, 9]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+
+        let adj = adjacency(Coords { x: 0, y: 0 }, Coords { x: -1, y: -1 });
+        adj.validate(&provinces);
+
+        let msgs = take_msgs();
+        assert!(
+            msgs.iter().any(|m| m.contains("start coordinate is in the wrong province color")),
+            "reports were: {msgs:?}"
+        );
+    }
+
+    #[test]
+    fn adjacency_stop_wrong_color_errors_when_start_sentinel() {
+        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+        img.put_pixel(1, 1, Rgb([9, 9, 9]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+
+        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 1 });
+        adj.validate(&provinces);
+
+        let msgs = take_msgs();
+        assert!(
+            msgs.iter().any(|m| m.contains("stop coordinate is in the wrong province color")),
+            "reports were: {msgs:?}"
+        );
+    }
+
+    #[test]
+    fn adjacency_one_endpoint_sentinel_can_still_pass() {
+        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+        img.put_pixel(1, 0, Rgb([7, 8, 9]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+
+        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 0 });
+        adj.validate(&provinces);
+
+        let msgs = take_msgs();
+        assert!(msgs.is_empty(), "reports were: {msgs:?}");
     }
 }

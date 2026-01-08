@@ -29,6 +29,9 @@ jobs:
       - name: Test
         run: cargo test
 
+      - name: Test Imperator
+        run: cargo test -p tiger-lib --no-default-features --features imperator --lib
+
   fmt:
     name: rustfmt
     runs-on: ubuntu-latest
