@@ -45,15 +45,13 @@ impl ImperatorProvinces {
         self.provinces.get(&provid).map(|p| p.color)
     }
 
-    fn provinces_png_pixel(&self, coords: &Coords) -> Option<Rgb<u8>> {
+    fn provinces_png_pixel(&self, coords: Coords) -> Option<Rgb<u8>> {
         let img = self.provinces_png.as_ref()?;
-        if coords.x < 0 || coords.y < 0 {
-            return None;
-        }
+
+        let x = u32::try_from(coords.x).ok()?;
+        let y = u32::try_from(coords.y).ok()?;
 
         // Map pixels are addressed as x,y from the top-left corner.
-        let x = coords.x as u32;
-        let y = coords.y as u32;
         if x >= img.width() || y >= img.height() {
             return None;
         }
@@ -343,7 +341,7 @@ pub struct Coords {
 }
 
 impl Coords {
-    fn is_sentinel(&self) -> bool {
+    fn is_sentinel(self) -> bool {
         self.x == -1 && self.y == -1
     }
 }
@@ -424,12 +422,24 @@ impl Adjacency {
             return;
         };
 
-        let (w, h) = (img.width() as i32, img.height() as i32);
+        let (w, h) = (img.width(), img.height());
         for (label, coords) in [("start", &self.start), ("stop", &self.stop)] {
             if coords.is_sentinel() {
                 continue;
             }
-            if coords.x < 0 || coords.y < 0 || coords.x >= w || coords.y >= h {
+
+            let x = u32::try_from(coords.x);
+            let y = u32::try_from(coords.y);
+            if x.is_err() || y.is_err() {
+                let msg = format!(
+                    "{label} coordinate ({}, {}) is out of bounds (image size {}x{})",
+                    coords.x, coords.y, w, h
+                );
+                err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
+                continue;
+            }
+            let (x, y) = (x.unwrap(), y.unwrap());
+            if x >= w || y >= h {
                 let msg = format!(
                     "{label} coordinate ({}, {}) is out of bounds (image size {}x{})",
                     coords.x, coords.y, w, h
@@ -442,7 +452,7 @@ impl Adjacency {
             let Some(expected_start) = provinces.province_color(self.from) else {
                 return;
             };
-            if let Some(actual) = provinces.provinces_png_pixel(&self.start) {
+            if let Some(actual) = provinces.provinces_png_pixel(self.start) {
                 if actual != expected_start {
                     let Rgb([er, eg, eb]) = expected_start;
                     let Rgb([ar, ag, ab]) = actual;
@@ -458,7 +468,7 @@ impl Adjacency {
             let Some(expected_stop) = provinces.province_color(self.to) else {
                 return;
             };
-            if let Some(actual) = provinces.provinces_png_pixel(&self.stop) {
+            if let Some(actual) = provinces.provinces_png_pixel(self.stop) {
                 if actual != expected_stop {
                     let Rgb([er, eg, eb]) = expected_stop;
                     let Rgb([ar, ag, ab]) = actual;
