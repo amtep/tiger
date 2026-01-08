@@ -72,6 +72,7 @@ pub enum ErrorKey {
     Deprecated,
     Variables,
     DefinitionName,
+    Prefixes,
 
     PrincesOfDarkness,
 

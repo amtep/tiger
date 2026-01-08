@@ -1,0 +1,126 @@
+//! Victoria 3 specific [`Item`] functions
+
+use crate::item::Item;
+
+impl Item {
+    /// Returns whether an item type uses the REPLACE/INJECT/CREATE prefixes.
+    pub fn injectable(self) -> bool {
+        matches!(
+            self,
+            Item::AcceptanceStatus
+                | Item::Achievement
+                | Item::AiStrategy
+                | Item::AlertGroup
+                | Item::Alert
+                | Item::Amendment
+                | Item::BattleCondition
+                | Item::BuildingGroup
+                | Item::BuildingType
+                | Item::BuyPackage
+                | Item::CharacterInteraction
+                | Item::CharacterTemplate
+                | Item::CharacterTrait
+                | Item::CohesionLevel
+                | Item::CombatUnitExperienceLevel
+                | Item::CombatUnitGroup
+                | Item::CombatUnit
+                | Item::CommanderOrder
+                | Item::CommanderRank
+                | Item::CompanyCharterType
+                | Item::CompanyType
+                | Item::CountryCreation
+                | Item::Country
+                | Item::CountryFormation
+                | Item::CountryRank
+                | Item::CountryType
+                | Item::CultureGraphics
+                | Item::Culture
+                | Item::Decision
+                | Item::Decree
+                | Item::DiplomaticAction
+                | Item::DiplomaticCatalystCategory
+                | Item::DiplomaticCatalyst
+                | Item::DiplomaticPlay
+                | Item::DiscriminationTraitGroup
+                | Item::DiscriminationTrait
+                | Item::Dna
+                | Item::DynamicCompanyName
+                | Item::DynamicCountryMapColor
+                | Item::DynamicCountryName
+                | Item::DynamicTreatyName
+                | Item::Ethnicity
+                | Item::FlagDefinition
+                | Item::GameConcept
+                | Item::GeneCategory
+                | Item::GeographicRegion
+                | Item::Goods
+                | Item::GovernmentType
+                | Item::HarvestConditionType
+                | Item::Ideology
+                | Item::Institution
+                | Item::InterestGroupTrait
+                | Item::InterestGroup
+                | Item::JournalEntry
+                | Item::JournalEntryGroup
+                | Item::TerrainLabel
+                | Item::LawGroup
+                | Item::LawType
+                | Item::LegitimacyLevel
+                | Item::LibertyDesireLevel
+                | Item::MilitaryFormationFlag
+                | Item::MobilizationOptionGroup
+                | Item::MobilizationOption
+                | Item::ModifierTypeDefinition
+                | Item::ObjectiveSubgoalCategory
+                | Item::ObjectiveSubgoal
+                | Item::Objective
+                | Item::Party
+                | Item::PoliticalLobby
+                | Item::PoliticalLobbyAppeasement
+                | Item::PoliticalMovement
+                | Item::PoliticalMovementCategory
+                | Item::PoliticalMovementPopSupport
+                | Item::PopNeed
+                | Item::PopType
+                | Item::PowerBlocCoaPiece
+                | Item::PowerBlocIdentity
+                | Item::PowerBlocMapTexture
+                | Item::PowerBlocName
+                | Item::PrincipleGroup
+                | Item::Principle
+                | Item::PrestigeGoods
+                | Item::ProductionMethodGroup
+                | Item::ProductionMethod
+                | Item::ProposalType
+                | Item::Religion
+                | Item::ScriptValue
+                | Item::ScriptedButton
+                | Item::ScriptedEffect
+                | Item::ScriptedGui
+                | Item::ScriptedList
+                | Item::ScriptedModifier
+                | Item::ScriptedProgressBar
+                | Item::ScriptedTrigger
+                | Item::SocialClass
+                | Item::SocialHierarchy
+                | Item::StateTrait
+                | Item::StrategicRegion
+                | Item::SubjectType
+                | Item::Technology
+                | Item::Terrain
+                | Item::TerrainManipulator
+                | Item::Theme
+                | Item::TreatyArticle
+                | Item::TutorialLessonChain
+                | Item::TutorialLesson
+                | Item::WarGoalType
+                | Item::ArmyDiorama
+                | Item::CityBuildingVfx
+                | Item::FleetDiorama
+                | Item::Accessory
+                | Item::PortraitModifierGroup
+                | Item::Music
+                | Item::MusicPlayerCategory
+        )
+    }
+}
