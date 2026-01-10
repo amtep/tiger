@@ -662,8 +662,7 @@ mod tests {
         let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
         for kind in ["sea", "river_large"] {
-            let adj =
-                adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
+            let adj = adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
             adj.validate(&provinces);
 
             let msgs = take_msgs();
