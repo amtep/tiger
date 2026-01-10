@@ -352,8 +352,7 @@ pub struct Adjacency {
     line: Loc,
     from: ProvId,
     to: ProvId,
-    /// TODO: check type is sea or `river_large`
-    /// sea or `river_large`
+    /// Adjacency kind, should be `sea` or `river_large`.
     kind: Token,
     through: ProvId,
     /// start and stop are map coordinates (should be within provinces.png bounds) and should have the right color on provinces.png
@@ -411,6 +410,14 @@ impl Adjacency {
                 let msg = format!("province id {prov} not defined in definitions.csv");
                 fatal(ErrorKey::Crash).msg(msg).loc(self.line).push();
             }
+        }
+
+        if !self.kind.lowercase_is("sea") && !self.kind.lowercase_is("river_large") {
+            let msg = format!(
+                "adjacency type `{}` is invalid; expected `sea` or `river_large`",
+                self.kind.as_str()
+            );
+            err(ErrorKey::Validation).msg(msg).loc(&self.kind).push();
         }
 
         if self.start.is_sentinel() && self.stop.is_sentinel() {
@@ -564,6 +571,10 @@ mod tests {
         }
     }
 
+    fn adjacency_with_kind(kind: &str, start: Coords, stop: Coords) -> Adjacency {
+        Adjacency { kind: tok(kind, 1, 5), ..adjacency(start, stop) }
+    }
+
     fn take_msgs() -> Vec<String> {
         take_reports().into_iter().map(|(meta, _)| meta.msg).collect()
     }
@@ -626,5 +637,37 @@ mod tests {
 
         let msgs = take_msgs();
         assert!(msgs.is_empty(), "reports were: {msgs:?}");
+    }
+
+    #[test]
+    fn adjacency_kind_invalid_errors_even_if_coords_sentinel() {
+        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+
+        let adj = adjacency_with_kind("land", Coords { x: -1, y: -1 }, Coords { x: -1, y: -1 });
+        adj.validate(&provinces);
+
+        let msgs = take_msgs();
+        assert!(
+            msgs.iter().any(|m| m.contains("adjacency type `land` is invalid")),
+            "reports were: {msgs:?}"
+        );
+    }
+
+    #[test]
+    fn adjacency_kind_sea_and_river_large_are_allowed() {
+        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+        img.put_pixel(0, 0, Rgb([1, 2, 3]));
+        img.put_pixel(1, 0, Rgb([7, 8, 9]));
+        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+
+        for kind in ["sea", "river_large"] {
+            let adj =
+                adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
+            adj.validate(&provinces);
+
+            let msgs = take_msgs();
+            assert!(msgs.is_empty(), "kind {kind} reports were: {msgs:?}");
+        }
     }
 }
