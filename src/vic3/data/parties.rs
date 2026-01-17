@@ -48,6 +48,6 @@ impl DbKind for Party {
             let mut vd = Validator::new(block, data);
             vd.field_item("default", Item::File);
         });
-        vd.field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
     }
 }

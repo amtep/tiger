@@ -22,6 +22,13 @@ macro_rules! set {
     };
 }
 
+/// Basically a named bool.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AllowInject {
+    No,
+    Yes,
+}
+
 /// Warns about a redefinition of a database item
 pub fn dup_error(key: &Token, other: &Token, id: &str) {
     warn(ErrorKey::DuplicateItem)
@@ -49,8 +56,13 @@ pub fn exact_dup_advice(key: &Token, other: &Token, id: &str) {
         .push();
 }
 
-/// Warns about a duplicate `key = value` in a database item
-pub fn dup_assign_error(key: &Token, other: &Token) {
+/// Warns about a duplicate `key = value` in a database item.
+/// `key` is the new one, `other` is the old one.
+pub fn dup_assign_error(key: &Token, other: &Token, allow_inject: AllowInject) {
+    if allow_inject == AllowInject::Yes && key.loc.kind > other.loc.kind {
+        return;
+    }
+
     // Don't trace back macro invocations for duplicate field errors,
     // because they're just confusing.
     let mut key = key.clone();

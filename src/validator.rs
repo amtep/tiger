@@ -8,7 +8,7 @@ use crate::context::ScopeContext;
 use crate::date::Date;
 use crate::effect::validate_effect_internal;
 use crate::everything::Everything;
-use crate::helpers::{TigerHashSet, dup_assign_error};
+use crate::helpers::{AllowInject, TigerHashSet, dup_assign_error};
 #[cfg(feature = "hoi4")]
 use crate::hoi4::variables::validate_variable;
 use crate::item::Item;
@@ -228,7 +228,7 @@ impl<'a> Validator<'a> {
         false
     }
 
-    fn field_check<F>(&mut self, name: &str, mut f: F) -> bool
+    fn field_check<F>(&mut self, name: &str, allow_inject: AllowInject, mut f: F) -> bool
     where
         F: FnMut(&Token, &BV),
     {
@@ -239,7 +239,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, allow_inject);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 f(key, bv);
@@ -271,7 +271,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field in the block.
     /// Returns true iff the field is present.
     pub fn field(&mut self, name: &str) -> bool {
-        self.field_check(name, |_, _| ())
+        self.field_check(name, AllowInject::No, |_, _| ())
     }
 
     /// Just like [`Validator::field`], but expects any number of `name` fields in the block.
@@ -291,7 +291,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some((other, _)) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::Yes);
                 }
                 found = Some((key, bv));
             }
@@ -311,7 +311,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::Yes);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(token) = bv.expect_value() {
@@ -336,7 +336,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::Yes);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(token) = bv.expect_value() {
@@ -367,7 +367,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::Yes);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(token) = bv.expect_value() {
@@ -392,7 +392,7 @@ impl<'a> Validator<'a> {
         F: FnMut(&Token, ValueValidator),
     {
         let max_sev = self.max_severity;
-        self.field_check(name, |k, bv| {
+        self.field_check(name, AllowInject::Yes, |k, bv| {
             if let Some(value) = bv.expect_value() {
                 let mut vd = ValueValidator::new(value, self.data);
                 vd.set_max_severity(max_sev);
@@ -423,7 +423,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_item(&mut self, name: &str, itype: Item) -> bool {
         let sev = self.max_severity;
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(itype, token, sev);
             }
@@ -436,7 +436,7 @@ impl<'a> Validator<'a> {
     #[cfg(feature = "hoi4")]
     pub fn field_variable(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 validate_variable(token, self.data, sc, sev);
             }
@@ -449,7 +449,7 @@ impl<'a> Validator<'a> {
     #[cfg(feature = "hoi4")]
     pub fn field_variable_or_integer(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if token.is_number() {
                     token.expect_integer();
@@ -467,7 +467,7 @@ impl<'a> Validator<'a> {
     pub fn field_action(&mut self, name: &str, sc: &ScopeContext) -> bool {
         let sev = self.max_severity;
         let data = &self.data;
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(Item::OnAction, token, sev);
                 if let Some(mut action_sc) = sc.root_for_action(token) {
@@ -485,7 +485,7 @@ impl<'a> Validator<'a> {
     #[allow(dead_code)]
     pub fn field_event(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         let sev = self.max_severity;
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(Item::Event, token, sev);
                 self.data.event_check_scope(token, sc);
@@ -503,7 +503,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_item_or_empty(&mut self, name: &str, itype: Item) -> bool {
         let sev = self.max_severity;
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if !token.is("") {
                     self.data.verify_exists_max_sev(itype, token, sev);
@@ -521,7 +521,7 @@ impl<'a> Validator<'a> {
     #[allow(dead_code)]
     pub fn field_localization(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         let sev = self.max_severity;
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(Item::Localization, token, sev);
                 self.data.localization.validate_use(token.as_str(), self.data, sc);
@@ -538,7 +538,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field in the block.
     /// Returns true iff the field is present.
     pub fn field_target(&mut self, name: &str, sc: &mut ScopeContext, outscopes: Scopes) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 // TODO: pass max_severity here
                 validate_target(token, self.data, sc, outscopes);
@@ -572,7 +572,7 @@ impl<'a> Validator<'a> {
         sc: &mut ScopeContext,
         outscopes: Scopes,
     ) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 // TODO: pass max_severity here
                 validate_target_ok_this(token, self.data, sc, outscopes);
@@ -591,7 +591,7 @@ impl<'a> Validator<'a> {
         itype: Item,
         outscopes: Scopes,
     ) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if !self.data.item_exists(itype, token.as_str()) {
                     // TODO: pass max_severity here
@@ -612,7 +612,7 @@ impl<'a> Validator<'a> {
         itype: Item,
         outscopes: Scopes,
     ) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if !self.data.item_exists(itype, token.as_str()) {
                     // TODO: pass max_severity here
@@ -627,7 +627,7 @@ impl<'a> Validator<'a> {
     /// No other validation is done.
     /// Returns true iff the field is present.
     pub fn field_block(&mut self, name: &str) -> bool {
-        self.field_check(name, |_, bv| _ = bv.expect_block())
+        self.field_check(name, AllowInject::No, |_, bv| _ = bv.expect_block())
     }
 
     /// Expect field `name`, if present, to be `name = yes` or `name = no`.
@@ -635,7 +635,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_bool(&mut self, name: &str) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if !token.is("yes") && !token.is("no") && !token.is("YES") && !token.is("NO") {
                     report(ErrorKey::Validation, sev).msg("expected yes or no").loc(token).push();
@@ -648,7 +648,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field.
     /// Returns true iff the field is present.
     pub fn field_integer(&mut self, name: &str) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 // TODO: pass max_severity here
                 token.expect_integer();
@@ -661,7 +661,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_integer_range<R: RangeBounds<i64>>(&mut self, name: &str, range: R) {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 // TODO: pass max_severity here
                 if let Some(i) = token.expect_integer() {
@@ -698,7 +698,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field.
     /// Returns true iff the field is present.
     pub fn field_numeric(&mut self, name: &str) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 token.expect_number();
             }
@@ -722,7 +722,7 @@ impl<'a> Validator<'a> {
     /// Expect no more than one `name` field.
     /// Returns true iff the field is present.
     pub fn field_precise_numeric(&mut self, name: &str) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 token.expect_precise_number();
             }
@@ -737,7 +737,7 @@ impl<'a> Validator<'a> {
         precise: bool,
     ) {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 let numeric =
                     if precise { token.expect_precise_number() } else { token.expect_number() };
@@ -792,7 +792,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_date(&mut self, name: &str) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if Date::from_str(token.as_str()).is_err() {
                     let msg = "expected date value";
@@ -991,7 +991,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     #[cfg(feature = "jomini")]
     pub fn field_script_value(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             // TODO: pass max_severity value down
             validate_script_value(bv, self.data, sc);
         })
@@ -1002,7 +1002,7 @@ impl<'a> Validator<'a> {
     /// the user except in debugging contexts, such as `ai_will_do`.
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     pub fn field_script_value_no_breakdown(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             // TODO: pass max_severity value down
             validate_script_value_no_breakdown(bv, self.data, sc);
         })
@@ -1016,7 +1016,7 @@ impl<'a> Validator<'a> {
     /// Does not warn if it is an inline script value and the `desc` fields in it do not contain valid localizations.
     #[cfg(feature = "jomini")]
     pub fn field_script_value_rooted(&mut self, name: &str, scopes: Scopes) -> bool {
-        self.field_check(name, |key, bv| {
+        self.field_check(name, AllowInject::Yes, |key, bv| {
             let mut sc = ScopeContext::new(scopes, key);
             // TODO: pass max_severity value down
             validate_script_value(bv, self.data, &mut sc);
@@ -1030,7 +1030,7 @@ impl<'a> Validator<'a> {
     #[cfg(feature = "jomini")]
     #[allow(dead_code)]
     pub fn field_script_value_no_breakdown_rooted(&mut self, name: &str, scopes: Scopes) -> bool {
-        self.field_check(name, |key, bv| {
+        self.field_check(name, AllowInject::Yes, |key, bv| {
             let mut sc = ScopeContext::new(scopes, key);
             // TODO: pass max_severity value down
             validate_script_value(bv, self.data, &mut sc);
@@ -1046,7 +1046,7 @@ impl<'a> Validator<'a> {
     where
         F: FnMut(&Token) -> ScopeContext,
     {
-        self.field_check(name, |key, bv| {
+        self.field_check(name, AllowInject::Yes, |key, bv| {
             let mut sc = f(key);
             // TODO: pass max_severity value down
             validate_script_value(bv, self.data, &mut sc);
@@ -1064,7 +1064,7 @@ impl<'a> Validator<'a> {
     where
         F: FnMut(&Token) -> ScopeContext,
     {
-        self.field_check(name, |key, bv| {
+        self.field_check(name, AllowInject::Yes, |key, bv| {
             let mut sc = f(key);
             // TODO: pass max_severity value down
             validate_script_value_no_breakdown(bv, self.data, &mut sc);
@@ -1074,7 +1074,7 @@ impl<'a> Validator<'a> {
     /// Just like [`Validator::field_script_value`], but it can accept a literal `flag:something` value as well as a script value.
     #[cfg(feature = "jomini")]
     pub fn field_script_value_or_flag(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             // TODO: pass max_severity value down
             if let Some(token) = bv.get_value() {
                 validate_target(token, self.data, sc, Scopes::Value | Scopes::Bool | Scopes::Flag);
@@ -1098,7 +1098,7 @@ impl<'a> Validator<'a> {
     /// Returns true iff the field is present.
     pub fn field_choice(&mut self, name: &str, choices: &[&str]) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 if !choices.contains(&token.as_str()) {
                     let msg = format!("expected one of {}", choices.join(", "));
@@ -1157,7 +1157,7 @@ impl<'a> Validator<'a> {
     where
         F: FnMut(&Token, &Everything),
     {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::No, |_, bv| {
             if let Some(block) = bv.expect_block() {
                 for token in block.iter_values_warn() {
                     f(token, self.data);
@@ -1194,7 +1194,7 @@ impl<'a> Validator<'a> {
 
     #[cfg(feature = "ck3")]
     pub fn field_icon(&mut self, name: &str, define: &str, suffix: &str) -> bool {
-        self.field_check(name, |_, bv| {
+        self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_icon(define, token, suffix);
             }
@@ -1279,7 +1279,7 @@ impl<'a> Validator<'a> {
                 self.known_fields.push(key.as_str());
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
                 }
                 f(bv, self.data);
                 found = Some(key);
@@ -1299,7 +1299,7 @@ impl<'a> Validator<'a> {
                 self.known_fields.push(key.as_str());
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
                 }
                 f(key, bv, self.data);
                 found = Some(key);
@@ -1442,7 +1442,33 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
+                }
+                self.expect_eq_qeq(key, *cmp);
+                if let Some(block) = bv.expect_block() {
+                    f(block, self.data);
+                }
+                found = Some(key);
+            }
+        }
+        found.is_some()
+    }
+
+    /// Just like [`Validator::multi_field_validated_block`], but warn if the field is redefined in
+    /// the same file.
+    #[cfg(feature = "vic3")]
+    pub fn multi_warn_field_validated_block<F>(&mut self, name: &str, mut f: F) -> bool
+    where
+        F: FnMut(&Block, &Everything),
+    {
+        let mut found: Option<&Token> = None;
+        for Field(key, cmp, bv) in self.block.iter_fields() {
+            if (self.case_sensitive && key.is(name))
+                || (!self.case_sensitive && key.lowercase_is(name))
+            {
+                self.known_fields.push(key.as_str());
+                if let Some(other) = found {
+                    dup_assign_error(key, other, AllowInject::Yes);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(block) = bv.expect_block() {
@@ -1466,7 +1492,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(block) = bv.expect_block() {
@@ -1491,7 +1517,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(block) = bv.expect_block() {
@@ -1592,7 +1618,7 @@ impl<'a> Validator<'a> {
             {
                 self.known_fields.push(key.as_str());
                 if let Some(other) = found {
-                    dup_assign_error(key, other);
+                    dup_assign_error(key, other, AllowInject::No);
                 }
                 self.expect_eq_qeq(key, *cmp);
                 if let Some(block) = bv.expect_block() {
@@ -1835,7 +1861,7 @@ impl<'a> Validator<'a> {
                 self.data.verify_exists(itype, key);
 
                 match visited_fields.get(key.as_str()) {
-                    Some(&duplicate) => dup_assign_error(key, duplicate),
+                    Some(&duplicate) => dup_assign_error(key, duplicate, AllowInject::No),
                     None => {
                         visited_fields.insert(key);
                     }

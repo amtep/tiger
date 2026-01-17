@@ -90,10 +90,10 @@ impl DbKind for LawType {
             sc
         });
 
-        vd.field_list_items("possible_political_movements", Item::LawType);
-        vd.field_list_items("unlocking_technologies", Item::Technology);
-        vd.field_list_items("unlocking_laws", Item::LawType);
-        vd.field_list_items("disallowing_laws", Item::LawType);
+        vd.multi_field_list_items("possible_political_movements", Item::LawType);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_laws", Item::LawType);
+        vd.multi_field_list_items("disallowing_laws", Item::LawType);
         vd.field_script_value_rooted("pop_support", Scopes::Pop);
 
         vd.field_item("institution", Item::Institution);
@@ -102,7 +102,7 @@ impl DbKind for LawType {
             validate_modifs(block, data, ModifKinds::Country, vd);
         });
 
-        vd.field_list_items("build_from_investment_pool", Item::BuildingGroup);
+        vd.multi_field_list_items("build_from_investment_pool", Item::BuildingGroup);
         vd.field_script_value_rooted("revolution_state_weight", Scopes::State);
 
         for field in &[

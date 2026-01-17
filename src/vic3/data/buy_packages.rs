@@ -43,7 +43,7 @@ impl DbKind for BuyPackage {
         }
 
         vd.field_numeric("political_strength");
-        vd.field_validated_block("goods", validate_goods);
+        vd.multi_field_validated_block("goods", validate_goods);
     }
 }
 

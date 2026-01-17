@@ -43,7 +43,7 @@ impl DbKind for Technology {
             validate_modifs(block, data, ModifKinds::Country, vd);
         });
 
-        vd.field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
 
         vd.field_effect_rooted("on_researched", Tooltipped::No, Scopes::Country);
         vd.field_script_value_rooted("ai_weight", Scopes::Country);

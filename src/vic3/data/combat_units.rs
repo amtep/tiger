@@ -55,7 +55,7 @@ impl DbKind for CombatUnit {
             validate_modifs(block, data, ModifKinds::MilitaryFormation, vd);
         });
         vd.field_trigger_rooted("can_build_conscript", Tooltipped::No, Scopes::Country);
-        vd.field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
         let mut seen_unconditional = None;
         vd.multi_field_validated_key_block("combat_unit_image", |key, block, data| {
             if let Some(unconditional) = &seen_unconditional {
