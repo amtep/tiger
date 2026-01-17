@@ -638,9 +638,18 @@ mod tests {
     use super::*;
 
     use std::path::PathBuf;
+    use std::sync::{LazyLock, Mutex};
 
     use crate::fileset::FileKind;
     use crate::report::take_reports;
+
+    static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+    fn with_test_lock<T>(f: impl FnOnce() -> T) -> T {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let _ = take_reports();
+        f()
+    }
 
     fn loc(line: u32, column: u32) -> Loc {
         let mut loc = Loc::for_file(
@@ -696,92 +705,104 @@ mod tests {
 
     #[test]
     fn adjacency_start_out_of_bounds_errors() {
-        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+        with_test_lock(|| {
+            let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
 
-        let adj = adjacency(Coords { x: 5, y: 0 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: 5, y: 0 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("start coordinate (5, 0) is out of bounds")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("start coordinate (5, 0) is out of bounds")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_start_wrong_color_errors() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(0, 0, Rgb([9, 9, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(0, 0, Rgb([9, 9, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: 0, y: 0 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: 0, y: 0 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("start coordinate is in the wrong province color")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("start coordinate is in the wrong province color")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_stop_wrong_color_errors_when_start_sentinel() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(1, 1, Rgb([9, 9, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(1, 1, Rgb([9, 9, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("stop coordinate is in the wrong province color")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("stop coordinate is in the wrong province color")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_one_endpoint_sentinel_can_still_pass() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(1, 0, Rgb([7, 8, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(1, 0, Rgb([7, 8, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 0 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 0 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(msgs.is_empty(), "reports were: {msgs:?}");
+            let msgs = take_msgs();
+            assert!(msgs.is_empty(), "reports were: {msgs:?}");
+        });
     }
 
     #[test]
     fn adjacency_kind_invalid_errors_even_if_coords_sentinel() {
-        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+        with_test_lock(|| {
+            let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
 
-        let adj = adjacency_with_kind("land", Coords { x: -1, y: -1 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency_with_kind("land", Coords { x: -1, y: -1 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("adjacency type `land` is invalid")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("adjacency type `land` is invalid")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_kind_sea_and_river_large_are_allowed() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(0, 0, Rgb([1, 2, 3]));
-        img.put_pixel(1, 0, Rgb([7, 8, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(0, 0, Rgb([1, 2, 3]));
+            img.put_pixel(1, 0, Rgb([7, 8, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        for kind in ["sea", "river_large"] {
-            let adj = adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
-            adj.validate(&provinces);
+            for kind in ["sea", "river_large"] {
+                let adj = adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
+                adj.validate(&provinces);
 
-            let msgs = take_msgs();
-            assert!(msgs.is_empty(), "kind {kind} reports were: {msgs:?}");
-        }
+                let msgs = take_msgs();
+                assert!(msgs.is_empty(), "kind {kind} reports were: {msgs:?}");
+            }
+        });
     }
 }
