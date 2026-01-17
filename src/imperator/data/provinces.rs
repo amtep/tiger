@@ -372,11 +372,8 @@ impl FileHandler<FileContent> for ImperatorProvinces {
 
     fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<FileContent> {
         if entry.path().components().count() == 2 {
-            match &*entry.filename().to_string_lossy() {
-                "default.map" => {
-                    return PdxFile::read_optional_bom(entry, parser).map(FileContent::DefaultMap);
-                }
-                _ => (),
+            if &*entry.filename().to_string_lossy() == "default.map" {
+                return PdxFile::read_optional_bom(entry, parser).map(FileContent::DefaultMap);
             }
             return Some(FileContent::Deferred);
         }
