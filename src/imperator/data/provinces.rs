@@ -81,7 +81,7 @@ impl MapFileNames {
         }
     }
 
-    fn matches_entry(&self, entry: &FileEntry, expected: &Option<String>) -> bool {
+    fn matches_entry(entry: &FileEntry, expected: &Option<String>) -> bool {
         let Some(expected) = expected else { return false };
         let expected = expected.trim();
         if expected.is_empty() {
@@ -310,7 +310,7 @@ impl ImperatorProvinces {
     fn process_map_entry(&mut self, entry: &FileEntry) {
         let Some(map_files) = &self.default_map_files else { return };
 
-        if map_files.matches_entry(entry, &map_files.adjacencies) {
+        if MapFileNames::matches_entry(entry, &map_files.adjacencies) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -325,7 +325,7 @@ impl ImperatorProvinces {
             return;
         }
 
-        if map_files.matches_entry(entry, &map_files.definitions) {
+        if MapFileNames::matches_entry(entry, &map_files.definitions) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -338,7 +338,7 @@ impl ImperatorProvinces {
             return;
         }
 
-        if map_files.matches_entry(entry, &map_files.provinces) {
+        if MapFileNames::matches_entry(entry, &map_files.provinces) {
             let img = match image::open(entry.fullpath()) {
                 Ok(img) => img,
                 Err(e) => {
