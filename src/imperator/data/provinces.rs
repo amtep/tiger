@@ -49,6 +49,8 @@ struct MapFileNames {
     definitions: Option<String>,
     provinces: Option<String>,
     #[allow(dead_code)]
+    positions: Option<String>, // set to "positions.txt" in vanilla, but the file is actually missing
+    #[allow(dead_code)]
     rivers: Option<String>, // processed in rivers.rs
     #[allow(dead_code)]
     topology: Option<String>, // not processed yet
@@ -68,6 +70,7 @@ impl MapFileNames {
         Self {
             definitions: map_filename(block.get_field_value("definitions")),
             provinces: map_filename(block.get_field_value("provinces")),
+            positions: map_filename(block.get_field_value("positions")),
             rivers: map_filename(block.get_field_value("rivers")),
             topology: map_filename(block.get_field_value("topology")),
             adjacencies: map_filename(block.get_field_value("adjacencies")),
@@ -96,6 +99,7 @@ impl MapFileNames {
     fn is_map_key(key: &Token) -> bool {
         key.lowercase_is("definitions")
             || key.lowercase_is("provinces")
+            || key.lowercase_is("positions")
             || key.lowercase_is("rivers")
             || key.lowercase_is("topology")
             || key.lowercase_is("adjacencies")
@@ -402,6 +406,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
             self.default_map_files = Some(MapFileNames {
                 definitions: Some("definition.csv".to_string()),
                 provinces: Some("provinces.png".to_string()),
+                positions: Some("positions.txt".to_string()),
                 rivers: Some("rivers.csv".to_string()),
                 topology: Some("topology.txt".to_string()),
                 adjacencies: Some("adjacencies.csv".to_string()),
