@@ -71,14 +71,14 @@ impl DbKind for CompanyType {
             vd.ban_field("dynamic_company_type_names", || "uses_dynamic_naming = yes");
         }
 
-        vd.field_list_items("building_types", Item::BuildingType);
-        vd.field_list_items("extension_building_types", Item::BuildingType);
+        vd.multi_field_list_items("building_types", Item::BuildingType);
+        vd.multi_field_list_items("extension_building_types", Item::BuildingType);
 
         vd.field_trigger_rooted("potential", Tooltipped::No, Scopes::Country);
         vd.field_trigger_rooted("attainable", Tooltipped::Yes, Scopes::Country);
         vd.field_trigger_rooted("possible", Tooltipped::Yes, Scopes::Country);
 
-        vd.field_validated_block("prosperity_modifier", |block, data| {
+        vd.multi_warn_field_validated_block("prosperity_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Country, vd);
         });

@@ -143,7 +143,7 @@ impl DbKind for DiplomaticAction {
             );
         }
 
-        vd.field_list_items("unlocking_technologies", Item::Technology); // undocumented
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology); // undocumented
 
         vd.field_trigger("selectable", Tooltipped::No, &mut sc);
         vd.field_trigger("potential", Tooltipped::No, &mut sc);

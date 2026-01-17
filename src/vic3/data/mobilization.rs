@@ -43,9 +43,9 @@ impl DbKind for MobilizationOption {
 
         vd.field_item("texture", Item::File);
 
-        vd.field_list_items("unlocking_technologies", Item::Technology);
-        vd.field_list_items("unlocking_laws", Item::LawType);
-        vd.field_list_items("unlocking_principles", Item::Principle); // undocumented
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_laws", Item::LawType);
+        vd.multi_field_list_items("unlocking_principles", Item::Principle); // undocumented
 
         vd.field_trigger_builder("is_shown", Tooltipped::No, sc_builder);
         vd.field_trigger_builder("possible", Tooltipped::Yes, sc_builder);

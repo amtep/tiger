@@ -50,14 +50,14 @@ impl DbKind for ProductionMethod {
         });
         vd.field_list_items("timed_modifiers", Item::Modifier);
 
-        vd.field_list_items("unlocking_laws", Item::LawType);
-        vd.field_list_items("disallowing_laws", Item::LawType);
-        vd.field_list_items("unlocking_religions", Item::Religion);
-        vd.field_list_items("disallowing_religions", Item::Religion);
-        vd.field_list_items("unlocking_technologies", Item::Technology);
-        vd.field_list_items("unlocking_production_methods", Item::ProductionMethod);
-        vd.field_list_items("unlocking_global_technologies", Item::Technology);
-        vd.field_list_items("unlocking_principles", Item::Principle);
+        vd.multi_field_list_items("unlocking_laws", Item::LawType);
+        vd.multi_field_list_items("disallowing_laws", Item::LawType);
+        vd.multi_field_list_items("unlocking_religions", Item::Religion);
+        vd.multi_field_list_items("disallowing_religions", Item::Religion);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_production_methods", Item::ProductionMethod);
+        vd.multi_field_list_items("unlocking_global_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_principles", Item::Principle);
         vd.multi_field_item("unlocking_identity", Item::PowerBlocIdentity);
 
         // TODO: verify ai_weight and ai_value; do both work?
@@ -110,17 +110,14 @@ impl ProductionMethodGroup {
         db.add(Item::ProductionMethodGroup, key, block, Box::new(Self {}));
     }
 
-    #[allow(clippy::unused_self)]
+    #[allow(clippy::unused_self)] // don't want to bake into the API that no self fields are used
     pub fn contains_production_method(
         &self,
         contains_pm: &Token,
         block: &Block,
         _data: &Everything,
     ) -> bool {
-        if let Some(pms) = block.get_field_list("production_methods") {
-            return pms.iter().any(|pm| pm == contains_pm);
-        }
-        false
+        block.get_multi_field_list("production_methods").iter().any(|pm| pm == contains_pm)
     }
 }
 
@@ -137,7 +134,7 @@ impl DbKind for ProductionMethodGroup {
         vd.field_bool("is_hidden_when_unavailable");
 
         vd.req_field("production_methods");
-        vd.field_list_items("production_methods", Item::ProductionMethod);
+        vd.multi_field_list_items("production_methods", Item::ProductionMethod);
 
         vd.field_choice("ai_selection", &["most_profitable", "most_productive"]);
     }

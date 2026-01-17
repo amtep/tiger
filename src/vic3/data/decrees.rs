@@ -39,9 +39,9 @@ impl DbKind for Decree {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::State, vd);
         });
-        vd.field_list_items("unlocking_technologies", Item::Technology);
-        vd.field_list_items("unlocking_laws", Item::LawType);
-        vd.field_script_value("cost", &mut sc); // TODO: verify if a script value is allowed here
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_laws", Item::LawType);
+        vd.field_numeric("cost");
         vd.field_script_value("ai_weight", &mut sc);
 
         vd.replaced_field("valid", "country_trigger and state_trigger");

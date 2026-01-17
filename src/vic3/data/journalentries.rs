@@ -108,7 +108,7 @@ impl DbKind for JournalEntry {
         vd.field_list_items("modifiers_while_active", Item::Modifier);
 
         for field in &["on_weekly_pulse", "on_monthly_pulse", "on_yearly_pulse"] {
-            vd.field_validated_block_sc(field, &mut sc, validate_on_action);
+            vd.multi_field_validated_block_sc(field, &mut sc, validate_on_action);
         }
 
         vd.field_script_value("current_value", &mut sc);
