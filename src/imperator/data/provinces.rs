@@ -81,7 +81,7 @@ impl MapFileNames {
         }
     }
 
-    fn matches_entry(entry: &FileEntry, expected: &Option<String>) -> bool {
+    fn matches_entry(entry: &FileEntry, expected: Option<&String>) -> bool {
         let Some(expected) = expected else { return false };
         let expected = expected.trim();
         if expected.is_empty() {
@@ -173,11 +173,9 @@ impl ImperatorProvinces {
                             } else {
                                 expecting = Expecting::Nothing;
                             }
-                        } else {
-                            if !MapFileNames::is_map_key(key) {
-                                let msg = format!("unexpected key `{key}`");
-                                warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
-                            }
+                        } else if !MapFileNames::is_map_key(key) {
+                            let msg = format!("unexpected key `{key}`");
+                            warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
                         }
                     }
                 }
@@ -260,9 +258,9 @@ impl ImperatorProvinces {
         }
     }
 
-    fn handle_adjacencies_content(&mut self, entry: &FileEntry, content: String) {
+    fn handle_adjacencies_content(&mut self, entry: &FileEntry, content: &str) {
         let mut seen_terminator = false;
-        for csv in parse_csv(entry, 1, &content) {
+        for csv in parse_csv(entry, 1, content) {
             if csv[0].is("-1") {
                 seen_terminator = true;
             } else if seen_terminator {
@@ -279,9 +277,9 @@ impl ImperatorProvinces {
         }
     }
 
-    fn handle_definitions_content(&mut self, entry: &FileEntry, content: String) {
+    fn handle_definitions_content(&mut self, entry: &FileEntry, content: &str) {
         self.definition_csv = Some(entry.clone());
-        for csv in parse_csv(entry, 0, &content) {
+        for csv in parse_csv(entry, 0, content) {
             self.parse_definition(&csv);
         }
     }
@@ -310,7 +308,7 @@ impl ImperatorProvinces {
     fn process_map_entry(&mut self, entry: &FileEntry) {
         let Some(map_files) = &self.default_map_files else { return };
 
-        if MapFileNames::matches_entry(entry, &map_files.adjacencies) {
+        if MapFileNames::matches_entry(entry, map_files.adjacencies.as_ref()) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -321,11 +319,11 @@ impl ImperatorProvinces {
                     return;
                 }
             };
-            self.handle_adjacencies_content(entry, content);
+            self.handle_adjacencies_content(entry, &content);
             return;
         }
 
-        if MapFileNames::matches_entry(entry, &map_files.definitions) {
+        if MapFileNames::matches_entry(entry, map_files.definitions.as_ref()) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -334,11 +332,11 @@ impl ImperatorProvinces {
                     return;
                 }
             };
-            self.handle_definitions_content(entry, content);
+            self.handle_definitions_content(entry, &content);
             return;
         }
 
-        if MapFileNames::matches_entry(entry, &map_files.provinces) {
+        if MapFileNames::matches_entry(entry, map_files.provinces.as_ref()) {
             let img = match image::open(entry.fullpath()) {
                 Ok(img) => img,
                 Err(e) => {
