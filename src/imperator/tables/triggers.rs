@@ -13,7 +13,6 @@ use Trigger::*;
 pub fn scope_trigger(name: &Token, data: &Everything) -> Option<(Scopes, Trigger)> {
     let name_lc = name.as_str().to_ascii_lowercase();
 
-    // TODO: binary search might be faster
     if let Some((from, trigger)) = TRIGGER_MAP.get(&*name_lc) {
         return Some((*from, *trigger));
     }
