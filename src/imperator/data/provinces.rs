@@ -39,75 +39,9 @@ pub struct ImperatorProvinces {
 
     sea_or_river: TigerHashSet<ProvId>,
 
-    default_map_files: Option<MapFileNames>,
+    default_map: Option<Block>,
 
     pending_map_files: Vec<FileEntry>,
-}
-
-#[derive(Clone, Debug, Default)]
-struct MapFileNames {
-    definitions: Option<String>,
-    provinces: Option<String>,
-    #[allow(dead_code)]
-    positions: Option<String>, // set to "positions.txt" in vanilla, but the file is actually missing
-    #[allow(dead_code)]
-    rivers: Option<String>, // processed in rivers.rs
-    #[allow(dead_code)]
-    topology: Option<String>, // not processed yet
-    adjacencies: Option<String>,
-    #[allow(dead_code)]
-    areas: Option<String>, // processed in areas.rs
-    #[allow(dead_code)]
-    regions: Option<String>, // processed in regions.rs
-    #[allow(dead_code)]
-    ports: Option<String>, // not processed yet
-    #[allow(dead_code)]
-    climate: Option<String>, // not processed yet
-}
-
-impl MapFileNames {
-    fn from_default_map(block: &Block) -> Self {
-        Self {
-            definitions: map_filename(block.get_field_value("definitions")),
-            provinces: map_filename(block.get_field_value("provinces")),
-            positions: map_filename(block.get_field_value("positions")),
-            rivers: map_filename(block.get_field_value("rivers")),
-            topology: map_filename(block.get_field_value("topology")),
-            adjacencies: map_filename(block.get_field_value("adjacencies")),
-            areas: map_filename(block.get_field_value("areas")),
-            regions: map_filename(block.get_field_value("regions")),
-            ports: map_filename(block.get_field_value("ports")),
-            climate: map_filename(block.get_field_value("climate")),
-        }
-    }
-
-    fn matches_entry(entry: &FileEntry, expected: Option<&String>) -> bool {
-        let Some(expected) = expected else { return false };
-        let expected = expected.trim();
-        if expected.is_empty() {
-            return false;
-        }
-
-        let expected_path = Path::new(expected);
-        if expected_path == entry.path() {
-            return true;
-        }
-
-        expected_path.file_name().is_some_and(|filename| filename == entry.filename())
-    }
-
-    fn is_map_key(key: &Token) -> bool {
-        key.lowercase_is("definitions")
-            || key.lowercase_is("provinces")
-            || key.lowercase_is("positions")
-            || key.lowercase_is("rivers")
-            || key.lowercase_is("topology")
-            || key.lowercase_is("adjacencies")
-            || key.lowercase_is("areas")
-            || key.lowercase_is("regions")
-            || key.lowercase_is("ports")
-            || key.lowercase_is("climate")
-    }
 }
 
 fn map_filename(token: Option<&Token>) -> Option<String> {
@@ -116,7 +50,56 @@ fn map_filename(token: Option<&Token>) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
+fn matches_entry(entry: &FileEntry, expected: Option<&str>) -> bool {
+    let Some(expected) = expected else { return false };
+    let expected = expected.trim();
+    if expected.is_empty() {
+        return false;
+    }
+
+    let expected_path = Path::new(expected);
+    if expected_path == entry.path() {
+        return true;
+    }
+
+    expected_path.file_name().is_some_and(|filename| filename == entry.filename())
+}
+
+fn is_map_key(key: &Token) -> bool {
+    key.lowercase_is("definitions")
+        || key.lowercase_is("provinces")
+        || key.lowercase_is("positions")
+        || key.lowercase_is("rivers")
+        || key.lowercase_is("topology")
+        || key.lowercase_is("adjacencies")
+        || key.lowercase_is("areas")
+        || key.lowercase_is("regions")
+        || key.lowercase_is("ports")
+        || key.lowercase_is("climate")
+}
+
 impl ImperatorProvinces {
+    fn expected_map_filename(&self, key: &str) -> Option<String> {
+        if let Some(block) = &self.default_map {
+            if let Some(value) = map_filename(block.get_field_value(key)) {
+                return Some(value);
+            }
+        }
+
+        match key {
+            "definitions" => Some("definition.csv".to_string()),
+            "provinces" => Some("provinces.png".to_string()),
+            "positions" => Some("positions.txt".to_string()),
+            "rivers" => Some("rivers.png".to_string()),
+            "topology" => Some("heightmap.heightmap".to_string()),
+            "adjacencies" => Some("adjacencies.csv".to_string()),
+            "areas" => Some("areas.txt".to_string()),
+            "regions" => Some("regions.txt".to_string()),
+            "ports" => Some("ports.csv".to_string()),
+            "climate" => Some("climate.txt".to_string()),
+            _ => None,
+        }
+    }
     fn province_color(&self, provid: ProvId) -> Option<Rgb<u8>> {
         self.provinces.get(&provid).map(|p| p.color)
     }
@@ -173,7 +156,7 @@ impl ImperatorProvinces {
                             } else {
                                 expecting = Expecting::Nothing;
                             }
-                        } else if !MapFileNames::is_map_key(key) {
+                        } else if !is_map_key(key) {
                             let msg = format!("unexpected key `{key}`");
                             warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
                         }
@@ -306,9 +289,8 @@ impl ImperatorProvinces {
     }
 
     fn process_map_entry(&mut self, entry: &FileEntry) {
-        let Some(map_files) = &self.default_map_files else { return };
-
-        if MapFileNames::matches_entry(entry, map_files.adjacencies.as_ref()) {
+        let adjacencies = self.expected_map_filename("adjacencies");
+        if matches_entry(entry, adjacencies.as_deref()) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -323,7 +305,8 @@ impl ImperatorProvinces {
             return;
         }
 
-        if MapFileNames::matches_entry(entry, map_files.definitions.as_ref()) {
+        let definitions = self.expected_map_filename("definitions");
+        if matches_entry(entry, definitions.as_deref()) {
             let content = match read_csv(entry.fullpath()) {
                 Ok(content) => content,
                 Err(e) => {
@@ -336,7 +319,8 @@ impl ImperatorProvinces {
             return;
         }
 
-        if MapFileNames::matches_entry(entry, map_files.provinces.as_ref()) {
+        let provinces = self.expected_map_filename("provinces");
+        if matches_entry(entry, provinces.as_deref()) {
             let img = match image::open(entry.fullpath()) {
                 Ok(img) => img,
                 Err(e) => {
@@ -381,13 +365,12 @@ impl FileHandler<FileContent> for ImperatorProvinces {
     fn handle_file(&mut self, entry: &FileEntry, content: FileContent) {
         match content {
             FileContent::DefaultMap(block) => {
-                let map_files = MapFileNames::from_default_map(&block);
-                self.default_map_files = Some(map_files);
+                self.default_map = Some(block.clone());
                 self.load_impassable(&block);
                 self.process_pending_map_entries();
             }
             FileContent::Deferred => {
-                if self.default_map_files.is_some() {
+                if self.default_map.is_some() {
                     self.process_map_entry(entry);
                 } else {
                     self.pending_map_files.push(entry.clone());
@@ -397,19 +380,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
     }
 
     fn finalize(&mut self) {
-        if self.default_map_files.is_none() {
-            self.default_map_files = Some(MapFileNames {
-                definitions: Some("definition.csv".to_string()),
-                provinces: Some("provinces.png".to_string()),
-                positions: Some("positions.txt".to_string()),
-                rivers: Some("rivers.png".to_string()),
-                topology: Some("heightmap.heightmap".to_string()),
-                adjacencies: Some("adjacencies.csv".to_string()),
-                areas: Some("areas.txt".to_string()),
-                regions: Some("regions.txt".to_string()),
-                ports: Some("ports.csv".to_string()),
-                climate: Some("climate.txt".to_string()),
-            });
+        if self.default_map.is_none() {
             self.process_pending_map_entries();
         }
 
