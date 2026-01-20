@@ -272,7 +272,7 @@ impl ImperatorProvinces {
             }
         }
         if !seen_terminator {
-            let msg = "CK3 needs a line with all `-1;` at the end of this file";
+            let msg = "Imperator needs a line with all `-1;` at the end of this file";
             err(ErrorKey::ParseError).msg(msg).loc(entry).push();
         }
     }
