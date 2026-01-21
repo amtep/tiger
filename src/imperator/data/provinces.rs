@@ -367,7 +367,6 @@ impl FileHandler<FileContent> for ImperatorProvinces {
             FileContent::DefaultMap(block) => {
                 self.default_map = Some(block.clone());
                 self.load_impassable(&block);
-                self.process_pending_map_entries();
             }
             FileContent::Deferred => {
                 if self.default_map.is_some() {
@@ -380,9 +379,7 @@ impl FileHandler<FileContent> for ImperatorProvinces {
     }
 
     fn finalize(&mut self) {
-        if self.default_map.is_none() {
-            self.process_pending_map_entries();
-        }
+        self.process_pending_map_entries();
 
         if self.definition_csv.is_none() {
             // Shouldn't happen, it should come from vanilla if not from the mod
