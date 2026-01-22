@@ -6,7 +6,8 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 #[cfg(feature = "hoi4")]
 use crate::game::Game;
-use crate::helpers::{BANNED_NAMES, TigerHashMap, dup_error, exact_dup_error};
+use crate::helpers::{BANNED_NAMES, TigerHashMap, limited_item_prefix_should_insert};
+use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::macros::{MACRO_MAP, MacroCache};
 use crate::parse::ParserMemory;
@@ -28,28 +29,23 @@ pub struct Triggers {
 
 impl Triggers {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.triggers.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_error(&key, &other.key, "scripted trigger");
-                } else {
-                    dup_error(&key, &other.key, "scripted trigger");
-                }
-            }
-        }
         if BANNED_NAMES.contains(&key.as_str()) {
             let msg = "scripted trigger has the same name as an important builtin";
             err(ErrorKey::NameConflict).strong().msg(msg).loc(key).push();
-        } else {
+        } else if let Some(name) =
+            limited_item_prefix_should_insert(Item::ScriptedTrigger, key, |key| {
+                self.triggers.get(key).map(|entry| &entry.key)
+            })
+        {
             let scope_override = self
                 .scope_overrides
-                .get(key.as_str())
+                .get(name.as_str())
                 .copied()
-                .or_else(|| builtin_scope_overrides(&key));
+                .or_else(|| builtin_scope_overrides(&name));
             if block.source.is_some() {
-                MACRO_MAP.insert_or_get_loc(key.loc);
+                MACRO_MAP.insert_or_get_loc(name.loc);
             }
-            self.triggers.insert(key.as_str(), Trigger::new(key, block, scope_override));
+            self.triggers.insert(name.as_str(), Trigger::new(name, block, scope_override));
         }
     }
 

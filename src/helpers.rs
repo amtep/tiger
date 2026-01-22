@@ -5,6 +5,10 @@ use bimap::BiHashMap;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+use crate::game::Game;
+use crate::item::Item;
+#[cfg(feature = "vic3")]
+use crate::report::err;
 use crate::report::{ErrorKey, tips, warn};
 #[cfg(feature = "hoi4")]
 use crate::scopes::Scopes;
@@ -246,4 +250,61 @@ pub fn camel_case_to_separated_words(s: &str) -> String {
         }
     }
     temp_s
+}
+
+/// Used for scripted triggers, effects, and modifiers. Handles the `REPLACE:` etc prefixes, and
+/// returns the name to insert under iff the new item should be inserted.
+pub fn limited_item_prefix_should_insert<'a, 'b, F>(
+    itype: Item,
+    key: Token,
+    get_other: F,
+) -> Option<Token>
+where
+    F: Fn(&'a str) -> Option<&'b Token>,
+{
+    if Game::is_vic3() {
+        #[allow(clippy::collapsible_else_if)]
+        #[cfg(feature = "vic3")]
+        if let Some((prefix, name)) = key.split_once(':') {
+            let other = get_other(name.as_str());
+            match prefix.as_str() {
+                "INJECT" | "TRY_INJECT" | "INJECT_OR_CREATE" => {
+                    let msg = format!("cannot inject {itype}");
+                    err(ErrorKey::Prefixes).msg(msg).loc(prefix).push();
+                }
+                "REPLACE" => {
+                    if other.is_some() {
+                        return Some(name);
+                    }
+                    let msg = "replacing a non-existing item";
+                    err(ErrorKey::Prefixes).msg(msg).loc(name).push();
+                }
+                "TRY_REPLACE" => {
+                    if other.is_some() {
+                        return Some(name);
+                    }
+                }
+                "REPLACE_OR_CREATE" => return Some(name),
+                _ => {
+                    let msg = format!("unknown prefix `{prefix}`");
+                    err(ErrorKey::Prefixes).msg(msg).loc(prefix).push();
+                }
+            }
+        } else {
+            if let Some(other) = get_other(key.as_str()) {
+                let msg = format!("must have prefix such as `REPLACE:` to replace {itype}");
+                err(ErrorKey::Prefixes).msg(msg).loc(key).loc_msg(other, "original here").push();
+            } else {
+                return Some(key);
+            }
+        }
+    } else {
+        if let Some(other) = get_other(key.as_str()) {
+            if other.loc.kind >= key.loc.kind {
+                dup_error(&key, other, &itype.to_string());
+            }
+        }
+        return Some(key);
+    }
+    None
 }
