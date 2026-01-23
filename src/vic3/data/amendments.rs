@@ -72,5 +72,8 @@ impl DbKind for Amendment {
         vd.field_trigger_rooted("ai_will_revoke", Tooltipped::Yes, Scopes::Country);
 
         vd.field_numeric("amendment_activism_multiplier");
+
+        vd.field_effect_rooted("on_activate", Tooltipped::Yes, Scopes::Country);
+        vd.field_effect_rooted("on_deactivate", Tooltipped::Yes, Scopes::Country);
     }
 }

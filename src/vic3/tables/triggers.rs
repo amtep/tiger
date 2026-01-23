@@ -1989,8 +1989,8 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scope(Scopes::Country),
             Scopes::Value,
         ),
-        (Scopes::Country, "religion_percent_country", Item(Item::Religion), Scopes::Value),
-        (Scopes::State, "religion_percent_state", Item(Item::Religion), Scopes::Value),
+        (Scopes::Country, "religion_percent_country", Scope(Scopes::Religion), Scopes::Value),
+        (Scopes::State, "religion_percent_state", Scope(Scopes::Religion), Scopes::Value),
         (Scopes::StateRegion, "remaining_undepleted", Item(Item::BuildingGroup), Scopes::Value),
         (Scopes::Country, "size_weighted_lost_battles_fraction", Scope(Scopes::War), Scopes::Value),
         (
