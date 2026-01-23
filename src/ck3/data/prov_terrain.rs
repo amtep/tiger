@@ -41,17 +41,13 @@ impl ProvinceTerrains {
 
         // If no file was handled, for example when using `replace_paths`, self.file_loc is None.
         // TODO: Find a way to denote `ErrorLoc` error report when no loc is available.
-        if self.file_loc.is_some() {
+        if let Some(loc) = self.file_loc {
             for (name, terrains) in DEFAULT_TERRAINS.iter().zip(&self.defaults) {
                 if let Some(terrain) = terrains {
                     data.verify_exists(Item::Terrain, terrain);
                 } else {
                     let msg = format!("missing default terrain: {name}");
-                    warn(ErrorKey::Validation)
-                        .msg(msg)
-                        // SAFETY: self.file_loc is `Some`
-                        .loc(self.file_loc.unwrap())
-                        .push();
+                    warn(ErrorKey::Validation).msg(msg).loc(loc).push();
                 }
             }
         }

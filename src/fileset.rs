@@ -124,6 +124,8 @@ impl PartialOrd for FileEntry {
 impl Ord for FileEntry {
     fn cmp(&self, other: &Self) -> Ordering {
         // Compare idx if available (for speed), otherwise compare the paths.
+        // TODO: the unnecessary unwrap can be fixed after msrv is high enough to use multiple `let` in one if.
+        #[allow(clippy::unnecessary_unwrap)]
         let path_ord = if self.idx.is_some() && other.idx.is_some() {
             self.idx.unwrap().cmp(&other.idx.unwrap())
         } else {
