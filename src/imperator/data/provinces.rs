@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use image::{DynamicImage, Rgb, RgbImage};
@@ -38,9 +38,68 @@ pub struct ImperatorProvinces {
     impassable: TigerHashSet<ProvId>,
 
     sea_or_river: TigerHashSet<ProvId>,
+
+    default_map: Option<Block>,
+
+    pending_map_files: Vec<FileEntry>,
+}
+
+fn map_filename(token: Option<&Token>) -> Option<String> {
+    token
+        .map(|value| value.as_str().trim_matches('"').to_string())
+        .filter(|value| !value.is_empty())
+}
+
+fn matches_entry(entry: &FileEntry, expected: Option<&str>) -> bool {
+    let Some(expected) = expected else { return false };
+    let expected = expected.trim();
+    if expected.is_empty() {
+        return false;
+    }
+
+    let expected_path = Path::new(expected);
+    if expected_path == entry.path() {
+        return true;
+    }
+
+    expected_path.file_name().is_some_and(|filename| filename == entry.filename())
+}
+
+fn is_map_key(key: &Token) -> bool {
+    key.lowercase_is("definitions")
+        || key.lowercase_is("provinces")
+        || key.lowercase_is("positions")
+        || key.lowercase_is("rivers")
+        || key.lowercase_is("topology")
+        || key.lowercase_is("adjacencies")
+        || key.lowercase_is("areas")
+        || key.lowercase_is("regions")
+        || key.lowercase_is("ports")
+        || key.lowercase_is("climate")
 }
 
 impl ImperatorProvinces {
+    fn expected_map_filename(&self, key: &str) -> Option<String> {
+        if let Some(block) = &self.default_map {
+            if let Some(value) = map_filename(block.get_field_value(key)) {
+                return Some(value);
+            }
+        }
+
+        match key {
+            "definitions" => Some("definition.csv".to_string()),
+            "provinces" => Some("provinces.png".to_string()),
+            "positions" => Some("positions.txt".to_string()),
+            "rivers" => Some("rivers.png".to_string()),
+            "topology" => Some("heightmap.heightmap".to_string()),
+            "adjacencies" => Some("adjacencies.csv".to_string()),
+            "areas" => Some("areas.txt".to_string()),
+            "regions" => Some("regions.txt".to_string()),
+            "ports" => Some("ports.csv".to_string()),
+            "climate" => Some("climate.txt".to_string()),
+            _ => None,
+        }
+    }
     fn province_color(&self, provid: ProvId) -> Option<Rgb<u8>> {
         self.provinces.get(&provid).map(|p| p.color)
     }
@@ -97,10 +156,9 @@ impl ImperatorProvinces {
                             } else {
                                 expecting = Expecting::Nothing;
                             }
-                        } else {
-                            // TODO: this has to wait until full validation
-                            // let msg = format!("unexpected key `{key}`");
-                            // warn(ErrorKey::UnknownField).weak().msg(msg).loc(key).push();
+                        } else if !is_map_key(key) {
+                            let msg = format!("unexpected key `{key}`");
+                            warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
                         }
                     }
                 }
@@ -182,14 +240,111 @@ impl ImperatorProvinces {
             item.validate(self);
         }
     }
+
+    fn handle_adjacencies_content(&mut self, entry: &FileEntry, content: &str) {
+        let mut seen_terminator = false;
+        for csv in parse_csv(entry, 1, content) {
+            if csv[0].is("-1") {
+                seen_terminator = true;
+            } else if seen_terminator {
+                let msg = "the line with all `-1;` should be the last line in the file";
+                warn(ErrorKey::ParseError).msg(msg).loc(&csv[0]).push();
+                break;
+            } else {
+                self.adjacencies.extend(Adjacency::parse(&csv));
+            }
+        }
+        if !seen_terminator {
+            let msg = "Imperator needs a line with all `-1;` at the end of this file";
+            err(ErrorKey::ParseError).msg(msg).loc(entry).push();
+        }
+    }
+
+    fn handle_definitions_content(&mut self, entry: &FileEntry, content: &str) {
+        self.definition_csv = Some(entry.clone());
+        for csv in parse_csv(entry, 0, content) {
+            self.parse_definition(&csv);
+        }
+    }
+
+    fn handle_provinces_image(&mut self, img: DynamicImage, entry: &FileEntry) {
+        match img {
+            DynamicImage::ImageRgb8(img) => {
+                for pixel in img.pixels().dedup() {
+                    self.colors.insert(*pixel);
+                }
+
+                // Keep the full image for validating adjacency coordinates.
+                self.provinces_png = Some(img);
+            }
+            other => {
+                let msg = format!(
+                    "`{}` has wrong color format `{:?}`, should be Rgb8",
+                    entry.path().display(),
+                    other.color()
+                );
+                err(ErrorKey::ImageFormat).msg(msg).loc(entry).push();
+            }
+        }
+    }
+
+    fn process_map_entry(&mut self, entry: &FileEntry) {
+        let adjacencies = self.expected_map_filename("adjacencies");
+        if matches_entry(entry, adjacencies.as_deref()) {
+            let content = match read_csv(entry.fullpath()) {
+                Ok(content) => content,
+                Err(e) => {
+                    err(ErrorKey::ReadError)
+                        .msg(format!("could not read file: {e:#}"))
+                        .loc(entry)
+                        .push();
+                    return;
+                }
+            };
+            self.handle_adjacencies_content(entry, &content);
+            return;
+        }
+
+        let definitions = self.expected_map_filename("definitions");
+        if matches_entry(entry, definitions.as_deref()) {
+            let content = match read_csv(entry.fullpath()) {
+                Ok(content) => content,
+                Err(e) => {
+                    let msg = format!("could not read `{}`: {:#}", entry.path().display(), e);
+                    err(ErrorKey::ReadError).msg(msg).loc(entry).push();
+                    return;
+                }
+            };
+            self.handle_definitions_content(entry, &content);
+            return;
+        }
+
+        let provinces = self.expected_map_filename("provinces");
+        if matches_entry(entry, provinces.as_deref()) {
+            let img = match image::open(entry.fullpath()) {
+                Ok(img) => img,
+                Err(e) => {
+                    let msg = format!("could not read `{}`: {e:#}", entry.path().display());
+                    err(ErrorKey::ReadError).msg(msg).loc(entry).push();
+                    return;
+                }
+            };
+            self.handle_provinces_image(img, entry);
+        }
+    }
+
+    fn process_pending_map_entries(&mut self) {
+        let pending = std::mem::take(&mut self.pending_map_files);
+        for entry in pending {
+            self.process_map_entry(&entry);
+        }
+    }
 }
 
 #[derive(Debug)]
 pub enum FileContent {
-    Adjacencies(String),
-    Definitions(String),
-    Provinces(DynamicImage),
     DefaultMap(Block),
+    Deferred,
 }
 
 impl FileHandler<FileContent> for ImperatorProvinces {
@@ -199,104 +354,33 @@ impl FileHandler<FileContent> for ImperatorProvinces {
 
     fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<FileContent> {
         if entry.path().components().count() == 2 {
-            match &*entry.filename().to_string_lossy() {
-                "adjacencies.csv" => {
-                    let content = match read_csv(entry.fullpath()) {
-                        Ok(content) => content,
-                        Err(e) => {
-                            err(ErrorKey::ReadError)
-                                .msg(format!("could not read file: {e:#}"))
-                                .loc(entry)
-                                .push();
-                            return None;
-                        }
-                    };
-                    return Some(FileContent::Adjacencies(content));
-                }
-
-                "definition.csv" => {
-                    let content = match read_csv(entry.fullpath()) {
-                        Ok(content) => content,
-                        Err(e) => {
-                            let msg =
-                                format!("could not read `{}`: {:#}", entry.path().display(), e);
-                            err(ErrorKey::ReadError).msg(msg).loc(entry).push();
-                            return None;
-                        }
-                    };
-                    return Some(FileContent::Definitions(content));
-                }
-
-                "provinces.png" => {
-                    let img = match image::open(entry.fullpath()) {
-                        Ok(img) => img,
-                        Err(e) => {
-                            let msg = format!("could not read `{}`: {e:#}", entry.path().display());
-                            err(ErrorKey::ReadError).msg(msg).loc(entry).push();
-                            return None;
-                        }
-                    };
-                    if let DynamicImage::ImageRgb8(_) = img {
-                        return Some(FileContent::Provinces(img));
-                    }
-                    let msg = format!(
-                        "`{}` has wrong color format `{:?}`, should be Rgb8",
-                        entry.path().display(),
-                        img.color()
-                    );
-                    err(ErrorKey::ImageFormat).msg(msg).loc(entry).push();
-                }
-
-                "default.map" => {
-                    return PdxFile::read_optional_bom(entry, parser).map(FileContent::DefaultMap);
-                }
-                _ => (),
+            if &*entry.filename().to_string_lossy() == "default.map" {
+                return PdxFile::read_optional_bom(entry, parser).map(FileContent::DefaultMap);
             }
+            return Some(FileContent::Deferred);
         }
         None
     }
 
     fn handle_file(&mut self, entry: &FileEntry, content: FileContent) {
         match content {
-            FileContent::Adjacencies(content) => {
-                let mut seen_terminator = false;
-                for csv in parse_csv(entry, 1, &content) {
-                    if csv[0].is("-1") {
-                        seen_terminator = true;
-                    } else if seen_terminator {
-                        let msg = "the line with all `-1;` should be the last line in the file";
-                        warn(ErrorKey::ParseError).msg(msg).loc(&csv[0]).push();
-                        break;
-                    } else {
-                        self.adjacencies.extend(Adjacency::parse(&csv));
-                    }
-                }
-                if !seen_terminator {
-                    let msg = "CK3 needs a line with all `-1;` at the end of this file";
-                    err(ErrorKey::ParseError).msg(msg).loc(entry).push();
+            FileContent::DefaultMap(block) => {
+                self.default_map = Some(block.clone());
+                self.load_impassable(&block);
+            }
+            FileContent::Deferred => {
+                if self.default_map.is_some() {
+                    self.process_map_entry(entry);
+                } else {
+                    self.pending_map_files.push(entry.clone());
                 }
             }
-            FileContent::Definitions(content) => {
-                self.definition_csv = Some(entry.clone());
-                for csv in parse_csv(entry, 0, &content) {
-                    self.parse_definition(&csv);
-                }
-            }
-            FileContent::Provinces(img) => {
-                if let DynamicImage::ImageRgb8(img) = img {
-                    for pixel in img.pixels().dedup() {
-                        self.colors.insert(*pixel);
-                    }
-
-                    // Keep the full image for validating adjacency coordinates.
-                    self.provinces_png = Some(img);
-                }
-            }
-            FileContent::DefaultMap(block) => self.load_impassable(&block),
         }
     }
 
     fn finalize(&mut self) {
+        self.process_pending_map_entries();
+
         if self.definition_csv.is_none() {
             // Shouldn't happen, it should come from vanilla if not from the mod
             eprintln!("map_data/definition.csv is missing?!?");
@@ -333,7 +417,6 @@ impl FileHandler<FileContent> for ImperatorProvinces {
     }
 }
 
-#[allow(dead_code)] // TODO
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Coords {
     x: i32,
@@ -523,9 +606,18 @@ mod tests {
     use super::*;
 
     use std::path::PathBuf;
+    use std::sync::{LazyLock, Mutex};
 
     use crate::fileset::FileKind;
     use crate::report::take_reports;
+
+    static TEST_MUTEX: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+    fn with_test_lock<T>(f: impl FnOnce() -> T) -> T {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let _ = take_reports();
+        f()
+    }
 
     fn loc(line: u32, column: u32) -> Loc {
         let mut loc = Loc::for_file(
@@ -581,92 +673,104 @@ mod tests {
 
     #[test]
     fn adjacency_start_out_of_bounds_errors() {
-        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+        with_test_lock(|| {
+            let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
 
-        let adj = adjacency(Coords { x: 5, y: 0 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: 5, y: 0 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("start coordinate (5, 0) is out of bounds")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("start coordinate (5, 0) is out of bounds")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_start_wrong_color_errors() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(0, 0, Rgb([9, 9, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(0, 0, Rgb([9, 9, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: 0, y: 0 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: 0, y: 0 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("start coordinate is in the wrong province color")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("start coordinate is in the wrong province color")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_stop_wrong_color_errors_when_start_sentinel() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(1, 1, Rgb([9, 9, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(1, 1, Rgb([9, 9, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 1 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("stop coordinate is in the wrong province color")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("stop coordinate is in the wrong province color")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_one_endpoint_sentinel_can_still_pass() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(1, 0, Rgb([7, 8, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(1, 0, Rgb([7, 8, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 0 });
-        adj.validate(&provinces);
+            let adj = adjacency(Coords { x: -1, y: -1 }, Coords { x: 1, y: 0 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(msgs.is_empty(), "reports were: {msgs:?}");
+            let msgs = take_msgs();
+            assert!(msgs.is_empty(), "reports were: {msgs:?}");
+        });
     }
 
     #[test]
     fn adjacency_kind_invalid_errors_even_if_coords_sentinel() {
-        let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
+        with_test_lock(|| {
+            let img = RgbImage::from_pixel(2, 2, Rgb([1, 2, 3]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([9, 9, 9]));
 
-        let adj = adjacency_with_kind("land", Coords { x: -1, y: -1 }, Coords { x: -1, y: -1 });
-        adj.validate(&provinces);
+            let adj = adjacency_with_kind("land", Coords { x: -1, y: -1 }, Coords { x: -1, y: -1 });
+            adj.validate(&provinces);
 
-        let msgs = take_msgs();
-        assert!(
-            msgs.iter().any(|m| m.contains("adjacency type `land` is invalid")),
-            "reports were: {msgs:?}"
-        );
+            let msgs = take_msgs();
+            assert!(
+                msgs.iter().any(|m| m.contains("adjacency type `land` is invalid")),
+                "reports were: {msgs:?}"
+            );
+        });
     }
 
     #[test]
     fn adjacency_kind_sea_and_river_large_are_allowed() {
-        let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
-        img.put_pixel(0, 0, Rgb([1, 2, 3]));
-        img.put_pixel(1, 0, Rgb([7, 8, 9]));
-        let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
+        with_test_lock(|| {
+            let mut img = RgbImage::from_pixel(2, 2, Rgb([0, 0, 0]));
+            img.put_pixel(0, 0, Rgb([1, 2, 3]));
+            img.put_pixel(1, 0, Rgb([7, 8, 9]));
+            let provinces = base_provinces(img, Rgb([1, 2, 3]), Rgb([7, 8, 9]));
 
-        for kind in ["sea", "river_large"] {
-            let adj = adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
-            adj.validate(&provinces);
+            for kind in ["sea", "river_large"] {
+                let adj = adjacency_with_kind(kind, Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 });
+                adj.validate(&provinces);
 
-            let msgs = take_msgs();
-            assert!(msgs.is_empty(), "kind {kind} reports were: {msgs:?}");
-        }
+                let msgs = take_msgs();
+                assert!(msgs.is_empty(), "kind {kind} reports were: {msgs:?}");
+            }
+        });
     }
 }

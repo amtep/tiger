@@ -20,6 +20,7 @@ use crate::report::{ErrorKey, err, warn, will_maybe_log};
 
 #[inline]
 fn river_image_path() -> &'static str {
+    // TODO: for Imperator, CK3 and Vic3, instead of hardcoded rivers.png file name, get it from map_data/default.map
     if Game::is_hoi4() { "map/rivers.bmp" } else { "map_data/rivers.png" }
 }
 
