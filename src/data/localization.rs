@@ -16,6 +16,7 @@ use bitvec::order::Lsb0;
 use bitvec::{BitArr, bitarr};
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use murmur3::murmur3_32;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::scope;
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{Display, EnumCount, EnumIter, EnumString, FromRepr, IntoStaticStr};
@@ -279,12 +280,11 @@ fn get_file_lang(filename: &OsStr) -> Option<Language> {
 }
 
 impl Localization {
-    // TODO: Remove `+ '_` in edition 2024
-    fn iter_lang_idx(&self) -> impl Iterator<Item = usize> + '_ {
+    fn iter_lang_idx(&self) -> impl Iterator<Item = usize> {
         self.iter_lang().map(Language::to_idx)
     }
 
-    fn iter_lang(&self) -> impl Iterator<Item = Language> + '_ {
+    fn iter_lang(&self) -> impl Iterator<Item = Language> {
         Language::iter().filter(|i| self.mod_langs[i.to_idx()])
     }
 
@@ -626,6 +626,7 @@ impl Localization {
 
     // This is in pass2 to make sure all `validated` entries have been marked.
     pub fn validate_pass2(&self, data: &Everything) {
+        #[allow(unused_variables)]
         scope(|s| {
             for lang in self.iter_lang_idx() {
                 let loca = &self.locas[lang];
@@ -638,15 +639,13 @@ impl Localization {
                 let mut unvalidated_entries: Vec<&LocaEntry> =
                     loca.values().filter(|e| !e.validated.load(Relaxed)).collect();
                 unvalidated_entries.sort_unstable();
-                for entry in unvalidated_entries {
+                unvalidated_entries.par_iter().for_each(|entry| {
                     // Technically we can now store true in entry.validated,
                     // but the value is not needed anymore after this.
-                    s.spawn(move |_| {
-                        let mut sc = ScopeContext::new_unrooted(Scopes::all(), &entry.key);
-                        sc.set_strict_scopes(false);
-                        Self::validate_loca(entry, loca, data, &mut sc, lang);
-                    });
-                }
+                    let mut sc = ScopeContext::new_unrooted(Scopes::all(), &entry.key);
+                    sc.set_strict_scopes(false);
+                    Self::validate_loca(entry, loca, data, &mut sc, lang);
+                });
             }
         });
     }

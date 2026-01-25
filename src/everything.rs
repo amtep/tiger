@@ -223,6 +223,154 @@ pub struct Everything {
     pub(crate) variables: Variables,
 }
 
+macro_rules! load_all_generic {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.dds, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.defines, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.triggers, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.effects, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.assets, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.gui, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.on_actions, &$t.parser));
+    };
+}
+
+#[cfg(feature = "ck3")]
+macro_rules! load_all_ck3 {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.events, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.interaction_cats, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.province_histories, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.province_properties, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.province_terrains, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.gameconcepts, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.titles, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.characters, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.traits, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.title_history, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.doctrines, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.menatarmstypes, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.music, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.data_bindings, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.provinces_ck3, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_lists, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.wars, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.coas, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_modifiers, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.script_values, &$t.parser));
+        $s.spawn(|_| crate::ck3::data::buildings::Building::finalize(&mut $t.database));
+    };
+}
+
+#[cfg(feature = "vic3")]
+macro_rules! load_all_vic3 {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.events, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.history, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.provinces_vic3, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.data_bindings, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.coas, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_lists, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_modifiers, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.script_values, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.music, &$t.parser));
+        $s.spawn(|_| {
+            Everything::load_json(
+                &$t.fileset,
+                &mut $t.database,
+                Item::TerrainMask,
+                TerrainMask::add_json,
+            );
+        });
+    };
+}
+
+#[cfg(feature = "imperator")]
+macro_rules! load_all_imperator {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.events, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.decisions_imperator, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.provinces_imperator, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.coas, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_lists, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_modifiers, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.script_values, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.music, &$t.parser));
+    };
+}
+
+#[cfg(feature = "hoi4")]
+macro_rules! load_all_hoi4 {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.events_hoi4, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.gfx, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.provinces_hoi4, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.music_hoi4, &$t.parser));
+    };
+}
+
+macro_rules! scan_all_generic {
+    ($s: ident) => {
+        $s.triggers.scan_variables(&mut $s.variables);
+        $s.effects.scan_variables(&mut $s.variables);
+        $s.on_actions.scan_variables(&mut $s.variables);
+    };
+}
+
+#[cfg(feature = "ck3")]
+macro_rules! scan_all_ck3 {
+    ($s: ident) => {
+        $s.events.scan_variables(&mut $s.variables);
+        $s.interaction_cats.scan_variables(&mut $s.variables);
+        $s.province_histories.scan_variables(&mut $s.variables);
+        $s.titles.scan_variables(&mut $s.variables);
+        $s.characters.scan_variables(&mut $s.variables);
+        $s.traits.scan_variables(&mut $s.variables);
+        $s.title_history.scan_variables(&mut $s.variables);
+        $s.doctrines.scan_variables(&mut $s.variables);
+        $s.menatarmstypes.scan_variables(&mut $s.variables);
+        $s.music.scan_variables(&mut $s.variables);
+        $s.scripted_lists.scan_variables(&mut $s.variables);
+        $s.coas.scan_variables(&mut $s.variables);
+        $s.scripted_modifiers.scan_variables(&mut $s.variables);
+        $s.script_values.scan_variables(&mut $s.variables);
+    };
+}
+
+#[cfg(feature = "vic3")]
+macro_rules! scan_all_vic3 {
+    ($s: ident) => {
+        $s.events.scan_variables(&mut $s.variables);
+        $s.history.scan_variables(&mut $s.variables);
+        $s.coas.scan_variables(&mut $s.variables);
+        $s.scripted_lists.scan_variables(&mut $s.variables);
+        $s.scripted_modifiers.scan_variables(&mut $s.variables);
+        $s.script_values.scan_variables(&mut $s.variables);
+        $s.music.scan_variables(&mut $s.variables);
+    };
+}
+
+#[cfg(feature = "imperator")]
+macro_rules! scan_all_imperator {
+    ($s: ident) => {
+        $s.events.scan_variables(&mut $s.variables);
+        $s.decisions_imperator.scan_variables(&mut $s.variables);
+        $s.coas.scan_variables(&mut $s.variables);
+        $s.scripted_lists.scan_variables(&mut $s.variables);
+        $s.scripted_modifiers.scan_variables(&mut $s.variables);
+        $s.script_values.scan_variables(&mut $s.variables);
+        $s.music.scan_variables(&mut $s.variables);
+    };
+}
+
+#[cfg(feature = "hoi4")]
+macro_rules! scan_all_hoi4 {
+    ($s: ident) => {
+        self.events_hoi4.scan_variables(&mut self.variables);
+        self.music_hoi4.scan_variables(&mut self.variables);
+    };
+}
+
 impl Everything {
     /// Create a new `Everything` instance, ready for validating a mod.
     ///
@@ -386,18 +534,18 @@ impl Everything {
     }
 
     #[cfg(feature = "vic3")]
-    fn load_json<F>(&mut self, itype: Item, add_json: F)
+    fn load_json<F>(fileset: &Fileset, db: &mut Db, itype: Item, add_json: F)
     where
         F: Fn(&mut Db, Block) + Sync + Send,
     {
-        for block in self.fileset.filter_map_under(&PathBuf::from(itype.path()), |entry| {
+        for block in fileset.filter_map_under(&PathBuf::from(itype.path()), |entry| {
             if entry.filename().to_string_lossy().ends_with(".json") {
                 parse_json_file(entry)
             } else {
                 None
             }
         }) {
-            add_json(&mut self.database, block);
+            add_json(db, block);
         }
     }
 
@@ -447,168 +595,58 @@ impl Everything {
         }
     }
 
-    fn load_all_generic(&mut self) {
-        scope(|s| {
-            s.spawn(|_| self.fileset.handle(&mut self.dds, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.localization, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.defines, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.triggers, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.effects, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.assets, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.gui, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.on_actions, &self.parser));
-        });
-
-        self.load_all_normal_pdx_files();
-    }
-
-    #[cfg(feature = "ck3")]
-    fn load_all_ck3(&mut self) {
-        scope(|s| {
-            s.spawn(|_| self.fileset.handle(&mut self.events, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.interaction_cats, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.province_histories, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.province_properties, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.province_terrains, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.gameconcepts, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.titles, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.characters, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.traits, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.title_history, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.doctrines, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.menatarmstypes, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.music, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.data_bindings, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.provinces_ck3, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_lists, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.wars, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.coas, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_modifiers, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.script_values, &self.parser));
-        });
-        crate::ck3::data::buildings::Building::finalize(&mut self.database);
-    }
-
-    #[cfg(feature = "vic3")]
-    fn load_all_vic3(&mut self) {
-        scope(|s| {
-            s.spawn(|_| self.fileset.handle(&mut self.events, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.history, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.provinces_vic3, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.data_bindings, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.coas, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_lists, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_modifiers, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.script_values, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.music, &self.parser));
-        });
-        self.load_json(Item::TerrainMask, TerrainMask::add_json);
-    }
-
-    #[cfg(feature = "imperator")]
-    fn load_all_imperator(&mut self) {
-        scope(|s| {
-            s.spawn(|_| self.fileset.handle(&mut self.events, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.decisions_imperator, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.provinces_imperator, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.coas, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_lists, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.scripted_modifiers, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.script_values, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.music, &self.parser));
-        });
-    }
-
-    #[cfg(feature = "hoi4")]
-    fn load_all_hoi4(&mut self) {
-        scope(|s| {
-            s.spawn(|_| self.fileset.handle(&mut self.events_hoi4, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.gfx, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.provinces_hoi4, &self.parser));
-            s.spawn(|_| self.fileset.handle(&mut self.music_hoi4, &self.parser));
-        });
-    }
-
-    fn scan_all_generic(&mut self) {
-        self.triggers.scan_variables(&mut self.variables);
-        self.effects.scan_variables(&mut self.variables);
-        self.on_actions.scan_variables(&mut self.variables);
-    }
-
-    #[cfg(feature = "ck3")]
-    fn scan_all_ck3(&mut self) {
-        self.events.scan_variables(&mut self.variables);
-        self.interaction_cats.scan_variables(&mut self.variables);
-        self.province_histories.scan_variables(&mut self.variables);
-        self.titles.scan_variables(&mut self.variables);
-        self.characters.scan_variables(&mut self.variables);
-        self.traits.scan_variables(&mut self.variables);
-        self.title_history.scan_variables(&mut self.variables);
-        self.doctrines.scan_variables(&mut self.variables);
-        self.menatarmstypes.scan_variables(&mut self.variables);
-        self.music.scan_variables(&mut self.variables);
-        self.scripted_lists.scan_variables(&mut self.variables);
-        self.coas.scan_variables(&mut self.variables);
-        self.scripted_modifiers.scan_variables(&mut self.variables);
-        self.script_values.scan_variables(&mut self.variables);
-    }
-
-    #[cfg(feature = "vic3")]
-    fn scan_all_vic3(&mut self) {
-        self.events.scan_variables(&mut self.variables);
-        self.history.scan_variables(&mut self.variables);
-        self.coas.scan_variables(&mut self.variables);
-        self.scripted_lists.scan_variables(&mut self.variables);
-        self.scripted_modifiers.scan_variables(&mut self.variables);
-        self.script_values.scan_variables(&mut self.variables);
-        self.music.scan_variables(&mut self.variables);
-    }
-
-    #[cfg(feature = "imperator")]
-    fn scan_all_imperator(&mut self) {
-        self.events.scan_variables(&mut self.variables);
-        self.decisions_imperator.scan_variables(&mut self.variables);
-        self.coas.scan_variables(&mut self.variables);
-        self.scripted_lists.scan_variables(&mut self.variables);
-        self.scripted_modifiers.scan_variables(&mut self.variables);
-        self.script_values.scan_variables(&mut self.variables);
-        self.music.scan_variables(&mut self.variables);
-    }
-
-    #[cfg(feature = "hoi4")]
-    fn scan_all_hoi4(&mut self) {
-        self.events_hoi4.scan_variables(&mut self.variables);
-        self.music_hoi4.scan_variables(&mut self.variables);
-    }
-
     pub fn load_all(&mut self) {
         #[cfg(feature = "ck3")]
         self.load_reader_export();
-        self.load_all_generic();
-        match Game::game() {
-            #[cfg(feature = "ck3")]
-            Game::Ck3 => self.load_all_ck3(),
-            #[cfg(feature = "vic3")]
-            Game::Vic3 => self.load_all_vic3(),
-            #[cfg(feature = "imperator")]
-            Game::Imperator => self.load_all_imperator(),
-            #[cfg(feature = "hoi4")]
-            Game::Hoi4 => self.load_all_hoi4(),
-        }
-        self.database.add_subitems();
+        self.load_all_normal_pdx_files();
 
-        self.scan_all_generic();
-        match Game::game() {
-            #[cfg(feature = "ck3")]
-            Game::Ck3 => self.scan_all_ck3(),
-            #[cfg(feature = "vic3")]
-            Game::Vic3 => self.scan_all_vic3(),
-            #[cfg(feature = "imperator")]
-            Game::Imperator => self.scan_all_imperator(),
-            #[cfg(feature = "hoi4")]
-            Game::Hoi4 => self.scan_all_hoi4(),
-        }
-        self.database.scan_variables(&mut self.variables);
+        std::thread::scope(|s| {
+            s.spawn(|| self.fileset.handle(&mut self.localization, &self.parser));
+
+            scope(|s| {
+                load_all_generic!(s, self);
+                match Game::game() {
+                    #[cfg(feature = "ck3")]
+                    Game::Ck3 => {
+                        load_all_ck3!(s, self);
+                    }
+                    #[cfg(feature = "vic3")]
+                    Game::Vic3 => {
+                        load_all_vic3!(s, self);
+                    }
+                    #[cfg(feature = "imperator")]
+                    Game::Imperator => {
+                        load_all_imperator!(s, self);
+                    }
+                    #[cfg(feature = "hoi4")]
+                    Game::Hoi4 => {
+                        load_all_hoi4!(s, self);
+                    }
+                }
+            });
+
+            self.database.add_subitems();
+            scan_all_generic!(self);
+            match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => {
+                    scan_all_ck3!(self);
+                }
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => {
+                    scan_all_vic3!(self);
+                }
+                #[cfg(feature = "imperator")]
+                Game::Imperator => {
+                    scan_all_imperator!(self);
+                }
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => {
+                    scan_all_hoi4!(self);
+                }
+            }
+            self.database.scan_variables(&mut self.variables);
+        });
     }
 
     fn validate_all_generic<'a>(&'a self, s: &Scope<'a>) {
@@ -695,9 +733,8 @@ impl Everything {
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.validate_all_hoi4(s),
             }
+            self.database.validate(self);
         });
-        self.database.validate(self);
-
         self.localization.validate_pass2(self);
     }
 

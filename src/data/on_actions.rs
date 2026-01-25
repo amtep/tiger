@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::effect::validate_effect;
@@ -57,9 +59,9 @@ impl OnActions {
     }
 
     pub fn validate(&self, data: &Everything) {
-        for item in self.on_actions.values() {
-            item.validate(data);
-        }
+        self.on_actions.par_iter().for_each(|(_, v)| {
+            v.validate(data);
+        });
     }
 
     pub fn validate_call(&self, key: &Token, data: &Everything, sc: &mut ScopeContext) {
