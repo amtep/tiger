@@ -29,6 +29,8 @@ use crate::datatype::{CodeChain, Datatype, validate_datatypes};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler, FileKind};
 use crate::game::Game;
+#[cfg(any(feature = "ck3", feature = "vic3"))]
+use crate::helpers::TigerHashMapExt;
 use crate::helpers::{TigerHashMap, dup_error, stringify_list};
 #[cfg(feature = "hoi4")]
 use crate::hoi4::tables::localization::BUILTIN_MACROS_HOI4;
@@ -44,6 +46,23 @@ use crate::token::Token;
 #[cfg(feature = "vic3")]
 use crate::vic3::tables::localization::BUILTIN_MACROS_VIC3;
 
+#[derive(Debug)]
+pub struct Languages([TigerHashMap<&'static str, LocaEntry>; Language::COUNT]);
+
+impl core::ops::Index<Language> for Languages {
+    type Output = TigerHashMap<&'static str, LocaEntry>;
+
+    fn index(&self, index: Language) -> &Self::Output {
+        &self.0[index.to_idx()]
+    }
+}
+
+impl core::ops::IndexMut<Language> for Languages {
+    fn index_mut(&mut self, index: Language) -> &mut Self::Output {
+        &mut self.0[index.to_idx()]
+    }
+}
+
 /// Database of all loaded localization keys and their values, for all supported languages.
 #[derive(Debug)]
 pub struct Localization {
@@ -54,7 +73,7 @@ pub struct Localization {
     /// (This saves them the effort of configuring `check_langs`).
     mod_langs: BitArr!(for Language::COUNT, in u16),
     /// Database of all localizations, indexed first by language and then by localization key.
-    locas: Box<[TigerHashMap<&'static str, LocaEntry>; Language::COUNT]>,
+    locas: Languages,
 }
 
 /// List of languages that are supported by the game engine.
@@ -280,16 +299,12 @@ fn get_file_lang(filename: &OsStr) -> Option<Language> {
 }
 
 impl Localization {
-    fn iter_lang_idx(&self) -> impl Iterator<Item = usize> {
-        self.iter_lang().map(Language::to_idx)
-    }
-
     fn iter_lang(&self) -> impl Iterator<Item = Language> {
         Language::iter().filter(|i| self.mod_langs[i.to_idx()])
     }
 
     pub fn exists(&self, key: &str) -> bool {
-        for lang in self.iter_lang_idx() {
+        for lang in self.iter_lang() {
             if !self.locas[lang].contains_key(key) {
                 return false;
             }
@@ -301,19 +316,22 @@ impl Localization {
     // engineering of CK3 binary through magic numbers. CK3 and VIC3 are supported.
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     fn all_collision_keys(&self, lang: Language) -> TigerHashMap<u32, Vec<&LocaEntry>> {
-        let mut result: TigerHashMap<u32, Vec<&LocaEntry>> = TigerHashMap::default();
-        for loca in self.locas[lang.to_idx()].values() {
-            result
-                .entry(murmur3_32(&mut Cursor::new(loca.key.as_str()), 0).unwrap())
-                .or_default()
-                .push(loca);
+        let loca_hashes: Vec<_> = self.locas[lang]
+            .par_iter()
+            .map(|(_, loca)| (loca, murmur3_32(&mut Cursor::new(loca.key.as_str()), 0).unwrap()))
+            .collect();
+        let mut result: TigerHashMap<u32, Vec<&LocaEntry>> =
+            TigerHashMap::with_capacity(loca_hashes.len());
+
+        for (l, h) in loca_hashes {
+            result.entry(h).or_default().push(l);
         }
         result.retain(|_, locas| locas.len() > 1);
         result
     }
 
     pub fn iter_keys(&self) -> impl Iterator<Item = &Token> {
-        self.iter_lang_idx()
+        self.iter_lang()
             .map(|i| &self.locas[i])
             .flat_map(|hash| hash.values().map(|item| &item.key))
     }
@@ -372,7 +390,7 @@ impl Localization {
 
     #[allow(dead_code)]
     pub fn exists_lang(&self, key: &str, lang: Language) -> bool {
-        if !self.locas[lang.to_idx()].contains_key(key) {
+        if !self.locas[lang].contains_key(key) {
             return false;
         }
         true
@@ -422,7 +440,7 @@ impl Localization {
     /// Marks a localization key as used for one language.
     /// Returns whether the key exists for this language (same as [`Localization::exists_lang`]).
     fn mark_used_lang_return_exists(&self, key: &str, lang: Language) -> bool {
-        if let Some(entry) = self.locas[lang.to_idx()].get(key) {
+        if let Some(entry) = self.locas[lang].get(key) {
             entry.used.store(true, Relaxed);
             return true;
         }
@@ -543,7 +561,7 @@ impl Localization {
 
     #[cfg(feature = "ck3")]
     pub fn verify_key_has_options(&self, loca: &str, key: &Token, n: i64, prefix: &str) {
-        for lang in self.iter_lang_idx() {
+        for lang in self.iter_lang() {
             if let Some(entry) = self.locas[lang].get(loca) {
                 if let Some(ref orig) = entry.orig {
                     for i in 1..=n {
@@ -596,12 +614,12 @@ impl Localization {
     }
 
     pub fn validate_use(&self, key: &str, data: &Everything, sc: &mut ScopeContext) {
-        for lang in self.iter_lang_idx() {
+        for lang in self.iter_lang() {
             let loca = &self.locas[lang];
             if let Some(entry) = loca.get(key) {
                 entry.used.store(true, Relaxed);
                 entry.validated.store(true, Relaxed);
-                Self::validate_loca(entry, loca, data, sc, Language::from_idx(lang));
+                Self::validate_loca(entry, loca, data, sc, lang);
             }
         }
     }
@@ -628,9 +646,8 @@ impl Localization {
     pub fn validate_pass2(&self, data: &Everything) {
         #[allow(unused_variables)]
         scope(|s| {
-            for lang in self.iter_lang_idx() {
+            for lang in self.iter_lang() {
                 let loca = &self.locas[lang];
-                let lang = Language::from_idx(lang);
                 // Check localization key collisions
                 #[cfg(any(feature = "ck3", feature = "vic3"))]
                 s.spawn(move |_| self.check_collisions(lang));
@@ -666,7 +683,7 @@ impl Localization {
         self.mark_category_used("HYBRID_NAME_FORMAT_");
         self.mark_category_used("DIVERGE_NAME_FORMAT_");
 
-        for lang in self.iter_lang_idx() {
+        for lang in self.iter_lang() {
             let mut vec = Vec::new();
             for entry in self.locas[lang].values() {
                 if !entry.used.load(Relaxed) {
@@ -685,7 +702,7 @@ impl Localization {
 
     #[cfg(feature = "ck3")]
     pub fn check_pod_loca(&self, data: &Everything) {
-        for lang in self.iter_lang_idx() {
+        for lang in self.iter_lang() {
             for key in data.database.iter_keys(Item::PerkTree) {
                 let loca = format!("{key}_name");
                 if let Some(entry) = self.locas[lang].get(loca.as_str()) {
@@ -791,14 +808,18 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
     }
 
     fn handle_file(&mut self, entry: &FileEntry, loaded: (Language, Vec<LocaEntry>)) {
-        let (filelang, mut vec) = loaded;
-        let hash = &mut self.locas[filelang.to_idx()];
+        let (filelang, vec) = loaded;
+        let hash = &mut self.locas[filelang];
+        if hash.is_empty() {
+            // empirically ~290k for each lang of ck3
+            hash.reserve(300_000);
+        }
 
         if entry.kind() == FileKind::Mod {
             self.mod_langs.set(filelang.to_idx(), true);
         }
 
-        for loca in vec.drain(..) {
+        for loca in vec {
             match hash.entry(loca.key.as_str()) {
                 Entry::Occupied(mut occupied_entry) => {
                     let other = occupied_entry.get();
@@ -823,7 +844,7 @@ impl Default for Localization {
         Localization {
             check_langs: bitarr![u16, Lsb0; 1; Language::COUNT],
             mod_langs: bitarr![u16, Lsb0; 0; Language::COUNT],
-            locas: Box::new(std::array::from_fn(|_| TigerHashMap::default())),
+            locas: Languages(std::array::from_fn(|_| TigerHashMap::default())),
         }
     }
 }
