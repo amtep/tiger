@@ -366,8 +366,8 @@ macro_rules! scan_all_imperator {
 #[cfg(feature = "hoi4")]
 macro_rules! scan_all_hoi4 {
     ($s: ident) => {
-        self.events_hoi4.scan_variables(&mut self.variables);
-        self.music_hoi4.scan_variables(&mut self.variables);
+        $s.events_hoi4.scan_variables(&mut $s.variables);
+        $s.music_hoi4.scan_variables(&mut $s.variables);
     };
 }
 
@@ -733,7 +733,7 @@ impl Everything {
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.validate_all_hoi4(s),
             }
-            self.database.validate(self);
+            s.spawn(|_| self.database.validate(self));
         });
         self.localization.validate_pass2(self);
     }
