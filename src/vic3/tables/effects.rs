@@ -227,7 +227,8 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "execute_event_option", Vb(validate_execute_event_option)),
     (Scopes::Character, "exile_character", Yes),
     (Scopes::StateRegion, "finish_harvest_condition", Item(Item::HarvestConditionType)),
-    (Scopes::InterestGroup, "finish_negotiation", Boolean),
+    // docs say boolean
+    (Scopes::InterestGroup, "finish_negotiation", Item(Item::Localization)),
     (Scopes::State, "force_resource_depletion", Item(Item::BuildingType)),
     (Scopes::State, "force_resource_discovery", Item(Item::BuildingType)),
     (Scopes::Character, "free_character_from_void", Boolean),
