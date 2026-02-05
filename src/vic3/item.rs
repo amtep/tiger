@@ -121,6 +121,8 @@ impl Item {
                 | Item::PortraitModifierGroup
                 | Item::Music
                 | Item::MusicPlayerCategory
+                // undocumented
+                | Item::PortraitAnimation
         )
     }
 }

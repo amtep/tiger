@@ -30,8 +30,8 @@ impl DbKind for StateTrait {
         vd.req_field("icon");
         vd.field_item("icon", Item::File);
 
-        vd.field_list_items("required_techs_for_colonization", Item::Technology);
-        vd.field_list_items("disabling_technologies", Item::Technology);
+        vd.multi_field_list_items("required_techs_for_colonization", Item::Technology);
+        vd.multi_field_list_items("disabling_technologies", Item::Technology);
 
         vd.field_validated_block("modifier", |block, data| {
             let vd = Validator::new(block, data);
