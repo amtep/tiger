@@ -6,7 +6,7 @@ pub const COMPANY_CATEGORIES: &[&str] = &[
     "capitalist_owned",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.10.0
+// LAST UPDATED VIC3 VERSION 1.12.2
 pub const DLC_FEATURES_VIC3: &[&str] = &[
     "voice_of_the_people_content",
     "voice_of_the_people_preorder",
@@ -28,6 +28,8 @@ pub const DLC_FEATURES_VIC3: &[&str] = &[
     "mp1_prestige_goods",
     "ip3_content",
     "ip3_cosmetics",
+    "ip4_content",
+    "ip4_cosmetics",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
@@ -141,44 +143,6 @@ pub const TREATY_ARTICLE_CATEGORIES: &[&str] = &[
     "other",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.8.1
-// Taken from `localization/english/diplomatic_plays_l_english.yml` entries
-// that start with `war_goal_`.
-pub const WARGOALS: &[&str] = &[
-    "annex_country",
-    "ban_slavery",
-    "colonization_rights",
-    "conquer_state",
-    "contain_threat",
-    "enforce_treaty_article",
-    "force_nationalization",
-    "force_recognition",
-    "foreign_investment_rights",
-    "humiliation",
-    "increase_autonomy",
-    "independence",
-    "join_power_bloc",
-    "leave_power_bloc",
-    "liberate_country",
-    "liberate_subject",
-    "make_dominion",
-    "make_protectorate",
-    "make_tributary",
-    "open_market",
-    "reduce_autonomy",
-    "regime_change",
-    "return_state",
-    "revoke_all_claims",
-    "revoke_claim",
-    "revolution",
-    "secession",
-    "take_treaty_port",
-    "transfer_subject",
-    "unification",
-    "unification_leadership",
-    // war_reparations was removed in 1.9
-];
-
 // LAST UPDATED VIC3 VERSION 1.3.6
 // TODO: maybe ruler and heir too?
 pub const CHARACTER_ROLES: &[&str] = &["admiral", "agitator", "general", "politician", "executive"];
@@ -195,13 +159,14 @@ pub const TERRAIN_KEYS: &[&str] = &[
     "travel_harsh_environment",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.7.0
+// LAST UPDATED VIC3 VERSION 1.12.2
 pub const COMMON_DIRS: &[&str] = &[
     "common/acceptance_statuses",
     "common/achievements",
     "common/ai_strategies",
     "common/alert_groups",
     "common/alert_types",
+    "common/amendments",
     "common/battle_conditions",
     "common/building_groups",
     "common/buildings",
@@ -221,6 +186,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/commander_ranks",
     "common/company_charter_types",
     "common/company_types",
+    "common/console_command_macros",
     "common/country_creation",
     "common/country_definitions",
     "common/country_formation",
@@ -249,6 +215,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/game_concepts",
     "common/game_rules",
     "common/genes",
+    "common/geographic_regions",
     "common/goods",
     "common/government_types",
     "common/harvest_condition_types",
@@ -321,6 +288,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/trigger_localization",
     "common/tutorial_lesson_chains",
     "common/tutorial_lessons",
+    "common/war_goal_types",
 ];
 
 // LAST UPDATED VIC3 VERSION 1.7.6

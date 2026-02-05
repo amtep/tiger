@@ -35,14 +35,12 @@ impl BuildingType {
         block: &Block,
         data: &Everything,
     ) {
-        if let Some(groups) = block.get_field_list("production_method_groups") {
-            for group in groups {
-                if let Some((_, block, group_item)) = data
-                    .get_item::<ProductionMethodGroup>(Item::ProductionMethodGroup, group.as_str())
-                {
-                    if group_item.contains_production_method(pm, block, data) {
-                        return;
-                    }
+        for group in block.get_multi_field_list("production_method_groups") {
+            if let Some((_, block, group_item)) =
+                data.get_item::<ProductionMethodGroup>(Item::ProductionMethodGroup, group.as_str())
+            {
+                if group_item.contains_production_method(pm, block, data) {
+                    return;
                 }
             }
         }
@@ -138,7 +136,7 @@ impl DbKind for BuildingType {
 
         vd.field_bool("company_headquarter");
 
-        vd.field_list_items("unlocking_technologies", Item::Technology);
+        vd.multi_field_list_items("unlocking_technologies", Item::Technology);
         vd.field_trigger("potential", Tooltipped::No, &mut state_sc);
         vd.field_trigger("possible", Tooltipped::No, &mut state_sc);
         vd.field_trigger("can_build", Tooltipped::Yes, &mut state_sc);
@@ -171,7 +169,7 @@ impl DbKind for BuildingType {
         vd.field_item("slaves_role", Item::PopType);
 
         // docs say production_methods
-        vd.field_list_items("production_method_groups", Item::ProductionMethodGroup);
+        vd.multi_field_list_items("production_method_groups", Item::ProductionMethodGroup);
 
         vd.field_trigger("should_auto_expand", Tooltipped::Yes, &mut building_sc);
 

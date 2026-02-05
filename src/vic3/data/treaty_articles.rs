@@ -74,6 +74,8 @@ impl DbKind for TreatyArticle {
             "friendly",
             "giftable",
             "hostile",
+            // undocumented
+            "target_subjects_as_input",
         ];
         vd.field_list_choice("flags", flags);
 

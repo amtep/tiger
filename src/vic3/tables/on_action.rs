@@ -1,4 +1,4 @@
-// LAST UPDATED VIC3 VERSION 1.8.1
+// LAST UPDATED VIC3 VERSION 1.12.2
 pub const ON_ACTION_SCOPES: &str = "
         on_monthly_pulse = {
             root = none
@@ -414,5 +414,19 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = culture
 		region = state_region
 		culture = culture
+	}
+	on_empty_battle_lost = on_battle_started
+	on_empty_battle_won = on_battle_started
+	on_amendment_repealed = {
+		root = country
+		amendment = amendment
+	}
+	on_ruler_selected = {
+		root = character
+		previous = character
+	}
+	on_negotiate_with = {
+		root = country
+		negotiating_interest_group = interest_group
 	}
 ";

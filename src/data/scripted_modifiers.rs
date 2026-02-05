@@ -4,7 +4,8 @@ use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::{BANNED_NAMES, TigerHashMap, dup_error};
+use crate::helpers::{BANNED_NAMES, TigerHashMap, limited_item_prefix_should_insert};
+use crate::item::Item;
 use crate::macros::{MACRO_MAP, MacroCache};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
@@ -23,19 +24,19 @@ pub struct ScriptedModifiers {
 
 impl ScriptedModifiers {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.scripted_modifiers.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "scripted modifier");
-            }
-        }
         if BANNED_NAMES.contains(&key.as_str()) {
             let msg = "scripted modifier has the same name as an important builtin";
             err(ErrorKey::NameConflict).strong().msg(msg).loc(key).push();
-        } else {
+        } else if let Some(name) =
+            limited_item_prefix_should_insert(Item::ScriptedModifier, key, |key| {
+                // TODO: here and in triggers and effects, get rid of the clone somehow.
+                self.scripted_modifiers.get(key).map(|entry| &entry.key)
+            })
+        {
             if block.source.is_some() {
-                MACRO_MAP.insert_or_get_loc(key.loc);
+                MACRO_MAP.insert_or_get_loc(name.loc);
             }
-            self.scripted_modifiers.insert(key.as_str(), ScriptedModifier::new(key, block));
+            self.scripted_modifiers.insert(name.as_str(), ScriptedModifier::new(name, block));
         }
     }
 

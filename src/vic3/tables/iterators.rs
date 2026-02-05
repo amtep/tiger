@@ -1,11 +1,35 @@
 use std::sync::LazyLock;
 
+use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
+use crate::item::Item;
+use crate::lowercase::Lowercase;
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
+use crate::token::Token;
+
+const GEOGRAPHIC_REGION_ITERATORS: &[(Scopes, &str, Scopes)] = &[
+    (Scopes::None, "country_in_", Scopes::Country),
+    (Scopes::None, "province_in_", Scopes::Province),
+    (Scopes::None, "state_in_", Scopes::State),
+    (Scopes::None, "state_region_in_", Scopes::StateRegion),
+    (Scopes::None, "strategic_region_in_", Scopes::StrategicRegion),
+];
 
 #[inline]
-pub fn iterator(name: &str) -> Option<(Scopes, Scopes)> {
-    ITERATOR_MAP.get(name).copied()
+pub fn iterator(name_lc: &Lowercase, name: &Token, data: &Everything) -> Option<(Scopes, Scopes)> {
+    for (inscope, pfx, outscope) in GEOGRAPHIC_REGION_ITERATORS.iter().copied() {
+        if let Some(part) = name_lc.strip_prefix_unchecked(pfx) {
+            if !data.item_exists(Item::GeographicRegionShortKey, part.as_str()) {
+                let msg = format!("could not find geographic region short key {part}");
+                let info = format!("so the iterator {name} does not exist");
+                err(ErrorKey::MissingItem).strong().msg(msg).info(info).loc(name).push();
+            }
+            return Some((inscope, outscope));
+        }
+    }
+
+    ITERATOR_MAP.get(name_lc.as_str()).copied()
 }
 
 static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = LazyLock::new(|| {
@@ -16,7 +40,7 @@ static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = La
     hash
 });
 
-/// LAST UPDATED VIC3 VERSION 1.10.0
+/// LAST UPDATED VIC3 VERSION 1.12.0
 /// See `effects.log` from the game data dumps
 /// These are the list iterators. Every entry represents
 /// a every_, ordered_, random_, and any_ version.
@@ -83,6 +107,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::DiplomaticPact, "participant", Scopes::Country),
     (Scopes::Country.union(Scopes::InterestGroup), "political_lobby", Scopes::PoliticalLobby),
     (Scopes::Country, "political_movement", Scopes::PoliticalMovement),
+    (Scopes::Law, "possible_amendment_type", Scopes::AmendmentType),
     (Scopes::Country, "potential_party", Scopes::Party),
     (Scopes::None, "power_bloc", Scopes::PowerBloc),
     (Scopes::PowerBloc, "power_bloc_member", Scopes::Country),
@@ -102,6 +127,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         Scopes::Character,
     ),
     (Scopes::Country, "scope_ally", Scopes::Country),
+    (Scopes::Law, "scope_amendment", Scopes::Amendment),
     (Scopes::Treaty, "scope_article", Scopes::TreatyArticle),
     (
         Scopes::TreatyOptions.union(Scopes::Treaty),
@@ -140,6 +166,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         "scope_interest_marker",
         Scopes::InterestMarker,
     ),
+    (Scopes::JournalEntry, "scope_je_involved", Scopes::Country),
     (Scopes::DiplomaticPlay, "scope_play_involved", Scopes::Country),
     (
         Scopes::Country

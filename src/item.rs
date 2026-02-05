@@ -204,8 +204,6 @@ pub enum Item {
     TutorialLessonChain,
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     TutorialLessonStep,
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
-    Wargoal,
 
     // Items for ck3
     #[cfg(feature = "ck3")] AccoladeCategory,
@@ -427,6 +425,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] AirGraphics,
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
+    #[cfg(feature = "vic3")] Amendment,
     #[cfg(feature = "vic3")] Approval,
     #[cfg(feature = "vic3")] ArmyDiorama,
     #[cfg(feature = "vic3")] Attitude,
@@ -469,6 +468,8 @@ pub enum Item {
     #[cfg(feature = "vic3")] FlagDefinition,
     #[cfg(feature = "vic3")] FleetDiorama,
     #[cfg(feature = "vic3")] FrontGraphics,
+    #[cfg(feature = "vic3")] GeographicRegion,
+    #[cfg(feature = "vic3")] GeographicRegionShortKey,
     #[cfg(feature = "vic3")] Goods,
     #[cfg(feature = "vic3")] GradientBorderSettings,
     #[cfg(feature = "vic3")] HarvestConditionType,
@@ -533,6 +534,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] TraditionTrait,
     #[cfg(feature = "vic3")] TransferOfPower,
     #[cfg(feature = "vic3")] TreatyArticle,
+    #[cfg(feature = "vic3")] WarGoalType,
 
     // Items specific to imperator
     #[cfg(feature = "imperator")] Ambition,
@@ -575,6 +577,7 @@ pub enum Item {
     #[cfg(feature = "imperator")] Treasure,
     #[cfg(feature = "imperator")] Unit,
     #[cfg(feature = "imperator")] UnitAbility,
+    #[cfg(feature = "imperator")] Wargoal,
 
     #[cfg(feature = "hoi4")] Ability,
     #[cfg(feature = "hoi4")] Acclimatation,
@@ -1007,15 +1010,6 @@ impl Item {
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
-            #[cfg(any(feature = "vic3", feature = "imperator"))]
-            Item::Wargoal => match Game::game() {
-                #[cfg(feature = "vic3")]
-                Game::Vic3 => "",
-                #[cfg(feature = "imperator")]
-                Game::Imperator => "common/wargoals",
-                #[allow(unreachable_patterns)]
-                _ => unreachable!(),
-            },
 
             #[cfg(feature = "ck3")]
             Item::AccoladeCategory => "common/accolade_types/",
@@ -1454,6 +1448,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::AlertGroup => "common/alert_groups",
             #[cfg(feature = "vic3")]
+            Item::Amendment => "common/amendments/",
+            #[cfg(feature = "vic3")]
             Item::Approval => "",
             #[cfg(feature = "vic3")]
             Item::ArmyDiorama => "gfx/map/army_dioramas/",
@@ -1537,6 +1533,10 @@ impl Item {
             Item::FleetDiorama => "gfx/map/fleet_dioramas/",
             #[cfg(feature = "vic3")]
             Item::FrontGraphics => "gfx/map/borders/front_graphics/",
+            #[cfg(feature = "vic3")]
+            Item::GeographicRegion => "common/geographic_regions/",
+            #[cfg(feature = "vic3")]
+            Item::GeographicRegionShortKey => "common/geographic_regions/",
             #[cfg(feature = "vic3")]
             Item::Goods => "common/goods/",
             #[cfg(feature = "vic3")]
@@ -1666,6 +1666,8 @@ impl Item {
             Item::TransferOfPower => "",
             #[cfg(feature = "vic3")]
             Item::TreatyArticle => "common/treaty_articles/",
+            #[cfg(feature = "vic3")]
+            Item::WarGoalType => "common/war_goal_types/",
 
             #[cfg(feature = "imperator")]
             Item::AiPlanGoals => "common/ai_plan_goals/",
@@ -1747,6 +1749,8 @@ impl Item {
             Item::Unit => "common/units/",
             #[cfg(feature = "imperator")]
             Item::UnitAbility => "common/unit_abilities/",
+            #[cfg(feature = "imperator")]
+            Item::Wargoal => "common/wargoals",
 
             #[cfg(feature = "hoi4")]
             Item::Ability => "common/abilities/",

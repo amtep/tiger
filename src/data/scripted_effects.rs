@@ -8,7 +8,8 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 #[cfg(feature = "hoi4")]
 use crate::game::Game;
-use crate::helpers::{BANNED_NAMES, TigerHashMap, dup_error, exact_dup_error};
+use crate::helpers::{BANNED_NAMES, TigerHashMap, limited_item_prefix_should_insert};
+use crate::item::Item;
 use crate::macros::{MACRO_MAP, MacroCache};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
@@ -26,24 +27,19 @@ pub struct Effects {
 
 impl Effects {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.effects.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_error(&key, &other.key, "scripted effect");
-                } else {
-                    dup_error(&key, &other.key, "scripted effect");
-                }
-            }
-        }
         if BANNED_NAMES.contains(&key.as_str()) {
             let msg = "scripted effect has the same name as an important builtin";
             err(ErrorKey::NameConflict).strong().msg(msg).loc(key).push();
-        } else {
-            let scope_override = self.scope_overrides.get(key.as_str()).copied();
+        } else if let Some(name) =
+            limited_item_prefix_should_insert(Item::ScriptedEffect, key, |key| {
+                self.effects.get(key).map(|entry| &entry.key)
+            })
+        {
+            let scope_override = self.scope_overrides.get(name.as_str()).copied();
             if block.source.is_some() {
-                MACRO_MAP.insert_or_get_loc(key.loc);
+                MACRO_MAP.insert_or_get_loc(name.loc);
             }
-            self.effects.insert(key.as_str(), Effect::new(key, block, scope_override));
+            self.effects.insert(name.as_str(), Effect::new(name, block, scope_override));
         }
     }
 

@@ -162,7 +162,7 @@ pub fn validate_add_war_goal(
     vd.req_field("holder");
     vd.field_item_or_target("holder", sc, Item::Country, Scopes::Country);
     vd.req_field("type");
-    vd.field_item("type", Item::Wargoal);
+    vd.field_item("type", Item::WarGoalType);
     vd.field_target("state", sc, Scopes::State);
     // TODO: verify this; there's only one example in vanilla
     vd.advice_field("country", "docs say `country` but it's `target_country`");
@@ -187,8 +187,8 @@ pub fn validate_remove_war_goal(
 ) {
     vd.req_field("who");
     vd.field_item_or_target("who", sc, Item::Country, Scopes::Country);
-    vd.req_field("war_goal");
-    vd.field_item("war_goal", Item::Wargoal);
+    vd.req_field("type");
+    vd.field_item("type", Item::WarGoalType);
 }
 
 pub fn validate_addremove_backers(
@@ -509,7 +509,7 @@ fn validate_war_goal(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     let mut vd = Validator::new(block, data);
     vd.set_case_sensitive(false);
     vd.field_item_or_target_ok_this("holder", sc, Item::Country, Scopes::Country);
-    vd.field_item("type", Item::Wargoal);
+    vd.field_item("type", Item::WarGoalType);
     vd.advice_field("state", "docs say `state` but it's `target_state`");
     vd.field_target("target_state", sc, Scopes::State);
     vd.advice_field("country", "docs say `country` but it's `target_country`");
@@ -1179,4 +1179,54 @@ pub fn validate_national_awakening(
     vd.field_target("culture", sc, Scopes::Culture);
     vd.field_script_value("months", sc);
     vd.field_target("state_region", sc, Scopes::StateRegion);
+}
+
+pub fn validate_add_amendment(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.req_field("sponsor");
+    vd.field_item("type", Item::Amendment);
+    vd.field_target("sponsor", sc, Scopes::InterestGroup);
+    vd.field_script_value("cooldown", sc);
+    vd.field_script_value("timeout", sc);
+}
+
+pub fn validate_spawn_entity_effect(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("name");
+    vd.req_field("duration");
+    vd.field_item("name", Item::Entity);
+    vd.field_script_value("duration", sc);
+}
+
+pub fn validate_teleport_to_front(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(token) => {
+            let mut vd = ValueValidator::new(token, data);
+            vd.target(sc, Scopes::Front);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.field_target("front", sc, Scopes::Front);
+            vd.field_target("base_camp", sc, Scopes::Province);
+        }
+    }
 }

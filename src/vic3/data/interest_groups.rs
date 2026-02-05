@@ -44,8 +44,8 @@ impl DbKind for InterestGroup {
         vd.field_item("layer", Item::MapLayer);
         vd.field_integer("index"); // TODO: do these have to be consecutive?
 
-        vd.field_list_items("ideologies", Item::Ideology);
-        vd.field_list_items("character_ideologies", Item::Ideology);
+        vd.multi_field_list_items("ideologies", Item::Ideology);
+        vd.multi_field_list_items("character_ideologies", Item::Ideology);
         // deprecated
         vd.field_list_items("traits", Item::InterestGroupTrait);
         vd.advice_field("traits", "deprecated; use on_enable effect to assign traits instead");

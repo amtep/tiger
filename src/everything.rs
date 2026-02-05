@@ -687,6 +687,25 @@ impl Everything {
 
     #[cfg(feature = "vic3")]
     fn validate_all_vic3<'a>(&'a self, s: &Scope<'a>) {
+        if std::env::var("TIGER_CHECK_MODIFS").is_ok() {
+            for line in std::io::stdin().lines().map_while(Result::ok) {
+                if !line.starts_with(' ') {
+                    if let Some(name) = line.strip_suffix(":") {
+                        eprintln!("checking modif {name}");
+                        let loc: Loc =
+                            FileEntry::new("stdin".into(), FileKind::Vanilla, "stdin".into())
+                                .into();
+                        let name_token = Token::new(name, loc);
+                        crate::vic3::tables::modifs::lookup_engine_modif(
+                            &name_token,
+                            &Lowercase::new(name),
+                            self,
+                            Some(Severity::Error),
+                        );
+                    }
+                }
+            }
+        }
         s.spawn(|_| self.events.validate(self));
         s.spawn(|_| self.history.validate(self));
         s.spawn(|_| self.provinces_vic3.validate(self));
@@ -840,7 +859,6 @@ impl Everything {
             Item::Strata => STRATA.contains(&key),
             Item::TerrainKey => TERRAIN_KEYS.contains(&key),
             Item::TransferOfPower => TRANSFER_OF_POWER.contains(&key),
-            Item::Wargoal => WARGOALS.contains(&key),
             _ => self.database.exists(itype, key),
         }
     }
@@ -1045,12 +1063,6 @@ impl Everything {
                         .loc(token)
                         .push();
                 }
-            }
-            #[cfg(feature = "vic3")]
-            Item::Wargoal if key == "war_reparations" => {
-                let msg = "wargoal `war_reparations` was removed in 1.9";
-                let info = "the new way is to use `enforce_treaty_article` with a `money_transfer` article";
-                err(ErrorKey::MissingItem).strong().msg(msg).info(info).loc(token).push();
             }
             _ => {
                 if !self.item_exists(itype, key) {

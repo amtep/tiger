@@ -14,9 +14,12 @@ use strum::EnumCount;
 use crate::block::Block;
 use crate::context::ScopeContext;
 use crate::everything::Everything;
+use crate::game::Game;
 use crate::helpers::{TigerHashMap, TigerHashSet, dup_error, exact_dup_advice, exact_dup_error};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
+#[cfg(feature = "vic3")]
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 use crate::variables::Variables;
 
@@ -51,17 +54,7 @@ impl Default for Db {
 
 impl Db {
     pub fn add(&mut self, item: Item, key: Token, block: Block, kind: Box<dyn DbKind>) {
-        if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_error(&key, &other.key, &item.to_string());
-                } else {
-                    dup_error(&key, &other.key, &item.to_string());
-                }
-            }
-        }
-        self.items_lc[item as usize].insert(Lowercase::new(key.as_str()), key.as_str());
-        self.database[item as usize].insert(key.as_str(), DbEntry { key, block, kind });
+        self.add_inner(item, key, block, kind, false);
     }
 
     #[allow(dead_code)]
@@ -72,15 +65,105 @@ impl Db {
         block: Block,
         kind: Box<dyn DbKind>,
     ) {
-        if let Some(other) = self.database[item as usize].get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                if other.block.equivalent(&block) {
-                    exact_dup_advice(&key, &other.key, &item.to_string());
+        self.add_inner(item, key, block, kind, true);
+    }
+
+    fn add_inner(
+        &mut self,
+        item: Item,
+        key: Token,
+        block: Block,
+        kind: Box<dyn DbKind>,
+        exact_dup_ok: bool,
+    ) {
+        if Game::is_vic3() {
+            #[cfg(feature = "vic3")]
+            if let Some((prefix, name)) = key.split_once(':') {
+                if !item.injectable() {
+                    let msg = format!("cannot use prefixes with {item}");
+                    err(ErrorKey::Prefixes).msg(msg).loc(key).push();
+                    return;
+                }
+                match prefix.as_str() {
+                    "INJECT" => {
+                        if let Some(other) = self.database[item as usize].get_mut(name.as_str()) {
+                            other.inject(block, kind);
+                        } else {
+                            let msg = "injecting into a non-existing item";
+                            err(ErrorKey::Prefixes).msg(msg).loc(name).push();
+                        }
+                    }
+                    "REPLACE" => {
+                        if self.database[item as usize].contains_key(name.as_str()) {
+                            self.add_inner2(item, name, block, kind);
+                        } else {
+                            let msg = "replacing a non-existing item";
+                            err(ErrorKey::Prefixes).msg(msg).loc(name).push();
+                        }
+                    }
+                    "TRY_INJECT" => {
+                        if let Some(other) = self.database[item as usize].get_mut(name.as_str()) {
+                            other.inject(block, kind);
+                        }
+                    }
+                    "TRY_REPLACE" => {
+                        if self.database[item as usize].contains_key(name.as_str()) {
+                            self.add_inner2(item, name, block, kind);
+                        }
+                    }
+                    "REPLACE_OR_CREATE" => {
+                        self.add_inner2(item, name, block, kind);
+                    }
+                    "INJECT_OR_CREATE" => {
+                        if let Some(other) = self.database[item as usize].get_mut(name.as_str()) {
+                            other.inject(block, kind);
+                        } else {
+                            self.add_inner2(item, name, block, kind);
+                        }
+                    }
+                    _ => {
+                        let msg = format!("unknown prefix `{prefix}`");
+                        err(ErrorKey::Prefixes).msg(msg).loc(prefix).push();
+                    }
+                }
+            } else {
+                #[allow(clippy::collapsible_else_if)]
+                if item.injectable() {
+                    if let Some(other) = self.database[item as usize].get(key.as_str()) {
+                        let msg =
+                            format!("must have a prefix such as `REPLACE:` to replace {item}");
+                        err(ErrorKey::Prefixes)
+                            .msg(msg)
+                            .loc(key)
+                            .loc_msg(&other.key, "original here")
+                            .push();
+                    } else {
+                        self.add_inner2(item, key, block, kind);
+                    }
                 } else {
-                    dup_error(&key, &other.key, &item.to_string());
+                    self.add_inner2(item, key, block, kind);
                 }
             }
+        } else {
+            if let Some(other) = self.database[item as usize].get(key.as_str()) {
+                if other.key.loc.kind >= key.loc.kind {
+                    if other.block.equivalent(&block) {
+                        if exact_dup_ok {
+                            exact_dup_advice(&key, &other.key, &item.to_string());
+                        } else {
+                            exact_dup_error(&key, &other.key, &item.to_string());
+                        }
+                    } else {
+                        dup_error(&key, &other.key, &item.to_string());
+                    }
+                }
+            }
+            self.add_inner2(item, key, block, kind);
         }
+    }
+
+    /// Actually add the item to the database, replacing any of the same name that were there before.
+    fn add_inner2(&mut self, item: Item, key: Token, block: Block, kind: Box<dyn DbKind>) {
         self.items_lc[item as usize].insert(Lowercase::new(key.as_str()), key.as_str());
         self.database[item as usize].insert(key.as_str(), DbEntry { key, block, kind });
     }
@@ -251,6 +334,14 @@ pub struct DbEntry {
     kind: Box<dyn DbKind>,
 }
 
+impl DbEntry {
+    #[cfg(feature = "vic3")]
+    fn inject(&mut self, mut block: Block, kind: Box<dyn DbKind>) {
+        self.block.append(&mut block);
+        self.kind.merge_in(kind);
+    }
+}
+
 #[allow(dead_code)]
 pub trait DbKind: Debug + AsAny + Sync + Send {
     /// Add additional items that are implied by the current item, for example buildings that add
@@ -300,4 +391,6 @@ pub trait DbKind: Debug + AsAny + Sync + Send {
     }
 
     fn set_property(&mut self, _key: &Token, _block: &Block, _property: &str) {}
+
+    fn merge_in(&mut self, _other: Box<dyn DbKind>) {}
 }

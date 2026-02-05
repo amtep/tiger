@@ -83,6 +83,18 @@ impl Parser {
         }
     }
 
+    fn null(&mut self, null: Token) {
+        self.check_comma(null.loc);
+        self.check_colon(null.loc);
+        if self.current.key.take().is_some() || self.current.opening_bracket == '[' {
+            self.current.expect_comma = true;
+        } else {
+            // A null key is weird but acceptable
+            self.current.key = Some(null);
+            self.current.expect_colon = true;
+        }
+    }
+
     fn block_value(&mut self, block: Block) {
         if let Some(key) = self.current.key.take() {
             self.current.block.add_key_bv(key, Comparator::Equals(Single), BV::Block(block));
@@ -209,9 +221,11 @@ fn parse(blockloc: Loc, content: &str) -> Block {
                     let token = Token::new(&take(&mut current_id), token_start);
                     if token.is("true") || token.is("false") {
                         parser.token(token);
+                    } else if token.is("null") {
+                        parser.null(token);
                     } else {
                         let msg = "unexpected unquoted string";
-                        let info = "expected only true or false";
+                        let info = "expected only true or false or null";
                         warn(ErrorKey::ParseError).msg(msg).info(info).loc(token).push();
                     }
                     state = State::Neutral;

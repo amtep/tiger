@@ -9,6 +9,7 @@ use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::{camel_case_to_separated_words, display_choices, snake_case_to_camel_case};
 use crate::item::Item;
+use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, err};
 use crate::token::Token;
 
@@ -63,6 +64,8 @@ bitflags! {
         const War = 0x0000_2000;
         #[cfg(any(feature = "vic3", feature = "hoi4"))]
         const StrategicRegion = 0x0000_4000;
+        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        const Decision = 0x0000_8000;
 
         // Scope types for CK3
         #[cfg(feature = "ck3")] const Accolade = 0x0001_0000;
@@ -78,7 +81,6 @@ bitflags! {
         #[cfg(feature = "ck3")] const CouncilTask = 0x0400_0000;
         #[cfg(feature = "ck3")] const CulturePillar = 0x0800_0000;
         #[cfg(feature = "ck3")] const CultureTradition = 0x1000_0000;
-        #[cfg(feature = "ck3")] const Decision = 0x2000_0000;
         #[cfg(feature = "ck3")] const Doctrine = 0x4000_0000;
         #[cfg(feature = "ck3")] const Dynasty = 0x8000_0000;
         #[cfg(feature = "ck3")] const DynastyHouse = 0x0000_0001_0000_0000;
@@ -209,6 +211,11 @@ bitflags! {
         #[cfg(feature = "vic3")] const TreatyArticleOptions = 0x0000_0000_0200_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const Treaty = 0x0000_0000_0400_0000_0000_0000_0000_0000;
         #[cfg(feature = "vic3")] const BuildingGroup = 0x0000_0000_0800_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const Amendment = 0x0000_0000_1000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const AmendmentType = 0x0000_0000_2000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const GeographicRegion = 0x0000_0000_4000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const WarGoal = 0x0000_0000_8000_0000_0000_0000_0000_0000;
+        #[cfg(feature = "vic3")] const WarGoalType = 0x0000_0001_0000_0000_0000_0000_0000_0000;
 
         #[cfg(feature = "imperator")] const Area = 0x0001_0000;
         #[cfg(feature = "imperator")] const CountryCulture = 0x0002_0000;
@@ -504,11 +511,11 @@ pub fn scope_iterator(
         Game::Hoi4 => crate::hoi4::tables::iterators::iterator_removed,
     };
 
-    let name_lc = name.as_str().to_ascii_lowercase();
-    if let scopes @ Some(_) = scope_iterator(&name_lc) {
+    let name_lc = Lowercase::new(name.as_str());
+    if let scopes @ Some(_) = scope_iterator(&name_lc, name, data) {
         return scopes;
     }
-    if let Some((version, explanation)) = scope_iterator_removed(&name_lc) {
+    if let Some((version, explanation)) = scope_iterator_removed(name_lc.as_str()) {
         let msg = format!("`{name}` iterators were removed in {version}");
         err(ErrorKey::Removed).strong().msg(msg).info(explanation).loc(name).push();
         return Some((Scopes::all(), Scopes::all()));
@@ -519,7 +526,7 @@ pub fn scope_iterator(
         return data
             .scripted_lists
             .base(name)
-            .and_then(|base| scope_iterator(&base.as_str().to_ascii_lowercase()));
+            .and_then(|base| scope_iterator(&Lowercase::new(base.as_str()), base, data));
     }
     #[cfg(feature = "hoi4")]
     let _ = &data; // mark parameter used

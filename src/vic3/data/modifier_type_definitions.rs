@@ -47,6 +47,7 @@ impl DbKind for ModifierTypeDefinition {
         vd.field_choice("color", &["neutral", "good", "bad"]);
         vd.field_bool("percent");
         vd.field_bool("boolean");
+        vd.field_bool("script_only");
         vd.field_validated_block("game_data", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_integer("ai_value");

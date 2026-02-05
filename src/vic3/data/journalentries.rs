@@ -36,26 +36,47 @@ impl DbKind for JournalEntry {
         let loca = format!("{key}_goal");
         data.mark_used(Item::Localization, &loca);
 
-        let mut sc = ScopeContext::new(Scopes::Country, key);
+        let sc_context = if let Some(group) = block.get_field_value("group") {
+            if data.item_has_property(Item::JournalEntryGroup, group.as_str(), "none_context") {
+                Scopes::None
+            } else {
+                Scopes::Country
+            }
+        } else {
+            Scopes::Country
+        };
+        let mut sc = ScopeContext::new(sc_context, key);
         sc.define_name("journal_entry", Scopes::JournalEntry, key);
         sc.define_name("target", Scopes::all(), key);
+
+        let mut country_sc = ScopeContext::new(Scopes::Country, key);
+        country_sc.define_name("journal_entry", Scopes::JournalEntry, key);
+        country_sc.define_name("target", Scopes::all(), key);
 
         vd.field_item("group", Item::JournalEntryGroup);
 
         vd.field_item("icon", Item::File);
 
         vd.field_trigger("is_shown_when_inactive", Tooltipped::No, &mut sc);
+        vd.field_trigger("should_be_involved", Tooltipped::No, &mut country_sc);
+        vd.field_trigger("should_show_when_not_involved", Tooltipped::No, &mut country_sc);
 
         vd.multi_field_item("scripted_button", Item::ScriptedButton);
 
         vd.field_trigger("possible", Tooltipped::Yes, &mut sc);
         vd.field_effect("immediate", Tooltipped::No, &mut sc);
+        vd.field_effect("immediate_all_involved", Tooltipped::No, &mut country_sc);
         vd.field_trigger("complete", Tooltipped::Yes, &mut sc);
         vd.field_effect("on_complete", Tooltipped::Yes, &mut sc);
+        vd.field_effect("on_complete_all_involved", Tooltipped::No, &mut country_sc);
         vd.field_trigger("fail", Tooltipped::Yes, &mut sc);
         vd.field_effect("on_fail", Tooltipped::Yes, &mut sc);
+        vd.field_effect("on_fail_all_involved", Tooltipped::No, &mut country_sc);
         vd.field_trigger("invalid", Tooltipped::No, &mut sc);
         vd.field_effect("on_invalid", Tooltipped::Yes, &mut sc);
+        vd.field_effect("on_invalid_all_involved", Tooltipped::No, &mut country_sc);
+        vd.field_effect("on_become_involved_after_activation", Tooltipped::No, &mut country_sc);
+        vd.field_effect("on_no_longer_involved", Tooltipped::No, &mut country_sc);
 
         if !vd.field_validated_sc("status_desc", &mut sc, validate_desc) {
             data.mark_used(Item::Localization, &format!("{key}_status"));
@@ -104,11 +125,12 @@ impl DbKind for JournalEntry {
             }
         }
         vd.field_effect("on_timeout", Tooltipped::Yes, &mut sc);
+        vd.field_effect("on_timeout_all_involved", Tooltipped::No, &mut country_sc);
 
         vd.field_list_items("modifiers_while_active", Item::Modifier);
 
         for field in &["on_weekly_pulse", "on_monthly_pulse", "on_yearly_pulse"] {
-            vd.field_validated_block_sc(field, &mut sc, validate_on_action);
+            vd.multi_field_validated_block_sc(field, &mut sc, validate_on_action);
         }
 
         vd.field_script_value("current_value", &mut sc);
@@ -161,11 +183,23 @@ impl JournalEntryGroup {
 
 impl DbKind for JournalEntryGroup {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
-        // Since journal entry groups have no defined fields, this Validator
-        // is just here to warn about unknown fields when it is dropped.
-        Validator::new(block, data);
-
         data.verify_exists(Item::Localization, key);
+
+        let mut vd = Validator::new(block, data);
+        vd.field_choice("context", &["none", "country"]);
+    }
+
+    fn has_property(
+        &self,
+        _key: &Token,
+        block: &Block,
+        property: &str,
+        _data: &Everything,
+    ) -> bool {
+        if property == "none_context" {
+            return block.get_field_value("context").is_some_and(|v| v.is("none"));
+        }
+        false
     }
 }
 
