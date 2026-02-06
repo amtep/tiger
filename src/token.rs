@@ -395,7 +395,7 @@ impl Token {
     /// Some files seem not to have the 5-decimal limitation
     pub fn expect_precise_number(&self) -> Option<f64> {
         // Trim "f" from the end of precise numbers
-        let s = self.s.trim_end_matches('f');
+        let s = if self.s.ends_with("inf") { self.s } else { self.s.trim_end_matches('f') };
         if let Ok(v) = s.parse::<f64>() {
             Some(v)
         } else {
