@@ -260,6 +260,17 @@ impl DbKind for MorphGene {
             err(ErrorKey::Validation).msg(msg).loc(call_block).push();
         }
     }
+
+    fn merge_in(&mut self, other: Box<dyn DbKind>) {
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            for key in &other.templates {
+                if let Some(already) = self.templates.get(key.as_str()) {
+                    dup_error(key, already, "morph gene template");
+                }
+                self.templates.insert(key.clone());
+            }
+        }
+    }
 }
 
 fn validate_portrait_modifier_use(
@@ -426,6 +437,17 @@ impl DbKind for AccessoryGene {
         if count < 4 {
             let msg = "too few values in this gene";
             err(ErrorKey::Validation).msg(msg).loc(call_block).push();
+        }
+    }
+
+    fn merge_in(&mut self, other: Box<dyn DbKind>) {
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            for key in &other.templates {
+                if let Some(already) = self.templates.get(key.as_str()) {
+                    dup_error(key, already, "morph gene template");
+                }
+                self.templates.insert(key.clone());
+            }
         }
     }
 }

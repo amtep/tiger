@@ -115,6 +115,12 @@ impl DbKind for TutorialLessonChain {
     ) -> bool {
         property == "gamestate_tutorial" && self.gamestate_tutorial
     }
+
+    fn merge_in(&mut self, other: Box<dyn DbKind>) {
+        if let Some(other) = other.as_any().downcast_ref::<Self>() {
+            self.gamestate_tutorial |= other.gamestate_tutorial;
+        }
+    }
 }
 
 /// These are added by the [`TutorialLesson`] item loader
