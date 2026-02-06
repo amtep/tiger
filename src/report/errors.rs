@@ -26,7 +26,7 @@ use crate::report::{
     OutputStyle, PointedMessage,
 };
 use crate::set;
-use crate::token::{Loc, leak};
+use crate::token::Loc;
 
 /// Error types that should be logged once when consolidating reports
 static LOG_ONCE: LazyLock<TigerHashSet<ErrorKey>> = LazyLock::new(|| {
@@ -284,7 +284,7 @@ impl Cache {
             (contents, _, false) => contents,
             (_, _, true) => WINDOWS_1252.decode(&bytes).0,
         };
-        let contents = leak(contents.into_owned());
+        let contents = contents.into_owned().leak();
         filecache.insert(fullpath.to_path_buf(), contents);
 
         let lines: Vec<_> = contents.lines().collect();
