@@ -17,7 +17,7 @@ use crate::parse::pdxfile::lexer::{LexError, Lexeme, Lexer};
 use crate::parse::pdxfile::memory::CombinedMemory;
 pub use crate::parse::pdxfile::memory::PdxfileMemory;
 use crate::report::{ErrorKey, err, store_source_file};
-use crate::token::{Loc, Token, leak};
+use crate::token::{Loc, Token};
 
 mod lexer;
 pub mod memory;
@@ -73,7 +73,7 @@ pub fn parse_pdx_file(
     offset: usize,
     parser: &ParserMemory,
 ) -> Block {
-    let content = leak(content);
+    let content = content.leak();
     store_source_file(entry.fullpath().to_path_buf(), &content[offset..]);
     parse_pdx(entry, &content[offset..], parser)
 }
@@ -86,7 +86,7 @@ pub fn parse_reader_export(
     offset: usize,
     global: &mut PdxfileMemory,
 ) {
-    let content = leak(content);
+    let content = content.leak();
     store_source_file(entry.fullpath().to_path_buf(), &content[offset..]);
     let content = &content[offset..];
     let mut loc = Loc::from(entry);

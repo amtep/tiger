@@ -10,7 +10,7 @@ use crate::parse::cob::Cob;
 use crate::parse::ignore::{IgnoreFilter, IgnoreSize, parse_comment};
 use crate::report::register_ignore_filter;
 use crate::report::{ErrorKey, untidy, warn};
-use crate::token::{Loc, Token, leak};
+use crate::token::{Loc, Token};
 
 fn is_key_char(c: char) -> bool {
     c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '\''
@@ -915,7 +915,7 @@ impl Iterator for LocaReader {
 }
 
 pub fn parse_loca(entry: &FileEntry, content: String, lang: Language) -> LocaReader {
-    let content = leak(content);
+    let content = content.leak();
     let parser = LocaParser::new(entry, content, lang);
     LocaReader { parser }
 }
