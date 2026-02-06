@@ -1601,7 +1601,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Country,
         "should_set_wargoal",
-        Block(&[("target", Scope(Scopes::DiplomaticPlay)), ("value", Boolean)]),
+        Block(&[("target", Scope(Scopes::DiplomaticPlay)), ("?value", Boolean)]),
     ),
     (Scopes::None, "should_show_nudity", Boolean),
     (Scopes::Country, "shrinking_institution", Item(Item::Institution)),
@@ -1941,6 +1941,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (Scopes::War, "has_war_support", Item(Item::Country), Scopes::Value),
         (Scopes::State, "ig_state_pol_strength_share", Scope(Scopes::InterestGroup), Scopes::Value),
         (Scopes::Country, "institution_investment_level", Item(Item::Institution), Scopes::Value),
+        (Scopes::LawType, "law_progressiveness_difference", Scope(Scopes::LawType), Scopes::Value),
         (Scopes::PowerBloc, "leverage_advantage", Scope(Scopes::Country), Scopes::Value),
         (Scopes::None, "list_size", Identifier("list name"), Scopes::Value),
         (Scopes::Market, "market_consumption_share", Scope(Scopes::Country), Scopes::Value),
@@ -2110,6 +2111,13 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::JournalEntry,
             "scripted_bar_progress",
             Item(Item::ScriptedProgressBar),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "stall_chance_for_law", Scope(Scopes::LawType), Scopes::Value),
+        (
+            Scopes::Country,
+            "stall_chance_for_law_without_enactment_modifier",
+            Scope(Scopes::LawType),
             Scopes::Value,
         ),
         (

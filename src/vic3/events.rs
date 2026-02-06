@@ -43,6 +43,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     // TODO: what is this for and what else can it be?
     vd.field_choice("category", EVENT_CATEGORIES);
 
+    vd.field_bool("is_popup");
     vd.field_bool("orphan");
     vd.field_bool("hidden");
     let hidden = event.block.field_value_is("hidden", "yes");

@@ -150,6 +150,7 @@ impl DbKind for CountryFormation {
         vd.set_case_sensitive(false);
 
         data.verify_exists(Item::Country, key);
+        vd.field_item("geographic_region", Item::GeographicRegion);
         vd.field_bool("is_major_formation");
 
         vd.field_bool("use_culture_states");

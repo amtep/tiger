@@ -1202,7 +1202,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_validated_list`], but expect any number of `name` fields in the block.
-    #[cfg(any(feature = "ck3", feature = "hoi4", feature = "vic3"))]
+    #[allow(dead_code)]
     pub fn multi_field_validated_list<F>(&mut self, name: &str, mut f: F) -> bool
     where
         F: FnMut(&Token, &Everything),
@@ -1222,6 +1222,18 @@ impl<'a> Validator<'a> {
         let sev = self.max_severity;
         self.multi_field_validated_list(name, |token, data| {
             data.verify_exists_max_sev(item, token, sev);
+        })
+    }
+
+    /// Just like [`Validator::field_list_choice`], but expect any number of `name` fields in the block.
+    #[allow(dead_code)]
+    pub fn multi_field_list_choice(&mut self, name: &str, choices: &[&str]) -> bool {
+        let sev = Severity::Error.at_most(self.max_severity);
+        self.multi_field_validated_list(name, |token, _| {
+            if !choices.contains(&token.as_str()) {
+                let msg = format!("expected one of {}", choices.join(", "));
+                report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
+            }
         })
     }
 

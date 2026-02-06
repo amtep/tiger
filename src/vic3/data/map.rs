@@ -104,6 +104,7 @@ const MAP_PAINTING_MODES: &[&str] = &[
     "states",
     "strategic_regions",
     "technology_progress",
+    "player_country",
 ];
 
 // LAST UPDATED VIC3 VERSION 1.7.1
@@ -118,6 +119,7 @@ const MAP_NAMES: &[&str] = &[
     "states",
     "strategic_regions",
     "theaters",
+    "player",
 ];
 
 impl MapMode {

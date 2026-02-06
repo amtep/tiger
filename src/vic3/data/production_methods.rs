@@ -74,7 +74,8 @@ impl DbKind for ProductionMethod {
         vd.field_item("replacement_if_valid", Item::ProductionMethod);
         vd.field_bool("is_hidden_when_unavailable");
         vd.multi_field_item("required_input_goods", Item::Goods);
-        vd.field_list_choice("unlocking_company_categories", COMPANY_CATEGORIES);
+        vd.multi_field_list_choice("unlocking_company_categories", COMPANY_CATEGORIES);
+        vd.multi_field_list_items("unlocking_geographic_regions", Item::GeographicRegion);
     }
 }
 

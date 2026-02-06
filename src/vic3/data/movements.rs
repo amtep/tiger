@@ -124,6 +124,11 @@ impl DbKind for PoliticalMovement {
                         vd.field_script_value_rooted("weight", Scopes::PoliticalMovement);
                     });
                 });
+                vd.field_trigger_builder("interest_group_can_join", Tooltipped::No, |key| {
+                    let mut sc = ScopeContext::new(Scopes::InterestGroup, key);
+                    sc.define_name("political_movement", Scopes::PoliticalMovement, key);
+                    sc
+                });
                 vd.field_validated_key("state_weight", |key, bv, data| {
                     let mut sc = ScopeContext::new(Scopes::State, key);
                     sc.define_name("political_movement", Scopes::PoliticalMovement, key);

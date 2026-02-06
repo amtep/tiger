@@ -61,6 +61,7 @@ impl DbKind for Culture {
         vd.multi_field_list_items("regal_last_names", Item::Localization);
 
         vd.multi_field_list_items("obsessions", Item::Goods);
+        vd.multi_field_list_items("taboos", Item::Goods);
 
         vd.field_item("graphics", Item::CultureGraphics);
         vd.multi_field_validated_block("ethnicities", |block, data| {
@@ -71,6 +72,10 @@ impl DbKind for Culture {
                 }
             });
         });
+
+        // undocumented fields
+
+        vd.field_value("name_format"); // valid values not known
     }
 }
 

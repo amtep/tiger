@@ -110,6 +110,8 @@ impl DbKind for WarGoalType {
             "conflicts_with_annex_country",
             "conflicts_with_annex_state",
             "conflicts_with_existing_subject",
+            // undocumented
+            "preserve_on_switching_sides",
         ];
         vd.field_list_choice("settings", settings);
 

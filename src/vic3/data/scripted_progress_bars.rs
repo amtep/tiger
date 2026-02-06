@@ -22,8 +22,15 @@ impl ScriptedProgressBar {
     }
 }
 
-const BAR_TYPES: &[&str] =
-    &["default", "default_green", "default_bad", "double_sided_gold", "double_sided_bad"];
+const BAR_TYPES: &[&str] = &[
+    "default",
+    "default_green",
+    "default_bad",
+    "double_sided_gold",
+    "double_sided_bad",
+    // undocumented
+    "double_sided_two_spains",
+];
 
 impl DbKind for ScriptedProgressBar {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {

@@ -80,6 +80,12 @@ impl BuildingType {
 }
 
 impl DbKind for BuildingType {
+    fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
+        for token in block.get_multi_field_list("aliases") {
+            db.add_flag(Item::BuildingType, token.clone());
+        }
+    }
+
     fn has_property(
         &self,
         _key: &Token,
@@ -112,6 +118,8 @@ impl DbKind for BuildingType {
             let loca = format!("{key}_discovered_resource");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
+
+        vd.multi_field_list_items("aliases", Item::BuildingType);
 
         vd.field_item("building_group", Item::BuildingGroup);
         vd.replaced_field("texture", "icon");
@@ -289,5 +297,6 @@ impl DbKind for BuildingGroup {
         vd.field_bool("owns_other_buildings");
         vd.field_bool("is_shown_in_outliner");
         vd.field_bool("construction_efficiency_modifier");
+        vd.field_bool("self_investment_chance_modifier");
     }
 }

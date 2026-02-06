@@ -74,5 +74,6 @@ impl DbKind for PopType {
         vd.field_bool("is_slave");
         vd.field_bool("military");
         vd.field_numeric("sol_change_impact");
+        vd.field_bool("pays_land_tax");
     }
 }
