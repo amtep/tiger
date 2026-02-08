@@ -19,12 +19,12 @@ Support for Hearts of Iron IV (`hoi4-tiger`) is in the works but it is **unfinis
 
 `ck3-tiger` (or `vic3-tiger` or `imperator-tiger`) will read the relevant vanilla files and your mod's files, and it will complain about everything in your mod that looks wrong. Where possible, it will tell you why it thinks the thing is wrong.
 
-* Syntax validation: are you using the right key = value pairs? No misspellings?
-* Missing items: is every game object that you refer to actually defined somewhere?
-* Missing localizations: do you have all the localizations you need for your mod?
-* Scope consistency checking: are you using culture effects on cultures and character effects on characters, etc.?
-* History (for CK3): Are spouses, employers, and lieges alive on the relevant dates? Is no one their own grandfather?
-* Special: rivers.png check
+- Syntax validation: are you using the right key = value pairs? No misspellings?
+- Missing items: is every game object that you refer to actually defined somewhere?
+- Missing localizations: do you have all the localizations you need for your mod?
+- Scope consistency checking: are you using culture effects on cultures and character effects on characters, etc.?
+- History (for CK3): Are spouses, employers, and lieges alive on the relevant dates? Is no one their own grandfather?
+- Special: rivers.png check
 
 Tiger can also be configured to validate submods, by loading the parent mods first.
 
@@ -38,69 +38,30 @@ Tiger can also be configured to validate submods, by loading the parent mods fir
 
 ## How to use
 
-### `ck3-tiger`
-
 Download a release package from [GitHub](https://github.com/amtep/tiger/releases). Unpack it somewhere.
 
-On Windows, if everything works out, you can then just double-click on `ck3-tiger-auto` and it will try its best.
+On Windows, if everything works out, you can then just double-click on `ck3-tiger-auto / vic3-tiger-auto / imperator-tiger-auto` and it will try its best.
 
 Otherwise, run the tool from the command prompt:
-<pre>
-<i>path/to/</i>ck3-tiger <i>path/to/your/</i>descriptor.mod
-</pre>
-or
-<pre>
-<i>path/to/</i>ck3-tiger "<i>path/to/</i>Paradox Interactive/Crusader Kings III/mod/YourMod.mod"
-</pre>
 
-(Note that the quote marks around the path are important because of the spaces in it.)
+```
+# CK3
+path/to/ck3-tiger path/to/your/descriptor.mod
+path/to/ck3-tiger "path/to/Paradox Interactive/Crusader Kings III/mod/YourMod.mod"
 
-If you want the output in a file, you can redirect it like this:
-<pre>
-ck3-tiger <i>path/to/your/</i>descriptor.mod ><i>filename</i>
-</pre>
+# VIC3
+path/to/vic3-tiger path/to/your/mod
+path/to/vic3-tiger "path/to/Paradox Interactive/Victoria 3/mod/YourMod/"
 
-### `vic3-tiger`
+# I:R
+path/to/imperator-tiger path/to/your/descriptor.mod
+path/to/vic3-tiger "path/to/Paradox Interactive/ImperatorRome/mod/YourMod.mod"
 
-Download a release package from [GitHub](https://github.com/amtep/tiger/releases). Unpack it somewhere.
+# For output redirection to a new file, Append `> filename` to the command, e.g.
+path/to/ck3-tiger path/to/your/descriptor.mod > output.txt
+```
 
-On Windows, if everything works out, you can then just double-click on `vic3-tiger-auto` and it will try its best.
-
-Otherwise, run the tool from the command prompt:
-<pre>
-<i>path/to/</i>vic3-tiger <i>path/to/your/mod</i>
-</pre>
-or
-<pre>
-<i>path/to/</i>vic3-tiger "<i>path/to/</i>Paradox Interactive/Victoria 3/mod/YourMod/"
-</pre>
-
-(Note that the quote marks around the path are important because of the spaces in it.)
-
-If you want the output in a file, you can redirect it like this:
-<pre>
-vic3-tiger <i>path/to/your/mod</i> ><i>filename</i>
-</pre>
-
-### `imperator-tiger`
-
-Download a release package from [GitHub](https://github.com/amtep/tiger/releases). Unpack it somewhere.
-
-Run the tool from the command prompt:
-<pre>
-<i>path/to/</i>imperator-tiger <i>path/to/your/</i>descriptor.mod
-</pre>
-or
-<pre>
-<i>path/to/</i>imperator-tiger "<i>path/to/</i>Paradox Interactive/ImperatorRome/mod/YourMod.mod"
-</pre>
-
-(Note that the quote marks around the path are important because of the spaces in it.)
-
-If you want the output in a file, you can redirect it like this:
-<pre>
-imperator-tiger <i>path/to/your/mod</i> ><i>filename</i>
-</pre>
+_(Note that the quote marks around the path are important because of the spaces in it.)_
 
 ## How to configure
 
@@ -133,10 +94,14 @@ It allows running Tiger validation in GitHub Workflows.
 You can tell `tiger` to suppress reports that were shown in a previous run.
 This can be helpful when you only want to see what changed, for example after updating your mod.
 First you have to generate a "baseline" to compare future runs to:
+
 <pre>ck3-tiger --json <i>path/to/your/mod</i> >baseline.json</pre>
+
 You can use any filename in place of `baseline.json`.
 Then when you run tiger again, you can tell it to exclude reports from the baseline:
+
 <pre>ck3-tiger --suppress baseline.json <i>path/to/your/mod</i></pre>
+
 It works with `vic3-tiger` and `imperator-tiger` too.
 
 ## Suppressing some reports
@@ -144,48 +109,48 @@ It works with `vic3-tiger` and `imperator-tiger` too.
 Sometimes tiger is mistaken, or you just don't want to deal with certain warnings.
 You can remove those reports from the output in either of two ways:
 
-* The filter config in the `.conf` file: a [guide](filter.md).
-* Leaving special comments in your mod: a [guide](annotations.md).
+- The filter config in the `.conf` file: a [guide](filter.md).
+- Leaving special comments in your mod: a [guide](annotations.md).
 
 ## Command-line options
 
 The various path options are only needed if Tiger can't find the paths on its own.
 
-* `--game` *PATH* Path to the game main directory
-* `--config` *PATH* Path to the custom `.conf` file
-* `--workshop` *PATH* Path to the Steam workshop directory (only for Vic3)
-* `--paradox` *PATH* Path to the Paradox game directory (not for Vic3)
-* `--show-vanilla` Show errors in the base game script code as well as the mod's
-* `--show-mods` Show errors in secondary loaded mods as well as the main mod
-* `--json` Output the reports in JSON format
-* `--consolidate` Log only the first occurrence of certain errors (such as missing items)
-* `--unused` Warn about items that are defined but unused (not yet accurate)
-* `--no-color` Omit color from the output
-* `--suppress` *PATH* Load a JSON file of reports to remove from the output (see section above)
-* `--pod` Do checks specific to the Princes of Darkness mod
-* `--help` Print help.
-* `--version` Print version
+- `--game` _PATH_ Path to the game main directory
+- `--config` _PATH_ Path to the custom `.conf` file
+- `--workshop` _PATH_ Path to the Steam workshop directory (only for Vic3)
+- `--paradox` _PATH_ Path to the Paradox game directory (not for Vic3)
+- `--show-vanilla` Show errors in the base game script code as well as the mod's
+- `--show-mods` Show errors in secondary loaded mods as well as the main mod
+- `--json` Output the reports in JSON format
+- `--consolidate` Log only the first occurrence of certain errors (such as missing items)
+- `--unused` Warn about items that are defined but unused (not yet accurate)
+- `--no-color` Omit color from the output
+- `--suppress` _PATH_ Load a JSON file of reports to remove from the output (see section above)
+- `--pod` Do checks specific to the Princes of Darkness mod
+- `--help` Print help.
+- `--version` Print version
 
 ## Contributions
 
 I welcome contributions and collaborations! Some forms that contributions can take:
 
-* Suggestions and ideas about what things tiger should check
-* Telling me which of the output messages are confusing or hard to understand
-* Reporting cases where tiger complains about a problem that's not real (false positives)
-* Filing an issue on GitHub about a problem you have, or sending me email directly
-* Starting up the game to verify something that's marked "TODO: verify" in the code
+- Suggestions and ideas about what things tiger should check
+- Telling me which of the output messages are confusing or hard to understand
+- Reporting cases where tiger complains about a problem that's not real (false positives)
+- Filing an issue on GitHub about a problem you have, or sending me email directly
+- Starting up the game to verify something that's marked "TODO: verify" in the code
 
 Contributions in the form of code are also welcome. They should be made as GitHub pull requests, and you should read and understand the project's copyright license before doing so. It may help to file a GitHub issue before starting to code, though, since I may prefer to solve the problem in a different way.
 
 Some ideas for code contributions:
 
-* Adding a new check and its error report
-* Adding a validator for a new item type
-* Updating a validator to a new game version
-* Solving one of the hundreds of TODO comments in the code
-* Solving one of the issues marked in the [TODO](https://github.com/amtep/tiger/wiki/Todo) or [IDEAS](https://github.com/amtep/tiger/wiki/Ideas) wiki pages
-* Speed or memory use improvements; opportunities are all over the place
+- Adding a new check and its error report
+- Adding a validator for a new item type
+- Updating a validator to a new game version
+- Solving one of the hundreds of TODO comments in the code
+- Solving one of the issues marked in the [TODO](https://github.com/amtep/tiger/wiki/Todo) or [IDEAS](https://github.com/amtep/tiger/wiki/Ideas) wiki pages
+- Speed or memory use improvements; opportunities are all over the place
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for tips and the [CODING](https://github.com/amtep/tiger/wiki/Overview-for-coders) wiki page for an overview of the code and coding style.
 
