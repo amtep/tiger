@@ -34,9 +34,9 @@ Tiger can also be configured to validate submods, by loading the parent mods fir
 
 ![Sample Output](example2.png)
 
-![Sample Output](example3.png)
+## Usage
 
-## How to use
+### How to use
 
 Download a release package from [GitHub](https://github.com/amtep/tiger/releases). Unpack it somewhere.
 
@@ -57,34 +57,40 @@ path/to/vic3-tiger "path/to/Paradox Interactive/Victoria 3/mod/YourMod/"
 path/to/imperator-tiger path/to/your/descriptor.mod
 path/to/vic3-tiger "path/to/Paradox Interactive/ImperatorRome/mod/YourMod.mod"
 
+# Add command-line options as needed, e.g.
+path/to/ck3-tiger --no-color path/to/your/descriptor.mod
+
 # For output redirection to a new file, append `> filename` to the command, e.g.
 path/to/ck3-tiger path/to/your/descriptor.mod > output.txt
 ```
 
 _(Note that the quote marks around the path are important because of the spaces in it.)_
 
-## How to configure
+### How to configure
 
 You can place a file `ck3-tiger.conf` (or `vic3-tiger.conf` or `imperator.conf`) in your mod's directory. You can use it to select which languages to check localizations for, and to suppress messages about things you don't want to fix.
 
 There is a sample [`ck3-tiger.conf`](ck3-tiger.conf) file, [`vic3-tiger.conf`](vic3-tiger.conf) file, and [`imperator-tiger.conf`](imperator-tiger.conf) file in the release, with an explanation of what goes in it. There is also a [guide](filter.md).
 
-## How to build
+### How to build
 
 If you want to build it yourself, you will have to [install the Rust programming language](https://www.rust-lang.org/tools/install). You can either get the source archive from one of the releases (preferably the [latest](https://github.com/amtep/tiger/releases/latest)) or clone the git repository.
 
+To build and run the tool, add any options and the modpath after the `--` as shown below:
+
 ```
-cargo run --release -p ck3-tiger -- [OPTIONS]
-cargo run --release -p vic3-tiger -- [OPTIONS]
-cargo run --release -p imperator-tiger -- [OPTIONS]
+cargo run --release -p <ck3-tiger|vic3-tiger|imperator-tiger> -- [OPTIONS] <MODPATH>
+
+# Example:
+cargo run --release -p ck3-tiger -- --no-color path/to/your/descriptor.mod
 ```
 
-## Visual Studio Code extension
+### Visual Studio Code extension
 
 User unLomTrois has made a [VS Code extension](https://github.com/unLomTrois/ck3tiger-for-vscode-2) for Tiger.
 It enables you to view the reports directly in the Problems tab.
 
-## GitHub Action
+### GitHub Action
 
 User Bahmut has made a [GitHub Action](https://github.com/kaiser-chris/tiger-action-public) for Tiger.
 It allows running Tiger validation in GitHub Workflows.
@@ -92,7 +98,7 @@ It allows running Tiger validation in GitHub Workflows.
 > [!NOTE]
 > Because of copyright issues, you will need to set up the action yourself. The repository linked above contains a guide on how to set it up for yourself.
 
-## Showing only new reports
+### Showing only new reports
 
 You can tell `tiger` to suppress reports that were shown in a previous run.
 This can be helpful when you only want to see what changed, for example after updating your mod.
@@ -111,7 +117,7 @@ ck3-tiger --suppress baseline.json path/to/your/mod
 
 It works with `vic3-tiger` and `imperator-tiger` too.
 
-## Suppressing some reports
+### Suppressing some reports
 
 Sometimes tiger is mistaken, or you just don't want to deal with certain warnings.
 You can remove those reports from the output in either of two ways:
@@ -119,7 +125,7 @@ You can remove those reports from the output in either of two ways:
 - The filter config in the `.conf` file: a [guide](filter.md).
 - Leaving special comments in your mod: a [guide](annotations.md).
 
-## Command-line options
+### Command-line options
 
 The various path options are only needed if Tiger can't find the paths on its own.
 
