@@ -63,6 +63,13 @@ impl DbKind for ActivityType {
     }
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let define = "NGameIcons|ACTIVITY_TYPE_ICON_PATH";
+        data.verify_icon(define, key, ".dds");
+        data.verify_icon(define, key, "_header.dds");
+
+        let define = "NGameIcons|ACTIVITY_HEADER_BACKGROUND_PATH";
+        data.verify_icon(define, key, ".dds");
+
         let mut vd = Validator::new(block, data);
         let has_special_option = block.has_key("special_option_category");
 
@@ -269,11 +276,11 @@ impl DbKind for ActivityType {
                 // option categories
                 data.verify_exists(Item::Localization, key);
                 let mut vd = Validator::new(block, data);
-                let mut is_special_option = false;
-                if let Some(special) = special_option_category {
-                    if key.is(special.as_str()) {
-                        is_special_option = true;
-                    }
+                let is_special_option =
+                    special_option_category.is_some_and(|special| key.is(special.as_str()));
+                if !is_special_option {
+                    let define = "NGameIcons|ACTIVITY_OPTION_CATEGORY_TEXTURE_PATH";
+                    data.verify_icon(define, key, ".dds");
                 }
                 vd.unknown_block_fields(|key, block| {
                     validate_option(key, block, data, has_special_option, is_special_option);
@@ -514,6 +521,9 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, has_special_opt
     let loca = format!("{key}_desc");
     data.verify_exists_implied(Item::Localization, &loca, key);
 
+    let define = "NGameIcons|ACTIVITY_PHASE_ICON_PATH";
+    data.verify_icon(define, key, ".dds");
+
     let mut vd = Validator::new(block, data);
     vd.field_bool("is_predefined");
     let mut sc = ScopeContext::new(Scopes::None, key);
@@ -630,6 +640,9 @@ impl DbKind for ActivityLocale {
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
+        let define = "NGameIcons|ACTIVITY_LOCALE_ICON_PATH";
+        data.verify_icon(define, key, ".dds");
+
         let mut sc = ScopeContext::new(Scopes::Character, key);
         sc.define_name("host", Scopes::Character, key);
         sc.define_name("activity", Scopes::Activity, key);
@@ -743,6 +756,10 @@ impl ActivityIntent {
 impl DbKind for ActivityIntent {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
+
+        data.verify_exists(Item::Localization, key);
+        let loca = format!("{key}_desc");
+        data.verify_exists_implied(Item::Localization, &loca, key);
 
         let define = "NGameIcons|ACTIVITY_INTENTS_ICON_PATH";
         let icon = vd.field_value("icon").unwrap_or(key);
