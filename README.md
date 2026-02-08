@@ -17,7 +17,7 @@ Support for Hearts of Iron IV (`hoi4-tiger`) is in the works but it is **unfinis
 
 ## Features
 
-`ck3-tiger` (or `vic3-tiger` or `imperator-tiger`) will read the relevant vanilla files and your mod's files, and it will complain about everything in your mod that looks wrong. Where possible, it will tell you why it thinks the thing is wrong.
+`ck3-tiger / vic3-tiger / imperator-tiger` will read the relevant vanilla files and your mod's files, and it will complain about everything in your mod that looks wrong. Where possible, it will tell you why it thinks the thing is wrong.
 
 - Syntax validation: are you using the right key = value pairs? No misspellings?
 - Missing items: is every game object that you refer to actually defined somewhere?
@@ -57,7 +57,7 @@ path/to/vic3-tiger "path/to/Paradox Interactive/Victoria 3/mod/YourMod/"
 path/to/imperator-tiger path/to/your/descriptor.mod
 path/to/vic3-tiger "path/to/Paradox Interactive/ImperatorRome/mod/YourMod.mod"
 
-# For output redirection to a new file, Append `> filename` to the command, e.g.
+# For output redirection to a new file, append `> filename` to the command, e.g.
 path/to/ck3-tiger path/to/your/descriptor.mod > output.txt
 ```
 
@@ -73,9 +73,11 @@ There is a sample [`ck3-tiger.conf`](ck3-tiger.conf) file, [`vic3-tiger.conf`](v
 
 If you want to build it yourself, you will have to [install the Rust programming language](https://www.rust-lang.org/tools/install). You can either get the source archive from one of the releases (preferably the [latest](https://github.com/amtep/tiger/releases/latest)) or clone the git repository.
 
-For `ck3-tiger`, run `cargo build --release -p ck3-tiger` in the project's directory, then run the program as `cargo run --release -p ck3-tiger`.  
-For `vic3-tiger`, run `cargo build --release -p vic3-tiger` in the project's directory, then run the program as `cargo run --release -p vic3-tiger`.  
-For `imperator-tiger`, run `cargo build --release -p imperator-tiger` in the project's directory, then run the program as `cargo run --release -p imperator-tiger`.
+```
+cargo run --release -p ck3-tiger -- [OPTIONS]
+cargo run --release -p vic3-tiger -- [OPTIONS]
+cargo run --release -p imperator-tiger -- [OPTIONS]
+```
 
 ## Visual Studio Code extension
 
@@ -87,7 +89,8 @@ It enables you to view the reports directly in the Problems tab.
 User Bahmut has made a [GitHub Action](https://github.com/kaiser-chris/tiger-action-public) for Tiger.
 It allows running Tiger validation in GitHub Workflows.
 
-> **NOTE:** Because of copyright issues, you will need to set up the action yourself. The repository linked above contains a guide on how to set it up for yourself.
+> [!NOTE]
+> Because of copyright issues, you will need to set up the action yourself. The repository linked above contains a guide on how to set it up for yourself.
 
 ## Showing only new reports
 
@@ -95,12 +98,16 @@ You can tell `tiger` to suppress reports that were shown in a previous run.
 This can be helpful when you only want to see what changed, for example after updating your mod.
 First you have to generate a "baseline" to compare future runs to:
 
-<pre>ck3-tiger --json <i>path/to/your/mod</i> >baseline.json</pre>
+```
+ck3-tiger --json path/to/your/mod > baseline.json
+```
 
 You can use any filename in place of `baseline.json`.
 Then when you run tiger again, you can tell it to exclude reports from the baseline:
 
-<pre>ck3-tiger --suppress baseline.json <i>path/to/your/mod</i></pre>
+```
+ck3-tiger --suppress baseline.json path/to/your/mod
+```
 
 It works with `vic3-tiger` and `imperator-tiger` too.
 
@@ -116,20 +123,21 @@ You can remove those reports from the output in either of two ways:
 
 The various path options are only needed if Tiger can't find the paths on its own.
 
-- `--game` _PATH_ Path to the game main directory
-- `--config` _PATH_ Path to the custom `.conf` file
-- `--workshop` _PATH_ Path to the Steam workshop directory (only for Vic3)
-- `--paradox` _PATH_ Path to the Paradox game directory (not for Vic3)
-- `--show-vanilla` Show errors in the base game script code as well as the mod's
-- `--show-mods` Show errors in secondary loaded mods as well as the main mod
-- `--json` Output the reports in JSON format
-- `--consolidate` Log only the first occurrence of certain errors (such as missing items)
-- `--unused` Warn about items that are defined but unused (not yet accurate)
-- `--no-color` Omit color from the output
-- `--suppress` _PATH_ Load a JSON file of reports to remove from the output (see section above)
-- `--pod` Do checks specific to the Princes of Darkness mod
-- `--help` Print help.
-- `--version` Print version
+```
+      --game <GAME>          Path to game main directory
+      --paradox <PARADOX>    Path to paradox directory
+      --config <CONFIG>      Path to custom .conf file
+      --show-vanilla         Show errors in the base game script code as well
+      --show-mods            Show errors in other loaded mods as well
+      --json                 Output the reports in JSON format
+  -c, --consolidate          Consolidate certain repeated errors
+      --unused               Warn about items that are defined but unused
+      --pod                  Do checks specific to the Princes of Darkness mod
+      --no-color             Omit color from the output. False by default. Can also be configured in the config file
+      --suppress <SUPPRESS>  Load a JSON file of reports to remove from the output
+  -h, --help                 Print help
+  -V, --version              Print version
+```
 
 ## Contributions
 
