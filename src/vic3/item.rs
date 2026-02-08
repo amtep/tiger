@@ -122,6 +122,7 @@ impl Item {
                 | Item::Music
                 | Item::MusicPlayerCategory
                 // undocumented
+                | Item::Modifier
                 | Item::PortraitAnimation
         )
     }
