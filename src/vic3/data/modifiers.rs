@@ -32,8 +32,8 @@ impl DbKind for Modifier {
             && !key.as_str().ends_with("_standard_of_living_modifier_negative")
             && !key.as_str().ends_with("_cultural_acceptance_modifier_positive")
             && !key.as_str().ends_with("_cultural_acceptance_modifier_negative")
-            && !key.as_str().ends_with("_fervor_target_positive")
-            && !key.as_str().ends_with("_fervor_target_negative")
+            && !key.as_str().ends_with("_fervor_target_modifier_positive")
+            && !key.as_str().ends_with("_fervor_target_modifier_negative")
         {
             data.verify_exists(Item::Localization, key);
         }

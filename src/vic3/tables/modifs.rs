@@ -707,6 +707,25 @@ pub fn modif_loc_vic3(name: &Token, data: &Everything) -> (Cow<'static, str>, Co
             );
         }
     }
+
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_") {
+        if part.strip_suffix_unchecked("_add").is_some() {
+            return (
+                Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER"),
+                Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER_DESC"),
+            );
+        }
+    }
+
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
+        if part.strip_suffix_unchecked("_cultural_acceptance_add").is_some() {
+            return (
+                Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER"),
+                Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER_DESC"),
+            );
+        }
+    }
+
     // TODO: should the loca key be lowercased?
     let desc_loc = format!("{name}_desc");
     (Cow::Borrowed(name.as_str()), Cow::Owned(desc_loc))
