@@ -76,7 +76,11 @@ impl DbKind for AiStrategy {
         // TODO verify scope type
         vd.field_script_value_rooted("revolution_aversion", Scopes::Country);
         // TODO verify scope type
-        vd.field_script_value_rooted("min_law_chance_to_pass", Scopes::Country);
+        vd.field_script_value_builder("min_law_chance_to_pass", |key| {
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("law", Scopes::Law, key);
+            sc
+        });
         vd.field_script_value_builder("negotiation_chance", |key| {
             let mut sc = ScopeContext::new(Scopes::Country, key);
             sc.define_name("law", Scopes::Law, key);

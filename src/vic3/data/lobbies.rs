@@ -34,7 +34,8 @@ impl DbKind for PoliticalLobby {
         }
 
         fn sc_with_lobby(key: &Token) -> ScopeContext {
-            let mut sc = sc_no_lobby(key);
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("target_country", Scopes::Country, key);
             sc.define_name("political_lobby", Scopes::PoliticalLobby, key);
             sc
         }

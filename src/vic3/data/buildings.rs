@@ -104,6 +104,7 @@ impl DbKind for BuildingType {
         let mut sc = ScopeContext::new(Scopes::Country, key);
         let mut building_sc = ScopeContext::new(Scopes::Building, key);
         let mut state_sc = ScopeContext::new(Scopes::State, key);
+        state_sc.define_name("num_levels", Scopes::Value, key);
 
         maybe_warn_modifiable_capitalization(key);
 
