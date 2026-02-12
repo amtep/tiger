@@ -79,7 +79,7 @@ pub const ARTIFACT_HISTORY: &[&str] = &[
     "reforged",
 ];
 
-/// LAST UPDATED CK3 VERSION 1.17.0
+/// LAST UPDATED CK3 VERSION 1.18.3
 /// Taken from `has_dlc_feature` in triggers.log
 pub const DLC_FEATURES_CK3: &[&str] = &[
     "garments_of_the_hre",
@@ -119,6 +119,8 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "merit_admin",
     "advanced_aspirations",
     "barter_troops",
+    "high_medieval_warfare_attire",
+    "holy_buildings",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
