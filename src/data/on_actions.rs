@@ -76,10 +76,13 @@ impl FileHandler<Block> for OnActions {
         match Game::game() {
             #[cfg(feature = "ck3")]
             Game::Ck3 => PathBuf::from("common/on_action"),
-            #[cfg(feature = "imperator")]
-            Game::Imperator => PathBuf::from("common/on_action"),
             #[cfg(feature = "vic3")]
             Game::Vic3 => PathBuf::from("common/on_actions"),
+            #[cfg(feature = "imperator")]
+            Game::Imperator => PathBuf::from("common/on_action"),
+            #[cfg(feature = "eu5")]
+            // TODO: EU5 verify
+            Game::Eu5 => PathBuf::from("common/on_action"),
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => PathBuf::from("common/on_actions"),
         }

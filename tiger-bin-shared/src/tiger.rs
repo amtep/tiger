@@ -5,7 +5,7 @@ use anyhow::{Result, bail};
 use clap::{Args, Parser, Subcommand, error::ErrorKind};
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use tiger_lib::ModFile;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 use tiger_lib::ModMetadata;
 use tiger_lib::{
     Everything, disable_ansi_colors, emit_reports, get_version_from_launcher, set_show_loaded_mods,
@@ -41,7 +41,7 @@ enum Commands {
 
 #[derive(Args)]
 struct ValidateArgs {
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     /// Path to folder of mod to check.
     modpath: PathBuf,
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
@@ -53,8 +53,8 @@ struct ValidateArgs {
     #[clap(long)]
     /// Path to game main directory.
     game: Option<PathBuf>,
-    #[cfg_attr(not(feature = "vic3"), clap(skip))]
-    #[cfg_attr(feature = "vic3", clap(long))]
+    #[cfg_attr(not(any(feature = "vic3", feature = "eu5")), clap(skip))]
+    #[cfg_attr(any(feature = "vic3", feature = "eu5"), clap(long))]
     /// Path to game workshop directory.
     workshop: Option<PathBuf>,
     #[cfg_attr(not(any(feature = "ck3", feature = "imperator", feature = "hoi4")), clap(skip))]
@@ -239,7 +239,7 @@ pub fn run(
                     modfile.replace_paths(),
                 )?;
             }
-            #[cfg(feature = "vic3")]
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
             {
                 let metadata = ModMetadata::read(&args.modpath)?;
                 eprintln!("Using mod directory: {}", metadata.modpath().display());

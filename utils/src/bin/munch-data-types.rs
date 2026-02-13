@@ -13,6 +13,8 @@ enum Game {
     Ck3,
     /// Victoria 3
     Vic3,
+    /// Europa Universalis 5
+    Eu5,
 }
 
 #[derive(Debug, Parser)]
@@ -37,6 +39,11 @@ fn remove_game_wrapper(sometype: &str) -> &str {
         }
     }
     if let Some(sfx) = sometype.strip_prefix("Vic3(") {
+        if let Some(result) = sfx.strip_suffix(')') {
+            return result;
+        }
+    }
+    if let Some(sfx) = sometype.strip_prefix("Eu5(") {
         if let Some(result) = sfx.strip_suffix(')') {
             return result;
         }
@@ -436,6 +443,7 @@ fn main() -> Result<()> {
     if args.game == Game::Vic3 {
         new_global_functions.retain(|k, _| !k.starts_with("concept_"));
     }
+    // TODO: EU5 find out the pattern
 
     // Root seems to work as well as ROOT
     new_global_promotes

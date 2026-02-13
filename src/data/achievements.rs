@@ -52,6 +52,8 @@ fn achievement_scope() -> Scopes {
         Game::Vic3 => Scopes::Country,
         #[cfg(feature = "imperator")]
         Game::Imperator => Scopes::Country,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => Scopes::Country,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => Scopes::Country,
     }

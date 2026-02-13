@@ -53,6 +53,8 @@ pub fn scope_trigger(name: &Token, data: &Everything) -> Option<(Scopes, Trigger
         Game::Vic3 => crate::vic3::tables::triggers::scope_trigger,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::triggers::scope_trigger,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::triggers::scope_trigger,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::triggers::scope_trigger,
     };
@@ -1693,6 +1695,8 @@ pub fn validate_argument(
             Game::Vic3 => crate::vic3::tables::triggers::scope_trigger_complex,
             #[cfg(feature = "imperator")]
             Game::Imperator => unreachable!(),
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::triggers::scope_trigger_complex,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => unreachable!(),
         };
@@ -1729,6 +1733,8 @@ pub fn validate_prefix(
             Game::Vic3 => crate::vic3::tables::triggers::scope_trigger_complex(prefix),
             #[cfg(feature = "imperator")]
             Game::Imperator => None,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::triggers::scope_trigger_complex(prefix),
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => None,
         }

@@ -45,10 +45,10 @@ bitflags! {
 
         #[cfg(any(feature = "vic3", feature = "imperator"))]
         const Color = 0x0000_0010;
-        #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
+        #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5", feature = "hoi4"))]
         const Country = 0x0000_0020;
         const Character = 0x0000_0040;
-        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "imperator"))]
         const Culture = 0x0000_0080;
         #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
         const Province = 0x0000_0100;
@@ -366,6 +366,8 @@ pub fn scope_to_scope(name: &Token, inscopes: Scopes) -> Option<(Scopes, Scopes)
         Game::Vic3 => crate::vic3::tables::targets::scope_to_scope,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::targets::scope_to_scope,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::targets::scope_to_scope,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::targets::scope_to_scope,
     };
@@ -376,6 +378,8 @@ pub fn scope_to_scope(name: &Token, inscopes: Scopes) -> Option<(Scopes, Scopes)
         Game::Vic3 => crate::vic3::tables::targets::scope_to_scope_removed,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::targets::scope_to_scope_removed,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::targets::scope_to_scope_removed,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::targets::scope_to_scope_removed,
     };
@@ -449,6 +453,8 @@ pub fn scope_prefix(prefix: &Token) -> Option<(Scopes, Scopes, ArgumentValue)> {
         Game::Vic3 => crate::vic3::tables::targets::scope_prefix,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::targets::scope_prefix,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::targets::scope_prefix,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::targets::scope_prefix,
     };
@@ -471,6 +477,8 @@ pub fn needs_prefix(arg: &str, data: &Everything, scopes: Scopes) -> Option<&'st
         Game::Vic3 => crate::vic3::scopes::needs_prefix(arg, data, scopes),
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::scopes::needs_prefix(arg, data, scopes),
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::scopes::needs_prefix(arg, data, scopes),
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::scopes::needs_prefix(arg, data, scopes),
     }
@@ -497,6 +505,8 @@ pub fn scope_iterator(
         Game::Vic3 => crate::vic3::tables::iterators::iterator,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::iterators::iterator,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::iterators::iterator,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::iterators::iterator,
     };
@@ -507,6 +517,8 @@ pub fn scope_iterator(
         Game::Vic3 => crate::vic3::tables::iterators::iterator_removed,
         #[cfg(feature = "imperator")]
         Game::Imperator => crate::imperator::tables::iterators::iterator_removed,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::iterators::iterator_removed,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::iterators::iterator_removed,
     };

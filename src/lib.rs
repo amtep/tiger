@@ -2,19 +2,27 @@
 //! `imperator-tiger`. Each executable is a small wrapper around the functions in this library that
 //! start and perform validation.
 
-#[cfg(all(feature = "ck3", feature = "vic3", feature = "imperator", feature = "hoi4", not(doc)))]
+#[cfg(all(
+    feature = "ck3",
+    feature = "vic3",
+    feature = "imperator",
+    feature = "eu5",
+    feature = "hoi4",
+    not(doc)
+))]
 compile_error!(
-    "features \"ck3\", \"vic3\", \"imperator\", and \"hoi4\" cannot be enabled at the same time"
+    "features \"ck3\", \"vic3\", \"imperator\", \"eu5\", and \"hoi4\" cannot be enabled at the same time"
 );
 
 #[cfg(all(
     not(feature = "ck3"),
     not(feature = "vic3"),
     not(feature = "imperator"),
+    not(feature = "eu5"),
     not(feature = "hoi4")
 ))]
 compile_error!(
-    "exactly one of the features \"ck3\", \"vic3\", \"imperator\", \"hoi4\" must be enabled"
+    "exactly one of the features \"ck3\", \"vic3\", \"imperator\", \"eu5\", \"hoi4\" must be enabled"
 );
 
 pub use crate::config_load::validate_config_file;
@@ -40,6 +48,8 @@ mod benches;
 
 #[cfg(feature = "ck3")]
 mod ck3;
+#[cfg(feature = "eu5")]
+mod eu5;
 #[cfg(feature = "hoi4")]
 mod hoi4;
 #[cfg(feature = "imperator")]
@@ -69,7 +79,7 @@ mod item;
 mod launcher_settings;
 mod lowercase;
 mod macros;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 mod mod_metadata;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 mod modfile;

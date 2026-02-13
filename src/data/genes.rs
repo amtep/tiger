@@ -556,7 +556,6 @@ fn validate_morph_gene(block: &Block, data: &Everything) {
     vd.field_value("negative_mirror"); // TODO
     #[cfg(feature = "imperator")]
     vd.field_value("set_tags");
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
     let choices = &[
         "male",
         "female",
@@ -606,7 +605,6 @@ fn validate_accessory_gene(block: &Block, data: &Everything) {
     vd.field_integer("index"); // TODO: verify unique indices
     vd.field_value("set_tags");
     vd.field_bool("allow_game_entity_override"); // undocumented
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
     let choices = &[
         "male",
         "female",

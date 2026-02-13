@@ -6,7 +6,7 @@ use anyhow::{Context, Result, bail};
 use console::Term;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use tiger_lib::ModFile;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 use tiger_lib::ModMetadata;
 use tiger_lib::{Everything, emit_reports};
 
@@ -146,7 +146,7 @@ fn validate_mod(
         everything =
             Everything::new(None, Some(game), workshop, paradox, modpath, modfile.replace_paths())?;
     }
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     {
         let metadata = ModMetadata::read(modpath)?;
         everything = Everything::new(
@@ -187,7 +187,7 @@ fn is_local_mod_entry(entry: &DirEntry) -> bool {
         let name = filename.to_string_lossy();
         name.ends_with(".mod") && !name.starts_with("pdx_") && !name.starts_with("ugc")
     }
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     {
         entry.path().join(".metadata/metadata.json").is_file()
     }

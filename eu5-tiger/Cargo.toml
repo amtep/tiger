@@ -1,0 +1,32 @@
+[package]
+name = "eu5-tiger"
+version = "1.15.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+default-run = "eu5-tiger"
+description = "Validator that checks Europa Universalis 5 user mod files for mistakes and warns about them. For example: missing localizations, or using a state trigger on a country. Europa Universalis 5 is a grand strategy game made by Paradox Interactive, and user mods are made by the players to enhance or change their game experience. This tool is for the people who make the mods."
+homepage = "https://github.com/amtep/tiger"
+repository = "https://github.com/amtep/tiger"
+readme = "../README.md"
+keywords = ["eu5", "linter", "mods", "validator"]
+categories = ["command-line-utilities", "development-tools", "game-development"]
+rust-version = "1.85"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tiger-lib = { path = "..", version = "1.15.0", default-features = false, features = ["eu5"] }
+tiger-bin-shared = { path = "../tiger-bin-shared", version = "1.15.0", default-features = false, features = ["eu5"] }
+
+anyhow = "1"
+
+[target.'cfg(windows)'.dependencies]
+ansiterm = "0.12.2"
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+
+[lints]
+workspace = true

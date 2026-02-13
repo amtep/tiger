@@ -720,6 +720,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "eu5-tiger"
+version = "1.15.0"
+dependencies = [
+ "ansiterm",
+ "anyhow",
+ "serde",
+ "serde_json",
+ "tiger-bin-shared",
+ "tiger-lib",
+ "toml",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

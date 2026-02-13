@@ -38,6 +38,8 @@ include!("ck3/tables/include/datatypes.rs");
 include!("vic3/tables/include/datatypes.rs");
 #[cfg(feature = "imperator")]
 include!("imperator/tables/include/datatypes.rs");
+#[cfg(feature = "eu5")]
+include!("eu5/tables/include/datatypes.rs");
 #[cfg(feature = "hoi4")]
 include!("hoi4/tables/include/datatypes.rs");
 
@@ -96,6 +98,8 @@ pub enum Datatype {
     Vic3(Vic3Datatype),
     #[cfg(feature = "imperator")]
     Imperator(ImperatorDatatype),
+    #[cfg(feature = "eu5")]
+    Eu5(Eu5Datatype),
     #[cfg(feature = "hoi4")]
     Hoi4(Hoi4Datatype),
 }
@@ -141,6 +145,8 @@ impl FromStr for Datatype {
                 Game::Vic3 => Vic3Datatype::from_str(s).map(Datatype::Vic3),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => ImperatorDatatype::from_str(s).map(Datatype::Imperator),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => Eu5Datatype::from_str(s).map(Datatype::Eu5),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => Hoi4Datatype::from_str(s).map(Datatype::Hoi4),
             }
@@ -185,6 +191,8 @@ impl Display for Datatype {
             Datatype::Vic3(dt) => dt.fmt(f),
             #[cfg(feature = "imperator")]
             Datatype::Imperator(dt) => dt.fmt(f),
+            #[cfg(feature = "eu5")]
+            Datatype::Eu5(dt) => dt.fmt(f),
             #[cfg(feature = "hoi4")]
             Datatype::Hoi4(dt) => dt.fmt(f),
         }
@@ -839,6 +847,8 @@ fn lookup_global_promote(lookup_name: &str) -> Option<(Args, Datatype)> {
         Game::Vic3 => &crate::vic3::tables::datafunctions::GLOBAL_PROMOTES_MAP,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::GLOBAL_PROMOTES_MAP,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::GLOBAL_PROMOTES_MAP,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::GLOBAL_PROMOTES_MAP,
     };
@@ -863,6 +873,8 @@ fn lookup_global_function(lookup_name: &str) -> Option<(Args, Datatype)> {
         Game::Vic3 => &crate::vic3::tables::datafunctions::GLOBAL_FUNCTIONS_MAP,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::GLOBAL_FUNCTIONS_MAP,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::GLOBAL_FUNCTIONS_MAP,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::GLOBAL_FUNCTIONS_MAP,
     };
@@ -907,6 +919,8 @@ fn lookup_promote(lookup_name: &str, ltype: Datatype) -> LookupResult {
         Game::Vic3 => &crate::vic3::tables::datafunctions::PROMOTES_MAP,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::PROMOTES_MAP,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::PROMOTES_MAP,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::PROMOTES_MAP,
     };
@@ -924,6 +938,8 @@ fn lookup_function(lookup_name: &str, ltype: Datatype) -> LookupResult {
         Game::Vic3 => &crate::vic3::tables::datafunctions::FUNCTIONS_MAP,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::FUNCTIONS_MAP,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::FUNCTIONS_MAP,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::FUNCTIONS_MAP,
     };
@@ -961,6 +977,8 @@ fn lookup_alternative(lookup_name: &'static str) -> Option<&'static str> {
         Game::Vic3 => &crate::vic3::tables::datafunctions::LOWERCASE_DATATYPE_SET,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::LOWERCASE_DATATYPE_SET,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::LOWERCASE_DATATYPE_SET,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::LOWERCASE_DATATYPE_SET,
     };
@@ -976,6 +994,8 @@ fn datatype_and_scope_map() -> &'static LazyLock<BiTigerHashMap<Datatype, Scopes
         Game::Vic3 => &crate::vic3::tables::datafunctions::DATATYPE_AND_SCOPE_MAP,
         #[cfg(feature = "imperator")]
         Game::Imperator => &crate::imperator::tables::datafunctions::DATATYPE_AND_SCOPE_MAP,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => &crate::eu5::tables::datafunctions::DATATYPE_AND_SCOPE_MAP,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => &crate::hoi4::tables::datafunctions::DATATYPE_AND_SCOPE_MAP,
     }

@@ -26,6 +26,8 @@ use crate::block::Block;
 use crate::ck3::tables::localization::{BUILTIN_MACROS_CK3, COMPLEX_TOOLTIPS_CK3};
 use crate::context::ScopeContext;
 use crate::datatype::{CodeChain, Datatype, validate_datatypes};
+#[cfg(feature = "eu5")]
+use crate::eu5::tables::localization::BUILTIN_MACROS_EU5;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler, FileKind};
 use crate::game::Game;
@@ -143,6 +145,8 @@ fn is_builtin_macro<S: Borrow<str>>(s: S) -> bool {
         Game::Vic3 => BUILTIN_MACROS_VIC3.contains(&s),
         #[cfg(feature = "imperator")]
         Game::Imperator => BUILTIN_MACROS_IMPERATOR.contains(&s),
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => BUILTIN_MACROS_EU5.contains(&s),
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => BUILTIN_MACROS_HOI4.contains(&s),
     }

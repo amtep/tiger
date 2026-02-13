@@ -28,6 +28,8 @@ impl DbKind for Dlc {
             Game::Vic3 => "name",
             #[cfg(feature = "imperator")]
             Game::Imperator => "key",
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => "name", // TODO: EU5 verify
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => "name",
         };

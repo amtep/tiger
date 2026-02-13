@@ -110,7 +110,7 @@ pub enum Item {
     GuiLayer,
     GuiTemplate,
     GuiType,
-    #[cfg(feature = "jomini")]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
     LawGroup,
     Localization,
     MapEnvironment,
@@ -692,6 +692,9 @@ impl Item {
                 Game::Vic3 => "common/achievements/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/achievements/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/achievements/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/achievements.txt",
             },
@@ -731,6 +734,9 @@ impl Item {
                 Game::Vic3 => "common/cultures/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/cultures/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/cultures/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
             },
@@ -743,6 +749,9 @@ impl Item {
                 Game::Vic3 => "common/decisions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "decisions/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "commmon/decisions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/decisions/",
             },
@@ -780,6 +789,9 @@ impl Item {
                 Game::Vic3 => "common/government_types/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/governments/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/government_types/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
             },
@@ -796,6 +808,9 @@ impl Item {
                 Game::Vic3 => "common/static_modifiers/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/modifiers/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/static_modifiers/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/modifiers/", // TODO HOI4
             },
@@ -811,6 +826,9 @@ impl Item {
                 Game::Vic3 => "common/on_actions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/on_action/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/on_actions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/on_actions/", // TODO HOI4
             },
@@ -832,6 +850,9 @@ impl Item {
                 Game::Vic3 => "map_data/provinces.png",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "map_data/provinces.png",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "map_data/provinces.png",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "map/definition.csv", // TODO HOI4
             },
@@ -843,6 +864,9 @@ impl Item {
                 Game::Vic3 => "common/religions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/religions/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/religions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
             },
@@ -871,6 +895,9 @@ impl Item {
                 Game::Vic3 => "common/terrain/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/terrain_types/",
+                #[cfg(feature = "eu5")]
+                // TODO: EU5 verify
+                Game::Eu5 => "common/terrain/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/terrain/",
             },

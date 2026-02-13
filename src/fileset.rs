@@ -17,7 +17,7 @@ use crate::everything::{Everything, FilesError};
 use crate::game::Game;
 use crate::helpers::TigerHashSet;
 use crate::item::Item;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 use crate::mod_metadata::ModMetadata;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
 use crate::modfile::ModFile;
@@ -320,8 +320,8 @@ impl Fileset {
                         "could not load secondary mod from config; missing valid `modfile` or `workshop_id` field"
                     );
                 }
-            } else if Game::is_vic3() {
-                #[cfg(feature = "vic3")]
+            } else if Game::is_vic3() || Game::is_eu5() {
+                #[cfg(any(feature = "vic3", feature = "eu5"))]
                 if let Some(pathdir) = get_mod(&label, config_path, block, workshop_dir) {
                     match ModMetadata::read(&pathdir) {
                         Ok(metadata) => {
@@ -608,6 +608,8 @@ impl Fileset {
             Game::Vic3 => crate::vic3::tables::misc::COMMON_DIRS,
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::tables::misc::COMMON_DIRS,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::misc::COMMON_DIRS,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => crate::hoi4::tables::misc::COMMON_DIRS,
         };
@@ -618,6 +620,8 @@ impl Fileset {
             Game::Vic3 => crate::vic3::tables::misc::COMMON_SUBDIRS_OK,
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::tables::misc::COMMON_SUBDIRS_OK,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::misc::COMMON_SUBDIRS_OK,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => crate::hoi4::tables::misc::COMMON_SUBDIRS_OK,
         };
@@ -752,7 +756,7 @@ fn get_modfile(
     path
 }
 
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 fn get_mod(
     label: &String,
     config_path: &Path,

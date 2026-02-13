@@ -47,6 +47,8 @@ impl Musics {
             Game::Vic3 => crate::vic3::tables::misc::DLC_MUSIC,
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::tables::misc::DLC_MUSIC,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::misc::DLC_MUSIC,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => crate::hoi4::tables::misc::DLC_MUSIC,
         };
@@ -119,6 +121,8 @@ impl Music {
             Game::Vic3 => Scopes::Country,
             #[cfg(feature = "imperator")]
             Game::Imperator => Scopes::Country,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => Scopes::Country,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => Scopes::Country,
         };

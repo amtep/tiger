@@ -249,6 +249,8 @@ impl Event {
             Game::Vic3 => crate::vic3::events::get_event_scope(&key, &block),
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::events::get_event_scope(&key, &block),
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::events::get_event_scope(&key, &block),
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => unimplemented!(),
         };
@@ -276,6 +278,8 @@ impl Event {
             Game::Vic3 => crate::vic3::events::validate_event(self, data, &mut sc),
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::events::validate_event(self, data, &mut sc),
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::events::validate_event(self, data, &mut sc),
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => unimplemented!(),
         }
@@ -293,6 +297,8 @@ impl Event {
             Game::Vic3 => crate::vic3::events::validate_event(self, data, sc),
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::events::validate_event(self, data, sc),
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::events::validate_event(self, data, sc),
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => unimplemented!(),
         }

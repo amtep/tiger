@@ -34,6 +34,8 @@ static ON_ACTION_SCOPES_MAP: LazyLock<TigerHashMap<String, OnActionScopeContext>
             Game::Vic3 => crate::vic3::tables::on_action::ON_ACTION_SCOPES,
             #[cfg(feature = "imperator")]
             Game::Imperator => crate::imperator::tables::on_action::ON_ACTION_SCOPES,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => crate::eu5::tables::on_action::ON_ACTION_SCOPES,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => crate::hoi4::tables::on_action::ON_ACTION_SCOPES,
         })

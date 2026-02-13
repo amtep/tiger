@@ -397,6 +397,11 @@ where
                 // TODO: what is the correct scope here?
                 sc = ScopeContext::new(Scopes::Country, key);
             }
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => {
+                // TODO: what is the correct scope here?
+                sc = ScopeContext::new(Scopes::Country, key);
+            }
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => unimplemented!(),
         }

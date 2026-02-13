@@ -30,6 +30,7 @@ default = ["ck3"]
 ck3 = ["tiger-lib/ck3"]
 vic3 = ["tiger-lib/vic3"]
 imperator = ["tiger-lib/imperator"]
+eu5 = ["tiger-lib/eu5"]
 hoi4 = ["tiger-lib/hoi4"]
 
 [target.'cfg(target_os = "windows")'.dependencies]

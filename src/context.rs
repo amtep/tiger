@@ -1324,5 +1324,13 @@ fn scope_type_from_name(mut name: &str) -> Option<Scopes> {
         };
     }
 
+    #[cfg(feature = "eu5")]
+    if Game::is_eu5() {
+        return match name {
+            // TODO: EU5 fill in good guesses
+            _ => None,
+        };
+    }
+
     None
 }

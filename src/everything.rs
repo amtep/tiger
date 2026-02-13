@@ -55,6 +55,10 @@ use crate::data::{
 };
 use crate::db::{Db, DbKind};
 use crate::dds::DdsFiles;
+#[cfg(feature = "eu5")]
+use crate::eu5::data::provinces::Eu5Provinces;
+#[cfg(feature = "eu5")]
+use crate::eu5::tables::misc::*;
 use crate::fileset::{FileEntry, FileKind, Fileset};
 use crate::game::Game;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
@@ -162,6 +166,8 @@ pub struct Everything {
     pub(crate) provinces_vic3: Vic3Provinces,
     #[cfg(feature = "imperator")]
     pub(crate) provinces_imperator: ImperatorProvinces,
+    #[cfg(feature = "eu5")]
+    pub(crate) provinces_eu5: Eu5Provinces,
     #[cfg(feature = "hoi4")]
     pub(crate) provinces_hoi4: Hoi4Provinces,
 
@@ -299,6 +305,19 @@ macro_rules! load_all_imperator {
     };
 }
 
+#[cfg(feature = "eu5")]
+macro_rules! load_all_eu5 {
+    ($s: ident, $t: ident) => {
+        $s.spawn(|_| $t.fileset.handle(&mut $t.events, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.coas, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.provinces_eu5, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_lists, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.scripted_modifiers, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.script_values, &$t.parser));
+        $s.spawn(|_| $t.fileset.handle(&mut $t.music, &$t.parser));
+    };
+}
+
 #[cfg(feature = "hoi4")]
 macro_rules! load_all_hoi4 {
     ($s: ident, $t: ident) => {
@@ -363,6 +382,17 @@ macro_rules! scan_all_imperator {
     };
 }
 
+#[cfg(feature = "eu5")]
+macro_rules! scan_all_eu5 {
+    ($s: ident) => {
+        $s.events.scan_variables(&mut $s.variables);
+        $s.coas.scan_variables(&mut $s.variables);
+        $s.scripted_lists.scan_variables(&mut $s.variables);
+        $s.scripted_modifiers.scan_variables(&mut $s.variables);
+        $s.script_values.scan_variables(&mut $s.variables);
+        $s.music.scan_variables(&mut $s.variables);
+    };
+}
 #[cfg(feature = "hoi4")]
 macro_rules! scan_all_hoi4 {
     ($s: ident) => {
@@ -398,6 +428,8 @@ impl Everything {
             Game::Vic3 => "vic3-tiger.conf",
             #[cfg(feature = "imperator")]
             Game::Imperator => "imperator-tiger.conf",
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => "eu5-tiger.conf",
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => "hoi4-tiger.conf",
         };
@@ -448,6 +480,8 @@ impl Everything {
             provinces_vic3: Vic3Provinces::default(),
             #[cfg(feature = "imperator")]
             provinces_imperator: ImperatorProvinces::default(),
+            #[cfg(feature = "eu5")]
+            provinces_eu5: Eu5Provinces::default(),
             #[cfg(feature = "hoi4")]
             provinces_hoi4: Hoi4Provinces::default(),
             #[cfg(feature = "ck3")]
@@ -618,6 +652,10 @@ impl Everything {
                     Game::Imperator => {
                         load_all_imperator!(s, self);
                     }
+                    #[cfg(feature = "eu5")]
+                    Game::Eu5 => {
+                        load_all_eu5!(s, self);
+                    }
                     #[cfg(feature = "hoi4")]
                     Game::Hoi4 => {
                         load_all_hoi4!(s, self);
@@ -639,6 +677,10 @@ impl Everything {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => {
                     scan_all_imperator!(self);
+                }
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => {
+                    scan_all_eu5!(self);
                 }
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => {
@@ -731,6 +773,17 @@ impl Everything {
         s.spawn(|_| self.music.validate(self));
     }
 
+    #[cfg(feature = "eu5")]
+    fn validate_all_eu5<'a>(&'a self, s: &Scope<'a>) {
+        s.spawn(|_| self.events.validate(self));
+        s.spawn(|_| self.coas.validate(self));
+        s.spawn(|_| self.provinces_eu5.validate(self));
+        s.spawn(|_| self.scripted_lists.validate(self));
+        s.spawn(|_| self.scripted_modifiers.validate(self));
+        s.spawn(|_| self.script_values.validate(self));
+        s.spawn(|_| self.music.validate(self));
+    }
+
     #[cfg(feature = "hoi4")]
     fn validate_all_hoi4<'a>(&'a self, s: &Scope<'a>) {
         s.spawn(|_| self.events_hoi4.validate(self));
@@ -749,6 +802,8 @@ impl Everything {
                 Game::Vic3 => self.validate_all_vic3(s),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => self.validate_all_imperator(s),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => self.validate_all_eu5(s),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.validate_all_hoi4(s),
             }
@@ -883,6 +938,24 @@ impl Everything {
         }
     }
 
+    #[cfg(feature = "eu5")]
+    fn item_exists_eu5(&self, itype: Item, key: &str) -> bool {
+        match itype {
+            Item::Coa => self.coas.exists(key),
+            Item::CoaTemplate => self.coas.template_exists(key),
+            Item::DlcFeature => DLC_FEATURES_EU5.contains(&key),
+            Item::Event => self.events.exists(key),
+            Item::EventNamespace => self.events.namespace_exists(key),
+            Item::GeneAttribute => self.assets.attribute_exists(key),
+            Item::Music => self.music.exists(key),
+            Item::ScriptedList => self.scripted_lists.exists(key),
+            Item::ScriptedModifier => self.scripted_modifiers.exists(key),
+            Item::ScriptValue => self.script_values.exists(key),
+            Item::Sound => self.valid_sound(key),
+            _ => self.database.exists(itype, key),
+        }
+    }
+
     #[cfg(feature = "hoi4")]
     fn item_exists_hoi4(&self, itype: Item, key: &str) -> bool {
         match itype {
@@ -927,6 +1000,8 @@ impl Everything {
                 Game::Vic3 => self.item_exists_vic3(itype, key),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => self.item_exists_imperator(itype, key),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => self.item_exists_eu5(itype, key),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.item_exists_hoi4(itype, key),
             },
@@ -971,6 +1046,14 @@ impl Everything {
     /// Return true iff the item `key` is found with a case insensitive match.
     /// This function is **incomplete**. It only contains the item types for which case insensitive
     /// matches are needed.
+    #[cfg(feature = "eu5")]
+    fn item_exists_lc_eu5(&self, itype: Item, key: &Lowercase) -> bool {
+        self.database.exists_lc(itype, key)
+    }
+
+    /// Return true iff the item `key` is found with a case insensitive match.
+    /// This function is **incomplete**. It only contains the item types for which case insensitive
+    /// matches are needed.
     #[cfg(feature = "hoi4")]
     fn item_exists_lc_hoi4(&self, itype: Item, key: &Lowercase) -> bool {
         #[allow(clippy::match_single_binding)]
@@ -979,6 +1062,7 @@ impl Everything {
             _ => self.database.exists_lc(itype, key),
         }
     }
+
     /// Return true iff the item `key` is found with a case insensitive match.
     /// This function is **incomplete**. It only contains the item types for which case insensitive
     /// matches are needed; this is currently the ones used in modif lookups.
@@ -992,6 +1076,8 @@ impl Everything {
                 Game::Vic3 => self.item_exists_lc_vic3(itype, key),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => self.item_exists_lc_imperator(itype, key),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => self.item_exists_lc_eu5(itype, key),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.item_exists_lc_hoi4(itype, key),
             },
@@ -1034,6 +1120,8 @@ impl Everything {
                 Game::Vic3 => self.music.verify_exists_implied(key, token, max_sev),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => self.music.verify_exists_implied(key, token, max_sev),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => self.music.verify_exists_implied(key, token, max_sev),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.music_hoi4.verify_exists_implied(key, token, max_sev),
             },
@@ -1046,6 +1134,11 @@ impl Everything {
                 Game::Imperator => {
                     self.provinces_imperator.verify_exists_implied(key, token, max_sev);
                 }
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => {
+                    self.provinces_eu5.verify_exists_implied(key, token, max_sev);
+                }
+                #[cfg(feature = "hoi4")]
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => {
                     self.provinces_hoi4.verify_exists_implied(key, token, max_sev);
@@ -1297,6 +1390,22 @@ impl Everything {
         }
     }
 
+    #[cfg(feature = "eu5")]
+    fn iter_keys_eu5<'a>(&'a self, itype: Item) -> Box<dyn Iterator<Item = &'a Token> + 'a> {
+        match itype {
+            Item::Coa => Box::new(self.coas.iter_keys()),
+            Item::CoaTemplate => Box::new(self.coas.iter_template_keys()),
+            Item::Event => Box::new(self.events.iter_keys()),
+            Item::EventNamespace => Box::new(self.events.iter_namespace_keys()),
+            Item::Music => Box::new(self.music.iter_keys()),
+            Item::GeneAttribute => Box::new(self.assets.iter_attribute_keys()),
+            Item::ScriptedList => Box::new(self.scripted_lists.iter_keys()),
+            Item::ScriptedModifier => Box::new(self.scripted_modifiers.iter_keys()),
+            Item::ScriptValue => Box::new(self.script_values.iter_keys()),
+            _ => Box::new(self.database.iter_keys(itype)),
+        }
+    }
+
     #[cfg(feature = "hoi4")]
     fn iter_keys_hoi4<'a>(&'a self, itype: Item) -> Box<dyn Iterator<Item = &'a Token> + 'a> {
         match itype {
@@ -1338,6 +1447,8 @@ impl Everything {
                 Game::Vic3 => self.iter_keys_vic3(itype),
                 #[cfg(feature = "imperator")]
                 Game::Imperator => self.iter_keys_imperator(itype),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => self.iter_keys_eu5(itype),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => self.iter_keys_hoi4(itype),
             },
@@ -1357,6 +1468,8 @@ impl Everything {
                 Game::Vic3 => &crate::vic3::tables::sounds::SOUNDS_SET,
                 #[cfg(feature = "imperator")]
                 Game::Imperator => &crate::imperator::tables::sounds::SOUNDS_SET,
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => &crate::eu5::tables::sounds::SOUNDS_SET,
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unimplemented!(),
             };

@@ -267,6 +267,8 @@ pub(crate) fn kind_tag<'a>(errors: &'a Errors<'a>, kind: FileKind) -> &'a str {
             Game::Vic3 => "Vic3",
             #[cfg(feature = "imperator")]
             Game::Imperator => "Imperator",
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => "EU5",
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => "Hoi4",
         },

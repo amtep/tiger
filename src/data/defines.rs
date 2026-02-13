@@ -97,6 +97,8 @@ impl Define {
             Game::Vic3 => &crate::vic3::tables::defines::DEFINES_MAP,
             #[cfg(feature = "imperator")]
             Game::Imperator => &crate::imperator::tables::defines::DEFINES_MAP,
+            #[cfg(feature = "eu5")]
+            Game::Eu5 => &crate::eu5::tables::defines::DEFINES_MAP,
             #[cfg(feature = "hoi4")]
             Game::Hoi4 => &crate::hoi4::tables::defines::DEFINES_MAP,
         };
