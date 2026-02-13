@@ -43,29 +43,37 @@ bitflags! {
 
         // Scope types shared by multiple games
 
-        #[cfg(any(feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
         const Color = 1<<4;
         #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5", feature = "hoi4"))]
         const Country = 1<<5;
         const Character = 1<<6;
         #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "imperator"))]
         const Culture = 1<<7;
-        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator", feature = "eu5"))]
         const Province = 1<<8;
-        #[cfg(any(feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
         const Pop = 1<<9;
         #[cfg(any(feature = "vic3", feature = "imperator"))]
         const Party = 1<<10;
-        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
+        #[cfg(feature = "eu5")]
+        const PopType = 1<<10; // overlap with Party to save a bit
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator", feature = "eu5"))]
         const Religion = 1<<11;
         #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
         const State = 1<<12;
-        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
+        #[cfg(feature = "eu5")]
+        const Trait = 1<<12; // overlap with State to save a bit
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator", feature = "eu5"))]
         const War = 1<<13;
         #[cfg(any(feature = "vic3", feature = "hoi4"))]
         const StrategicRegion = 1<<14;
+        #[cfg(feature = "eu5")]
+        const Invalid = 1<<14; // overlap with StrategicRegion to save a bit
         #[cfg(any(feature = "ck3", feature = "vic3"))]
         const Decision = 1<<15;
+        #[cfg(feature = "eu5")]
+        const Date = 1<<15; // overlap with Decision to save a bit
 
         // Scope types for CK3
         #[cfg(feature = "ck3")] const Accolade = 1<<16;
@@ -230,6 +238,116 @@ bitflags! {
         #[cfg(feature = "imperator")] const SubUnit = 1<<28;
         #[cfg(feature = "imperator")] const Treasure = 1<<29;
         #[cfg(feature = "imperator")] const Unit = 1<<30;
+
+        #[cfg(feature = "eu5")] const Location = 1<<16;
+        #[cfg(feature = "eu5")] const Unit = 1<<17;
+        #[cfg(feature = "eu5")] const SubUnit = 1<<18;
+        #[cfg(feature = "eu5")] const Dynasty = 1<<19;
+        #[cfg(feature = "eu5")] const War = 1<<20;
+        #[cfg(feature = "eu5")] const Combat = 1<<21;
+        #[cfg(feature = "eu5")] const CombatSide = 1<<22;
+        #[cfg(feature = "eu5")] const Siege = 1<<23;
+        #[cfg(feature = "eu5")] const ColonialCharter = 1<<24;
+        #[cfg(feature = "eu5")] const Market = 1<<25;
+        #[cfg(feature = "eu5")] const ProvinceDefinition = 1<<26;
+        #[cfg(feature = "eu5")] const Area = 1<<27;
+        #[cfg(feature = "eu5")] const Region = 1<<28;
+        #[cfg(feature = "eu5")] const SubContinent = 1<<29;
+        #[cfg(feature = "eu5")] const Continent = 1<<30;
+        #[cfg(feature = "eu5")] const Group = 1<<31;
+        #[cfg(feature = "eu5")] const Language = 1<<32;
+        #[cfg(feature = "eu5")] const Rebels = 1<<33;
+        #[cfg(feature = "eu5")] const Trade = 1<<34;
+        #[cfg(feature = "eu5")] const ReligiousSchool = 1<<35;
+        #[cfg(feature = "eu5")] const Goods = 1<<36;
+        #[cfg(feature = "eu5")] const Demand = 1<<37;
+        #[cfg(feature = "eu5")] const Privateer = 1<<38;
+        #[cfg(feature = "eu5")] const Exploration = 1<<39;
+        #[cfg(feature = "eu5")] const Mercenary = 1<<40;
+        #[cfg(feature = "eu5")] const WorkOfArt = 1<<41;
+        #[cfg(feature = "eu5")] const Government = 1<<42;
+        #[cfg(feature = "eu5")] const InternationalOrganization = 1<<43;
+        #[cfg(feature = "eu5")] const HolySite = 1<<44;
+        #[cfg(feature = "eu5")] const Institution = 1<<45;
+        #[cfg(feature = "eu5")] const Loan = 1<<46;
+        #[cfg(feature = "eu5")] const Building = 1<<47;
+        #[cfg(feature = "eu5")] const Law = 1<<48;
+        #[cfg(feature = "eu5")] const Policy = 1<<49;
+        #[cfg(feature = "eu5")] const Price = 1<<50;
+        #[cfg(feature = "eu5")] const Situation = 1<<51;
+        #[cfg(feature = "eu5")] const BuildingType = 1<<52;
+        #[cfg(feature = "eu5")] const Disaster = 1<<53;
+        #[cfg(feature = "eu5")] const ReligiousAspect = 1<<54;
+        #[cfg(feature = "eu5")] const EstatePrivilege = 1<<55;
+        #[cfg(feature = "eu5")] const CabinetAction = 1<<56;
+        #[cfg(feature = "eu5")] const GovernmentReform = 1<<57;
+        #[cfg(feature = "eu5")] const Cabinet = 1<<58;
+        #[cfg(feature = "eu5")] const ProductionMethod = 1<<59;
+        #[cfg(feature = "eu5")] const GraphicalCulture = 1<<60;
+        #[cfg(feature = "eu5")] const DiseaseOutbreak = 1<<61;
+        #[cfg(feature = "eu5")] const Disease = 1<<62;
+        #[cfg(feature = "eu5")] const ParliamentIssue = 1<<63;
+        #[cfg(feature = "eu5")] const ParliamentType = 1<<64;
+        #[cfg(feature = "eu5")] const Resolution = 1<<65;
+        #[cfg(feature = "eu5")] const God = 1<<66;
+        #[cfg(feature = "eu5")] const Avatar = 1<<67;
+        #[cfg(feature = "eu5")] const ReligiousFaction = 1<<68;
+        #[cfg(feature = "eu5")] const SubjectType = 1<<69;
+        #[cfg(feature = "eu5")] const Cardinal = 1<<70;
+        #[cfg(feature = "eu5")] const ActiveResolution = 1<<71;
+        #[cfg(feature = "eu5")] const Estate = 1<<72;
+        #[cfg(feature = "eu5")] const AudioCulture = 1<<73;
+        #[cfg(feature = "eu5")] const AdvanceType = 1<<74;
+        #[cfg(feature = "eu5")] const CharacterInteraction = 1<<75;
+        #[cfg(feature = "eu5")] const CountryInteraction = 1<<76;
+        #[cfg(feature = "eu5")] const GenericAction = 1<<77;
+        #[cfg(feature = "eu5")] const UnitType = 1<<78;
+        #[cfg(feature = "eu5")] const LevySetup = 1<<79;
+        #[cfg(feature = "eu5")] const ParliamentAgenda = 1<<80;
+        #[cfg(feature = "eu5")] const CasusBelli = 1<<81;
+        #[cfg(feature = "eu5")] const RelationType = 1<<82;
+        #[cfg(feature = "eu5")] const DisasterType = 1<<83;
+        #[cfg(feature = "eu5")] const SubUnitCategory = 1<<84;
+        #[cfg(feature = "eu5")] const PeaceTreaty = 1<<85;
+        #[cfg(feature = "eu5")] const ArtistType = 1<<86;
+        #[cfg(feature = "eu5")] const WorkOfArtType = 1<<87;
+        #[cfg(feature = "eu5")] const ChildEducation = 1<<88;
+        #[cfg(feature = "eu5")] const Mission = 1<<89;
+        #[cfg(feature = "eu5")] const MissionTask = 1<<90;
+        #[cfg(feature = "eu5")] const RecruitmentMethod = 1<<91;
+        #[cfg(feature = "eu5")] const RegencyType = 1<<92;
+        #[cfg(feature = "eu5")] const UnitAbility = 1<<93;
+        #[cfg(feature = "eu5")] const SocietalValueType = 1<<94;
+        #[cfg(feature = "eu5")] const RoadType = 1<<95;
+        #[cfg(feature = "eu5")] const LanguageFamily = 1<<96;
+        #[cfg(feature = "eu5")] const CultureGroup = 1<<97;
+        #[cfg(feature = "eu5")] const HeirSelection = 1<<98;
+        #[cfg(feature = "eu5")] const EstateType = 1<<99;
+        #[cfg(feature = "eu5")] const Dialect = 1<<100;
+        #[cfg(feature = "eu5")] const Ethnicity = 1<<101;
+        #[cfg(feature = "eu5")] const InternationalOrganizationType = 1<<102;
+        #[cfg(feature = "eu5")] const Payment = 1<<103;
+        #[cfg(feature = "eu5")] const SpecialStatus = 1<<104;
+        #[cfg(feature = "eu5")] const LandOwnershipRule = 1<<105;
+        #[cfg(feature = "eu5")] const WeatherSystem = 1<<106;
+        #[cfg(feature = "eu5")] const FormableCountry = 1<<107;
+        #[cfg(feature = "eu5")] const Hegemony = 1<<108;
+        #[cfg(feature = "eu5")] const HolySiteDefinition = 1<<109;
+        #[cfg(feature = "eu5")] const HolySiteType = 1<<110;
+        #[cfg(feature = "eu5")] const CountryRank = 1<<111;
+        #[cfg(feature = "eu5")] const LocationRank = 1<<112;
+        #[cfg(feature = "eu5")] const ReligiousFocus = 1<<113;
+        #[cfg(feature = "eu5")] const ReligiousFigure = 1<<114;
+        #[cfg(feature = "eu5")] const Climate = 1<<115;
+        #[cfg(feature = "eu5")] const Vegetation = 1<<116;
+        #[cfg(feature = "eu5")] const Topography = 1<<117;
+        #[cfg(feature = "eu5")] const Age = 1<<118;
+        #[cfg(feature = "eu5")] const EmploymentSystem = 1<<119;
+        #[cfg(feature = "eu5")] const MilitaryStance = 1<<120;
+        #[cfg(feature = "eu5")] const UnitTemplate = 1<<121;
+        #[cfg(feature = "eu5")] const UnitFormationPreference = 1<<122;
+        #[cfg(feature = "eu5")] const ScriptableHintDefinition = 1<<123;
+        #[cfg(feature = "eu5")] const ScriptedGeography = 1<<124;
 
         #[cfg(feature = "hoi4")] const Ace = 1<<16;
         #[cfg(feature = "hoi4")] const Combatant = 1<<17;
