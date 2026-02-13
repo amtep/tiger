@@ -436,14 +436,13 @@ fn main() -> Result<()> {
 
     // Drop the game concepts.
     // Heuristic: they are all lowercase while real datafunctions contain uppercase.
-    if args.game == Game::Ck3 {
+    if args.game == Game::Ck3 || args.game == Game::Eu5 {
         new_global_functions.retain(|k, _| k.chars().any(char::is_uppercase));
     }
     // Heuristic: they all start with concept_
     if args.game == Game::Vic3 {
         new_global_functions.retain(|k, _| !k.starts_with("concept_"));
     }
-    // TODO: EU5 find out the pattern
 
     // Root seems to work as well as ROOT
     new_global_promotes
