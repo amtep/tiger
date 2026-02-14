@@ -398,7 +398,7 @@ pub fn validate_effect_field(
                 warn(ErrorKey::Removed).msg(msg).info(explanation).loc(key).push();
             }
             Effect::Unchecked => (),
-            #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "hoi4"))]
             Effect::UncheckedTodo => (),
         }
         return;
@@ -731,7 +731,7 @@ pub enum Effect {
     /// * Examples: `assert_if`, `debug_log`, `remove_variable`
     Unchecked,
     /// This variant is for effects that we haven't gotten around to validating yet.
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "hoi4"))]
     UncheckedTodo,
     /// The effect takes a literal string that is one of the options given here.
     ///
