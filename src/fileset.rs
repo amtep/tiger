@@ -59,11 +59,48 @@ impl FileKind {
     }
 }
 
+/// The top level directories used by EU5.
+/// The other games only have the `NoStage` stage, which doesn't correspond to a directory prefix.
+///
+/// Note that ordering of these enum values matters for the same reason as [`FileKind`].
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
+pub enum FileStage {
+    #[cfg(feature = "eu5")]
+    LoadingScreen,
+    #[cfg(feature = "eu5")]
+    MainMenu,
+    #[cfg(feature = "eu5")]
+    InGame,
+    NoStage,
+}
+
+impl FileStage {
+    fn with_dir(self, path: &Path) -> PathBuf {
+        let toplevel: Option<&'static str> = match self {
+            #[cfg(feature = "eu5")]
+            FileStage::LoadingScreen => Some("loading_screen"),
+            #[cfg(feature = "eu5")]
+            FileStage::MainMenu => Some("main_menu"),
+            #[cfg(feature = "eu5")]
+            FileStage::InGame => Some("in_game"),
+            FileStage::NoStage => None,
+        };
+        // TODO: could try using Cow here. Might be that the caller has to clone anyway though.
+        let mut p = path.to_owned();
+        if let Some(toplevel) = toplevel {
+            p.push(toplevel);
+        }
+        p
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FileEntry {
     /// Pathname components below the mod directory or the vanilla game dir
     /// Must not be empty.
     path: PathBuf,
+    /// The top-level directories use by EU5. This prefix is not included in `path`.
+    stage: FileStage,
     /// Whether it's a vanilla or mod file
     kind: FileKind,
     /// Index into the `PathTable`. Used to initialize `Loc`, which doesn't carry a copy of the pathbuf.
@@ -75,9 +112,13 @@ pub struct FileEntry {
 }
 
 impl FileEntry {
-    pub fn new(path: PathBuf, kind: FileKind, fullpath: PathBuf) -> Self {
+    pub fn new(path: PathBuf, stage: FileStage, kind: FileKind, fullpath: PathBuf) -> Self {
         assert!(path.file_name().is_some());
-        Self { path, kind, idx: None, fullpath }
+        Self { path, stage, kind, idx: None, fullpath }
+    }
+
+    pub fn stage(&self) -> FileStage {
+        self.stage
     }
 
     pub fn kind(&self) -> FileKind {
@@ -126,14 +167,18 @@ impl Ord for FileEntry {
         // Compare idx if available (for speed), otherwise compare the paths.
         // TODO: the unnecessary unwrap can be fixed after msrv is high enough to use multiple `let` in one if.
         #[allow(clippy::unnecessary_unwrap)]
-        let path_ord = if self.idx.is_some() && other.idx.is_some() {
+        let ord = if self.idx.is_some() && other.idx.is_some() {
             self.idx.unwrap().cmp(&other.idx.unwrap())
         } else {
             self.path.cmp(&other.path)
         };
 
+        // EU5 support: [`FileStage`] takes precedence over [`FileKind`]
+        // For the other games, this should compile down to nothing.
+        let ord = if ord == Ordering::Equal { self.stage.cmp(&other.stage) } else { ord };
+
         // For same paths, the later [`FileKind`] wins.
-        if path_ord == Ordering::Equal { self.kind.cmp(&other.kind) } else { path_ord }
+        if ord == Ordering::Equal { self.kind.cmp(&other.kind) } else { ord }
     }
 }
 
@@ -376,7 +421,12 @@ impl Fileset {
         false
     }
 
-    fn scan(&mut self, path: &Path, kind: FileKind) -> Result<(), walkdir::Error> {
+    fn scan(
+        &mut self,
+        path: &Path,
+        stage: FileStage,
+        kind: FileKind,
+    ) -> Result<(), walkdir::Error> {
         for entry in WalkDir::new(path) {
             let entry = entry?;
             if entry.depth() == 0 || !entry.file_type().is_file() {
@@ -393,6 +443,7 @@ impl Fileset {
             }
             self.files.push(FileEntry::new(
                 inner_path.to_path_buf(),
+                stage,
                 kind,
                 entry.path().to_path_buf(),
             ));
@@ -400,39 +451,66 @@ impl Fileset {
         Ok(())
     }
 
-    pub fn scan_all(&mut self) -> Result<(), FilesError> {
+    #[allow(clippy::nonminimal_bool)] // The expressions as written are clearer
+    fn scan_stage(&mut self, stage: FileStage) -> Result<(), FilesError> {
         #[cfg(feature = "jomini")]
-        if let Some(clausewitz_root) = self.clausewitz_root.clone() {
-            self.scan(&clausewitz_root.clone(), FileKind::Clausewitz).map_err(|e| {
-                FilesError::VanillaUnreadable { path: clausewitz_root.clone(), source: e }
-            })?;
+        if let Some(path) = &self.clausewitz_root {
+            let path = stage.with_dir(path);
+            if !(Game::is_eu5() && !path.exists()) {
+                self.scan(&path, stage, FileKind::Clausewitz)
+                    .map_err(|e| FilesError::VanillaUnreadable { path: path.clone(), source: e })?;
+            }
         }
         #[cfg(feature = "jomini")]
-        if let Some(jomini_root) = &self.jomini_root.clone() {
-            self.scan(&jomini_root.clone(), FileKind::Jomini).map_err(|e| {
-                FilesError::VanillaUnreadable { path: jomini_root.clone(), source: e }
-            })?;
+        if let Some(path) = &self.jomini_root {
+            let path = stage.with_dir(path);
+            if !(Game::is_eu5() && !path.exists()) {
+                self.scan(&path, stage, FileKind::Jomini)
+                    .map_err(|e| FilesError::VanillaUnreadable { path: path.clone(), source: e })?;
+            }
         }
-        if let Some(vanilla_root) = &self.vanilla_root.clone() {
-            self.scan(&vanilla_root.clone(), FileKind::Vanilla).map_err(|e| {
-                FilesError::VanillaUnreadable { path: vanilla_root.clone(), source: e }
-            })?;
+        if let Some(path) = &self.vanilla_root {
+            let path = stage.with_dir(path);
+            if !(Game::is_eu5() && !path.exists()) {
+                self.scan(&path, stage, FileKind::Vanilla)
+                    .map_err(|e| FilesError::VanillaUnreadable { path: path.clone(), source: e })?;
+            }
             #[cfg(feature = "hoi4")]
             if Game::is_hoi4() {
-                self.load_dlcs(&vanilla_root.join("integrated_dlc"))?;
+                self.load_dlcs(&path.join("integrated_dlc"))?;
             }
-            self.load_dlcs(&vanilla_root.join("dlc"))?;
+            // We don't know yet how EU5 will do DLCs
+            if !Game::is_eu5() {
+                self.load_dlcs(&path.join("dlc"))?;
+            }
         }
         // loaded_mods is cloned here for the borrow checker
         for loaded_mod in &self.loaded_mods.clone() {
-            self.scan(loaded_mod.root(), loaded_mod.kind()).map_err(|e| {
-                FilesError::ModUnreadable { path: loaded_mod.root().to_path_buf(), source: e }
-            })?;
+            let path = stage.with_dir(loaded_mod.root());
+            if !(Game::is_eu5() && !path.exists()) {
+                self.scan(&path, stage, loaded_mod.kind())
+                    .map_err(|e| FilesError::ModUnreadable { path: path.clone(), source: e })?;
+            }
         }
-        #[allow(clippy::unnecessary_to_owned)] // borrow checker requires to_path_buf here
-        self.scan(&self.the_mod.root().to_path_buf(), FileKind::Mod).map_err(|e| {
-            FilesError::ModUnreadable { path: self.the_mod.root().to_path_buf(), source: e }
-        })?;
+        let path = stage.with_dir(self.the_mod.root());
+        if !(Game::is_eu5() && !path.exists()) {
+            self.scan(&path, stage, FileKind::Mod)
+                .map_err(|e| FilesError::ModUnreadable { path: path.clone(), source: e })?;
+        }
+        Ok(())
+    }
+
+    pub fn scan_all(&mut self) -> Result<(), FilesError> {
+        if Game::is_eu5() {
+            #[cfg(feature = "eu5")]
+            self.scan_stage(FileStage::LoadingScreen)?;
+            #[cfg(feature = "eu5")]
+            self.scan_stage(FileStage::MainMenu)?;
+            #[cfg(feature = "eu5")]
+            self.scan_stage(FileStage::InGame)?;
+        } else {
+            self.scan_stage(FileStage::NoStage)?;
+        }
         Ok(())
     }
 
@@ -448,9 +526,9 @@ impl Fileset {
                     entry.path().to_path_buf(),
                     Vec::new(),
                 );
-                self.scan(dlc.root(), dlc.kind()).map_err(|e| FilesError::VanillaUnreadable {
-                    path: dlc.root().to_path_buf(),
-                    source: e,
+                // TODO: figure out how to handle this in EU5
+                self.scan(dlc.root(), FileStage::NoStage, dlc.kind()).map_err(|e| {
+                    FilesError::VanillaUnreadable { path: dlc.root().to_path_buf(), source: e }
                 })?;
                 self.loaded_dlcs.push(dlc);
                 add_loaded_dlc_root(label);

@@ -6,7 +6,7 @@ use itertools::Itertools;
 use strum::{EnumCount as _, IntoEnumIterator};
 use unicode_width::UnicodeWidthChar;
 
-use crate::fileset::FileKind;
+use crate::fileset::{FileKind, FileStage};
 use crate::game::Game;
 use crate::report::errors::Errors;
 use crate::report::output_style::Styled;
@@ -168,10 +168,11 @@ fn log_line_file_location<O: Write + Send>(
         errors.styles.style(Styled::Default).paint(format!("{:width$}", "", width = indentation)),
         errors.styles.style(Styled::Location).paint("-->"),
         errors.styles.style(Styled::Default).paint(" "),
-        errors
-            .styles
-            .style(Styled::Location)
-            .paint(format!("[{}]", kind_tag(errors, pointer.loc.kind))),
+        errors.styles.style(Styled::Location).paint(format!(
+            "[{}{}]",
+            kind_tag(errors, pointer.loc.kind),
+            stage_tag(pointer.loc.stage)
+        )),
         errors.styles.style(Styled::Default).paint(" "),
         errors
             .styles
@@ -275,6 +276,18 @@ pub(crate) fn kind_tag<'a>(errors: &'a Errors<'a>, kind: FileKind) -> &'a str {
         FileKind::Dlc(idx) => &errors.loaded_dlcs_labels[idx as usize],
         FileKind::LoadedMod(idx) => &errors.loaded_mods_labels[idx as usize],
         FileKind::Mod => "MOD",
+    }
+}
+
+fn stage_tag(stage: FileStage) -> &'static str {
+    match stage {
+        #[cfg(feature = "eu5")]
+        FileStage::LoadingScreen => "(loadscreen)",
+        #[cfg(feature = "eu5")]
+        FileStage::MainMenu => "(menu)",
+        #[cfg(feature = "eu5")]
+        FileStage::InGame => "",
+        FileStage::NoStage => "",
     }
 }
 

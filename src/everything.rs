@@ -59,7 +59,7 @@ use crate::dds::DdsFiles;
 use crate::eu5::data::provinces::Eu5Provinces;
 #[cfg(feature = "eu5")]
 use crate::eu5::tables::misc::*;
-use crate::fileset::{FileEntry, FileKind, Fileset};
+use crate::fileset::{FileEntry, FileKind, FileStage, Fileset};
 use crate::game::Game;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use crate::helpers::TigerHashSet;
@@ -443,7 +443,12 @@ impl Everything {
             Self::read_config(config_file_name, &config_file)
                 .ok_or(FilesError::ConfigUnreadable { path: config_file })?
         } else {
-            Block::new(Loc::for_file(config_file.clone(), FileKind::Mod, config_file.clone()))
+            Block::new(Loc::for_file(
+                config_file.clone(),
+                FileStage::NoStage,
+                FileKind::Mod,
+                config_file.clone(),
+            ))
         };
 
         fileset.config(config.clone(), workshop_dir, paradox_dir)?;
@@ -529,7 +534,8 @@ impl Everything {
     }
 
     fn read_config(name: &str, path: &Path) -> Option<Block> {
-        let entry = FileEntry::new(PathBuf::from(name), FileKind::Mod, path.to_path_buf());
+        let entry =
+            FileEntry::new(PathBuf::from(name), FileStage::NoStage, FileKind::Mod, path.to_owned());
         PdxFile::read_optional_bom(&entry, &ParserMemory::default())
     }
 
@@ -734,9 +740,13 @@ impl Everything {
                 if !line.starts_with(' ') {
                     if let Some(name) = line.strip_suffix(":") {
                         eprintln!("checking modif {name}");
-                        let loc: Loc =
-                            FileEntry::new("stdin".into(), FileKind::Vanilla, "stdin".into())
-                                .into();
+                        let loc: Loc = FileEntry::new(
+                            "stdin".into(),
+                            FileStage::NoStage,
+                            FileKind::Vanilla,
+                            "stdin".into(),
+                        )
+                        .into();
                         let name_token = Token::new(name, loc);
                         crate::vic3::tables::modifs::lookup_engine_modif(
                             &name_token,

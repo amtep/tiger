@@ -4,7 +4,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 
-use crate::fileset::{FileEntry, FileKind};
+use crate::fileset::{FileEntry, FileKind, FileStage};
 use crate::game::Game;
 use crate::parse::json::parse_json_file;
 
@@ -15,8 +15,12 @@ pub fn get_version_from_launcher(game_dir: &Path) -> Result<String> {
     } else {
         game_dir.join("launcher/launcher-settings.json")
     };
-    let launcher_entry =
-        FileEntry::new(launcher_pathname.clone(), FileKind::Vanilla, launcher_pathname.clone());
+    let launcher_entry = FileEntry::new(
+        launcher_pathname.clone(),
+        FileStage::NoStage,
+        FileKind::Vanilla,
+        launcher_pathname.clone(),
+    );
     let block = parse_json_file(&launcher_entry).with_context(|| {
         format!("Could not parse launcher file {}", launcher_pathname.display())
     })?;

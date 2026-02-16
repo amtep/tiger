@@ -2,6 +2,7 @@ use std::io::Write;
 
 use serde_json::json;
 
+use crate::fileset::FileStage;
 use crate::report::errors::Errors;
 use crate::report::writer::kind_tag;
 use crate::report::{LogReportMetadata, LogReportPointers};
@@ -21,6 +22,7 @@ pub fn log_report_json<O: Write + Send>(
             json!({
                 "path": path,
                 "from": kind_tag(errors, pointer.loc.kind),
+                "stage": stage_desc(pointer.loc.stage),
                 "fullpath": fullpath,
                 "linenr": if pointer.loc.line == 0 { None } else { Some(pointer.loc.line) },
                 "column": if pointer.loc.column == 0 { None } else { Some(pointer.loc.column) },
@@ -42,5 +44,17 @@ pub fn log_report_json<O: Write + Send>(
 
     if let Err(e) = serde_json::to_writer_pretty(output, &report) {
         eprintln!("JSON error: {e:#}");
+    }
+}
+
+fn stage_desc(stage: FileStage) -> Option<&'static str> {
+    match stage {
+        #[cfg(feature = "eu5")]
+        FileStage::LoadingScreen => Some("loading_screen"),
+        #[cfg(feature = "eu5")]
+        FileStage::MainMenu => Some("main_menu"),
+        #[cfg(feature = "eu5")]
+        FileStage::InGame => Some("in_game"),
+        FileStage::NoStage => None,
     }
 }

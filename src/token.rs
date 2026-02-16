@@ -14,7 +14,7 @@ use std::slice::SliceIndex;
 use bumpalo::Bump;
 
 use crate::date::Date;
-use crate::fileset::{FileEntry, FileKind};
+use crate::fileset::{FileEntry, FileKind, FileStage};
 use crate::macros::{MACRO_MAP, MacroMapIndex};
 use crate::pathtable::{PathTable, PathTableIndex};
 use crate::report::{ErrorKey, err, untidy};
@@ -22,6 +22,7 @@ use crate::report::{ErrorKey, err, untidy};
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Loc {
     pub(crate) idx: PathTableIndex,
+    pub stage: FileStage,
     pub kind: FileKind,
     /// line 0 means the loc applies to the file as a whole.
     pub line: u32,
@@ -33,9 +34,14 @@ pub struct Loc {
 
 impl Loc {
     #[must_use]
-    pub(crate) fn for_file(pathname: PathBuf, kind: FileKind, fullpath: PathBuf) -> Self {
+    pub(crate) fn for_file(
+        pathname: PathBuf,
+        stage: FileStage,
+        kind: FileKind,
+        fullpath: PathBuf,
+    ) -> Self {
         let idx = PathTable::store(pathname, fullpath);
-        Loc { idx, kind, line: 0, column: 0, link_idx: None }
+        Loc { idx, stage, kind, line: 0, column: 0, link_idx: None }
     }
 
     pub fn filename(self) -> Cow<'static, str> {
@@ -82,9 +88,21 @@ impl Ord for Loc {
 impl From<&FileEntry> for Loc {
     fn from(entry: &FileEntry) -> Self {
         if let Some(idx) = entry.path_idx() {
-            Loc { idx, kind: entry.kind(), line: 0, column: 0, link_idx: None }
+            Loc {
+                idx,
+                stage: entry.stage(),
+                kind: entry.kind(),
+                line: 0,
+                column: 0,
+                link_idx: None,
+            }
         } else {
-            Self::for_file(entry.path().to_path_buf(), entry.kind(), entry.fullpath().to_path_buf())
+            Self::for_file(
+                entry.path().to_path_buf(),
+                entry.stage(),
+                entry.kind(),
+                entry.fullpath().to_path_buf(),
+            )
         }
     }
 }
@@ -108,6 +126,7 @@ impl Debug for Loc {
             .field("pathindex", &self.idx)
             .field("pathname", &self.pathname())
             .field("fullpath", &self.fullpath())
+            .field("stage", &self.stage)
             .field("kind", &self.kind)
             .field("line", &self.line)
             .field("column", &self.column)

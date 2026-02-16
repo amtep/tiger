@@ -9,7 +9,7 @@ use std::sync::LazyLock;
 use lalrpop_util::{ParseError, lalrpop_mod};
 
 use crate::block::{Block, Comparator, Eq};
-use crate::fileset::{FileEntry, FileKind};
+use crate::fileset::{FileEntry, FileKind, FileStage};
 use crate::game::Game;
 use crate::parse::ParserMemory;
 use crate::parse::cob::Cob;
@@ -107,7 +107,12 @@ pub fn parse_reader_export(
 /// Parse a string into a [`Block`]. This function is meant for use by the validator itself, to
 /// allow it to load game description data from internal strings that are in pdx script format.
 pub fn parse_pdx_internal(input: &'static str, desc: &str) -> Block {
-    let entry = FileEntry::new(PathBuf::from(desc), FileKind::Internal, PathBuf::from(desc));
+    let entry = FileEntry::new(
+        PathBuf::from(desc),
+        FileStage::NoStage,
+        FileKind::Internal,
+        PathBuf::from(desc),
+    );
     parse_pdx(&entry, input, &ParserMemory::default())
 }
 
