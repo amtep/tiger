@@ -7,6 +7,7 @@ pub const COMMON_DIRS: &[&str] = &[
     // TODO: EU5 fill in table
     // Note that parent directories should not be listed except for the COMMON_SUBDIRS_OK ones,
     // where only the parent directory should be listed.
+    "common/insults",
 ];
 
 // TODO: EU5 verify

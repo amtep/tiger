@@ -653,6 +653,8 @@ pub enum Item {
     #[cfg(feature = "hoi4")] UnitLeaderSkill,
     #[cfg(feature = "hoi4")] UnitLeaderTrait,
     #[cfg(feature = "hoi4")] UnitNames,
+
+    #[cfg(feature = "eu5")] InsultType,
 }
 
 /// Display items in `separated word case` for maximum friendliness.
@@ -1927,6 +1929,9 @@ impl Item {
             Item::UnitLeaderTrait => "common/unit_leader/",
             #[cfg(feature = "hoi4")]
             Item::UnitNames => "common/units/names/",
+
+            #[cfg(feature = "eu5")]
+            Item::InsultType => "common/insults/",
         }
     }
 
