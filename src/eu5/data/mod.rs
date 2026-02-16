@@ -1,2 +1,2 @@
-pub mod provinces;
 pub mod insults;
+pub mod provinces;
