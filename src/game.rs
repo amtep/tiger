@@ -75,6 +75,14 @@ impl Game {
             not(feature = "eu5"),
         ))]
         return Game::Hoi4;
+        #[cfg(all(
+            feature = "eu5",
+            not(feature = "ck3"),
+            not(feature = "vic3"),
+            not(feature = "imperator"),
+            not(feature = "hoi4"),
+        ))]
+        return Game::Eu5;
         *GAME.get().expect("internal error: don't know which game we are validating")
     }
 
