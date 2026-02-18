@@ -188,7 +188,7 @@ pub enum Item {
     Message,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     Mission,
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     PopType,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
     Region,
@@ -655,6 +655,9 @@ pub enum Item {
     #[cfg(feature = "hoi4")] UnitNames,
 
     #[cfg(feature = "eu5")] InsultType,
+    #[cfg(feature = "eu5")] InternationalOrganization,
+    #[cfg(feature = "eu5")] Bias,
+    #[cfg(feature = "eu5")] BuildingCategory,
 }
 
 /// Display items in `separated word case` for maximum friendliness.
@@ -1932,6 +1935,14 @@ impl Item {
 
             #[cfg(feature = "eu5")]
             Item::InsultType => "common/insults/",
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganization => "common/international_organizations/",
+            #[cfg(feature = "eu5")]
+            Item::Bias => "common/biases/",
+            #[cfg(feature = "eu5")]
+            Item::BuildingCategory => "common/building_categories/",
+            #[cfg(feature = "eu5")]
+            Item::PopType => "common/pop_types/",
         }
     }
 

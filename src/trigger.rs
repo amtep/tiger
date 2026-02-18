@@ -1573,13 +1573,13 @@ fn validate_argument_internal(
 ) {
     match validation {
         ArgumentValue::Item(item) => data.verify_exists(item, arg),
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         ArgumentValue::Scope(scope) => {
             let stash = sc.stash_builder();
             validate_target_ok_this(arg, data, sc, scope);
             sc.unstash_builder(stash);
         }
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         ArgumentValue::ScopeOrItem(scope, item) => {
             if !data.item_exists(item, arg.as_str()) {
                 let stash = sc.stash_builder();
@@ -1599,7 +1599,7 @@ fn validate_argument_internal(
                 sc.unstash_builder(stash);
             }
         }
-        #[cfg(any(feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
         ArgumentValue::Modif => {
             // TODO: deduce the ModifKinds from the `this` scope
             match Game::game() {
@@ -1621,7 +1621,7 @@ fn validate_argument_internal(
                 _ => unreachable!(),
             }
         }
-        #[cfg(any(feature = "vic3", feature = "ck3"))]
+        #[cfg(any(feature = "vic3", feature = "ck3", feature = "eu5"))]
         ArgumentValue::Identifier(kind) => {
             validate_identifier(arg, kind, Severity::Error);
         }
