@@ -108,8 +108,10 @@ pub enum GuiValidation {
 #[strum(serialize_all = "lowercase")] // for "loop"
 pub enum WidgetProperty {
     accept_tabs,
+    action_tooltip,
     active_item,
     activeframe,
+    actor,
     addcolumn,
     addrow,
     align,
@@ -121,6 +123,7 @@ pub enum WidgetProperty {
     animation_speed,
     attachto,
     autoresize,
+    autoresize_axis,
     autoresize_slider,
     autoresizescrollarea,
     autoresizeviewport,
@@ -130,6 +133,7 @@ pub enum WidgetProperty {
     blend_mode,
     bottomtotop,
     button_ignore,
+    button_tooltip_override,
     button_trigger,
     buttontext,
     camera_fov_y_degrees,
@@ -139,7 +143,10 @@ pub enum WidgetProperty {
     camera_rotation_pitch_limits,
     camera_translation_limits,
     camera_zoom_limits,
+    cameracontrolwidget_entity_view,
     checked,
+    clamp_pan_position,
+    clear_color,
     click_modifiers,
     clicksound,
     close_on_click_outside,
@@ -150,19 +157,27 @@ pub enum WidgetProperty {
     coat_of_arms_scale,
     coat_of_arms_slot,
     color,
+    colormap_coordinates,
     colorpicker_reticule_icon,
     constantbuffers,
+    contextmenu_enabled,
+    contextmenu_widget,
     cursorcolor,
     datacontext,
     datamodel,
     datamodel_reuse_widgets,
     datamodel_wrap,
+    debug_text,
     dec_button,
     default_clicksound,
     default_format,
     delay,
+    description,
     direction,
+    disable_common_context,
+    disable_input_fallthrough,
     disableframe,
+    distance,
     distribute_visual_state,
     down,
     downframe,
@@ -174,13 +189,16 @@ pub enum WidgetProperty {
     drag_drop_id,
     dragdropargs,
     dragdropid,
+    draggable_behavior,
     draggable_by,
+    drop_target,
     droptarget,
     duration,
     effect,
     effectname,
     elide,
     enabled,
+    enabled_input,
     enabled_post_effects,
     end_sound,
     endangle,
@@ -206,6 +224,7 @@ pub enum WidgetProperty {
     forcedown,
     format_override,
     frame,
+    frame_grid,
     frame_tier,
     framesize,
     from,
@@ -224,6 +243,7 @@ pub enum WidgetProperty {
     header_height,
     highlightchecked,
     ignore_in_debug_draw,
+    ignore_layout,
     ignore_unset_buttons,
     ignoreinvisible,
     inc_button,
@@ -247,12 +267,15 @@ pub enum WidgetProperty {
     layoutpolicy_vertical,
     layoutstretchfactor_horizontal,
     layoutstretchfactor_vertical,
+    left_action,
+    left_click_and_hold_action,
     line_cap,
     line_feather_distance,
     line_type,
     list,
     Loop, // titlecased to avoid collision with builtin loop
     loopinterval,
+    lowpriotextcontext,
     margin,
     margin_bottom,
     margin_left,
@@ -262,6 +285,7 @@ pub enum WidgetProperty {
     mask,
     mask_uv_scale,
     max,
+    max_aspect_ratio,
     max_height,
     max_update_rate,
     max_width,
@@ -285,7 +309,9 @@ pub enum WidgetProperty {
     next,
     noprogresstexture,
     odd_row_widget,
+    on_escape_pressed,
     on_finish,
+    on_input_action_shortcut,
     on_keyframe_move,
     on_start,
     onalt,
@@ -314,9 +340,12 @@ pub enum WidgetProperty {
     onreleased,
     onreturnpressed,
     onrightclick,
+    onrightpressed,
+    onrightreleased,
     onselectionchanged,
     onshift,
     ontextchanged,
+    ontextcontextchanged,
     ontextedited,
     onvaluechanged,
     open_sound,
@@ -324,9 +353,12 @@ pub enum WidgetProperty {
     oversound,
     page,
     pan_position,
+    parameter,
+    params,
     parentanchor,
     password,
     plotpoints,
+    plotrect,
     points,
     pop_out,
     pop_out_v,
@@ -338,9 +370,12 @@ pub enum WidgetProperty {
     position_x,
     position_y,
     preferscrollwidgetsize,
+    primary_color,
     progress_change_to_duration_curve,
     progresstexture,
+    proposer,
     pseudo_localization_enabled,
+    ranged_slider,
     raw_text,
     raw_tooltip,
     realtime,
@@ -349,9 +384,12 @@ pub enum WidgetProperty {
     reorder_on_mouse,
     resizable,
     resizeparent,
+    resizetofit,
     restart_on_show,
     restrictparent_min,
     reuse_widgets,
+    right_action,
+    right_click_and_hold_action,
     rightclick_modifiers,
     rightclicksound,
     righttoleft,
@@ -359,7 +397,9 @@ pub enum WidgetProperty {
     row_height,
     scale,
     scale_mode,
+    scene,
     scissor,
+    screen_grab,
     scrollbar_horizontal,
     scrollbar_vertical,
     scrollbaralign_horizontal,
@@ -367,9 +407,11 @@ pub enum WidgetProperty {
     scrollbarpolicy_horizontal,
     scrollbarpolicy_vertical,
     scrollwidget,
+    secondary_color,
     selectallonfocus,
     selectedindex,
     selectioncolor,
+    set_parent_dimension_to_minimum,
     set_parent_size_to_minimum,
     setitemsizefromcell,
     shaderfile,
@@ -381,6 +423,7 @@ pub enum WidgetProperty {
     soundeffect,
     soundparam,
     spacing,
+    speed,
     spriteborder,
     spriteborder_bottom,
     spriteborder_left,
@@ -394,9 +437,12 @@ pub enum WidgetProperty {
     step,
     sticky,
     tabfocusroot,
+    tagtooltip_enabled,
+    tertiary_color,
     text,
     text_selectable,
     text_validator,
+    textcontext,
     texture,
     texture_density,
     timeline_line_direction,
@@ -404,6 +450,7 @@ pub enum WidgetProperty {
     timeline_texts,
     timeline_time_points,
     tintcolor,
+    title,
     to,
     tooltip,
     tooltip_enabled,
@@ -415,8 +462,11 @@ pub enum WidgetProperty {
     tooltip_visible,
     tooltip_when_disabled,
     tooltip_widgetanchor,
+    tooltipmeta,
     tooltipwidget,
     track,
+    track_highlight,
+    track_range,
     tracknavigation,
     translate_uv,
     trigger_on_create,
@@ -425,6 +475,8 @@ pub enum WidgetProperty {
     uphoverframe,
     uppressedframe,
     url,
+    use_for_loading_screen,
+    use_global_input_instance,
     useragent,
     uv_scale,
     value,
@@ -437,9 +489,11 @@ pub enum WidgetProperty {
     widgetid,
     width,
     wrap_count,
+    wrap_length,
     zoom,
     zoom_max,
     zoom_min,
+    zoom_speed,
     zoom_step,
     zoomwidget,
 }
@@ -478,8 +532,10 @@ impl GuiValidation {
         #[allow(clippy::match_same_arms)] // keep it alphabetic
         match property {
             accept_tabs => Boolean,
+            action_tooltip => UncheckedValue, // TODO
             active_item => Widget,
             activeframe => Integer,
+            actor => UncheckedValue, // TODO
             addcolumn => NumberOrPercent,
             addrow => NumberOrPercent,
             align => Align,
@@ -491,6 +547,7 @@ impl GuiValidation {
             animation_speed => CVector2f,
             attachto => ComplexProperty,
             autoresize => Boolean,
+            autoresize_axis => UncheckedValue, // TODO
             autoresize_slider => Boolean,
             autoresizescrollarea => Boolean,
             autoresizeviewport => Boolean,
@@ -500,6 +557,7 @@ impl GuiValidation {
             blend_mode => Blendmode,
             bottomtotop => Boolean,
             button_ignore => MouseButton(&["both", "none", "left", "right"]),
+            button_tooltip_override => UncheckedValue, // TODO
             button_trigger => UncheckedValue, // only example is "none"
             buttontext => Widget,
             camera_fov_y_degrees => Integer,
@@ -509,7 +567,10 @@ impl GuiValidation {
             camera_rotation_pitch_limits => CVector2f,
             camera_translation_limits => CVector3f,
             camera_zoom_limits => CVector2f,
+            cameracontrolwidget_entity_view => UncheckedValue, // TODO
             checked => Boolean,
+            clamp_pan_position => UncheckedValue, // TODO
+            clear_color => UncheckedValue, // TODO
             click_modifiers => ComplexProperty,
             clicksound => ItemOrBlank(Item::Sound),
             close_on_click_outside => Boolean,
@@ -520,19 +581,27 @@ impl GuiValidation {
             coat_of_arms_scale => CVector2f,
             coat_of_arms_slot => CVector4f,
             color => Color,
+            colormap_coordinates => UncheckedValue, // TODO
             colorpicker_reticule_icon => Widget,
             constantbuffers => DatatypeExpr,
+            contextmenu_enabled => UncheckedValue, // TODO
+            contextmenu_widget => UncheckedValue, // TODO
             cursorcolor => Color,
             datacontext => Datacontext,
             datamodel => Datamodel,
             datamodel_reuse_widgets => Boolean,
             datamodel_wrap => Integer,
+            debug_text => UncheckedValue, // TODO
             dec_button => Widget,
             default_clicksound => ItemOrBlank(Item::Sound),
             default_format => Format,
             delay => Number,
+            description => UncheckedValue, // TODO
             direction => Choice(&["horizontal", "vertical"]),
+            disable_common_context => UncheckedValue, // TODO
+            disable_input_fallthrough => UncheckedValue, // TODO
             disableframe => Integer,
+            distance => UncheckedValue, // TODO
             distribute_visual_state => Boolean,
             down => Boolean,
             downframe => Integer,
@@ -544,13 +613,16 @@ impl GuiValidation {
             drag_drop_id => UncheckedValue, // TODO what are the options?
             dragdropargs => RawText,
             dragdropid => RawText,
+            draggable_behavior => UncheckedValue, // TODO
             draggable_by => MouseButtonSet(&["left", "right", "middle"]),
+            drop_target => UncheckedValue, // TODO
             droptarget => Boolean,
             duration => Number,
             effect => DatatypeExpr,
             effectname => UncheckedValue, // TODO validate effect names
             elide => Choice(&["right", "middle", "left"]),
             enabled => Boolean,
+            enabled_input => UncheckedValue, // TODO
             enabled_post_effects => UncheckedValue,
             end_sound => ComplexProperty,
             endangle => NumberOrInt32,
@@ -576,6 +648,7 @@ impl GuiValidation {
             forcedown => DatatypeExpr,
             format_override => FormatOverride,
             frame => Integer,
+            frame_grid => UncheckedValue, // TODO
             frame_tier => Integer,
             framesize => CVector2i,
             from => CVector2f,
@@ -594,6 +667,7 @@ impl GuiValidation {
             header_height => Integer,
             highlightchecked => Boolean,
             ignore_in_debug_draw => Boolean,
+            ignore_layout => UncheckedValue, // TODO
             ignore_unset_buttons => MouseButtonSet(&["right", "middle", "left"]), // middle and left are guesses
             ignoreinvisible => Boolean,
             inc_button => Widget,
@@ -617,12 +691,15 @@ impl GuiValidation {
             layoutpolicy_vertical => ChoiceSet(LAYOUT_POLICIES),
             layoutstretchfactor_horizontal => NumberOrInt32,
             layoutstretchfactor_vertical => NumberOrInt32,
+            left_action => UncheckedValue, // TODO
+            left_click_and_hold_action => UncheckedValue, // TODO
             line_cap => Boolean,
             line_feather_distance => Integer,
             line_type => UncheckedValue, // TODO: only example is "nodeline"
             list => Widget,
             Loop => Boolean,
             loopinterval => Number,
+            lowpriotextcontext => UncheckedValue, // TODO
             margin => TwoNumberOrPercent,
             margin_bottom => NumberOrInt32,
             margin_left => NumberOrInt32,
@@ -632,6 +709,7 @@ impl GuiValidation {
             mask => Item(Item::File),
             mask_uv_scale => CVector2f,
             max => NumberOrInt32,
+            max_aspect_ratio => UncheckedValue, // TODO
             max_height => Integer,
             max_update_rate => Integer,
             max_width => Integer,
@@ -655,7 +733,9 @@ impl GuiValidation {
             next => UncheckedValue, // TODO: choices are states in the same widget
             noprogresstexture => Item(Item::File),
             odd_row_widget => Widget,
+            on_escape_pressed => UncheckedValue, // TODO
             on_finish => DatatypeExpr,
+            on_input_action_shortcut => UncheckedValue, // TODO
             on_keyframe_move => DatatypeExpr,
             on_start => DatatypeExpr,
             onalt => DatatypeExpr,
@@ -684,9 +764,12 @@ impl GuiValidation {
             onreleased => DatatypeExpr,
             onreturnpressed => DatatypeExpr,
             onrightclick => DatatypeExpr,
+            onrightpressed => UncheckedValue, // TODO
+            onrightreleased => UncheckedValue, // TODO
             onselectionchanged => DatatypeExpr,
             onshift => DatatypeExpr,
             ontextchanged => DatatypeExpr,
+            ontextcontextchanged => UncheckedValue, // TODO
             ontextedited => DatatypeExpr,
             onvaluechanged => DatatypeExpr,
             open_sound => Item(Item::Sound),
@@ -694,9 +777,12 @@ impl GuiValidation {
             oversound => ItemOrBlank(Item::Sound),
             page => Integer,
             pan_position => CVector2f,
+            parameter => UncheckedValue, // TODO
+            params => UncheckedValue, // TODO
             parentanchor => Align,
             password => Boolean,
             plotpoints => DatatypeExpr,
+            plotrect => UncheckedValue, // TODO
             points => PointsList,
             pop_out => Boolean,
             pop_out_v => NumberOrInt32,
@@ -708,9 +794,12 @@ impl GuiValidation {
             position_x => Numeric,
             position_y => Numeric,
             preferscrollwidgetsize => Boolean,
+            primary_color => UncheckedValue, // TODO
             progress_change_to_duration_curve => CVector4f,
             progresstexture => Item(Item::File),
+            proposer => UncheckedValue, // TODO
             pseudo_localization_enabled => Boolean,
+            ranged_slider => UncheckedValue, // TODO
             raw_text => RawText,
             raw_tooltip => RawText,
             realtime => Boolean,
@@ -719,9 +808,12 @@ impl GuiValidation {
             reorder_on_mouse => UncheckedValue, // TODO: only example is "presstop"
             resizable => Boolean,
             resizeparent => Boolean,
+            resizetofit => UncheckedValue, // TODO
             restart_on_show => Boolean,
             restrictparent_min => Boolean,
             reuse_widgets => Boolean,
+            right_action => UncheckedValue, // TODO
+            right_click_and_hold_action => UncheckedValue, // TODO
             rightclick_modifiers => ComplexProperty,
             rightclicksound => ItemOrBlank(Item::Sound),
             righttoleft => Boolean,
@@ -729,7 +821,9 @@ impl GuiValidation {
             row_height => Integer,
             scale => Number,
             scale_mode => UncheckedValue, // TODO: only example is "fixedwidth"
+            scene => UncheckedValue, // TODO
             scissor => Boolean,
+            screen_grab => UncheckedValue, // TODO
             scrollbar_horizontal => Widget,
             scrollbar_vertical => Widget,
             scrollbaralign_horizontal => Choice(&["top", "bottom"]),
@@ -737,9 +831,11 @@ impl GuiValidation {
             scrollbarpolicy_horizontal => Choice(&["as_needed", "always_off", "always_on"]), // TODO: always_on is a guess
             scrollbarpolicy_vertical => Choice(&["as_needed", "always_off", "always_on"]),
             scrollwidget => Widget,
+            secondary_color => UncheckedValue, // TODO
             selectallonfocus => Boolean,
             selectedindex => CVector2i,
             selectioncolor => Color,
+            set_parent_dimension_to_minimum => UncheckedValue, // TODO
             set_parent_size_to_minimum => Boolean,
             setitemsizefromcell => Boolean,
             shaderfile => ItemOrBlank(Item::File),
@@ -751,6 +847,7 @@ impl GuiValidation {
             soundeffect => Item(Item::Sound),
             soundparam => ComplexProperty,
             spacing => NumberF,
+            speed => UncheckedValue, // TODO
             spriteborder => CVector2f,
             spriteborder_bottom => Integer,
             spriteborder_left => Integer,
@@ -764,9 +861,12 @@ impl GuiValidation {
             step => NumberOrInt32,
             sticky => Boolean,
             tabfocusroot => Boolean,
+            tagtooltip_enabled => UncheckedValue, // TODO
+            tertiary_color => UncheckedValue, // TODO
             text => Text,
             text_selectable => Boolean,
             text_validator => DatatypeExpr,
+            textcontext => UncheckedValue, // TODO
             texture => Item(Item::File),
             texture_density => Number,
             timeline_line_direction => UncheckedValue, // TODO only example is "up"
@@ -774,6 +874,7 @@ impl GuiValidation {
             timeline_texts => Widget,
             timeline_time_points => Integer,
             tintcolor => Color,
+            title => UncheckedValue, // TODO
             to => CVector2f,
             tooltip => Text,
             tooltip_enabled => Boolean,
@@ -785,8 +886,11 @@ impl GuiValidation {
             tooltip_visible => Boolean,
             tooltip_when_disabled => Text,
             tooltip_widgetanchor => Align,
+            tooltipmeta => UncheckedValue, // TODO
             tooltipwidget => Widget,
             track => Widget,
+            track_highlight => UncheckedValue, // TODO
+            track_range => UncheckedValue, // TODO
             tracknavigation => UncheckedValue, // TODO only example is "direct"
             translate_uv => CVector2f,
             trigger_on_create => Boolean,
@@ -795,6 +899,8 @@ impl GuiValidation {
             uphoverframe => Integer,
             uppressedframe => Integer,
             url => RawText,
+            use_for_loading_screen => UncheckedValue, // TODO
+            use_global_input_instance => UncheckedValue, // TODO
             useragent => UncheckedValue,
             uv_scale => CVector2f,
             value => NumberOrInt32,
@@ -807,9 +913,11 @@ impl GuiValidation {
             widgetid => UncheckedValue,
             width => Number,
             wrap_count => Number,
+            wrap_length => UncheckedValue, // TODO
             zoom => Number,
             zoom_max => Number,
             zoom_min => Number,
+            zoom_speed => UncheckedValue, // TODO
             zoom_step => Number,
             zoomwidget => Widget,
         }
