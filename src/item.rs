@@ -242,7 +242,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] BooleanHouseRelationParameter,
     #[cfg(feature = "ck3")] BuildingFlag,
     #[cfg(feature = "ck3")] BuildingGfx,
-    #[cfg(feature = "ck3")] CasusBelli,
+    #[cfg(any(feature = "ck3", feature = "eu5"))] CasusBelli,
     #[cfg(feature = "ck3")] CasusBelliGroup,
     #[cfg(feature = "ck3")] Catalyst,
     #[cfg(feature = "ck3")] ChallengeCharacter,
@@ -658,6 +658,7 @@ pub enum Item {
     #[cfg(feature = "eu5")] InternationalOrganization,
     #[cfg(feature = "eu5")] Bias,
     #[cfg(feature = "eu5")] BuildingCategory,
+    #[cfg(feature = "eu5")] ArtistType,
 }
 
 /// Display items in `separated word case` for maximum friendliness.
@@ -1005,7 +1006,7 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "vic3", feature = "imperator"))]
+            #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
             Item::PopType => "common/pop_types/",
             #[cfg(any(feature = "ck3", feature = "imperator"))]
             Item::Region => match Game::game() {
@@ -1115,8 +1116,15 @@ impl Item {
             Item::BuildingFlag => "common/buildings/",
             #[cfg(feature = "ck3")]
             Item::BuildingGfx => "common/culture/cultures/",
-            #[cfg(feature = "ck3")]
-            Item::CasusBelli => "common/casus_belli_types/",
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::CasusBelli => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/casus_belli_types/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/casus_belli/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(feature = "ck3")]
             Item::CasusBelliGroup => "common/casus_belli_groups/",
             #[cfg(feature = "ck3")]
@@ -1942,7 +1950,7 @@ impl Item {
             #[cfg(feature = "eu5")]
             Item::BuildingCategory => "common/building_categories/",
             #[cfg(feature = "eu5")]
-            Item::PopType => "common/pop_types/",
+            Item::ArtistType => "common/artist_types/",
         }
     }
 
