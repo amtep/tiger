@@ -144,7 +144,7 @@ fn validate_event_option(
     vd.field_bool("default_option");
     vd.field_bool("highlighted_option");
     vd.field_bool("fallback");
-    vd.field_validated_sc("ai_will_select", sc, validate_ai_chance);
+    vd.field_script_value_no_breakdown("ai_will_select", sc);
     vd.field_validated_sc("ai_chance", sc, validate_ai_chance);
     validate_effect_internal(
         &Lowercase::new_unchecked("option"),

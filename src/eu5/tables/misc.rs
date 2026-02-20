@@ -24,6 +24,9 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/character_interactions",
     "common/child_educations",
     "common/climates",
+    "common/coat_of_arms/coat_of_arms",
+    "common/coat_of_arms/options",
+    "common/coat_of_arms/template_lists",
     "common/country_description_categories",
     "common/country_interactions",
     "common/country_ranks",
@@ -102,6 +105,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/scripted_country_names",
     "common/scripted_diplomatic_objectives",
     "common/scripted_effects",
+    "common/scripted_geography",
     "common/scripted_lists",
     "common/scripted_relations",
     "common/scripted_triggers",
@@ -120,12 +124,13 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/tutorial_lessons",
     "common/unit_abilities",
     "common/unit_categories",
+    "common/unit_formation_preference",
     "common/unit_types",
     "common/vegetation",
     "common/wargoals",
 ];
 
 // TODO: EU5 verify
-pub const COMMON_SUBDIRS_OK: &[&str] = &["common/defines", "common/coat_of_arms"];
+pub const COMMON_SUBDIRS_OK: &[&str] = &["common/defines"];
 
 pub const FOCUS_TYPES: &[&str] = &["adm", "mil", "dip"];

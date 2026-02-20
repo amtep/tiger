@@ -4,13 +4,26 @@ use crate::everything::Everything;
 use crate::game::{Game, GameFlags};
 use crate::helpers::{TigerHashSet, dup_error};
 use crate::item::{Item, ItemLoader};
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 use crate::report::{Confidence, Severity};
 use crate::report::{ErrorKey, err, fatal, warn};
 use crate::token::Token;
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 use crate::validate::validate_numeric_range;
 use crate::validator::Validator;
+
+const BODY_TYPES: &[&str] = &[
+    "male",
+    "female",
+    "boy",
+    "girl",
+    #[cfg(feature = "eu5")]
+    "adolescent_boy",
+    #[cfg(feature = "eu5")]
+    "adolescent_girl",
+    #[cfg(any(feature = "imperator", feature = "eu5"))]
+    "infant",
+];
 
 #[derive(Clone, Debug)]
 pub struct Gene {}
@@ -111,7 +124,7 @@ impl DbKind for ColorGene {
         vd.field_value("group"); // TODO
         vd.field_value("color"); // TODO
 
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         vd.field_validated_block("blend_range", |block, data| {
             validate_numeric_range(block, data, 0.0, 1.0, Severity::Warning, Confidence::Weak);
         });
@@ -282,7 +295,7 @@ fn validate_portrait_modifier_use(
     // get template
     if let Some(block) = block.get_field_block(property.as_str()) {
         // loop over body types
-        for field in &["male", "female", "boy", "girl"] {
+        for field in BODY_TYPES {
             // get weighted settings
             if let Some(block) = block.get_field_block(field) {
                 for (_, token) in block.iter_assignments() {
@@ -335,7 +348,7 @@ impl AccessoryGene {
             return false;
         }
         if let Some(block) = block.get_field_block(template) {
-            for field in &["male", "female", "boy", "girl"] {
+            for field in BODY_TYPES {
                 // get weighted settings
                 if let Some(block) = block.get_field_block(field) {
                     for (_, token) in block.iter_assignments() {
@@ -556,22 +569,14 @@ fn validate_morph_gene(block: &Block, data: &Everything) {
     vd.field_value("negative_mirror"); // TODO
     #[cfg(feature = "imperator")]
     vd.field_value("set_tags");
-    let choices = &[
-        "male",
-        "female",
-        "boy",
-        "girl",
-        #[cfg(feature = "imperator")]
-        "infant",
-    ];
 
-    for field in choices {
+    for field in BODY_TYPES {
         vd.field_validated(field, |bv, data| {
             match bv {
                 BV::Value(token) => {
                     // TODO: if it refers to another field, check that following the chain of fields eventually reaches a block
-                    if !choices.contains(&token.as_str()) {
-                        let msg = format!("expected one of {}", choices.join(", "));
+                    if !BODY_TYPES.contains(&token.as_str()) {
+                        let msg = format!("expected one of {}", BODY_TYPES.join(", "));
                         warn(ErrorKey::Choice).msg(msg).loc(token).push();
                     }
                 }
@@ -605,22 +610,14 @@ fn validate_accessory_gene(block: &Block, data: &Everything) {
     vd.field_integer("index"); // TODO: verify unique indices
     vd.field_value("set_tags");
     vd.field_bool("allow_game_entity_override"); // undocumented
-    let choices = &[
-        "male",
-        "female",
-        "boy",
-        "girl",
-        #[cfg(feature = "imperator")]
-        "infant",
-    ];
 
-    for field in choices {
+    for field in BODY_TYPES {
         vd.field_validated(field, |bv, data| {
             match bv {
                 BV::Value(token) => {
                     // TODO: if it refers to another field, check that following the chain of fields eventually reaches a block
-                    if !choices.contains(&token.as_str()) {
-                        let msg = format!("expected one of {}", choices.join(", "));
+                    if !BODY_TYPES.contains(&token.as_str()) {
+                        let msg = format!("expected one of {}", BODY_TYPES.join(", "));
                         warn(ErrorKey::Choice).msg(msg).loc(token).push();
                     }
                 }

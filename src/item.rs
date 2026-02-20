@@ -198,11 +198,11 @@ pub enum Item {
     SubjectType,
     #[cfg(any(feature = "vic3", feature = "hoi4"))]
     Technology,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLesson,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonChain,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonStep,
 
     // Items for ck3
@@ -1037,11 +1037,11 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLesson => "common/tutorial_lessons",
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
 
             #[cfg(feature = "ck3")]

@@ -214,8 +214,8 @@ pub fn validate_coa_layout(block: &Block, data: &Everything) {
         vd.multi_field_validated_block("instance", validate_instance);
     });
 
-    #[cfg(feature = "vic3")]
-    if Game::is_vic3() {
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    if Game::is_vic3() || Game::is_eu5() {
         vd.multi_field_validated_block("sub", |subblock, data| {
             let mut vd = Validator::new(subblock, data);
             vd.set_max_severity(Severity::Warning);
@@ -466,7 +466,7 @@ fn validate_instance(block: &Block, data: &Everything) {
 }
 
 /// Just like [`validate_instance`], but takes offset instead of position
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 fn validate_instance_offset(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.set_max_severity(Severity::Warning);

@@ -114,36 +114,41 @@ pub struct Music {
 impl Music {
     pub fn validate(&self, data: &Everything) {
         let mut vd = Validator::new(&self.block, data);
-        let scope = match Game::game() {
-            #[cfg(feature = "ck3")]
-            Game::Ck3 => Scopes::Character,
-            #[cfg(feature = "vic3")]
-            Game::Vic3 => Scopes::Country,
-            #[cfg(feature = "imperator")]
-            Game::Imperator => Scopes::Country,
-            #[cfg(feature = "eu5")]
-            Game::Eu5 => Scopes::Country,
-            #[cfg(feature = "hoi4")]
-            Game::Hoi4 => Scopes::Country,
-        };
-        let mut sc = ScopeContext::new(scope, &self.key);
 
-        vd.field_localization("name", &mut sc);
-        vd.field_item("music", Item::Sound);
-        vd.field_item("group", Item::Music); // Take settings from this item
-        vd.field_integer("pause_factor");
+        if Game::is_eu5() {
+            vd.field_integer("priority");
+            vd.field("culture_tag");
+        } else {
+            let scope = match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => Scopes::Character,
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => Scopes::Country,
+                #[cfg(feature = "imperator")]
+                Game::Imperator => Scopes::Country,
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => Scopes::Country,
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => Scopes::Country,
+            };
+            let mut sc = ScopeContext::new(scope, &self.key);
+            vd.field_localization("name", &mut sc);
+            vd.field_item("music", Item::Sound);
+            vd.field_item("group", Item::Music); // Take settings from this item
+            vd.field_integer("pause_factor");
 
-        vd.field_bool("mood");
-        vd.field_bool("is_prioritized_mood");
-        vd.field_bool("can_be_interrupted");
+            vd.field_bool("mood");
+            vd.field_bool("is_prioritized_mood");
+            vd.field_bool("can_be_interrupted");
 
-        validate_optional_duration_int(&mut vd);
-        vd.field_integer("calls");
+            validate_optional_duration_int(&mut vd);
+            vd.field_integer("calls");
 
-        vd.field_bool("trigger_prio_override");
-        vd.field_trigger("is_valid", Tooltipped::No, &mut sc);
+            vd.field_bool("trigger_prio_override");
+            vd.field_trigger("is_valid", Tooltipped::No, &mut sc);
 
-        vd.field_list_numeric_exactly("subsequent_playback_chance", 3);
+            vd.field_list_numeric_exactly("subsequent_playback_chance", 3);
+        }
     }
 }
 

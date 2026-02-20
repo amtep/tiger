@@ -6,6 +6,24 @@ use crate::item::{Item, ItemLoader};
 use crate::token::Token;
 use crate::validator::Validator;
 
+const CONCEPT_FAMILIES: &[&str] = &[
+    "good",
+    "tax_base",
+    "religion",
+    "culture",
+    "food",
+    "integration_status",
+    "combat",
+    "dice",
+    "cabinet",
+    "market",
+    "mercenary",
+    "trait",
+    "role",
+    "location_rank",
+    "ability",
+];
+
 #[derive(Clone, Debug)]
 pub struct GameConcept {}
 
@@ -36,7 +54,6 @@ impl DbKind for GameConcept {
         data.verify_exists_implied(Item::Localization, &loca_name, key);
         data.verify_exists_implied(Item::Localization, &loca_desc, key);
 
-        vd.req_field("texture");
         if let Some(token) = vd.field_value("texture") {
             let pathname = format!("gfx/interface/icons/{token}.dds");
             data.verify_exists_implied(Item::File, &pathname, token);
@@ -45,5 +62,13 @@ impl DbKind for GameConcept {
         vd.multi_field_validated_key("alias", |key, _bv, data| {
             data.verify_exists_implied(Item::Localization, &loca_name, key);
         });
+
+        vd.field_bool("shown_in_loading_screen");
+
+        vd.field_choice("family", CONCEPT_FAMILIES);
+
+        vd.field_item("tooltip_map_mode", Item::MapMode);
+
+        vd.field_item("tutorial_lesson", Item::TutorialLesson);
     }
 }
