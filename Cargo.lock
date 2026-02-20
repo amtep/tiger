@@ -704,6 +704,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "encoding_rs_rw"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "597f4ee99dceffde445d4c238343d4c54f7c701db102538e91674a1fbfdf930f"
+dependencies = [
+ "encoding_rs",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2926,6 +2935,8 @@ version = "1.15.0"
 dependencies = [
  "anyhow",
  "clap",
+ "encoding_rs",
+ "encoding_rs_rw",
  "strum_macros",
 ]
 
