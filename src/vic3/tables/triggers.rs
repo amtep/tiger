@@ -145,7 +145,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("who", Scope(Scopes::Country)), ("type", Item(Item::SubjectType))]),
     ),
     (Scopes::StrategicRegion, "can_have_declared_interest_here", Scope(Scopes::Country)),
-    (Scopes::Country, "can_have_mass_migration_to", Scope(Scopes::Country)),
     (Scopes::Country, "can_have_political_movement", Removed("1.8", "")),
     (Scopes::Country, "can_have_subjects", Boolean),
     (Scopes::Country, "can_increase_autonomy", Boolean),
@@ -381,7 +380,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target", Scope(Scopes::War)), ("value", CompareValue)]),
     ),
     (Scopes::Country, "enemy_occupation", CompareValue),
-    (Scopes::None, "error_check", Special),
+    (Scopes::None, "error_check", Removed("1.7", "")),
     (Scopes::DiplomaticPlay, "escalation", CompareValue),
     (Scopes::None, "exists", Special),
     (
@@ -1249,6 +1248,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::State, "most_prominent_revolting_interest_group", Item(Item::InterestGroup)),
     (Scopes::PoliticalMovement, "movement_can_cause_obstinance", Boolean),
     (Scopes::PoliticalMovement, "movement_is_causing_obstinance", Boolean),
+    (Scopes::PoliticalMovement, "movement_pressure", UncheckedTodo), // no examples of non-complex form
     (Scopes::None, "nand", Control),
     (
         Scopes::Country,
@@ -1290,7 +1290,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::State, "num_cultural_communities", CompareValue),
     (Scopes::War, "num_dead", CompareValue),
     (Scopes::Country, "num_declared_interests", CompareValue),
-    (Scopes::Front, "num_defending_battalions(", CompareValue),
     // TODO: check that the DiplomaticAction has a pact.
     (
         Scopes::Country,
@@ -1304,6 +1303,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (
         Scopes::Front,
+        "num_front_dead",
+        Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
+    ),
+    (
+        Scopes::Front,
         "num_front_wounded",
         Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
     ),
@@ -1313,8 +1317,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("type", Item(Item::BuildingType)), ("value", CompareValue)]),
     ),
     (Scopes::Theater, "num_mobilized_units_in_theater", CompareValue),
-    (Scopes::Country, "num_mutual_trade_route_levels_with_country(", CompareValue),
     (Scopes::Country.union(Scopes::InterestGroup), "num_political_lobbies", CompareValue),
+    (Scopes::State, "num_potential_resources", UncheckedTodo), // no examples of non-complex form
     (Scopes::PowerBloc, "num_power_bloc_members", CompareValue),
     (Scopes::PowerBloc, "num_power_bloc_states", CompareValue),
     (Scopes::Theater, "num_provinces_in_theater", CompareValue),
@@ -1584,6 +1588,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Culture, "shares_heritage_trait_with_any_primary_culture", Scope(Scopes::Country)),
     (Scopes::Culture, "shares_heritage_trait_with_culture", Scope(Scopes::Culture)),
     (Scopes::Religion, "shares_heritage_trait_with_culture", Scope(Scopes::Religion)),
+    (Scopes::Religion, "shares_heritage_trait_with_religion", Scope(Scopes::Religion)),
     (Scopes::Religion, "shares_heritage_trait_with_state_religion", Scope(Scopes::Country)),
     (
         Scopes::Culture,
