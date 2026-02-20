@@ -578,7 +578,7 @@ fn validate_morph_gene(block: &Block, data: &Everything) {
                 BV::Block(block) => {
                     let mut vd = Validator::new(block, data);
                     vd.multi_field_validated_block("setting", validate_gene_setting);
-                    #[cfg(any(feature = "ck3", feature = "vic3"))]
+                    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
                     vd.multi_field_validated_block("decal", validate_gene_decal);
                     #[cfg(feature = "imperator")]
                     vd.multi_field_validated_block("decal", validate_gene_decal_imperator);
@@ -651,7 +651,7 @@ fn validate_gene_setting(block: &Block, data: &Everything) {
     vd.field_item("attribute", Item::GeneAttribute);
     vd.field_validated("value", |bv, data| match bv {
         BV::Value(value) => {
-            value.expect_integer();
+            value.expect_number();
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
@@ -678,11 +678,12 @@ fn validate_gene_setting(block: &Block, data: &Everything) {
     }
 }
 
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 fn validate_gene_decal(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.req_field("body_part");
     vd.req_field("textures");
+    #[cfg(any(feature = "ck3", feature = "vic3"))]
     vd.req_field("priority");
     vd.field_value("body_part"); // TODO
     vd.multi_field_validated_block("textures", validate_decal_textures);
@@ -704,7 +705,7 @@ fn validate_gene_decal_imperator(block: &Block, data: &Everything) {
     vd.multi_field_validated_block("alpha_curve", validate_curve);
 }
 
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 fn validate_decal_textures(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     // TODO: validate that it's a dds? What properties should the dds have?
@@ -725,7 +726,7 @@ fn validate_texture_override(block: &Block, data: &Everything) {
     vd.field_item("properties", Item::File);
 }
 
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 fn validate_blend_modes(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     let choices = &["overlay", "replace", "hard_light", "multiply"];
@@ -734,7 +735,7 @@ fn validate_blend_modes(block: &Block, data: &Everything) {
     vd.field_choice("properties", choices);
 }
 
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 fn validate_uv_tiling(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.req_tokens_integers_exactly(2);
