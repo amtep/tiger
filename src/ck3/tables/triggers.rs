@@ -1295,6 +1295,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Culture, "is_divergent_culture", Boolean),
     (Scopes::Domicile, "is_domicile_type", Item(Item::DomicileType)),
     (Scopes::DynastyHouse, "is_dominant_family", Boolean),
+    (Scopes::None, "is_frontend_character_selected", Boolean),
     (Scopes::DynastyHouse, "is_powerful_family", Boolean),
     (Scopes::Character, "is_employer_of", Scope(Scopes::Character)),
     (Scopes::Artifact, "is_equipped", Boolean),
@@ -1598,6 +1599,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Regiment, "maa_max_troops_count", CompareValue),
     (Scopes::Regiment, "maa_size", CompareValue),
     (Scopes::Character, "main_administrative_tier", CompareValue),
+    (
+        Scopes::Character,
+        "mandate_type_qualification",
+        Block(&[("target", Item(Item::DiarchyMandate)), ("value", CompareValue)]),
+    ),
     (Scopes::Character, "martial", CompareValue),
     (
         Scopes::Character,
@@ -1913,7 +1919,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (
         Scopes::GeographicalRegion.union(Scopes::SituationSubRegion),
-        "region_is_adjacent_situation_sub_region",
+        "region_is_adjacent_situation_subregion",
         Scope(Scopes::SituationSubRegion),
     ),
     (Scopes::None, "release_only", Boolean),
@@ -2064,7 +2070,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "subject_contract_has_flag", Item(Item::SubjectContractFlag)),
     (Scopes::Character, "subject_contract_has_modifiable_obligations", Boolean),
     (Scopes::Character, "subject_contract_is_blocked_from_modification", Boolean),
-    (Scopes::Character, "subject_contract_liege_dynasty_reign_start_date", CompareDate),
     (
         Scopes::Character,
         "subject_contract_obligation_level_can_be_decreased",
@@ -2239,6 +2244,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "vassal_contract_has_modifiable_obligations", Boolean),
     (Scopes::Character, "vassal_contract_is_blocked_from_modification", Removed("1.16", "")),
     (Scopes::Character, "vassal_contract_liege_dynasty_reign_start_date", CompareDate),
+    (Scopes::Character, "vassal_contract_obligation_level", UncheckedTodo), // No examples for the non-complex case
     (
         Scopes::Character,
         "vassal_contract_obligation_level_can_be_decreased",
@@ -2249,6 +2255,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "vassal_contract_obligation_level_can_be_increased",
         Item(Item::SubjectContract),
     ),
+    (Scopes::Character, "vassal_contract_obligation_level_score", UncheckedTodo), // No examples for the non-complex case
     (Scopes::Character, "vassal_count", CompareValue),
     (Scopes::Character, "vassal_limit", CompareValue),
     (Scopes::Character, "vassal_limit_available", CompareValue),
@@ -2377,6 +2384,12 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (Scopes::Character, "intrigue_diff", Scope(Scopes::Character), Scopes::Value),
         (Scopes::Character, "join_faction_chance", Scope(Scopes::Faction), Scopes::Value),
         (Scopes::Character, "learning_diff", Scope(Scopes::Character), Scopes::Value),
+        (
+            Scopes::Character,
+            "mandate_type_qualification",
+            Item(Item::DiarchyMandate),
+            Scopes::Value,
+        ),
         (Scopes::Character, "martial_diff", Scope(Scopes::Character), Scopes::Value),
         (
             Scopes::Character,
