@@ -57,7 +57,7 @@ fn extract_old_triggers(lines: &[String]) -> HashSet<String> {
     let mut started = false;
     for line in lines {
         if started {
-            if line == "];" {
+            if line.starts_with("];") {
                 break;
             }
             // cargo fmt creates two kinds of entries: single-line, or multi-line with one field per line.
@@ -78,7 +78,7 @@ fn insert_new_trigger(lines: &mut Vec<String>, name: &str, scopes: Vec<String>) 
     let mut trigger_start_line = 0;
     for (i, line) in lines.iter().enumerate() {
         if started {
-            if line == "];" {
+            if line.starts_with("];") {
                 insert_line = Some(i);
                 break;
             }
@@ -118,7 +118,7 @@ fn remove_trigger(lines: &mut [String], name: &str) {
     let mut comment_line = None;
     for (i, line) in lines.iter().enumerate() {
         if started {
-            if line == "];" {
+            if line.starts_with("];") {
                 break;
             }
             if line.starts_with("    (") && comment_line.is_some() {
