@@ -1265,8 +1265,8 @@ impl Everything {
     }
 
     pub(crate) fn get_trigger(&self, key: &Token) -> Option<&Trigger> {
-        #[cfg(feature = "ck3")]
-        if Game::is_ck3() {
+        #[cfg(any(feature = "ck3", feature = "eu5"))]
+        if Game::is_ck3() || Game::is_eu5() {
             if let Some(trigger) = self.triggers.get(key.as_str()) {
                 return Some(trigger);
             }
@@ -1279,8 +1279,8 @@ impl Everything {
     }
 
     pub(crate) fn get_effect(&self, key: &Token) -> Option<&Effect> {
-        #[cfg(feature = "ck3")]
-        if Game::is_ck3() {
+        #[cfg(any(feature = "ck3", feature = "eu5"))]
+        if Game::is_ck3() || Game::is_eu5() {
             if let Some(effect) = self.effects.get(key.as_str()) {
                 return Some(effect);
             }
