@@ -49,7 +49,6 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     let mut tooltipped_immediate = Tooltipped::Past;
     let mut tooltipped = Tooltipped::Yes;
 
-    // TODO: should character_event always be hidden?
     vd.field_choice("type", EVENT_TYPES);
 
     vd.field_bool("orphan");
@@ -75,7 +74,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
         vd.field_date("from");
         vd.field_date("to");
 
-        vd.field_item("tag", Item::Country);
+        vd.multi_field("tag");
     });
 
     vd.field_bool("major");

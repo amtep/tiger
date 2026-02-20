@@ -85,13 +85,13 @@ impl Events {
         }
     }
 
-    #[cfg(feature = "ck3")]
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
     pub fn get_trigger(&self, key: &Token) -> Option<&Trigger> {
         let index = (key.loc.idx, key.as_str());
         self.triggers.get(&index)
     }
 
-    #[cfg(feature = "ck3")]
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
     pub fn get_effect(&self, key: &Token) -> Option<&Effect> {
         let index = (key.loc.idx, key.as_str());
         self.effects.get(&index)
@@ -208,14 +208,14 @@ impl FileHandler<Block> for Events {
                 }
             } else if let Some(key) = item.expect_value() {
                 if matches!(expecting, Expecting::Event) && key.is("scripted_trigger") {
-                    if !Game::is_ck3() {
-                        let msg = "scripted triggers in event files are only for CK3";
+                    if !Game::is_ck3() && !Game::is_eu5() {
+                        let msg = "scripted triggers in event files are only for CK3 and EU5";
                         err(ErrorKey::WrongGame).msg(msg).loc(key).push();
                     }
                     expecting = Expecting::ScriptedTrigger;
                 } else if matches!(expecting, Expecting::Event) && key.is("scripted_effect") {
-                    if !Game::is_ck3() {
-                        let msg = "scripted effects in event files are only for CK3";
+                    if !Game::is_ck3() && !Game::is_eu5() {
+                        let msg = "scripted effects in event files are only for CK3 and EU5";
                         err(ErrorKey::WrongGame).msg(msg).loc(key).push();
                     }
                     expecting = Expecting::ScriptedEffect;
