@@ -532,7 +532,7 @@ impl GuiValidation {
         #[allow(clippy::match_same_arms)] // keep it alphabetic
         match property {
             accept_tabs => Boolean,
-            action_tooltip => UncheckedValue, // TODO
+            action_tooltip => ComplexProperty,
             active_item => Widget,
             activeframe => Integer,
             actor => UncheckedValue, // TODO
@@ -558,7 +558,7 @@ impl GuiValidation {
             bottomtotop => Boolean,
             button_ignore => MouseButton(&["both", "none", "left", "right"]),
             button_tooltip_override => UncheckedValue, // TODO
-            button_trigger => UncheckedValue, // only example is "none"
+            button_trigger => UncheckedValue,          // only example is "none"
             buttontext => Widget,
             camera_fov_y_degrees => Integer,
             camera_look_at => CVector3f,
@@ -570,7 +570,7 @@ impl GuiValidation {
             cameracontrolwidget_entity_view => UncheckedValue, // TODO
             checked => Boolean,
             clamp_pan_position => UncheckedValue, // TODO
-            clear_color => UncheckedValue, // TODO
+            clear_color => UncheckedValue,        // TODO
             click_modifiers => ComplexProperty,
             clicksound => ItemOrBlank(Item::Sound),
             close_on_click_outside => Boolean,
@@ -585,7 +585,7 @@ impl GuiValidation {
             colorpicker_reticule_icon => Widget,
             constantbuffers => DatatypeExpr,
             contextmenu_enabled => UncheckedValue, // TODO
-            contextmenu_widget => UncheckedValue, // TODO
+            contextmenu_widget => UncheckedValue,  // TODO
             cursorcolor => Color,
             datacontext => Datacontext,
             datamodel => Datamodel,
@@ -648,7 +648,7 @@ impl GuiValidation {
             forcedown => DatatypeExpr,
             format_override => FormatOverride,
             frame => Integer,
-            frame_grid => UncheckedValue, // TODO
+            frame_grid => CVector2i,
             frame_tier => Integer,
             framesize => CVector2i,
             from => CVector2f,
@@ -691,7 +691,7 @@ impl GuiValidation {
             layoutpolicy_vertical => ChoiceSet(LAYOUT_POLICIES),
             layoutstretchfactor_horizontal => NumberOrInt32,
             layoutstretchfactor_vertical => NumberOrInt32,
-            left_action => UncheckedValue, // TODO
+            left_action => UncheckedValue,                // TODO
             left_click_and_hold_action => UncheckedValue, // TODO
             line_cap => Boolean,
             line_feather_distance => Integer,
@@ -764,7 +764,7 @@ impl GuiValidation {
             onreleased => DatatypeExpr,
             onreturnpressed => DatatypeExpr,
             onrightclick => DatatypeExpr,
-            onrightpressed => UncheckedValue, // TODO
+            onrightpressed => UncheckedValue,  // TODO
             onrightreleased => UncheckedValue, // TODO
             onselectionchanged => DatatypeExpr,
             onshift => DatatypeExpr,
@@ -778,7 +778,7 @@ impl GuiValidation {
             page => Integer,
             pan_position => CVector2f,
             parameter => UncheckedValue, // TODO
-            params => UncheckedValue, // TODO
+            params => UncheckedValue,    // TODO
             parentanchor => Align,
             password => Boolean,
             plotpoints => DatatypeExpr,
@@ -812,7 +812,7 @@ impl GuiValidation {
             restart_on_show => Boolean,
             restrictparent_min => Boolean,
             reuse_widgets => Boolean,
-            right_action => UncheckedValue, // TODO
+            right_action => UncheckedValue,                // TODO
             right_click_and_hold_action => UncheckedValue, // TODO
             rightclick_modifiers => ComplexProperty,
             rightclicksound => ItemOrBlank(Item::Sound),
@@ -821,7 +821,7 @@ impl GuiValidation {
             row_height => Integer,
             scale => Number,
             scale_mode => UncheckedValue, // TODO: only example is "fixedwidth"
-            scene => UncheckedValue, // TODO
+            scene => UncheckedValue,      // TODO
             scissor => Boolean,
             screen_grab => UncheckedValue, // TODO
             scrollbar_horizontal => Widget,
@@ -862,7 +862,7 @@ impl GuiValidation {
             sticky => Boolean,
             tabfocusroot => Boolean,
             tagtooltip_enabled => UncheckedValue, // TODO
-            tertiary_color => UncheckedValue, // TODO
+            tertiary_color => UncheckedValue,     // TODO
             text => Text,
             text_selectable => Boolean,
             text_validator => DatatypeExpr,
@@ -890,7 +890,7 @@ impl GuiValidation {
             tooltipwidget => Widget,
             track => Widget,
             track_highlight => UncheckedValue, // TODO
-            track_range => UncheckedValue, // TODO
+            track_range => UncheckedValue,     // TODO
             tracknavigation => UncheckedValue, // TODO only example is "direct"
             translate_uv => CVector2f,
             trigger_on_create => Boolean,
@@ -934,12 +934,14 @@ impl WidgetProperty {
         #[allow(clippy::match_same_arms)] // alphabetic is better
         match self {
             animate_negative_changes | autoresize_slider | click_modifiers => {
-                GameFlags::Ck3 | GameFlags::Vic3
+                GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
             }
 
             coat_of_arms | coat_of_arms_mask => GameFlags::Ck3,
 
-            coat_of_arms_slot | colorpicker_reticule_icon => GameFlags::Ck3 | GameFlags::Vic3,
+            coat_of_arms_slot | colorpicker_reticule_icon => {
+                GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
+            }
 
             drag_drop_args | drag_drop_base_type | drag_drop_id => GameFlags::Ck3,
 
@@ -949,19 +951,21 @@ impl WidgetProperty {
             | grid_entity_name
             | ignore_in_debug_draw
             | ignore_unset_buttons
-            | index => GameFlags::Ck3 | GameFlags::Vic3,
+            | index => GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5,
 
-            input_action => GameFlags::Vic3,
+            input_action => GameFlags::Vic3 | GameFlags::Eu5,
 
             invert_reticule_color | keyframe_editor_lane_container | Loop => {
-                GameFlags::Ck3 | GameFlags::Vic3
+                GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
             }
 
-            max_height => GameFlags::Ck3,
+            max_height => GameFlags::Ck3 | GameFlags::Eu5,
 
-            max_update_rate | min_dist_from_screen_edge => GameFlags::Ck3 | GameFlags::Vic3,
+            max_update_rate | min_dist_from_screen_edge => {
+                GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
+            }
 
-            min_height => GameFlags::Ck3,
+            min_height => GameFlags::Ck3 | GameFlags::Eu5,
 
             on_keyframe_move
             | onalt
@@ -982,13 +986,68 @@ impl WidgetProperty {
             | timeline_line_direction
             | timeline_line_height
             | timeline_texts
-            | timeline_time_points => GameFlags::Ck3 | GameFlags::Vic3,
+            | timeline_time_points => GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5,
 
-            tooltip_enabled => GameFlags::Vic3 | GameFlags::Imperator,
+            action_tooltip
+            | actor
+            | autoresize_axis
+            | button_tooltip_override
+            | cameracontrolwidget_entity_view
+            | clamp_pan_position
+            | clear_color
+            | colormap_coordinates
+            | contextmenu_enabled
+            | contextmenu_widget
+            | debug_text
+            | description
+            | disable_common_context
+            | disable_input_fallthrough
+            | distance
+            | draggable_behavior
+            | drop_target
+            | enabled_input
+            | frame_grid
+            | ignore_layout
+            | left_action
+            | left_click_and_hold_action
+            | lowpriotextcontext
+            | max_aspect_ratio
+            | on_escape_pressed
+            | on_input_action_shortcut
+            | onrightpressed
+            | onrightreleased
+            | ontextcontextchanged
+            | parameter
+            | params
+            | plotrect
+            | primary_color
+            | proposer
+            | ranged_slider
+            | resizetofit
+            | right_action
+            | right_click_and_hold_action
+            | scene
+            | screen_grab
+            | secondary_color
+            | set_parent_dimension_to_minimum
+            | speed
+            | tagtooltip_enabled
+            | tertiary_color
+            | textcontext
+            | title
+            | tooltipmeta
+            | track_highlight
+            | track_range
+            | use_for_loading_screen
+            | use_global_input_instance
+            | wrap_length
+            | zoom_speed => GameFlags::Eu5,
+
+            tooltip_enabled => GameFlags::Vic3 | GameFlags::Imperator | GameFlags::Eu5,
             tooltip_visible | tooltip_when_disabled => GameFlags::Ck3,
-            video | wrap_count => GameFlags::Ck3 | GameFlags::Vic3,
+            video | wrap_count => GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5,
 
-            onctrl => GameFlags::Vic3,
+            onctrl => GameFlags::Vic3 | GameFlags::Eu5,
 
             frame_tier | ondatacontextchanged | dragdropid | dragdropargs | forcedown | url
             | onleave_signal | onenter_signal => GameFlags::Imperator,

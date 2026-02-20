@@ -10,9 +10,7 @@ use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validate::{
-    ListType, validate_ai_chance, validate_modifiers_with_base,
-};
+use crate::validate::{ListType, validate_ai_chance, validate_modifiers_with_base};
 use crate::validator::Validator;
 
 const EVENT_TYPES: &[&str] = &[
@@ -26,11 +24,8 @@ const EVENT_TYPES: &[&str] = &[
 
 const EVENT_OUTCOMES: &[&str] = &["positive", "neutral", "negative"];
 
-const EVENT_CATEGORY: &[&str] = &[
-    "disaster_event",
-    "situation_event",
-    "international_organization_event",
-];
+const EVENT_CATEGORY: &[&str] =
+    &["disaster_event", "situation_event", "international_organization_event"];
 
 pub fn get_event_scope(key: &Token, block: &Block) -> (Scopes, Token) {
     if let Some(event_type) = block.get_field_value("type") {

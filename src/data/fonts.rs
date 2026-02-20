@@ -47,7 +47,14 @@ impl DbKind for Font {
             let mut vd = Validator::new(block, data);
             vd.field_validated_value("style", |_, mut vd| {
                 for mut vd in vd.split('|') {
-                    vd.choice(&["regular", "bold", "extrabold", "italic"]);
+                    vd.choice(&[
+                        "regular",
+                        #[cfg(feature = "eu5")]
+                        "semibold",
+                        "bold",
+                        "extrabold",
+                        "italic",
+                    ]);
                 }
             });
             vd.field_item("fontfiles", Item::Fontfiles);

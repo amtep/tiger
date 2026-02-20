@@ -170,7 +170,7 @@ pub enum Item {
     CharacterTrait,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     CombatTactic,
-    #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4", feature = "eu5"))]
     Country,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
     DeathReason,
@@ -961,10 +961,12 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
+            #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4", feature = "eu5"))]
             Item::Country => match Game::game() {
                 #[cfg(feature = "vic3")]
                 Game::Vic3 => "common/country_definitions/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/formable_countries/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "setup/countries/countries.txt",
                 #[cfg(feature = "hoi4")]

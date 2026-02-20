@@ -10,6 +10,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/advances",
     "common/age",
     "common/ai_diplochance",
+    "common/alert_descriptions",
     "common/artist_types",
     "common/artist_work",
     "common/attribute_columns",
@@ -58,15 +59,19 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/holy_site_types",
     "common/holy_sites",
     "common/institution",
+    "common/insults",
     "common/international_organization_land_ownership_rules",
     "common/international_organization_payments",
     "common/international_organization_special_statuses",
+    "common/international_organizations",
+    "common/join_war_rules",
     "common/language_families",
     "common/languages",
     "common/laws",
     "common/levies",
     "common/location_ranks",
     "common/missions",
+    "common/music_player_tracks",
     "common/modifier_icons",
     "common/modifier_type_definitions",
     "common/named_colors",
@@ -121,9 +126,6 @@ pub const COMMON_DIRS: &[&str] = &[
 ];
 
 // TODO: EU5 verify
-pub const COMMON_SUBDIRS_OK: &[&str] = &[
-    "common/defines",
-    "common/coat_of_arms",
-];
+pub const COMMON_SUBDIRS_OK: &[&str] = &["common/defines", "common/coat_of_arms"];
 
 pub const FOCUS_TYPES: &[&str] = &["adm", "mil", "dip"];
