@@ -329,7 +329,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Market, "demands_goods_by_pops", UncheckedTodo),
     (Scopes::Country, "dependency_length_days", UncheckedTodo),
     (Scopes::Country, "destroy_market_utility", UncheckedTodo),
-    (Scopes::Location, "development", UncheckedTodo),
+    (Scopes::Location, "development", CompareValue),
     (Scopes::Country.union(Scopes::InternationalOrganization), "devotion", UncheckedTodo),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
@@ -1434,7 +1434,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Location, "num_civil_constructions", CompareValue),
     (Scopes::Country, "num_colonial_charters", CompareValue),
     (Scopes::Religion, "num_countries_in_religion", CompareValue),
-    (Scopes::InternationalOrganization, "num_countries_with_special_status", CompareValue),
+    (Scopes::InternationalOrganization, "num_countries_with_special_status", UncheckedTodo),
     (Scopes::Country, "num_embraced_institutions", CompareValue),
     (Scopes::Country, "num_explorations", CompareValue),
     (Scopes::Location, "num_foreign_buildings", CompareValue),
@@ -1575,7 +1575,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             .union(Scopes::SubContinent)
             .union(Scopes::Continent),
         "population",
-        UncheckedTodo,
+        CompareValue,
     ),
     (Scopes::Area, "population_in_area", UncheckedTodo),
     (Scopes::Location, "population_with_traits", UncheckedTodo),
