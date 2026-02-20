@@ -492,7 +492,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] MilitaryFormationFlag,
     #[cfg(feature = "vic3")] MobilizationOption,
     #[cfg(feature = "vic3")] MobilizationOptionGroup,
-    #[cfg(feature = "vic3")] ModifierTypeDefinition,
+    #[cfg(any(feature = "vic3", feature = "eu5"))] ModifierTypeDefinition,
     #[cfg(feature = "vic3")] Objective,
     #[cfg(feature = "vic3")] ObjectiveSubgoal,
     #[cfg(feature = "vic3")] ObjectiveSubgoalCategory,
@@ -1624,8 +1624,15 @@ impl Item {
             Item::MobilizationOption => "common/mobilization_options/",
             #[cfg(feature = "vic3")]
             Item::MobilizationOptionGroup => "common/mobilization_option_groups/",
-            #[cfg(feature = "vic3")]
-            Item::ModifierTypeDefinition => "common/modifier_type_definitions/",
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::ModifierTypeDefinition => match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/modifier_type_definitions/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/modifier_type_definitions/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(feature = "vic3")]
             Item::Objective => "common/objectives/",
             #[cfg(feature = "vic3")]
