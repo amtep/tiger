@@ -188,7 +188,7 @@ pub enum Item {
     Message,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     Mission,
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     PopType,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
     Region,
@@ -198,11 +198,11 @@ pub enum Item {
     SubjectType,
     #[cfg(any(feature = "vic3", feature = "hoi4"))]
     Technology,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLesson,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonChain,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonStep,
 
     // Items for ck3
@@ -242,7 +242,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] BooleanHouseRelationParameter,
     #[cfg(feature = "ck3")] BuildingFlag,
     #[cfg(feature = "ck3")] BuildingGfx,
-    #[cfg(feature = "ck3")] CasusBelli,
+    #[cfg(any(feature = "ck3", feature = "eu5"))] CasusBelli,
     #[cfg(feature = "ck3")] CasusBelliGroup,
     #[cfg(feature = "ck3")] Catalyst,
     #[cfg(feature = "ck3")] ChallengeCharacter,
@@ -492,7 +492,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] MilitaryFormationFlag,
     #[cfg(feature = "vic3")] MobilizationOption,
     #[cfg(feature = "vic3")] MobilizationOptionGroup,
-    #[cfg(feature = "vic3")] ModifierTypeDefinition,
+    #[cfg(any(feature = "vic3", feature = "eu5"))] ModifierTypeDefinition,
     #[cfg(feature = "vic3")] Objective,
     #[cfg(feature = "vic3")] ObjectiveSubgoal,
     #[cfg(feature = "vic3")] ObjectiveSubgoalCategory,
@@ -653,6 +653,12 @@ pub enum Item {
     #[cfg(feature = "hoi4")] UnitLeaderSkill,
     #[cfg(feature = "hoi4")] UnitLeaderTrait,
     #[cfg(feature = "hoi4")] UnitNames,
+
+    #[cfg(feature = "eu5")] InsultType,
+    #[cfg(feature = "eu5")] InternationalOrganization,
+    #[cfg(feature = "eu5")] Bias,
+    #[cfg(feature = "eu5")] BuildingCategory,
+    #[cfg(feature = "eu5")] ArtistType,
 }
 
 /// Display items in `separated word case` for maximum friendliness.
@@ -1000,7 +1006,7 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "vic3", feature = "imperator"))]
+            #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
             Item::PopType => "common/pop_types/",
             #[cfg(any(feature = "ck3", feature = "imperator"))]
             Item::Region => match Game::game() {
@@ -1031,11 +1037,11 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLesson => "common/tutorial_lessons",
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
 
             #[cfg(feature = "ck3")]
@@ -1110,8 +1116,15 @@ impl Item {
             Item::BuildingFlag => "common/buildings/",
             #[cfg(feature = "ck3")]
             Item::BuildingGfx => "common/culture/cultures/",
-            #[cfg(feature = "ck3")]
-            Item::CasusBelli => "common/casus_belli_types/",
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::CasusBelli => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/casus_belli_types/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/casus_belli/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(feature = "ck3")]
             Item::CasusBelliGroup => "common/casus_belli_groups/",
             #[cfg(feature = "ck3")]
@@ -1609,8 +1622,15 @@ impl Item {
             Item::MobilizationOption => "common/mobilization_options/",
             #[cfg(feature = "vic3")]
             Item::MobilizationOptionGroup => "common/mobilization_option_groups/",
-            #[cfg(feature = "vic3")]
-            Item::ModifierTypeDefinition => "common/modifier_type_definitions/",
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::ModifierTypeDefinition => match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/modifier_type_definitions/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/modifier_type_definitions/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(feature = "vic3")]
             Item::Objective => "common/objectives/",
             #[cfg(feature = "vic3")]
@@ -1927,6 +1947,17 @@ impl Item {
             Item::UnitLeaderTrait => "common/unit_leader/",
             #[cfg(feature = "hoi4")]
             Item::UnitNames => "common/units/names/",
+
+            #[cfg(feature = "eu5")]
+            Item::InsultType => "common/insults/",
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganization => "common/international_organizations/",
+            #[cfg(feature = "eu5")]
+            Item::Bias => "common/biases/",
+            #[cfg(feature = "eu5")]
+            Item::BuildingCategory => "common/building_categories/",
+            #[cfg(feature = "eu5")]
+            Item::ArtistType => "common/artist_types/",
         }
     }
 

@@ -353,6 +353,9 @@ impl Asset {
                 let mut vd = Validator::new(block, data);
                 vd.req_tokens_numbers_exactly(3);
             });
+            if Game::is_vic3() || Game::is_eu5() {
+                vd.field("parent_joint"); // TODO: eu5 & vic3
+            }
             vd.field_numeric("scale");
         });
         vd.multi_field_validated_block("attach", |block, data| {
@@ -428,6 +431,9 @@ fn validate_event(block: &Block, data: &Everything) {
     vd.field_numeric("time");
     vd.field_numeric("life");
     vd.field_numeric("entity_fade_speed");
+    if Game::is_eu5() {
+        vd.field_numeric("entity_editor_id");
+    }
     vd.field_value("state"); // TODO
     vd.field_value("node"); // TODO
     vd.field_value("particle"); // TODO
@@ -454,6 +460,8 @@ fn validate_event(block: &Block, data: &Everything) {
                 if Game::is_hoi4() {
                     #[cfg(feature = "hoi4")]
                     data.verify_exists(Item::SoundEffect, token);
+                } else if Game::is_eu5() {
+                    // TODO: EU5 sound system is wwise and not documented
                 } else {
                     data.verify_exists(Item::Sound, token);
                 }
@@ -486,7 +494,7 @@ fn validate_meshsettings(block: &Block, data: &Everything) {
     vd.field_value("subpass");
     vd.field_value("shadow_shader");
     vd.field_value("rasterizerstate"); // TODO, choices?
-    if Game::is_vic3() || Game::is_ck3() {
+    if Game::is_vic3() || Game::is_ck3() || Game::is_eu5() {
         vd.field_list("additional_shader_defines");
     }
 }

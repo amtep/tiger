@@ -102,16 +102,16 @@ pub enum Language {
     French,
     German,
     Russian,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     Korean,
     SimpChinese,
-    #[cfg(any(feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "vic3", feature = "hoi4", feature = "eu5"))]
     BrazPor,
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4", feature = "eu5"))]
     Japanese,
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4", feature = "eu5"))]
     Polish,
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     Turkish,
 }
 

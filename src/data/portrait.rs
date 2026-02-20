@@ -187,9 +187,18 @@ impl PortraitAnimation {
     }
 }
 
-const TYPES: &[&str] = &["male", "female", "boy", "girl"];
-const TYPES_VIC3: &[&str] =
-    &["male", "female", "boy", "girl", "adolescent_boy", "adolescent_girl", "infant"];
+const BODY_TYPES: &[&str] = &[
+    "male",
+    "female",
+    "boy",
+    "girl",
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    "adolescent_boy",
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    "adolescent_girl",
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
+    "infant",
+];
 
 impl DbKind for PortraitAnimation {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
@@ -203,8 +212,7 @@ impl DbKind for PortraitAnimation {
 
         vd.field_bool("barbershop");
 
-        let types = if Game::is_vic3() { TYPES_VIC3 } else { TYPES };
-        for field in types {
+        for field in BODY_TYPES {
             if !has_default {
                 vd.req_field(field);
             }
@@ -212,7 +220,7 @@ impl DbKind for PortraitAnimation {
                 match bv {
                     BV::Value(token) => {
                         // TODO: check that the chain eventually resolves to a block
-                        if !types.contains(&token.as_str()) {
+                        if !BODY_TYPES.contains(&token.as_str()) {
                             warn(ErrorKey::Validation).msg("unknown body type").loc(token).push();
                         }
                     }

@@ -714,9 +714,9 @@ fn match_trigger_bv(
     // True iff the comparator must be Comparator::Equals
     let mut must_be_eq = true;
     // True iff it's probably a mistake if the comparator is Comparator::Equals
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4", feature = "eu5"))]
     let mut warn_if_eq = false;
-    #[cfg(not(any(feature = "ck3", feature = "vic3", feature = "hoi4")))]
+    #[cfg(not(any(feature = "ck3", feature = "vic3", feature = "hoi4", feature = "eu5")))]
     let warn_if_eq = false;
 
     match trigger {
@@ -738,7 +738,7 @@ fn match_trigger_bv(
                 }
             }
         }
-        #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4", feature = "eu5"))]
         Trigger::CompareValueWarnEq => {
             must_be_eq = false;
             warn_if_eq = true;
@@ -747,7 +747,7 @@ fn match_trigger_bv(
             validate_script_value(bv, data, sc);
             // TODO HOI4
         }
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::SetValue => {
             // TODO: check side_effects
             validate_script_value(bv, data, sc);
@@ -761,7 +761,7 @@ fn match_trigger_bv(
                 }
             }
         }
-        #[cfg(feature = "vic3")]
+        #[cfg(any(feature = "vic3", feature = "eu5"))]
         Trigger::ItemOrCompareValue(i) => {
             if let Some(token) = bv.expect_value() {
                 if !data.item_exists(*i, token.as_str()) {
@@ -815,7 +815,7 @@ fn match_trigger_bv(
                 }
             }
         }
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::CompareChoice(choices) => {
             must_be_eq = false;
             if let Some(token) = bv.expect_value() {
@@ -825,7 +825,7 @@ fn match_trigger_bv(
                 }
             }
         }
-        #[cfg(feature = "vic3")]
+        #[cfg(any(feature = "vic3", feature = "eu5"))]
         Trigger::CompareChoiceOrNumber(choices) => {
             must_be_eq = false;
             if let Some(token) = bv.expect_value() {
@@ -866,7 +866,7 @@ fn match_trigger_bv(
                     match_trigger_fields(fields, block, data, sc, tooltipped, negated, max_sev);
             }
         },
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::BlockOrCompareValue(fields) => match bv {
             BV::Value(t) => {
                 validate_target(t, data, sc, Scopes::Value);
@@ -1171,7 +1171,7 @@ fn match_trigger_bv(
                 }
             }
         }
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::Removed(msg, info) => {
             err(ErrorKey::Removed).msg(*msg).info(*info).loc(name).push();
         }
@@ -1573,13 +1573,13 @@ fn validate_argument_internal(
 ) {
     match validation {
         ArgumentValue::Item(item) => data.verify_exists(item, arg),
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         ArgumentValue::Scope(scope) => {
             let stash = sc.stash_builder();
             validate_target_ok_this(arg, data, sc, scope);
             sc.unstash_builder(stash);
         }
-        #[cfg(any(feature = "ck3", feature = "vic3"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         ArgumentValue::ScopeOrItem(scope, item) => {
             if !data.item_exists(item, arg.as_str()) {
                 let stash = sc.stash_builder();
@@ -1599,7 +1599,7 @@ fn validate_argument_internal(
                 sc.unstash_builder(stash);
             }
         }
-        #[cfg(any(feature = "vic3", feature = "imperator"))]
+        #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
         ArgumentValue::Modif => {
             // TODO: deduce the ModifKinds from the `this` scope
             match Game::game() {
@@ -1621,7 +1621,7 @@ fn validate_argument_internal(
                 _ => unreachable!(),
             }
         }
-        #[cfg(any(feature = "vic3", feature = "ck3"))]
+        #[cfg(any(feature = "vic3", feature = "ck3", feature = "eu5"))]
         ArgumentValue::Identifier(kind) => {
             validate_identifier(arg, kind, Severity::Error);
         }
@@ -1769,15 +1769,15 @@ pub enum Trigger {
     /// can be a script value
     CompareValue,
     /// can be a script value; warn if =
-    #[cfg(any(feature = "ck3", feature = "vic3", feature = "hoi4"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "hoi4"))]
     CompareValueWarnEq,
     /// can be a script value; no < or >
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     SetValue,
     /// value must be a valid date
     CompareDate,
     /// trigger is either = item or compared to another trigger
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     ItemOrCompareValue(Item),
     /// trigger is compared to a scope object
     Scope(Scopes),
@@ -1789,10 +1789,10 @@ pub enum Trigger {
     /// value is chosen from a list given here
     Choice(&'static [&'static str]),
     /// value is from a list given here that can be compared
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     CompareChoice(&'static [&'static str]),
     /// like `CompareChoice` but value can also be just a number
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     CompareChoiceOrNumber(&'static [&'static str]),
     /// For Block, if a field name in the array starts with ? it means that field is optional
     /// trigger takes a block with these fields
@@ -1807,7 +1807,7 @@ pub enum Trigger {
     #[cfg(feature = "ck3")]
     IdentifierOrBlock(&'static str, &'static [(&'static str, Trigger)]),
     /// can be part of a scope chain but also a standalone trigger
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     BlockOrCompareValue(&'static [(&'static str, Trigger)]),
     /// trigger takes a block of values of this scope type
     #[cfg(feature = "ck3")]
@@ -1830,7 +1830,7 @@ pub enum Trigger {
     #[cfg(feature = "hoi4")]
     FlagOrBlock(&'static [(&'static str, Trigger)]),
 
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     Removed(&'static str, &'static str),
 
     /// this key opens another trigger block
@@ -1863,6 +1863,20 @@ pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
         #[cfg(feature = "vic3")]
         (
             Game::Vic3,
+            Some((
+                s,
+                Trigger::CompareValue
+                | Trigger::CompareValueWarnEq
+                | Trigger::CompareDate
+                | Trigger::BlockOrCompareValue(_)
+                | Trigger::ItemOrCompareValue(_)
+                | Trigger::CompareChoice(_)
+                | Trigger::CompareChoiceOrNumber(_),
+            )),
+        ) => Some(s),
+        #[cfg(feature = "eu5")]
+        (
+            Game::Eu5,
             Some((
                 s,
                 Trigger::CompareValue

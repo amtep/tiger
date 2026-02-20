@@ -1,7 +1,7 @@
 //! [`ScopeContext`] tracks our knowledge of the scope types used in script and validates its consistency.
 
 use std::borrow::Cow;
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 use std::mem::take;
 
 use crate::game::Game;
@@ -146,7 +146,7 @@ pub enum Reason {
 /// where the builder scope opened by `squared_distance` needs to be preserved
 /// while `prev.capital_province` is evaluated in the original scope.
 #[repr(transparent)]
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
 pub struct StashedBuilder {
     this: ScopeEntry,
 }
@@ -543,14 +543,14 @@ impl ScopeContext {
         self.is_builder = true;
     }
 
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn stash_builder(&mut self) -> StashedBuilder {
         let stash = StashedBuilder { this: take(&mut self.this) };
         self.close();
         stash
     }
 
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn unstash_builder(&mut self, stash: StashedBuilder) {
         self.open_builder();
         self.this = stash.this;

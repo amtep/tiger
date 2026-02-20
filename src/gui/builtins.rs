@@ -93,6 +93,7 @@ impl BuiltinWidget {
     // LAST UPDATED CK3 VERSION 1.11.3
     // LAST UPDATED VIC3 VERSION 1.3.6
     // LAST UPDATED IMPERATOR VERSION 2.0.3
+    // LAST UPDATED EU5 VERSION 1.1.3
     pub fn to_game_flags(self) -> GameFlags {
         match self {
             BuiltinWidget::drag_drop_icon
@@ -117,7 +118,7 @@ impl BuiltinWidget {
             | BuiltinWidget::tools_keyframe_editor_lane
             | BuiltinWidget::tools_player_timeline
             | BuiltinWidget::treemapchart
-            | BuiltinWidget::treemapslice => GameFlags::Ck3 | GameFlags::Vic3,
+            | BuiltinWidget::treemapslice => GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5,
 
             BuiltinWidget::button | BuiltinWidget::webwindow => {
                 GameFlags::Vic3 | GameFlags::Imperator

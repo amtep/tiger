@@ -1000,7 +1000,7 @@ impl<'a> Validator<'a> {
     /// Just like [`Validator::field_script_value`], but does not warn if it is an inline script value and the `desc` fields
     /// in it do not contain valid localizations. This is generally used for script values that will never be shown to
     /// the user except in debugging contexts, such as `ai_will_do`.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn field_script_value_no_breakdown(&mut self, name: &str, sc: &mut ScopeContext) -> bool {
         self.field_check(name, AllowInject::Yes, |_, bv| {
             // TODO: pass max_severity value down
@@ -1373,7 +1373,7 @@ impl<'a> Validator<'a> {
     }
 
     /// Just like [`Validator::field_validated_key`], but expect any number of `name` fields in the block.
-    #[cfg(feature = "ck3")] // vic3 happens not to use; silence dead code warning
+    #[cfg(any(feature = "ck3", feature = "eu5"))] // vic3 happens not to use; silence dead code warning
     pub fn multi_field_validated_key<F>(&mut self, name: &str, mut f: F) -> bool
     where
         F: FnMut(&Token, &BV, &Everything),

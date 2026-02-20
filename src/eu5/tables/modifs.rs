@@ -57,21 +57,6 @@ fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn:
     }
 }
 
-/// Return the modifier localization keys.
-/// It's usually just the name, but there are known exceptions.
-pub fn modif_loc_eu5(name: &Token, _data: &Everything) -> (Cow<'static, str>, Cow<'static, str>) {
-    let name_lc = Lowercase::new(name.as_str());
-
-    if MODIF_MAP.contains_key(&name_lc) {
-        let desc_loc = format!("{name_lc}_desc");
-        return (name_lc.into_cow(), Cow::Owned(desc_loc));
-    }
-
-    // TODO: should the loca key be lowercased?
-    let desc_loc = format!("{name}_desc");
-    (Cow::Borrowed(name.as_str()), Cow::Owned(desc_loc))
-}
-
 static MODIF_MAP: LazyLock<TigerHashMap<Lowercase<'static>, ModifKinds>> = LazyLock::new(|| {
     let mut hash = TigerHashMap::default();
     for (s, kind) in MODIF_TABLE.iter().copied() {

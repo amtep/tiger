@@ -439,21 +439,21 @@ impl Display for Scopes {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ArgumentValue {
     /// The value must be an expression that resolves to a scope object of the given type.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     Scope(Scopes),
     /// The value must be the name of an item of the given item type.
     Item(Item),
     /// The value can be either a Scope or an Item
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     ScopeOrItem(Scopes, Item),
     /// The value can be a trait name or `trait|track`.
     #[cfg(feature = "ck3")]
     TraitTrack,
     /// The value must be the name of a modif
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     Modif,
     /// The value must be a single word
-    #[cfg(any(feature = "vic3", feature = "ck3"))]
+    #[cfg(any(feature = "vic3", feature = "ck3", feature = "eu5"))]
     Identifier(&'static str),
     /// The value can be anything
     UncheckedValue,

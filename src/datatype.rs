@@ -574,6 +574,22 @@ pub fn validate_datatypes(
             rtype = Datatype::CString;
         }
 
+        // In eu5, game concepts are unadorned, like [manpower]
+        // Each concept also generates a [manpower_icon] and [manpower_with_icon]
+        #[cfg(feature = "eu5")]
+        if Game::is_eu5() && !found && is_first && is_last {
+            found = true;
+            if let Some(concept) = code.name.as_str().strip_suffix("_with_icon") {
+                data.verify_exists_implied(Item::GameConcept, concept, &code.name);
+            } else if let Some(concept) = code.name.as_str().strip_suffix("_icon") {
+                data.verify_exists_implied(Item::GameConcept, concept, &code.name);
+            } else {
+                data.verify_exists(Item::GameConcept, &code.name);
+            }
+            args = Args::Args(&[]);
+            rtype = Datatype::CString;
+        }
+
         #[cfg(feature = "ck3")]
         if Game::is_ck3()
             && !found

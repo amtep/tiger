@@ -12,6 +12,9 @@ use crate::tooltipped::Tooltipped;
 use crate::validate::validate_modifiers_with_base;
 use crate::validator::Validator;
 
+#[cfg(feature = "eu5")]
+const INVALID_LOC_HANDLING: &[&str] = &["return_empty", "fallback_to_next_entry", "return_loc_key"];
+
 #[derive(Clone, Debug)]
 pub struct CustomLocalization {}
 
@@ -46,6 +49,9 @@ impl DbKind for CustomLocalization {
         sc.set_strict_scopes(false);
         vd.field_bool("log_loc_errors");
         vd.field_bool("random_valid");
+
+        #[cfg(feature = "eu5")]
+        vd.field_choice("if_invalid_loc", INVALID_LOC_HANDLING);
 
         if block.has_key("parent") {
             vd.field_item("parent", Item::CustomLocalization);
