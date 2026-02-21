@@ -87,6 +87,8 @@ pub enum GuiValidation {
     ChoiceSet(&'static [&'static str]),
     /// A block containing one widget, or the name of a template containing one widget.
     Widget,
+    /// An action tooltip block.
+    ActionTooltip,
     /// A string containing a localization text format specifier starting with `#`
     Format,
     /// A block containing two textformat names
@@ -108,6 +110,7 @@ pub enum GuiValidation {
 #[strum(serialize_all = "lowercase")] // for "loop"
 pub enum WidgetProperty {
     accept_tabs,
+    acceptance,
     action_tooltip,
     active_item,
     activeframe,
@@ -147,8 +150,12 @@ pub enum WidgetProperty {
     checked,
     clamp_pan_position,
     clear_color,
+    click_mode,
+    click_modifier,
     click_modifiers,
+    click_type,
     clicksound,
+    clicksoundlater,
     close_on_click_outside,
     close_sound,
     coat_of_arms,
@@ -159,9 +166,13 @@ pub enum WidgetProperty {
     color,
     colormap_coordinates,
     colorpicker_reticule_icon,
+    conditions,
+    confirmation,
     constantbuffers,
     contextmenu_enabled,
     contextmenu_widget,
+    cost,
+    cursor,
     cursorcolor,
     datacontext,
     datamodel,
@@ -196,6 +207,7 @@ pub enum WidgetProperty {
     duration,
     effect,
     effectname,
+    effects,
     elide,
     enabled,
     enabled_input,
@@ -242,6 +254,7 @@ pub enum WidgetProperty {
     grid_entity_name,
     header_height,
     highlightchecked,
+    hold_time_factor,
     ignore_in_debug_draw,
     ignore_layout,
     ignore_unset_buttons,
@@ -309,6 +322,8 @@ pub enum WidgetProperty {
     next,
     noprogresstexture,
     odd_row_widget,
+    on_action,
+    on_action_with_params,
     on_escape_pressed,
     on_finish,
     on_input_action_shortcut,
@@ -518,8 +533,17 @@ impl<'a> TryFrom<&Lowercase<'a>> for WidgetProperty {
 
 const LAYOUT_POLICIES: &[&str] = &["expanding", "fixed", "growing", "preferred", "shrinking"];
 
-pub const BLENDMODES: &[&str] =
-    &["add", "alphamultiply", "colordodge", "darken", "mask", "multiply", "normal", "overlay"];
+pub const BLENDMODES: &[&str] = &[
+    "add",
+    "alphamultiply",
+    "colordodge",
+    "darken",
+    "mask",
+    "multiply",
+    "normal",
+    "overlay",
+    "lighten",
+];
 
 // TODO: warn about contradicting alignments (left|right or top|vcenter)
 // TODO: is nobaseline only for text widgets?
@@ -532,7 +556,8 @@ impl GuiValidation {
         #[allow(clippy::match_same_arms)] // keep it alphabetic
         match property {
             accept_tabs => Boolean,
-            action_tooltip => ComplexProperty,
+            acceptance => UncheckedValue, // TODO
+            action_tooltip => ActionTooltip,
             active_item => Widget,
             activeframe => Integer,
             actor => UncheckedValue, // TODO
@@ -571,8 +596,12 @@ impl GuiValidation {
             checked => Boolean,
             clamp_pan_position => UncheckedValue, // TODO
             clear_color => UncheckedValue,        // TODO
+            click_mode => UncheckedValue,         // TODO
+            click_modifier => UncheckedValue,     // TODO
             click_modifiers => ComplexProperty,
+            click_type => UncheckedValue, // TODO
             clicksound => ItemOrBlank(Item::Sound),
+            clicksoundlater => UncheckedValue, // TODO
             close_on_click_outside => Boolean,
             close_sound => Item(Item::Sound),
             coat_of_arms => Item(Item::File),
@@ -583,9 +612,13 @@ impl GuiValidation {
             color => Color,
             colormap_coordinates => UncheckedValue, // TODO
             colorpicker_reticule_icon => Widget,
+            conditions => UncheckedValue,   // TODO
+            confirmation => UncheckedValue, // TODO
             constantbuffers => DatatypeExpr,
             contextmenu_enabled => UncheckedValue, // TODO
             contextmenu_widget => UncheckedValue,  // TODO
+            cost => UncheckedValue,                // TODO
+            cursor => UncheckedValue,              // TODO
             cursorcolor => Color,
             datacontext => Datacontext,
             datamodel => Datamodel,
@@ -620,6 +653,7 @@ impl GuiValidation {
             duration => Number,
             effect => DatatypeExpr,
             effectname => UncheckedValue, // TODO validate effect names
+            effects => UncheckedValue,    // TODO
             elide => Choice(&["right", "middle", "left"]),
             enabled => Boolean,
             enabled_input => UncheckedValue, // TODO
@@ -666,6 +700,7 @@ impl GuiValidation {
             grid_entity_name => Item(Item::Entity),
             header_height => Integer,
             highlightchecked => Boolean,
+            hold_time_factor => UncheckedValue, // TODO
             ignore_in_debug_draw => Boolean,
             ignore_layout => UncheckedValue, // TODO
             ignore_unset_buttons => MouseButtonSet(&["right", "middle", "left"]), // middle and left are guesses
@@ -733,7 +768,9 @@ impl GuiValidation {
             next => UncheckedValue, // TODO: choices are states in the same widget
             noprogresstexture => Item(Item::File),
             odd_row_widget => Widget,
-            on_escape_pressed => UncheckedValue, // TODO
+            on_action => UncheckedValue,             // TODO
+            on_action_with_params => UncheckedValue, // TODO
+            on_escape_pressed => UncheckedValue,     // TODO
             on_finish => DatatypeExpr,
             on_input_action_shortcut => UncheckedValue, // TODO
             on_keyframe_move => DatatypeExpr,
@@ -826,8 +863,8 @@ impl GuiValidation {
             screen_grab => UncheckedValue, // TODO
             scrollbar_horizontal => Widget,
             scrollbar_vertical => Widget,
-            scrollbaralign_horizontal => Choice(&["top", "bottom"]),
-            scrollbaralign_vertical => Choice(&["left", "right"]),
+            scrollbaralign_horizontal => Choice(&["top", "bottom", "noalign"]),
+            scrollbaralign_vertical => Choice(&["left", "right", "noalign"]),
             scrollbarpolicy_horizontal => Choice(&["as_needed", "always_off", "always_on"]), // TODO: always_on is a guess
             scrollbarpolicy_vertical => Choice(&["as_needed", "always_off", "always_on"]),
             scrollwidget => Widget,
@@ -998,7 +1035,6 @@ impl WidgetProperty {
             | colormap_coordinates
             | contextmenu_enabled
             | contextmenu_widget
-            | debug_text
             | description
             | disable_common_context
             | disable_input_fallthrough

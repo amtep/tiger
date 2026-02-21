@@ -162,6 +162,8 @@ pub enum Item {
     AiStrategy,
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     Building,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    CasusBelli,
     #[cfg(any(feature = "ck3", feature = "hoi4"))]
     Character,
     #[cfg(any(feature = "ck3", feature = "vic3"))]
@@ -188,6 +190,8 @@ pub enum Item {
     Message,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     Mission,
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    ModifierTypeDefinition,
     #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     PopType,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
@@ -242,7 +246,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] BooleanHouseRelationParameter,
     #[cfg(feature = "ck3")] BuildingFlag,
     #[cfg(feature = "ck3")] BuildingGfx,
-    #[cfg(any(feature = "ck3", feature = "eu5"))] CasusBelli,
     #[cfg(feature = "ck3")] CasusBelliGroup,
     #[cfg(feature = "ck3")] Catalyst,
     #[cfg(feature = "ck3")] ChallengeCharacter,
@@ -492,7 +495,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] MilitaryFormationFlag,
     #[cfg(feature = "vic3")] MobilizationOption,
     #[cfg(feature = "vic3")] MobilizationOptionGroup,
-    #[cfg(any(feature = "vic3", feature = "eu5"))] ModifierTypeDefinition,
     #[cfg(feature = "vic3")] Objective,
     #[cfg(feature = "vic3")] ObjectiveSubgoal,
     #[cfg(feature = "vic3")] ObjectiveSubgoalCategory,
@@ -1623,14 +1625,7 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::MobilizationOptionGroup => "common/mobilization_option_groups/",
             #[cfg(any(feature = "vic3", feature = "eu5"))]
-            Item::ModifierTypeDefinition => match Game::game() {
-                #[cfg(feature = "vic3")]
-                Game::Vic3 => "common/modifier_type_definitions/",
-                #[cfg(feature = "eu5")]
-                Game::Eu5 => "common/modifier_type_definitions/",
-                #[allow(unreachable_patterns)]
-                _ => unreachable!(),
-            },
+            Item::ModifierTypeDefinition => "common/modifier_type_definitions/",
             #[cfg(feature = "vic3")]
             Item::Objective => "common/objectives/",
             #[cfg(feature = "vic3")]
@@ -1949,15 +1944,15 @@ impl Item {
             Item::UnitNames => "common/units/names/",
 
             #[cfg(feature = "eu5")]
-            Item::InsultType => "common/insults/",
-            #[cfg(feature = "eu5")]
-            Item::InternationalOrganization => "common/international_organizations/",
+            Item::ArtistType => "common/artist_types/",
             #[cfg(feature = "eu5")]
             Item::Bias => "common/biases/",
             #[cfg(feature = "eu5")]
             Item::BuildingCategory => "common/building_categories/",
             #[cfg(feature = "eu5")]
-            Item::ArtistType => "common/artist_types/",
+            Item::InsultType => "common/insults/",
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganization => "common/international_organizations/",
         }
     }
 

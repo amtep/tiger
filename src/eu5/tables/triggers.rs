@@ -43,6 +43,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Scope(Scopes::Country),
     ),
     (Scopes::Character, "adm", CompareValue),
+    (Scopes::Country, "advance_no_longer_activated", UncheckedTodo),
     (Scopes::Character, "age_in_days", CompareValue),
     (Scopes::Character, "age_in_years", CompareValue),
     (Scopes::Country, "age_preference", UncheckedTodo),
@@ -78,6 +79,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "antagonism",
         Block(&[("target", Scope(Scopes::Country)), ("value", CompareValue)]),
     ),
+    (Scopes::None, "any_false", UncheckedTodo),
     (Scopes::Area, "area_average_control", CompareValue),
     (Scopes::Area, "area_average_integration", CompareValue),
     (Scopes::Area, "area_exploration_progress", CompareValue),
@@ -114,12 +116,15 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "bias_value",
         Block(&[("modifier", Item(Item::Bias)), ("value", CompareValue)]),
     ),
+    (Scopes::Character, "birth_age", UncheckedTodo),
+    (Scopes::PeaceTreaty, "blocks_full_annexation", UncheckedTodo),
     (
         Scopes::Location.union(Scopes::Country).union(Scopes::Province),
         "border_distance_to",
         Block(&[("country", Scope(Scopes::Country)), ("value", CompareValue)]),
     ),
     (Scopes::Building, "building_can_be_destroyed_by", Scope(Scopes::Country)),
+    (Scopes::Building, "building_can_be_upgraded_by", UncheckedTodo),
     (
         Scopes::Building.union(Scopes::BuildingType),
         "building_category",
@@ -194,6 +199,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "can_raise_navy_levies", UncheckedTodo),
     (Scopes::Unit, "can_ransom_prisoners", UncheckedTodo),
     (Scopes::Country, "can_research_advance", UncheckedTodo),
+    (Scopes::Country, "can_rival", UncheckedTodo),
     (Scopes::Country, "can_see_religious_aspect", UncheckedTodo),
     (Scopes::Country, "can_see_situation", UncheckedTodo),
     (Scopes::Unit, "can_sell_prisoners_into_slavery", UncheckedTodo),
@@ -206,9 +212,25 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "can_vote_in_parliament", UncheckedTodo),
     (Scopes::Country, "cancel_exploration_utility", UncheckedTodo),
     (Scopes::Country, "cb_creation_progress_against", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "character_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Character, "character_name", UncheckedTodo),
     (Scopes::Character, "character_nickname", UncheckedTodo),
     (Scopes::Location, "climate", UncheckedTodo),
+    (Scopes::Country, "climate_count", UncheckedTodo),
+    (Scopes::Country, "climate_percent", UncheckedTodo),
     (Scopes::Country, "colonial_charter_progress", UncheckedTodo),
     (Scopes::Country, "colonial_charter_utility", UncheckedTodo),
     (Scopes::ColonialCharter, "colonial_charter_value", UncheckedTodo),
@@ -218,6 +240,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::InternationalOrganization, "combined_special_status_power", UncheckedTodo),
     (Scopes::InternationalOrganization, "combined_unique_special_status_power", UncheckedTodo),
     (Scopes::Value, "compare_value", UncheckedTodo),
+    (Scopes::Country.union(Scopes::InternationalOrganization), "complacency", UncheckedTodo),
+    (
+        Scopes::Country.union(Scopes::InternationalOrganization),
+        "complacency_percentage",
+        UncheckedTodo,
+    ),
     (Scopes::Country, "conquer_desire", UncheckedTodo),
     (Scopes::Country, "conquistador_utility", UncheckedTodo),
     (Scopes::Country, "controls", UncheckedTodo),
@@ -236,6 +264,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "country_highest_rated_special_status_power", UncheckedTodo),
     (Scopes::Country, "country_interaction_acceptance", UncheckedTodo),
     (Scopes::Country, "country_loan_capacity", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "country_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Country, "country_rank_level", UncheckedTodo),
     (Scopes::Country, "country_rank_level_on_date", UncheckedTodo),
     (Scopes::Country, "country_strength", UncheckedTodo),
@@ -316,6 +358,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "current_year", UncheckedTodo),
     (Scopes::None, "custom_description", UncheckedTodo),
     (Scopes::None, "custom_tooltip", UncheckedTodo),
+    (Scopes::Character, "days_as_rebel", UncheckedTodo),
+    (Scopes::Character, "days_of_service_as_admiral", UncheckedTodo),
+    (Scopes::Character, "days_of_service_as_general", UncheckedTodo),
+    (Scopes::Character, "days_of_service_in_cabinet", UncheckedTodo),
     (Scopes::Disaster, "days_since_disaster_end", UncheckedTodo),
     (Scopes::Disaster, "days_since_disaster_start", UncheckedTodo),
     (Scopes::Situation, "days_since_situation_end", UncheckedTodo),
@@ -365,6 +411,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country.union(Scopes::InternationalOrganization), "doom_percentage", UncheckedTodo),
     (Scopes::Country.union(Scopes::Dynasty), "dynastic_power", UncheckedTodo),
     (Scopes::None, "dynasty_exists", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "dynasty_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Dynasty, "dynasty_name", UncheckedTodo),
     (Scopes::Character, "education", UncheckedTodo),
     (Scopes::Cabinet, "effective_skill", UncheckedTodo),
@@ -396,6 +456,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Exploration, "exploration_time", UncheckedTodo),
     (Scopes::Country, "exploration_utility", UncheckedTodo),
     (Scopes::Country, "favors", UncheckedTodo),
+    (Scopes::Country, "favors_needed_to_annul_relations_with", UncheckedTodo),
     (Scopes::Character, "fertility", UncheckedTodo),
     (Scopes::Location, "food_consumption", UncheckedTodo),
     (Scopes::Country, "food_maintenance", UncheckedTodo),
@@ -431,6 +492,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "giving_scripted_relation", UncheckedTodo),
     (Scopes::Country, "giving_scripted_relation_of_type", UncheckedTodo),
     (Scopes::None, "global_variable_list_size", UncheckedTodo),
+    (Scopes::None, "global_variable_map_size", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "gold", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "gold_percentage", UncheckedTodo),
     (Scopes::Trade, "goods", UncheckedTodo),
@@ -490,6 +552,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Religion, "has_canonization", UncheckedTodo),
     (Scopes::Religion, "has_cardinals", UncheckedTodo),
     (Scopes::War, "has_casus_belli", UncheckedTodo),
+    (Scopes::Country, "has_casus_belli_of_type", UncheckedTodo),
     (Scopes::Country, "has_casus_belli_of_type_on", UncheckedTodo),
     (Scopes::Country, "has_casus_belli_on", UncheckedTodo),
     (
@@ -518,7 +581,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_consort", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "has_cooldown", UncheckedTodo),
     (Scopes::Country, "has_core", UncheckedTodo),
-    (Scopes::Country, "has_countries_with_antagonism", UncheckedTodo),
+    (Scopes::Country, "has_countries_with_antagonism", UncheckedTodo), // TODO: REMOVED
     (Scopes::Country, "has_countries_with_coalition_grade_antagonism", UncheckedTodo),
     (Scopes::Country, "has_countries_with_near_coalition_grade_antagonism", UncheckedTodo),
     (Scopes::Country, "has_countries_with_timed_antagonism", UncheckedTodo),
@@ -544,6 +607,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_dlc", UncheckedTodo),
     (Scopes::Religion, "has_doom", UncheckedTodo),
     (Scopes::Character, "has_dynasty", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "has_dynasty_modifier",
+        UncheckedTodo,
+    ),
     (Scopes::Location, "has_earthquakes", UncheckedTodo),
     (Scopes::InternationalOrganization, "has_elections", UncheckedTodo),
     (Scopes::Country, "has_embraced_institution", UncheckedTodo),
@@ -562,6 +639,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_gifted_gold_to", UncheckedTodo),
     (Scopes::None, "has_global_variable", UncheckedTodo),
     (Scopes::None, "has_global_variable_list", UncheckedTodo),
+    (Scopes::None, "has_global_variable_map", UncheckedTodo),
     (Scopes::Culture, "has_graphical_culture", UncheckedTodo),
     (Scopes::Religion, "has_graphical_religion", UncheckedTodo),
     (Scopes::Country, "has_heir", UncheckedTodo),
@@ -602,6 +680,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_local_dlc", UncheckedTodo),
     (Scopes::None, "has_local_variable", UncheckedTodo),
     (Scopes::None, "has_local_variable_list", UncheckedTodo),
+    (Scopes::None, "has_local_variable_map", UncheckedTodo),
     (Scopes::InternationalOrganization, "has_location", UncheckedTodo),
     (
         Scopes::Location
@@ -690,6 +769,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_raised_levies", UncheckedTodo),
     (Scopes::Country, "has_raised_navy_levies", UncheckedTodo),
     (Scopes::Pop, "has_rebel", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "has_rebel_modifier",
+        UncheckedTodo,
+    ),
     (Scopes::Country, "has_reform", UncheckedTodo),
     (Scopes::Country, "has_regent", UncheckedTodo),
     (Scopes::Country, "has_regular_elections", UncheckedTodo),
@@ -717,6 +810,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Location, "has_road_constructions", UncheckedTodo),
     (Scopes::Location, "has_road_of_type_to", UncheckedTodo),
     (Scopes::Location, "has_road_to", UncheckedTodo),
+    (Scopes::Location, "has_road_to_capital", UncheckedTodo),
     (Scopes::Country, "has_royal_marriage_with", UncheckedTodo),
     (Scopes::Country, "has_ruler", UncheckedTodo),
     (Scopes::Country, "has_scripted_relation", UncheckedTodo),
@@ -767,6 +861,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_unlocked_any_unit_of_category", UncheckedTodo),
     (Scopes::None, "has_variable", UncheckedTodo),
     (Scopes::None, "has_variable_list", UncheckedTodo),
+    (Scopes::None, "has_variable_map", UncheckedTodo),
     (Scopes::Location, "has_volcano", UncheckedTodo),
     (Scopes::InternationalOrganization.union(Scopes::Situation), "has_voted", UncheckedTodo),
     (Scopes::InternationalOrganization.union(Scopes::Situation), "has_voted_for", UncheckedTodo),
@@ -851,12 +946,27 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "international_organization_locations_owned_percentage",
         UncheckedTodo,
     ),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "international_organization_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::InternationalOrganization, "international_organization_num_locations", UncheckedTodo),
     (Scopes::InternationalOrganization, "international_organization_population", UncheckedTodo),
     (Scopes::Location, "intrinsic_disease_resistance", UncheckedTodo),
     (Scopes::InternationalOrganization, "io_within_diplomatic_range", UncheckedTodo),
     (Scopes::None, "ironman", UncheckedTodo),
     (Scopes::War, "is_a_defender", UncheckedTodo),
+    (Scopes::Country, "is_a_threat_for_us", UncheckedTodo),
     (Scopes::Culture, "is_accepted_in", UncheckedTodo),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
@@ -987,6 +1097,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "is_creating_cb_of_type", UncheckedTodo),
     (Scopes::Combat, "is_crossing", UncheckedTodo),
     (Scopes::Location, "is_currently_being_integrated", UncheckedTodo),
+    (Scopes::CasusBelli, "is_cut_down_in_size_cb", UncheckedTodo),
     (Scopes::Goods, "is_demanded_in_market", UncheckedTodo),
     (Scopes::Goods, "is_demanded_in_market_by_buildings", UncheckedTodo),
     (Scopes::Goods, "is_demanded_in_market_by_burgher_trades", UncheckedTodo),
@@ -1003,6 +1114,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_dynasty_head", UncheckedTodo),
     (Scopes::Location, "is_east_of", UncheckedTodo),
     (Scopes::Country, "is_elector_in_international_organization", UncheckedTodo),
+    (Scopes::Character, "is_eligible_for_royal_marriage", UncheckedTodo),
     (Scopes::Character, "is_eligible_heir", UncheckedTodo),
     (Scopes::Character, "is_eligible_heir_baseline", UncheckedTodo),
     (Scopes::Character, "is_eligible_military_leader", UncheckedTodo),
@@ -1063,17 +1175,33 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "is_in_list", UncheckedTodo),
     (Scopes::Country, "is_in_losing_war", UncheckedTodo),
     (Scopes::Country, "is_in_same_international_organization", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::ProvinceDefinition)
+            .union(Scopes::Area)
+            .union(Scopes::Region)
+            .union(Scopes::SubContinent)
+            .union(Scopes::Continent),
+        "is_in_scripted_geography",
+        UncheckedTodo,
+    ),
     (Scopes::Goods, "is_in_surplus_in_market", UncheckedTodo),
     (Scopes::War, "is_in_war", UncheckedTodo),
     (Scopes::Character, "is_infant", UncheckedTodo),
     (Scopes::Country, "is_integrating", UncheckedTodo),
+    (Scopes::InternationalOrganization, "is_international_organization_annullable", UncheckedTodo),
     (Scopes::InternationalOrganization, "is_international_organization_unique", UncheckedTodo),
+    (Scopes::None, "is_key_in_global_variable_map", UncheckedTodo),
+    (Scopes::None, "is_key_in_local_variable_map", UncheckedTodo),
+    (Scopes::None, "is_key_in_variable_map", UncheckedTodo),
     (Scopes::Country, "is_known_by_country", UncheckedTodo),
     (Scopes::Location, "is_labourer_positive_deficit", UncheckedTodo),
     (Scopes::Building, "is_lacking_goods", UncheckedTodo),
     (Scopes::Location, "is_land", UncheckedTodo),
     (Scopes::RoadType, "is_latest_road_type_for", UncheckedTodo),
     (Scopes::Country, "is_leader_of_international_organization", UncheckedTodo),
+    (Scopes::Character, "is_leading_largest_army_of", UncheckedTodo),
+    (Scopes::Character, "is_leading_largest_navy_of", UncheckedTodo),
     (Scopes::SubUnit, "is_levy", UncheckedTodo),
     (Scopes::Pop, "is_linked_to_foreign_building", UncheckedTodo),
     (Scopes::Location, "is_location_holy_site_for", UncheckedTodo),
@@ -1122,6 +1250,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         UncheckedTodo,
     ),
     (Scopes::Location, "is_neighbor_of_location", UncheckedTodo),
+    (Scopes::Location, "is_neighbor_of_location_or_across_one_seazone", UncheckedTodo),
     (Scopes::ProvinceDefinition, "is_neighbor_of_province_definition", UncheckedTodo),
     (Scopes::CasusBelli, "is_no_cb", UncheckedTodo),
     (Scopes::War, "is_no_cb_war", UncheckedTodo),
@@ -1146,6 +1275,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Culture, "is_primary_in", UncheckedTodo),
     (Scopes::Culture, "is_primary_or_accepted_in", UncheckedTodo),
     (Scopes::Goods, "is_produced_by_production_method", UncheckedTodo),
+    (Scopes::Location, "is_produced_in_location_market", UncheckedTodo),
     (Scopes::Market, "is_produced_in_market", UncheckedTodo),
     (Scopes::Building, "is_profitable", UncheckedTodo),
     (Scopes::Market, "is_projected_to_run_out_of_food_stockpile", UncheckedTodo),
@@ -1176,6 +1306,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::SubUnit, "is_ship", UncheckedTodo),
     (Scopes::Character, "is_sibling_of", UncheckedTodo),
     (Scopes::None, "is_situation_active", UncheckedTodo),
+    (Scopes::BuildingType, "is_special_building", UncheckedTodo),
     (Scopes::Character, "is_spouse_of", UncheckedTodo),
     (Scopes::Province, "is_starving", UncheckedTodo),
     (Scopes::Combat, "is_strait_crossing", UncheckedTodo),
@@ -1183,6 +1314,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "is_subject_of", UncheckedTodo),
     (Scopes::Country, "is_subject_or_below_of", UncheckedTodo),
     (Scopes::Country, "is_subject_type", UncheckedTodo),
+    (Scopes::SubjectType, "is_subject_type_annullable", UncheckedTodo),
     (Scopes::Building, "is_subsidized", UncheckedTodo),
     (Scopes::Rebels, "is_supported_by_character", UncheckedTodo),
     (Scopes::Rebels, "is_supported_by_country", UncheckedTodo),
@@ -1209,6 +1341,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Goods, "is_used_by_production_method", UncheckedTodo),
     (Scopes::Country, "is_valid_colonial_charter", UncheckedTodo),
     (Scopes::Character, "is_valid_for_exploration", UncheckedTodo),
+    (Scopes::None, "is_value_in_global_variable_map", UncheckedTodo),
+    (Scopes::None, "is_value_in_local_variable_map", UncheckedTodo),
+    (Scopes::None, "is_value_in_variable_map", UncheckedTodo),
     (
         Scopes::Law
             .union(Scopes::Policy)
@@ -1285,6 +1420,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Location, "local_relative_estate_power", UncheckedTodo),
     (Scopes::Location, "local_religious_unity", UncheckedTodo),
     (Scopes::None, "local_variable_list_size", UncheckedTodo),
+    (Scopes::None, "local_variable_map_size", UncheckedTodo),
     (Scopes::Location, "location_art_quality", UncheckedTodo),
     (Scopes::Location, "location_building_level", UncheckedTodo),
     (
@@ -1312,6 +1448,21 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Location, "location_maritime_presence_power", UncheckedTodo),
     (Scopes::Location, "location_max_population", UncheckedTodo),
     (Scopes::Location, "location_max_winter_level", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "location_modifier_strength",
+        UncheckedTodo,
+    ),
+    (Scopes::Location, "location_net_building_profit", UncheckedTodo),
     (Scopes::Location, "location_num_holy_sites", UncheckedTodo),
     (Scopes::Location, "location_num_works_of_art", UncheckedTodo),
     (Scopes::Location, "location_peace_cost", UncheckedTodo),
@@ -1347,6 +1498,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "max_sailors", UncheckedTodo),
     (Scopes::Religion, "max_sects", UncheckedTodo),
     (Scopes::Mercenary, "mercenary_has_owner", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "mercenary_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Market, "merchant_capacity", UncheckedTodo),
     (Scopes::Market, "merchant_power_in_market", UncheckedTodo),
     (Scopes::Location, "migration_attraction", UncheckedTodo),
@@ -1429,6 +1594,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "num_artists", CompareValue),
     (Scopes::Country, "num_avatars", CompareValue),
     (Scopes::Location, "num_buildings", CompareValue),
+    (Scopes::Country, "num_cabinet_capable_characters", UncheckedTodo),
     (Scopes::Country, "num_cardinals", CompareValue),
     (Scopes::Country, "num_characters", CompareValue),
     (Scopes::Location, "num_civil_constructions", CompareValue),
@@ -1437,6 +1603,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::InternationalOrganization, "num_countries_with_special_status", UncheckedTodo),
     (Scopes::Country, "num_embraced_institutions", CompareValue),
     (Scopes::Country, "num_explorations", CompareValue),
+    (Scopes::Country, "num_explorations_including_in_construction", UncheckedTodo),
     (Scopes::Location, "num_foreign_buildings", CompareValue),
     (Scopes::Country, "num_forts", CompareValue),
     (Scopes::Country, "num_known_institutions", CompareValue),
@@ -1467,6 +1634,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "num_of_traits", CompareValue),
     (Scopes::Character, "num_of_traits_of_category", CompareValue),
     (Scopes::Country, "num_open_reform_slots", CompareValue),
+    (Scopes::Location, "num_owned_foreign_buildings_in_location", UncheckedTodo),
     (Scopes::Country.union(Scopes::Estate), "num_possible_privileges", CompareValue),
     (Scopes::Country, "num_possible_rivals", CompareValue),
     (Scopes::Country.union(Scopes::Estate), "num_privileges", CompareValue),
@@ -1484,6 +1652,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Dynasty, "num_unions", CompareValue),
     (Scopes::Country, "num_works_of_art", CompareValue),
     (Scopes::Country, "offensive_alliance_strength", UncheckedTodo),
+    (Scopes::Country, "offer_relation_acceptance", UncheckedTodo),
     (Scopes::SubjectType, "only_allowed_overlord_court_language", UncheckedTodo),
     (Scopes::SubjectType, "only_allowed_overlord_primary_culture", UncheckedTodo),
     (Scopes::SubjectType, "only_allowed_overlord_primary_or_kindred_culture", UncheckedTodo),
@@ -1496,8 +1665,18 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::SubjectType, "overlord_can_enforce_peace_on_subject", UncheckedTodo),
     (Scopes::Country, "own_entire_area", UncheckedTodo),
     (Scopes::Country, "own_entire_province", UncheckedTodo),
+    (
+        Scopes::ProvinceDefinition
+            .union(Scopes::Area)
+            .union(Scopes::Region)
+            .union(Scopes::SubContinent)
+            .union(Scopes::Continent),
+        "owned_by_or_its_subjects",
+        UncheckedTodo,
+    ),
     (Scopes::Country, "owns", UncheckedTodo),
     (Scopes::Country, "owns_any_foreign_buildings_in", UncheckedTodo),
+    (Scopes::Country, "owns_most_foreign_buildings_in_location", UncheckedTodo),
     (Scopes::Country, "owns_or_non_sovereign_subject_owns", UncheckedTodo),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
@@ -1535,6 +1714,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::Country, "payment_contribution", UncheckedTodo),
     (Scopes::Country, "payment_maintenance", UncheckedTodo),
+    (Scopes::Country, "peace_treaty_antagonism", UncheckedTodo),
+    (Scopes::Country, "peace_treaty_war_score_cost", UncheckedTodo),
+    (Scopes::Location, "peasant_enfranchisment", UncheckedTodo),
     (Scopes::Country, "player_proficiency", UncheckedTodo),
     (Scopes::Country, "player_proficiency_greater", UncheckedTodo),
     (Scopes::Country, "player_proficiency_greater_eq", UncheckedTodo),
@@ -1554,6 +1736,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "policy_is_locked_in_international_organization",
         UncheckedTodo,
     ),
+    (Scopes::Policy, "policy_level", UncheckedTodo),
     (
         Scopes::InternationalOrganization,
         "policy_visible_to_international_organization",
@@ -1607,8 +1790,23 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Province, "province_food", UncheckedTodo),
     (Scopes::Province, "province_food_percentage", UncheckedTodo),
     (Scopes::Province, "province_max_food", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "province_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Province, "province_monthly_food_production", UncheckedTodo),
     (Scopes::Province, "province_navy_levy_size", UncheckedTodo),
+    (Scopes::Province, "province_pop_type_population", UncheckedTodo),
     (Scopes::Province, "province_population", UncheckedTodo),
     (Scopes::Province, "province_possible_institutions", UncheckedTodo),
     (Scopes::Province, "province_prosperity", UncheckedTodo),
@@ -1637,6 +1835,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Rebels, "rebel_estate_type", UncheckedTodo),
     (Scopes::Rebels, "rebel_last_months_progress", UncheckedTodo),
     (Scopes::Rebels, "rebel_locations", UncheckedTodo),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "rebel_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Rebels, "rebel_name_key", UncheckedTodo),
     (Scopes::Rebels, "rebel_progress", UncheckedTodo),
     (Scopes::Rebels, "rebel_size", UncheckedTodo),
@@ -1648,6 +1860,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "receiving_scripted_relation_of_type", UncheckedTodo),
     (Scopes::Religion, "reform_desire", UncheckedTodo),
     (Scopes::Country, "regular_army_size", CompareValue),
+    (Scopes::Country, "regular_navy_size", UncheckedTodo),
     (Scopes::Country, "relative_defensive_alliance_strength", UncheckedTodo),
     (Scopes::Country, "relative_military_strength", UncheckedTodo),
     (Scopes::Location, "relative_raw_material_price", UncheckedTodo),
@@ -1675,6 +1888,20 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             .union(Scopes::SubContinent)
             .union(Scopes::Continent),
         "religion_group_population",
+        UncheckedTodo,
+    ),
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "religion_modifier_strength",
         UncheckedTodo,
     ),
     (
@@ -1714,6 +1941,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::Country, "religious_unity", UncheckedTodo),
     (Scopes::Religion, "religious_view", UncheckedTodo),
+    (Scopes::Religion, "religious_view_impact", UncheckedTodo),
     (Scopes::Country, "relocate_market_utility", UncheckedTodo),
     (Scopes::Loan, "remaining_debt", UncheckedTodo),
     (
@@ -1736,6 +1964,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "republican_tradition_percentage",
         UncheckedTodo,
     ),
+    (Scopes::Country, "request_relation_acceptance", UncheckedTodo),
     (Scopes::ProductionMethod, "requires_goods", UncheckedTodo),
     (Scopes::Law, "requires_vote", UncheckedTodo),
     (Scopes::Country, "research_progress", UncheckedTodo),
@@ -1747,7 +1976,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "resolution_opinion", UncheckedTodo),
     (Scopes::Country, "reverse_country_interaction_acceptance", UncheckedTodo),
     (Scopes::Culture, "reverse_cultural_view", UncheckedTodo),
+    (Scopes::Country, "reverse_offer_relation_acceptance", UncheckedTodo),
     (Scopes::Religion, "reverse_religious_view", UncheckedTodo),
+    (Scopes::Religion, "reverse_religious_view_impact", UncheckedTodo),
+    (Scopes::Country, "reverse_request_relation_acceptance", UncheckedTodo),
     (Scopes::ReligiousSchool, "reverse_school_opinion", UncheckedTodo),
     (Scopes::Location, "rgo_workers", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "righteousness", UncheckedTodo),
@@ -1802,6 +2034,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::SubjectType, "subject_can_be_created_by", UncheckedTodo),
     (Scopes::SubjectType, "subject_level", UncheckedTodo),
     (Scopes::Country, "subject_loyalty", UncheckedTodo),
+    (Scopes::SubjectType, "subject_type_annullment_favours_required", UncheckedTodo),
     (Scopes::Country, "subjects_relative_power", UncheckedTodo),
     (Scopes::SubUnit, "subunit_morale", UncheckedTodo),
     (Scopes::SubUnit, "subunit_morale_percentage", UncheckedTodo),
@@ -1820,6 +2053,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "time_of_year", UncheckedTodo),
     (Scopes::Religion, "tithe", UncheckedTodo),
     (Scopes::Location, "topography", UncheckedTodo),
+    (Scopes::Country, "topography_count", UncheckedTodo),
+    (Scopes::Country, "topography_percent", UncheckedTodo),
     (Scopes::Character, "total_abilities", UncheckedTodo),
     (Scopes::Country, "total_accepted_culture_population", UncheckedTodo),
     (Scopes::Location, "total_building_levels", UncheckedTodo),
@@ -1830,6 +2065,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country.union(Scopes::Dynasty), "total_dynastic_power", UncheckedTodo),
     (Scopes::Country, "total_effective_goods_production_buildings", UncheckedTodo),
     (Scopes::InternationalOrganization, "total_enemies", UncheckedTodo),
+    (Scopes::Country, "total_foreign_buildings_levels", UncheckedTodo),
     (Scopes::Market, "total_goods_traded", UncheckedTodo),
     (Scopes::Market, "total_goods_value_traded", UncheckedTodo),
     (Scopes::Country, "total_heathen_population", UncheckedTodo),
@@ -1864,18 +2100,40 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "trigger_else_if", UncheckedTodo),
     (Scopes::None, "trigger_if", UncheckedTodo),
     (Scopes::Country, "trust", UncheckedTodo),
+    (Scopes::Province, "unfilled_jobs_in_province", UncheckedTodo),
+    (Scopes::Province, "unfilled_jobs_in_province_percentage", UncheckedTodo),
     (Scopes::Country, "union_length_days", UncheckedTodo),
     (Scopes::None, "unique_international_organization_type_exists", UncheckedTodo),
-    (Scopes::Unit, "unit_has_leader", UncheckedTodo),
+    (Scopes::Unit, "unit_has_leader", UncheckedTodo), // TODO: REMOVED
+    (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "unit_modifier_strength",
+        UncheckedTodo,
+    ),
     (Scopes::Unit, "unit_strength", UncheckedTodo),
     (Scopes::Country, "upkeep_maintenance", UncheckedTodo),
     (Scopes::Country, "used_cultures_capacity", UncheckedTodo),
     (Scopes::Country, "used_diplomatic_capacity", UncheckedTodo),
+    (Scopes::Country, "used_fort_limit", UncheckedTodo),
+    (Scopes::Country, "used_fort_limit_percentage", UncheckedTodo),
     (Scopes::Market, "used_merchant_capacity", UncheckedTodo),
+    (Scopes::HeirSelection, "uses_elections", UncheckedTodo),
     (Scopes::Country, "uses_government_power", UncheckedTodo),
     (Scopes::Character, "valid_estate_for_heir_selection", UncheckedTodo),
     (Scopes::None, "variable_list_size", UncheckedTodo),
+    (Scopes::None, "variable_map_size", UncheckedTodo),
     (Scopes::Location, "vegetation", UncheckedTodo),
+    (Scopes::Country, "vegetation_count", UncheckedTodo),
+    (Scopes::Country, "vegetation_percent", UncheckedTodo),
     (Scopes::Country, "vote_impact_in_resolution", UncheckedTodo),
     (Scopes::InternationalOrganization.union(Scopes::Situation), "vote_is_locked", UncheckedTodo),
     (Scopes::Country, "vote_percentage_impact_in_resolution", UncheckedTodo),
@@ -1888,6 +2146,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "wants_casus_belli_with", UncheckedTodo),
     (Scopes::Country, "wants_military_access_in", UncheckedTodo),
     (Scopes::Country, "wants_opinion_with", UncheckedTodo),
+    (Scopes::Country, "wants_to_attack", UncheckedTodo),
     (Scopes::Country, "wants_to_give_away_any_province", UncheckedTodo),
     (Scopes::Country, "wants_to_subjugate", UncheckedTodo),
     (Scopes::Country, "war_enthusiasm", UncheckedTodo),
@@ -1897,10 +2156,13 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "war_exhaustion_percentage",
         UncheckedTodo,
     ),
+    (Scopes::War, "war_goal_type", UncheckedTodo),
     (Scopes::War, "war_length", UncheckedTodo),
     (Scopes::War, "war_length_in_years", UncheckedTodo),
     (Scopes::Country, "war_score_in_war", UncheckedTodo),
+    (Scopes::Country, "war_score_in_war_whole_side", UncheckedTodo),
     (Scopes::War, "war_score_of_country", UncheckedTodo),
+    (Scopes::War, "war_score_of_country_side", UncheckedTodo),
     (Scopes::Country, "war_score_versus", UncheckedTodo),
     (Scopes::War, "war_stalling_length", UncheckedTodo),
     (Scopes::War, "war_stalling_length_in_years", UncheckedTodo),
@@ -1938,7 +2200,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "yearly_sailors", UncheckedTodo),
     (Scopes::Character, "yearly_salary", UncheckedTodo),
     (Scopes::Religion, "years_active", UncheckedTodo),
+    (Scopes::Character, "years_as_rebel", UncheckedTodo),
     (Scopes::Country, "years_in_international_organization", UncheckedTodo),
+    (Scopes::Character, "years_of_service_as_admiral", UncheckedTodo),
+    (Scopes::Character, "years_of_service_as_general", UncheckedTodo),
+    (Scopes::Character, "years_of_service_in_cabinet", UncheckedTodo),
     (Scopes::Disaster, "years_since_disaster_end", UncheckedTodo),
     (Scopes::Disaster, "years_since_disaster_start", UncheckedTodo),
     (Scopes::Situation, "years_since_situation_end", UncheckedTodo),
