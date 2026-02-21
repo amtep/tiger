@@ -2357,3 +2357,14 @@ pub fn validate_plan_great_project(
         sc.define_name_token(name.as_str(), Scopes::GreatProject, name);
     }
 }
+
+pub fn validate_phase_duration(
+    _key: &Token,
+    block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    validate_mandatory_duration(block, &mut vd, sc);
+}
