@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::Game;
 use crate::block::{BV, Block, BlockItem, Comparator, Eq::Single, Field};
 use crate::data::gui::{GuiTemplate, GuiType};
 use crate::everything::Everything;
@@ -18,6 +19,7 @@ enum GuiItem {
     /// A contained widget.
     Widget(Arc<GuiBlock>),
     /// A set of specific properties for action tooltips.
+    #[allow(dead_code)]
     ActionTooltip(Arc<GuiBlock>),
     /// A property which contains other properties. It can have `Subst` blocks too.
     ComplexProperty(Arc<GuiBlock>),
@@ -187,21 +189,12 @@ impl GuiBlock {
                                     }
                                 }
                             } else if validation == GuiValidation::ActionTooltip {
-                                match bv {
-                                    BV::Block(block) => {
-                                        let guiblock = GuiBlock::from_block(
-                                            GuiBlockFrom::PropertyKey(prop),
-                                            block,
-                                            types,
-                                            templates,
-                                        );
-                                        gui.items.push(GuiItem::ActionTooltip(guiblock));
-                                    }
-                                    _ => {
-                                        let msg = "action tooltip needs to be a block";
-                                        err(ErrorKey::WrongGame).weak().msg(msg).loc(key).push();
-                                    }
+                                if !Game::is_eu5() {
+                                    let msg = "action tooltip is only for EU5";
+                                    err(ErrorKey::WrongGame).msg(msg).loc(bv).push();
                                 }
+                                bv.expect_block();
+                                gui.items.push(GuiItem::Property(prop, key.clone(), bv.clone()));
                             } else {
                                 gui.items.push(GuiItem::Property(prop, key.clone(), bv.clone()));
                             }

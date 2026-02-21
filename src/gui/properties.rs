@@ -556,11 +556,11 @@ impl GuiValidation {
         #[allow(clippy::match_same_arms)] // keep it alphabetic
         match property {
             accept_tabs => Boolean,
-            acceptance => UncheckedValue, // TODO
+            acceptance => DatatypeExpr,
             action_tooltip => ActionTooltip,
             active_item => Widget,
             activeframe => Integer,
-            actor => UncheckedValue, // TODO
+            actor => Datacontext,
             addcolumn => NumberOrPercent,
             addrow => NumberOrPercent,
             align => Align,
@@ -572,7 +572,7 @@ impl GuiValidation {
             animation_speed => CVector2f,
             attachto => ComplexProperty,
             autoresize => Boolean,
-            autoresize_axis => UncheckedValue, // TODO
+            autoresize_axis => Choice(&["horizontal", "vertical"]),
             autoresize_slider => Boolean,
             autoresizescrollarea => Boolean,
             autoresizeviewport => Boolean,
@@ -592,12 +592,12 @@ impl GuiValidation {
             camera_rotation_pitch_limits => CVector2f,
             camera_translation_limits => CVector3f,
             camera_zoom_limits => CVector2f,
-            cameracontrolwidget_entity_view => UncheckedValue, // TODO
+            cameracontrolwidget_entity_view => Widget,
             checked => Boolean,
-            clamp_pan_position => UncheckedValue, // TODO
-            clear_color => UncheckedValue,        // TODO
-            click_mode => UncheckedValue,         // TODO
-            click_modifier => UncheckedValue,     // TODO
+            clamp_pan_position => Boolean,
+            clear_color => CVector4f,
+            click_mode => UncheckedValue,     // TODO
+            click_modifier => UncheckedValue, // TODO
             click_modifiers => ComplexProperty,
             click_type => UncheckedValue, // TODO
             clicksound => ItemOrBlank(Item::Sound),
@@ -634,7 +634,7 @@ impl GuiValidation {
             disable_common_context => UncheckedValue, // TODO
             disable_input_fallthrough => UncheckedValue, // TODO
             disableframe => Integer,
-            distance => UncheckedValue, // TODO
+            distance => Integer,
             distribute_visual_state => Boolean,
             down => Boolean,
             downframe => Integer,
@@ -923,7 +923,7 @@ impl GuiValidation {
             tooltip_visible => Boolean,
             tooltip_when_disabled => Text,
             tooltip_widgetanchor => Align,
-            tooltipmeta => UncheckedValue, // TODO
+            tooltipmeta => ComplexProperty,
             tooltipwidget => Widget,
             track => Widget,
             track_highlight => UncheckedValue, // TODO
