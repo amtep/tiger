@@ -53,24 +53,21 @@ impl ScriptValues {
                         err(ErrorKey::Prefixes).msg(msg).loc(value).push();
                     }
                     BV::Block(block) => {
-                        self.script_values.entry(name.as_str()).and_modify(|entry| {
-                            match &entry.bv {
+                        self.script_values.entry(name.as_str()).and_modify(
+                            |entry| match &mut entry.bv {
                                 BV::Value(value) => {
                                     let msg = "cannot inject into a simple value";
                                     err(ErrorKey::Prefixes)
                                         .msg(msg)
                                         .loc(name)
-                                        .loc_msg(value, "into here")
+                                        .loc_msg(&*value, "into here")
                                         .push();
                                 }
                                 BV::Block(old_block) => {
-                                    // TODO: so much cloning here. Can't old_block be modified in place?
-                                    let mut new_block = old_block.clone();
-                                    new_block.append(&mut block.clone());
-                                    entry.bv = BV::Block(new_block);
+                                    old_block.append(&mut block.clone());
                                 }
-                            }
-                        });
+                            },
+                        );
                     }
                 },
                 PrefixShould::Ignore => (),
