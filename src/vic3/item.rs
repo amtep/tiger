@@ -100,6 +100,7 @@ impl Item {
                 | Item::ScriptedList
                 | Item::ScriptedModifier
                 | Item::ScriptedProgressBar
+                | Item::ScriptedRule
                 | Item::ScriptedTrigger
                 | Item::SocialClass
                 | Item::SocialHierarchy
