@@ -1035,7 +1035,6 @@ impl WidgetProperty {
             | colormap_coordinates
             | contextmenu_enabled
             | contextmenu_widget
-            | debug_text
             | description
             | disable_common_context
             | disable_input_fallthrough
