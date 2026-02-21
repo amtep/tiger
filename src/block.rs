@@ -108,7 +108,7 @@ impl Block {
 
     /// Combine two blocks by adding the contents of `other` to this block.
     /// To avoid lots of cloning, `other` will be emptied in the process.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn append(&mut self, other: &mut Block) {
         self.v.append(&mut other.v);
     }

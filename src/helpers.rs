@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use crate::game::Game;
 use crate::item::Item;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 use crate::report::err;
 use crate::report::{ErrorKey, tips, warn};
 #[cfg(feature = "hoi4")]
@@ -262,9 +262,9 @@ pub fn limited_item_prefix_should_insert<'a, 'b, F>(
 where
     F: Fn(&'a str) -> Option<&'b Token>,
 {
-    if Game::is_vic3() {
+    if Game::is_vic3() || Game::is_eu5() {
         #[allow(clippy::collapsible_else_if)]
-        #[cfg(feature = "vic3")]
+        #[cfg(any(feature = "vic3", feature = "eu5"))]
         if let Some((prefix, name)) = key.split_once(':') {
             let other = get_other(name.as_str());
             match prefix.as_str() {
@@ -307,4 +307,80 @@ where
         return Some(key);
     }
     None
+}
+
+#[derive(Debug, Clone)]
+#[cfg(feature = "jomini")]
+pub enum PrefixShould {
+    Insert(Token),
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    Inject(Token),
+    Ignore,
+}
+
+/// Used for prefixed items other than effects, triggers, and modifiers.
+#[cfg(feature = "jomini")]
+pub fn item_prefix_should<'a, 'b, F>(itype: Item, key: &Token, get_other: F) -> PrefixShould
+where
+    F: Fn(&'a str) -> Option<&'b Token>,
+{
+    if Game::is_vic3() || Game::is_eu5() {
+        #[allow(clippy::collapsible_else_if)]
+        #[cfg(any(feature = "vic3", feature = "eu5"))]
+        if let Some((prefix, name)) = key.split_once(':') {
+            let other = get_other(name.as_str());
+            match prefix.as_str() {
+                "INJECT" => {
+                    if other.is_some() {
+                        return PrefixShould::Inject(name);
+                    }
+                    let msg = "injecting into a non-existing item";
+                    err(ErrorKey::Prefixes).msg(msg).loc(name).push();
+                }
+                "REPLACE" => {
+                    if other.is_some() {
+                        return PrefixShould::Insert(name);
+                    }
+                    let msg = "replacing a non-existing item";
+                    err(ErrorKey::Prefixes).msg(msg).loc(name).push();
+                }
+                "TRY_INJECT" => {
+                    if other.is_some() {
+                        return PrefixShould::Inject(name);
+                    }
+                }
+                "TRY_REPLACE" => {
+                    if other.is_some() {
+                        return PrefixShould::Insert(name);
+                    }
+                }
+                "REPLACE_OR_CREATE" => return PrefixShould::Insert(name),
+                "INJECT_OR_CREATE" => {
+                    if other.is_some() {
+                        return PrefixShould::Inject(name);
+                    }
+                    return PrefixShould::Insert(name);
+                }
+                _ => {
+                    let msg = format!("unknown prefix `{prefix}`");
+                    err(ErrorKey::Prefixes).msg(msg).loc(prefix).push();
+                }
+            }
+        } else {
+            if let Some(other) = get_other(key.as_str()) {
+                let msg = format!("must have prefix such as `REPLACE:` to replace {itype}");
+                err(ErrorKey::Prefixes).msg(msg).loc(key).loc_msg(other, "original here").push();
+            } else {
+                return PrefixShould::Insert(key.clone());
+            }
+        }
+    } else {
+        if let Some(other) = get_other(key.as_str()) {
+            if other.loc.kind >= key.loc.kind {
+                dup_error(key, other, &itype.to_string());
+            }
+        }
+        return PrefixShould::Insert(key.clone());
+    }
+    PrefixShould::Ignore
 }

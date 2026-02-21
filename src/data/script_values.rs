@@ -5,7 +5,10 @@ use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::{BANNED_NAMES, TigerHashMap, dup_error, exact_dup_error};
+use crate::helpers::{
+    BANNED_NAMES, PrefixShould, TigerHashMap, dup_error, exact_dup_error, item_prefix_should,
+};
+use crate::item::Item;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{ErrorKey, err, warn};
@@ -35,9 +38,43 @@ impl ScriptValues {
             let msg = "scriptedvalue has the same name as an important builtin";
             err(ErrorKey::NameConflict).strong().msg(msg).loc(key).push();
         } else {
-            let scope_override = self.scope_overrides.get(key.as_str()).copied();
-            self.script_values
-                .insert(key.as_str(), ScriptValue::new(key.clone(), bv.clone(), scope_override));
+            match item_prefix_should(Item::ScriptValue, key, |key| {
+                self.script_values.get(key).map(|entry| &entry.key)
+            }) {
+                PrefixShould::Insert(name) => {
+                    let scope_override = self.scope_overrides.get(name.as_str()).copied();
+                    self.script_values
+                        .insert(name.as_str(), ScriptValue::new(name, bv.clone(), scope_override));
+                }
+                #[cfg(any(feature = "vic3", feature = "eu5"))]
+                PrefixShould::Inject(name) => match bv {
+                    BV::Value(value) => {
+                        let msg = "cannot inject a simple value";
+                        err(ErrorKey::Prefixes).msg(msg).loc(value).push();
+                    }
+                    BV::Block(block) => {
+                        self.script_values.entry(name.as_str()).and_modify(|entry| {
+                            match &entry.bv {
+                                BV::Value(value) => {
+                                    let msg = "cannot inject into a simple value";
+                                    err(ErrorKey::Prefixes)
+                                        .msg(msg)
+                                        .loc(name)
+                                        .loc_msg(value, "into here")
+                                        .push();
+                                }
+                                BV::Block(old_block) => {
+                                    // TODO: so much cloning here. Can't old_block be modified in place?
+                                    let mut new_block = old_block.clone();
+                                    new_block.append(&mut block.clone());
+                                    entry.bv = BV::Block(new_block);
+                                }
+                            }
+                        });
+                    }
+                },
+                PrefixShould::Ignore => (),
+            }
         }
     }
 

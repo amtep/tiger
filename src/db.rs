@@ -18,7 +18,7 @@ use crate::game::Game;
 use crate::helpers::{TigerHashMap, TigerHashSet, dup_error, exact_dup_advice, exact_dup_error};
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-#[cfg(feature = "vic3")]
+#[cfg(any(feature = "vic3", feature = "eu5"))]
 use crate::report::{ErrorKey, err};
 use crate::token::Token;
 use crate::variables::Variables;
@@ -76,8 +76,8 @@ impl Db {
         kind: Box<dyn DbKind>,
         exact_dup_ok: bool,
     ) {
-        if Game::is_vic3() {
-            #[cfg(feature = "vic3")]
+        if Game::is_vic3() || Game::is_eu5() {
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
             if let Some((prefix, name)) = key.split_once(':') {
                 if !item.injectable() {
                     let msg = format!("cannot use prefixes with {item}");
@@ -335,7 +335,7 @@ pub struct DbEntry {
 }
 
 impl DbEntry {
-    #[cfg(feature = "vic3")]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
     fn inject(&mut self, mut block: Block, kind: Box<dyn DbKind>) {
         self.block.append(&mut block);
         self.kind.merge_in(kind);
