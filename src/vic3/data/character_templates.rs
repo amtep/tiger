@@ -76,7 +76,8 @@ impl DbKind for CharacterTemplate {
         });
         vd.field_validated_value("interest_group", |_, mut vd| {
             vd.maybe_is("random");
-            vd.item(Item::InterestGroup);
+            vd.maybe_item(Item::InterestGroup);
+            vd.target(&mut sc, Scopes::InterestGroup);
         });
         vd.field_item("ideology", Item::Ideology);
 

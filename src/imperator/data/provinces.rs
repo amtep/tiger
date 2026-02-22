@@ -6,6 +6,8 @@ use itertools::Itertools;
 
 use crate::block::Block;
 use crate::everything::Everything;
+#[cfg(test)]
+use crate::fileset::FileStage;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
 use crate::item::Item;
@@ -622,6 +624,7 @@ mod tests {
     fn loc(line: u32, column: u32) -> Loc {
         let mut loc = Loc::for_file(
             PathBuf::from("map_data/adjacencies.csv"),
+            FileStage::NoStage,
             FileKind::Mod,
             PathBuf::from("C:/test/map_data/adjacencies.csv"),
         );
