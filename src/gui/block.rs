@@ -133,6 +133,19 @@ impl GuiBlock {
                                     untidy(ErrorKey::Gui).msg("template not found").loc(key).push();
                                 }
                             }
+                        } else if types.get(key_lc.as_str()).is_some()
+                            || BuiltinWidget::builtin_current_game(&key_lc).is_some()
+                        {
+                            if let Some(block) = bv.expect_block() {
+                                let guiblock = GuiBlock::from_block(
+                                    GuiBlockFrom::WidgetKey(key),
+                                    block,
+                                    types,
+                                    templates,
+                                );
+                                gui.substnames.extend(guiblock.substnames.iter().cloned());
+                                gui.items.push(GuiItem::Widget(guiblock));
+                            }
                         } else if let Ok(prop) = WidgetProperty::try_from(&key_lc) {
                             let validation = GuiValidation::from_property(prop);
                             if validation == GuiValidation::ComplexProperty {
@@ -173,19 +186,6 @@ impl GuiBlock {
                                 }
                             } else {
                                 gui.items.push(GuiItem::Property(prop, key.clone(), bv.clone()));
-                            }
-                        } else if types.get(key_lc.as_str()).is_some()
-                            || BuiltinWidget::builtin_current_game(&key_lc).is_some()
-                        {
-                            if let Some(block) = bv.expect_block() {
-                                let guiblock = GuiBlock::from_block(
-                                    GuiBlockFrom::WidgetKey(key),
-                                    block,
-                                    types,
-                                    templates,
-                                );
-                                gui.substnames.extend(guiblock.substnames.iter().cloned());
-                                gui.items.push(GuiItem::Widget(guiblock));
                             }
                         } else if let Ok(builtin) = BuiltinWidget::try_from(&key_lc) {
                             // If we got here, then it must be a builtin but not for the current game
