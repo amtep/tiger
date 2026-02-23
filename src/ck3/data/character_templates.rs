@@ -47,42 +47,77 @@ impl DbKind for CharacterTemplate {
     ) {
         // `from_block` is used to suppress warnings about targets that won't be used
         let mut vd = Validator::new(block, data);
-        vd.field_item("name", Item::Localization);
-        vd.field_script_value("age", sc);
-        if let Some(token) = vd.field_value("gender") {
-            if !token.is("male") && !token.is("female") {
-                validate_target_ok_this(token, data, sc, Scopes::Character);
+        if from_block.has_key("name") {
+            vd.field_value("name");
+        } else {
+            vd.field_item("name", Item::Localization);
+        }
+        for field in &[
+            "age",
+            "health",
+            "diplomacy",
+            "intrigue",
+            "learning",
+            "martial",
+            "prowess",
+            "stewardship",
+        ] {
+            if from_block.has_key(field) {
+                vd.field(field);
+            } else {
+                vd.field_script_value(field, sc);
+            }
+        }
+        if from_block.has_key("gender") {
+            vd.field_value("gender");
+            vd.field("gender_female_chance");
+        } else {
+            if let Some(token) = vd.field_value("gender") {
+                if !token.is("male") && !token.is("female") {
+                    validate_target_ok_this(token, data, sc, Scopes::Character);
+                }
+            }
+            if from_block.has_key("gender_female_chance") {
+                vd.field("gender_female_chance");
+            } else {
+                vd.field_script_value("gender_female_chance", sc);
             }
         }
         vd.multi_field_item("trait", Item::Trait);
         vd.multi_field_validated_block_sc("random_traits_list", sc, validate_random_traits_list);
         vd.field_bool("random_traits");
-        vd.field_script_value("gender_female_chance", sc);
         if from_block.has_key("culture") {
             vd.field_value("culture");
+            vd.multi_field_block("random_culture");
         } else {
             vd.field_target("culture", sc, Scopes::Culture);
+            vd.multi_field_validated_block_sc("random_culture", sc, validate_random_culture);
         }
         if from_block.has_key("faith") {
             vd.field_value("faith");
+            vd.multi_field_block("random_faith");
         } else {
             vd.field_target("faith", sc, Scopes::Faith);
+            vd.multi_field_validated_block_sc("random_faith", sc, validate_random_faith);
         }
-        vd.multi_field_validated_block_sc("random_culture", sc, validate_random_culture);
-        vd.multi_field_validated_block_sc("random_faith", sc, validate_random_faith);
-        vd.field_script_value("health", sc);
-        vd.field_script_value("diplomacy", sc);
-        vd.field_script_value("intrigue", sc);
-        vd.field_script_value("learning", sc);
-        vd.field_script_value("martial", sc);
-        vd.field_script_value("prowess", sc);
-        vd.field_script_value("stewardship", sc);
-        vd.field_target("dynasty_house", sc, Scopes::DynastyHouse);
-        vd.field_choice("dynasty", &["generate", "inherit", "none"]);
-        vd.field_validated_key_block("after_creation", |key, block, data| {
-            sc.open_scope(Scopes::Character, key.clone());
-            validate_effect(block, data, sc, Tooltipped::No);
-            sc.close();
-        });
+        if from_block.has_key("dynasty_house") {
+            vd.field_value("dynasty_house");
+        } else {
+            vd.field_target("dynasty_house", sc, Scopes::DynastyHouse);
+        }
+        if from_block.has_key("dynasty") {
+            vd.field_value("dynasty");
+        } else {
+            vd.field_choice("dynasty", &["generate", "inherit", "none"]);
+        }
+        if from_block.has_key("after_creation") {
+            vd.field_block("after_creation");
+        } else {
+            vd.field_validated_key_block("after_creation", |key, block, data| {
+                sc.open_scope(Scopes::Character, key.clone());
+                validate_effect(block, data, sc, Tooltipped::No);
+                sc.close();
+            });
+        }
     }
 }
