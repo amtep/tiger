@@ -29,6 +29,9 @@ jobs:
       - name: Test
         run: cargo test
 
+      - name: Test CK3
+        run: cargo test -p tiger-lib --no-default-features --features ck3 --lib
+
       - name: Test Imperator
         run: cargo test -p tiger-lib --no-default-features --features imperator --lib
 

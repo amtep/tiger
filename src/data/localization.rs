@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::collections::hash_map::Entry;
 use std::ffi::OsStr;
 use std::fs::read_to_string;
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -14,7 +14,7 @@ use std::sync::atomic::Ordering::Relaxed;
 
 use bitvec::order::Lsb0;
 use bitvec::{BitArr, bitarr};
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
 use murmur3::murmur3_32;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use rayon::scope;
@@ -29,7 +29,7 @@ use crate::datatype::{CodeChain, Datatype, validate_datatypes};
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler, FileKind};
 use crate::game::Game;
-#[cfg(any(feature = "ck3", feature = "vic3"))]
+#[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
 use crate::helpers::TigerHashMapExt;
 use crate::helpers::{TigerHashMap, dup_error, stringify_list};
 #[cfg(feature = "hoi4")]
@@ -314,7 +314,7 @@ impl Localization {
 
     // Undocumented; the hash algorithm was revealed by inspecting error.log and reverse
     // engineering of CK3 binary through magic numbers. CK3 and VIC3 are supported.
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
     fn all_collision_keys(&self, lang: Language) -> TigerHashMap<u32, Vec<&LocaEntry>> {
         let loca_hashes: Vec<_> = self.locas[lang]
             .par_iter()
@@ -624,7 +624,7 @@ impl Localization {
         }
     }
 
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
     fn check_collisions(&self, lang: Language) {
         for (k, v) in self.all_collision_keys(lang) {
             let mut rep = report(ErrorKey::LocalizationKeyCollision, Severity::Error)
@@ -649,7 +649,7 @@ impl Localization {
             for lang in self.iter_lang() {
                 let loca = &self.locas[lang];
                 // Check localization key collisions
-                #[cfg(any(feature = "ck3", feature = "vic3"))]
+                #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
                 s.spawn(move |_| self.check_collisions(lang));
 
                 // Collect and sort the entries before looping, to create more stable output
@@ -887,6 +887,9 @@ fn normal_capitalization_for_name(name: &str) -> bool {
 #[cfg(all(test, feature = "ck3"))]
 mod tests {
     use super::*;
+    use crate::fileset::FileKind;
+    use crate::token::{Loc, Token};
+    use std::path::PathBuf;
 
     #[test]
     fn test_only_latin_script() {
@@ -907,5 +910,45 @@ mod tests {
         assert!(normal_capitalization_for_name("Abu-l-Fadl al-Malik"));
         assert!(normal_capitalization_for_name("Abu Abdallah Muhammad"));
         assert!(!normal_capitalization_for_name("AbuAbdallahMuhammad"));
+    }
+
+    #[test]
+    fn test_collision_detection() {
+        // build a localization database containing known colliding keys
+        let mut loc = Localization::default();
+        let lang = Language::English;
+        // dummy location for tokens
+        let dummy_loc = Loc::for_file(PathBuf::new(), FileKind::Mod, PathBuf::new());
+
+        let pairs = [
+            // CK3 examples
+            ("Mallobald", "laamp_base_contract_schemes.2541.e.tt.employer_has_trait.paranoid"),
+            ("dynn_Hkeng", "debug_min_popular_opinion_modifier"),
+            ("b_hinggan_adj", "grand_wedding_completed_guest"),
+            // Imperator examples
+            ("carthage_mission_trade_metropolis_west", "me_diadochi_empire_events.316.at"),
+            ("Azdumani", "me_patauion_02.43.b_tt"),
+            ("PROV7234_hellenic", "me_kush_15_desc"),
+        ];
+
+        for &(k1, k2) in &pairs {
+            let t1 = Token::from_static_str(k1, dummy_loc);
+            let t2 = Token::from_static_str(k2, dummy_loc);
+            let e1 = LocaEntry::new(t1.clone(), LocaValue::Text(t1.clone()), None);
+            let e2 = LocaEntry::new(t2.clone(), LocaValue::Text(t2.clone()), None);
+            loc.locas[lang].insert(k1, e1);
+            loc.locas[lang].insert(k2, e2);
+        }
+
+        let collisions = loc.all_collision_keys(lang);
+        for &(k1, k2) in &pairs {
+            assert!(
+                collisions.values().any(|vec| {
+                    vec.iter().any(|e| e.key.as_str() == k1)
+                        && vec.iter().any(|e| e.key.as_str() == k2)
+                }),
+                "expected collision between {k1} and {k2}"
+            );
+        }
     }
 }
