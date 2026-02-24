@@ -922,7 +922,8 @@ mod tests {
         let mut loc = Localization::default();
         let lang = Language::English;
         // dummy location for tokens
-        let dummy_loc = Loc::for_file(PathBuf::new(), FileStage::NoStage, FileKind::Mod, PathBuf::new());
+        let dummy_loc =
+            Loc::for_file(PathBuf::new(), FileStage::NoStage, FileKind::Mod, PathBuf::new());
 
         let pairs = [
             // CK3 examples
