@@ -1,8 +1,6 @@
 //! [`ScopeContext`] tracks our knowledge of the scope types used in script and validates its consistency.
 
 use std::borrow::Cow;
-#[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
-use std::mem::take;
 
 use crate::game::Game;
 use crate::helpers::{ActionOrEvent, TigerHashMap, stringify_choices};
@@ -17,12 +15,12 @@ const MAX_SCOPE_NAME_LIST: usize = 6;
 /// currently being validated.
 #[derive(Clone, Debug)]
 pub struct ScopeContext {
-    /// `prev` is a chain of all the known previous scopes.
-    prev: Option<Box<ScopeHistory>>,
-
+    /// `scope_stack` contains all known previous scopes, with `this` at the end. The oldest scope
+    /// is at index 0. INVARIANT: it is never empty, because there is always `this`.
+    ///
     /// Normally, `this` starts as a `ScopeEntry::Rootref`, but there are cases where the
     /// relationship to root is not known.
-    this: ScopeEntry,
+    scope_stack: Vec<ScopeEntry>,
 
     /// root is always a `ScopeEntry::Scope`
     root: ScopeEntry,
@@ -54,9 +52,13 @@ pub struct ScopeContext {
     is_builder: bool,
 
     /// Was this `ScopeContext` created as an unrooted context? Unrooted means we do not know
-    /// whether `this` and `root` are the same at the start. Unrooted scopes start with an extra
-    /// `prev` level, so they need to be cleaned up differently.
+    /// whether `this` and `root` are the same at the start.
     is_unrooted: bool,
+
+    /// How many dummy `prev` levels were added to this scope context?
+    /// They affect how the scope context is cleaned up.
+    /// Usually 0 or 1, but imperator and hoi4 can have multiple prev levels.
+    prev_levels: usize,
 
     /// Is this scope context one where all the named scopes are (or should be) known in advance?
     /// If `strict_scopes` is false, then the `ScopeContext` will assume any name might be a valid
@@ -76,16 +78,6 @@ pub struct ScopeContext {
     traceback: Vec<ActionOrEvent>,
 }
 
-#[derive(Clone, Debug)]
-/// One previous scope level in a chain of previous scopes.
-///
-/// Used for handling `prev`, and also used when closing a scope: the most recent
-/// `ScopeHistory` in the chain gets popped back as the current scope.
-struct ScopeHistory {
-    prev: Option<Box<ScopeHistory>>,
-    this: ScopeEntry,
-}
-
 #[derive(Clone, Debug, Default)]
 /// `ScopeEntry` is a description of what we know of a scope's type and its connection to other
 /// scopes.
@@ -99,7 +91,12 @@ enum ScopeEntry {
     /// to it (such as narrowing of scope types) need to be propagated back to the
     /// real origin of that scope.
     ///
-    /// The backref number is 0 for 'this', 1 for 'prev'
+    /// The backref number is a relative count into `scope_stack`, counting backwards from the
+    /// entry in question.
+    /// It may go past the edge of `scope_stack`, if the script being analyzed uses `prev` farther
+    /// than we know about
+    ///
+    /// INVARIANT: The `usize` must not be zero.
     Backref(usize),
 
     /// Fromref is for when the current scope is made with `from`.
@@ -112,12 +109,12 @@ enum ScopeEntry {
     #[default]
     Rootref,
 
-    /// `Token` is the token that's the reason why we think the `Scopes` value is what it is.
+    /// `Reason` why we think the `Scopes` value is what it is.
     /// It's usually the token that was the cause of the latest narrowing.
     Scope(Scopes, Reason),
 
-    /// The current scope takes its value from a named scope. The `usize` is an index into the `ScopeContext::named` vector.
-    Named(usize, Reason),
+    /// The scope takes its value from a named scope. The `usize` is an index into the `ScopeContext::named` vector.
+    Named(usize),
 }
 
 /// This enum records the reason why we think a certain scope has the type it does.
@@ -161,6 +158,11 @@ pub struct Signature {
     lists: Vec<(&'static str, Scopes)>,
 }
 
+/// Backref index to pass to refer to the `this` scope.
+const THIS: usize = 1;
+/// Backref index to pass to refer to the `prev` scope.
+const PREV: usize = 2;
+
 impl Reason {
     pub fn token(&self) -> &Token {
         match self {
@@ -171,6 +173,7 @@ impl Reason {
     }
 
     // TODO: change this to Display ?
+    // TODO: some callers already have something in front of the reason, that conflicts with the "scope was"
     pub fn msg(&self) -> Cow<'_, str> {
         match self {
             Reason::Token(t) => Cow::Owned(format!("scope was deduced from `{t}` here")),
@@ -201,8 +204,7 @@ impl ScopeContext {
     pub fn new<T: Into<Token>>(root: Scopes, token: T) -> Self {
         let token = token.into();
         ScopeContext {
-            prev: None,
-            this: ScopeEntry::Rootref,
+            scope_stack: vec![ScopeEntry::Rootref],
             root: ScopeEntry::Scope(root, Reason::Builtin(token.clone())),
             #[cfg(feature = "hoi4")]
             from: Vec::new(),
@@ -212,6 +214,7 @@ impl ScopeContext {
             is_input: Vec::new(),
             is_builder: false,
             is_unrooted: false,
+            prev_levels: 0,
             strict_scopes: true,
             no_warn: false,
             source: token,
@@ -227,11 +230,7 @@ impl ScopeContext {
     pub fn new_unrooted<T: Into<Token>>(this: Scopes, token: T) -> Self {
         let token = token.into();
         ScopeContext {
-            prev: Some(Box::new(ScopeHistory {
-                prev: None,
-                this: ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())),
-            })),
-            this: ScopeEntry::Scope(this, Reason::Token(token.clone())),
+            scope_stack: vec![ScopeEntry::Scope(this, Reason::Token(token.clone()))],
             root: ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())),
             #[cfg(feature = "hoi4")]
             from: Vec::new(),
@@ -241,6 +240,7 @@ impl ScopeContext {
             is_input: Vec::new(),
             is_builder: false,
             is_unrooted: true,
+            prev_levels: 0,
             strict_scopes: true,
             no_warn: false,
             source: token,
@@ -258,7 +258,7 @@ impl ScopeContext {
     pub fn new_separate_root<T: Into<Token>>(root: Scopes, this: Scopes, token: T) -> Self {
         let token = token.into();
         let mut sc = ScopeContext::new(root, token.clone());
-        sc.this = ScopeEntry::Scope(this, Reason::Builtin(token));
+        *sc.scope_stack.last_mut().unwrap() = ScopeEntry::Scope(this, Reason::Builtin(token));
         sc
     }
 
@@ -266,11 +266,9 @@ impl ScopeContext {
     pub fn new_with_prev<T: Into<Token>>(root: Scopes, prev: Scopes, token: T) -> Self {
         let token = token.into();
         let mut sc = ScopeContext::new(root, token.clone());
-        sc.prev = Some(Box::new(ScopeHistory {
-            prev: None,
-            this: ScopeEntry::Scope(prev, Reason::Token(token)),
-        }));
-        sc.is_unrooted = true; // This is a kludge to avoid errors on Drop
+        sc.scope_stack
+            .insert(sc.scope_stack.len() - 1, ScopeEntry::Scope(prev, Reason::Token(token)));
+        sc.prev_levels += 1;
         sc
     }
 
@@ -319,8 +317,8 @@ impl ScopeContext {
         new_sc.from.insert(0, new_sc.root.clone());
         let (scopes, reason) = new_sc.scopes_reason();
         new_sc.root = ScopeEntry::Scope(scopes, reason.clone());
-        new_sc.this = ScopeEntry::Rootref;
-        new_sc.prev = None;
+        new_sc.scope_stack = vec![ScopeEntry::Rootref];
+        new_sc.prev_levels = 0;
         new_sc.is_unrooted = false;
         new_sc.traceback.push(trace);
         Some(new_sc)
@@ -398,7 +396,7 @@ impl ScopeContext {
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
                 ScopeEntry::Rootref => self.resolve_root().0,
-                ScopeEntry::Named(idx, _) => self.resolve_named(idx).0,
+                ScopeEntry::Named(idx) => self.resolve_named(idx).0,
             })
         } else {
             None
@@ -457,9 +455,9 @@ impl ScopeContext {
     pub fn save_current_scope(&mut self, name: &'static str) {
         if let Some(&idx) = self.names.get(name) {
             self.break_chains_to(idx);
-            let entry = self.resolve_backrefs();
+            let entry = self.resolve_backrefs(THIS);
             // Guard against `scope:foo = { save_scope_as = foo }`
-            if let ScopeEntry::Named(i, _) = entry {
+            if let ScopeEntry::Named(i) = entry {
                 if *i == idx {
                     // Leave the scope as its original value
                     return;
@@ -468,7 +466,7 @@ impl ScopeContext {
             self.named[idx] = entry.clone();
         } else {
             self.names.insert(name, self.named.len());
-            self.named.push(self.resolve_backrefs().clone());
+            self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
     }
@@ -487,7 +485,7 @@ impl ScopeContext {
             self.is_input[idx] = None;
         } else {
             self.list_names.insert(name.as_str(), self.named.len());
-            self.named.push(self.resolve_backrefs().clone());
+            self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
     }
@@ -498,7 +496,7 @@ impl ScopeContext {
         if let Some(&idx) = self.list_names.get(name.as_str()) {
             let (s, reason) = self.resolve_named(idx);
             let reason = reason.clone(); // TODO: remove need to clone
-            self.expect3(s, &reason, name);
+            self.expect3(s, &reason, name, THIS, "list");
         } else if self.strict_scopes {
             let msg = "unknown list";
             err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
@@ -512,7 +510,7 @@ impl ScopeContext {
             if i == idx {
                 continue;
             }
-            if let ScopeEntry::Named(ni, _) = self.named[i] {
+            if let ScopeEntry::Named(ni) = self.named[i] {
                 if ni == idx {
                     self.named[i] = self.named[idx].clone();
                 }
@@ -525,9 +523,7 @@ impl ScopeContext {
     /// This is mostly used by iterators.
     /// `prev` will refer to the previous scope level.
     pub fn open_scope(&mut self, scopes: Scopes, token: Token) {
-        self.prev =
-            Some(Box::new(ScopeHistory { prev: self.prev.take(), this: self.this.clone() }));
-        self.this = ScopeEntry::Scope(scopes, Reason::Token(token));
+        self.scope_stack.push(ScopeEntry::Scope(scopes, Reason::Token(token)));
     }
 
     /// Open a new, temporary scope level. Initially it will have its `this` the same as the
@@ -537,23 +533,21 @@ impl ScopeContext {
     /// functions to update the value of `this`, and at the end either confirm the new scope level
     /// with [`Self::finalize_builder()`] or discard it with [`Self::close()`].
     pub fn open_builder(&mut self) {
-        self.prev =
-            Some(Box::new(ScopeHistory { prev: self.prev.take(), this: self.this.clone() }));
-        self.this = ScopeEntry::Backref(0);
+        self.scope_stack.push(ScopeEntry::Backref(THIS));
         self.is_builder = true;
     }
 
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn stash_builder(&mut self) -> StashedBuilder {
-        let stash = StashedBuilder { this: take(&mut self.this) };
-        self.close();
+        let stash = StashedBuilder { this: self.scope_stack.pop().unwrap() };
+        self.is_builder = false;
         stash
     }
 
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     pub fn unstash_builder(&mut self, stash: StashedBuilder) {
-        self.open_builder();
-        self.this = stash.this;
+        self.scope_stack.push(stash.this);
+        self.is_builder = true;
     }
 
     /// Declare that the temporary scope level opened with [`Self::open_builder()`] is a real scope level.
@@ -563,9 +557,7 @@ impl ScopeContext {
 
     /// Exit a scope level and return to the previous level.
     pub fn close(&mut self) {
-        let mut prev = self.prev.take().unwrap();
-        self.this = prev.this.clone();
-        self.prev = prev.prev.take();
+        self.scope_stack.pop().expect("matching open and close scopes");
         self.is_builder = false;
     }
 
@@ -590,33 +582,46 @@ impl ScopeContext {
     ///
     /// This is used when a scope chain starts with something absolute like `faith:catholic`.
     pub fn replace(&mut self, scopes: Scopes, token: Token) {
-        self.this = ScopeEntry::Scope(scopes, Reason::Token(token));
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::Scope(scopes, Reason::Token(token));
     }
 
     /// Replace the `this` in a temporary scope level with a reference to `root`.
     pub fn replace_root(&mut self) {
-        self.this = ScopeEntry::Rootref;
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::Rootref;
     }
 
     /// Replace the `this` in a temporary scope level with a reference to the previous scope level.
     pub fn replace_prev(&mut self) {
-        if Game::is_imperator() || Game::is_hoi4() {
+        let this = self.scope_stack.last_mut().unwrap();
+        let backref = if Game::is_imperator() || Game::is_hoi4() {
             // Allow `prev.prev` etc
-            match self.this {
-                ScopeEntry::Backref(r) => self.this = ScopeEntry::Backref(r + 1),
-                _ => self.this = ScopeEntry::Backref(1),
+            match this {
+                ScopeEntry::Backref(r) => *r + 1,
+                _ => PREV,
             }
         } else {
-            self.this = ScopeEntry::Backref(1);
+            PREV
+        };
+        *this = ScopeEntry::Backref(backref);
+        while 1 + backref > self.scope_stack.len() {
+            // We went further back up the scope chain than we know about.
+            let entry = if self.is_unrooted {
+                ScopeEntry::Scope(Scopes::all(), Reason::Token(self.source.clone()))
+            } else {
+                ScopeEntry::Scope(Scopes::None, Reason::Builtin(self.source.clone()))
+            };
+            self.scope_stack.insert(0, entry);
+            self.prev_levels += 1;
         }
     }
 
     /// Replace the `this` in a temporary scope level with a reference to its previous event root.
     #[cfg(feature = "hoi4")]
     pub fn replace_from(&mut self) {
-        match self.this {
-            ScopeEntry::Fromref(r) => self.this = ScopeEntry::Fromref(r + 1),
-            _ => self.this = ScopeEntry::Fromref(0),
+        let this = self.scope_stack.last_mut().unwrap();
+        match this {
+            ScopeEntry::Fromref(r) => *this = ScopeEntry::Fromref(*r + 1),
+            _ => *this = ScopeEntry::Fromref(0),
         }
     }
 
@@ -626,15 +631,15 @@ impl ScopeContext {
     /// `this` in the middle of the chain (which itself will trigger a warning) then it resets the
     /// temporary scope level to the way it started.
     pub fn replace_this(&mut self) {
-        self.this = ScopeEntry::Backref(0);
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::Backref(THIS);
     }
 
     /// Replace the `this` in a temporary scope level with a reference to the named scope `name`.
     ///
     /// This is used when a scope chain starts with `scope:name`. The `token` is expected to be the
     /// `scope:name` token.
-    pub fn replace_named_scope(&mut self, name: &'static str, token: Token) {
-        self.this = ScopeEntry::Named(self.named_index(name, &token), Reason::Token(token));
+    pub fn replace_named_scope(&mut self, name: &'static str, token: &Token) {
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::Named(self.named_index(name, token));
     }
 
     /// Replace the `this` in a temporary scope level with a reference to the scope type of the
@@ -643,8 +648,8 @@ impl ScopeContext {
     /// This is used in list iterators. The `token` is expected to be the token for the name of the
     /// list.
     pub fn replace_list_entry(&mut self, name: &'static str, token: &Token) {
-        self.this =
-            ScopeEntry::Named(self.named_list_index(name, token), Reason::Token(token.clone()));
+        *self.scope_stack.last_mut().unwrap() =
+            ScopeEntry::Named(self.named_list_index(name, token));
     }
 
     /// Get the internal index of named scope `name`, either its existing index or a newly created
@@ -732,41 +737,52 @@ impl ScopeContext {
         match self.named[idx] {
             ScopeEntry::Scope(s, ref reason) => (s, reason),
             ScopeEntry::Rootref => self.resolve_root(),
-            ScopeEntry::Named(idx, _) => self.resolve_named(idx),
+            ScopeEntry::Named(idx) => self.resolve_named(idx),
             ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
             ScopeEntry::Fromref(_) => unreachable!(),
         }
     }
 
-    /// Search through the scope levels to find out what `this` actually refers to.
+    /// Search through the scope levels to find out what a scope actually refers to.
+    /// Pass 1 for `back` to examine the `this` scope.
     ///
     /// The returned `ScopeEntry` will not be a `ScopeEntry::Backref`.
     #[doc(hidden)]
-    fn resolve_backrefs(&self) -> &ScopeEntry {
-        match self.this {
-            ScopeEntry::Backref(r) => self.resolve_backrefs_inner(r),
-            _ => &self.this,
+    fn resolve_backrefs(&self, mut back: usize) -> &ScopeEntry {
+        loop {
+            // SAFETY: `replace_prev` ensures that when backrefs are added, enough scope
+            // stack entries are added too.
+            assert!(back > 0);
+            assert!(back <= self.scope_stack.len());
+            let entry = &self.scope_stack[self.scope_stack.len() - back];
+            match entry {
+                ScopeEntry::Backref(r) => back += *r,
+                _ => {
+                    return entry;
+                }
+            }
         }
     }
 
+    /// Search through the scope levels to find out what a scope actually refers to.
+    /// Pass 1 for `back` to examine the `this` scope.
+    ///
+    /// The returned `ScopeEntry` will not be a `ScopeEntry::Backref`.
     #[doc(hidden)]
-    fn resolve_backrefs_inner(&self, mut back: usize) -> &ScopeEntry {
-        let mut ptr = &self.prev;
+    fn resolve_backrefs_mut(&mut self, mut back: usize) -> &mut ScopeEntry {
+        // TODO: can the duplication with resolve_backrefs be avoided?
         loop {
-            if let Some(entry) = ptr {
-                if back == 0 {
-                    match entry.this {
-                        ScopeEntry::Backref(r) => back = r + 1,
-                        _ => return &entry.this,
-                    }
+            // SAFETY: `replace_prev` ensures that when backrefs are added, enough scope
+            // stack entries are added too.
+            assert!(back > 0);
+            assert!(back <= self.scope_stack.len());
+            let idx = self.scope_stack.len() - back;
+            match self.scope_stack[idx] {
+                ScopeEntry::Backref(r) => back += r,
+                _ => {
+                    return &mut self.scope_stack[idx];
                 }
-                ptr = &entry.prev;
-                back -= 1;
-            } else {
-                // We went further back up the scope chain than we know about.
-                // TODO: do something sensible here
-                return &self.root;
             }
         }
     }
@@ -774,14 +790,7 @@ impl ScopeContext {
     /// Return the possible scope types for the current scope layer, together with the reason why
     /// we think that.
     pub fn scopes_reason(&self) -> (Scopes, &Reason) {
-        match self.this {
-            ScopeEntry::Scope(s, ref reason) => (s, reason),
-            ScopeEntry::Backref(r) => self.scopes_reason_backref(r),
-            #[cfg(feature = "hoi4")]
-            ScopeEntry::Fromref(r) => self.resolve_from(r),
-            ScopeEntry::Rootref => self.resolve_root(),
-            ScopeEntry::Named(idx, _) => self.resolve_named(idx),
-        }
+        self.scopes_reason_backref(THIS)
     }
 
     /// Return the possible scope types for a `from` entry, together with the reason why we think
@@ -805,31 +814,14 @@ impl ScopeContext {
     }
 
     #[doc(hidden)]
-    fn scopes_reason_backref(&self, mut back: usize) -> (Scopes, &Reason) {
-        let mut ptr = &self.prev;
-        loop {
-            if let Some(entry) = ptr {
-                if back == 0 {
-                    match entry.this {
-                        ScopeEntry::Scope(s, ref reason) => return (s, reason),
-                        ScopeEntry::Backref(r) => back = r + 1,
-                        #[cfg(feature = "hoi4")]
-                        ScopeEntry::Fromref(r) => return self.resolve_from(r),
-                        ScopeEntry::Rootref => return self.resolve_root(),
-                        ScopeEntry::Named(idx, _) => return self.resolve_named(idx),
-                    }
-                }
-                ptr = &entry.prev;
-                back -= 1;
-            } else {
-                // We went further back up the scope chain than we know about.
-                // Currently we just bail, and return an "any scope" value with
-                // an arbitrary token.
-                match self.root {
-                    ScopeEntry::Scope(_, ref reason) => return (Scopes::all(), reason),
-                    _ => unreachable!(),
-                }
-            }
+    fn scopes_reason_backref(&self, back: usize) -> (Scopes, &Reason) {
+        match self.resolve_backrefs(back) {
+            ScopeEntry::Scope(s, reason) => (*s, reason),
+            ScopeEntry::Backref(_) => unreachable!(),
+            #[cfg(feature = "hoi4")]
+            ScopeEntry::Fromref(r) => self.resolve_from(*r),
+            ScopeEntry::Rootref => self.resolve_root(),
+            ScopeEntry::Named(idx) => self.resolve_named(*idx),
         }
     }
 
@@ -933,7 +925,7 @@ impl ScopeContext {
                     Self::expect_check(&mut self.root, scopes, reason);
                     return;
                 }
-                ScopeEntry::Named(i, _) => idx = i,
+                ScopeEntry::Named(i) => idx = i,
                 ScopeEntry::Backref(_) => unreachable!(),
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
@@ -961,95 +953,10 @@ impl ScopeContext {
                     Self::expect_check3(&mut self.root, scopes, reason, key, report);
                     return;
                 }
-                ScopeEntry::Named(i, _) => idx = i,
+                ScopeEntry::Named(i) => idx = i,
                 ScopeEntry::Backref(_) => unreachable!(),
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
-            }
-        }
-    }
-
-    #[doc(hidden)]
-    fn expect_internal(&mut self, scopes: Scopes, reason: &Reason, mut back: usize) {
-        // go N steps back and check/modify that scope. If the scope is itself
-        // a back reference, go that much further back.
-
-        let mut ptr = &mut self.prev;
-        loop {
-            if let Some(ref mut entry) = *ptr {
-                if back == 0 {
-                    match entry.this {
-                        ScopeEntry::Scope(_, _) => {
-                            Self::expect_check(&mut entry.this, scopes, reason);
-                            return;
-                        }
-                        ScopeEntry::Backref(r) => back = r + 1,
-                        #[cfg(feature = "hoi4")]
-                        ScopeEntry::Fromref(r) => {
-                            self.expect_fromref(r, scopes, reason);
-                            return;
-                        }
-                        ScopeEntry::Rootref => {
-                            Self::expect_check(&mut self.root, scopes, reason);
-                            return;
-                        }
-                        ScopeEntry::Named(idx, _) => {
-                            self.expect_named(idx, scopes, reason);
-                            return;
-                        }
-                    }
-                }
-                ptr = &mut entry.prev;
-                back -= 1;
-            } else {
-                // TODO: warning of some kind?
-                return;
-            }
-        }
-    }
-
-    #[doc(hidden)]
-    fn expect3_internal(
-        &mut self,
-        scopes: Scopes,
-        reason: &Reason,
-        mut back: usize,
-        key: &Token,
-        report: &str,
-    ) {
-        // go N steps back and check/modify that scope. If the scope is itself
-        // a back reference, go that much further back.
-
-        let mut ptr = &mut self.prev;
-        loop {
-            if let Some(ref mut entry) = *ptr {
-                if back == 0 {
-                    match entry.this {
-                        ScopeEntry::Scope(_, _) => {
-                            Self::expect_check3(&mut entry.this, scopes, reason, key, report);
-                            return;
-                        }
-                        ScopeEntry::Backref(r) => back = r + 1,
-                        #[cfg(feature = "hoi4")]
-                        ScopeEntry::Fromref(r) => {
-                            self.expect_fromref3(r, scopes, reason, key, report);
-                            return;
-                        }
-                        ScopeEntry::Rootref => {
-                            Self::expect_check3(&mut self.root, scopes, reason, key, report);
-                            return;
-                        }
-                        ScopeEntry::Named(idx, ref _t) => {
-                            self.expect_named3(idx, scopes, reason, key, report);
-                            return;
-                        }
-                    }
-                }
-                ptr = &mut entry.prev;
-                back -= 1;
-            } else {
-                // TODO: warning of some kind?
-                return;
             }
         }
     }
@@ -1062,13 +969,14 @@ impl ScopeContext {
         if self.no_warn || scopes == Scopes::None {
             return;
         }
-        match self.this {
-            ScopeEntry::Scope(_, _) => Self::expect_check(&mut self.this, scopes, reason),
-            ScopeEntry::Backref(r) => self.expect_internal(scopes, reason, r),
+        let this = self.resolve_backrefs_mut(THIS);
+        match this {
+            ScopeEntry::Scope(_, _) => Self::expect_check(this, scopes, reason),
+            ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
-            ScopeEntry::Fromref(r) => self.expect_fromref(r, scopes, reason),
+            &mut ScopeEntry::Fromref(r) => self.expect_fromref(r, scopes, reason),
             ScopeEntry::Rootref => Self::expect_check(&mut self.root, scopes, reason),
-            ScopeEntry::Named(idx, ref _t) => self.expect_named(idx, scopes, reason),
+            &mut ScopeEntry::Named(idx) => self.expect_named(idx, scopes, reason),
         }
     }
 
@@ -1076,24 +984,19 @@ impl ScopeContext {
     ///
     /// This function is used when the expectation of scope compatibility comes from `key`, for
     /// example when matching up a caller's scope context with a scripted effect's scope context.
-    fn expect3(&mut self, scopes: Scopes, reason: &Reason, key: &Token) {
+    fn expect3(&mut self, scopes: Scopes, reason: &Reason, key: &Token, back: usize, report: &str) {
         // The None scope is special, it means the scope isn't used or inspected
         if scopes == Scopes::None {
             return;
         }
-        match self.this {
-            ScopeEntry::Scope(_, _) => {
-                Self::expect_check3(&mut self.this, scopes, reason, key, "scope");
-            }
-            ScopeEntry::Backref(r) => self.expect3_internal(scopes, reason, r, key, "scope"),
+        let this = self.resolve_backrefs_mut(back);
+        match this {
+            ScopeEntry::Scope(_, _) => Self::expect_check3(this, scopes, reason, key, report),
+            ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
-            ScopeEntry::Fromref(r) => self.expect_fromref3(r, scopes, reason, key, "scope"),
-            ScopeEntry::Rootref => {
-                Self::expect_check3(&mut self.root, scopes, reason, key, "scope");
-            }
-            ScopeEntry::Named(idx, ref _t) => {
-                self.expect_named3(idx, scopes, reason, key, "scope");
-            }
+            &mut ScopeEntry::Fromref(r) => self.expect_fromref3(r, scopes, reason, key, report),
+            ScopeEntry::Rootref => Self::expect_check3(&mut self.root, scopes, reason, key, report),
+            &mut ScopeEntry::Named(idx) => self.expect_named3(idx, scopes, reason, key, report),
         }
     }
 
@@ -1117,12 +1020,14 @@ impl ScopeContext {
 
         // Compare restrictions on `this`
         let (scopes, reason) = other.scopes_reason();
-        self.expect3(scopes, reason, key);
+        self.expect3(scopes, reason, key, THIS, "scope");
 
         // Compare restrictions on `prev`
-        // In practice, we don't need to go further than one `prev` back, because of how expect_compatibility is used.
-        let (scopes, reason) = other.scopes_reason_backref(0);
-        self.expect3_internal(scopes, reason, usize::from(self.is_builder), key, "prev");
+        // TODO: for imperator and hoi4, go multiple prev levels back
+        if other.prev_levels > 0 && self.prev_levels > 0 {
+            let (scopes, reason) = other.scopes_reason_backref(PREV);
+            self.expect3(scopes, reason, key, PREV + usize::from(self.is_builder), "prev");
+        }
 
         // Compare restrictions on `from`
         // TODO: go all the way back up the chains
@@ -1197,22 +1102,15 @@ impl ScopeContext {
     /// This is useful when a `ScopeContext` needed to be cloned for some reason.
     #[allow(dead_code)]
     pub(crate) fn destroy(mut self) {
-        self.is_unrooted = false;
-        self.prev = None;
+        self.prev_levels = self.scope_stack.len() - 1;
     }
 }
 
 impl Drop for ScopeContext {
     /// This `drop` function checks that every opened scope level was also closed.
     fn drop(&mut self) {
-        if self.is_unrooted {
-            assert!(
-                self.prev.take().unwrap().prev.is_none(),
-                "unrooted scope chain not properly unwound"
-            );
-        } else {
-            assert!(self.prev.is_none(), "scope chain not properly unwound");
-        }
+        // Expect only the prev levels and the `this` level to remain.
+        // assert_eq!(self.scope_stack.len(), self.prev_levels + 1, "scope chain not properly unwound");
     }
 }
 

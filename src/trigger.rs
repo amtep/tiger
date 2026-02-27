@@ -1652,7 +1652,7 @@ pub fn validate_argument_scope(
         if part_flags.contains(PartFlags::Last | PartFlags::Question) {
             sc.exists_scope(arg.as_str(), outscopes_token.clone());
         }
-        sc.replace_named_scope(arg.as_str(), outscopes_token);
+        sc.replace_named_scope(arg.as_str(), &outscopes_token);
     } else {
         sc.replace(outscopes, outscopes_token);
     }
