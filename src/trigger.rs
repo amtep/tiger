@@ -1606,6 +1606,9 @@ fn validate_argument_internal(
             if args.len() > specs.len() {
                 let msg = format!("too many arguments for trigger; expected {}", specs.len());
                 warn(ErrorKey::Validation).msg(msg).loc(&args[specs.len()]).push();
+            } else if args.len() < specs.len() {
+                let msg = format!("too few arguments for trigger; expected {}", specs.len());
+                warn(ErrorKey::Validation).msg(msg).loc(arg).push();
             }
             for (arg, spec) in args.into_iter().zip(specs) {
                 validate_argument_internal(&arg, *spec, data, sc);
