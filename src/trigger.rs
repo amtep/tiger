@@ -1350,7 +1350,7 @@ pub fn validate_target_ok_this(
         let msg = format!("`{part}` produces {final_scopes} but expected {outscopes}");
         // Must not be at the same location to avoid spurious error messages
         let opt_loc = (part.loc() != because.token().loc).then(|| because.token());
-        let msg2 = because.msg();
+        let msg2 = format!("scope was {}", because.msg());
         warn(ErrorKey::Scopes).msg(msg).loc(part).opt_loc_msg(opt_loc, msg2).push();
     }
     sc.close();

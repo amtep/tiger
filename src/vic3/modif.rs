@@ -76,7 +76,7 @@ impl ModifKinds {
             if let Some((token, _, reason)) = scope {
                 report = report
                     .loc_msg(token, "from this temporary modifier")
-                    .loc_msg(reason.token(), reason.msg());
+                    .loc_msg(reason.token(), format!("scope was {}", reason.msg()));
             }
             report.push();
         }

@@ -177,12 +177,12 @@ impl Reason {
     // TODO: some callers already have something in front of the reason, that conflicts with the "scope was"
     pub fn msg(&self) -> Cow<'_, str> {
         match self {
-            Reason::Token(t) => Cow::Owned(format!("scope was deduced from `{t}` here")),
-            Reason::Name(_) => Cow::Borrowed("scope was deduced from the scope's name"),
-            Reason::Builtin(_) => Cow::Borrowed("scope was supplied by the game engine"),
+            Reason::Token(t) => Cow::Owned(format!("deduced from `{t}` here")),
+            Reason::Name(_) => Cow::Borrowed("deduced from the scope's name"),
+            Reason::Builtin(_) => Cow::Borrowed("supplied by the game engine"),
             #[cfg(feature = "vic3")]
             Reason::MultiplierBug(_) => {
-                Cow::Borrowed("as of 1.9.8, `multiplier` is evaluated in root scope")
+                Cow::Borrowed("evaluated in root scope for `multiplier` (as of 1.9.8")
             }
         }
     }
@@ -847,7 +847,7 @@ impl ScopeContext {
                 } else {
                     let token = reason.token();
                     let msg = format!("`{token}` is for {scopes} but scope seems to be {s}");
-                    let msg2 = r.msg();
+                    let msg2 = format!("scope was {}", r.msg());
                     warn(ErrorKey::Scopes).msg(msg).loc(token).loc_msg(r.token(), msg2).push();
                 }
             }
