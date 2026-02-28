@@ -1599,6 +1599,18 @@ fn validate_argument_internal(
                 sc.unstash_builder(stash);
             }
         }
+        #[cfg(feature = "eu5")]
+        ArgumentValue::Multiple(specs) => {
+            let args = arg.split('|');
+            // TODO: EU5 if the arguments are all mandatory, also check for not enough arguments
+            if args.len() > specs.len() {
+                let msg = format!("too many arguments for trigger; expected {}", specs.len());
+                warn(ErrorKey::Validation).msg(msg).loc(&args[specs.len()]).push();
+            }
+            for (arg, spec) in args.into_iter().zip(specs) {
+                validate_argument_internal(&arg, *spec, data, sc);
+            }
+        }
         #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
         ArgumentValue::Modif => {
             // TODO: deduce the ModifKinds from the `this` scope

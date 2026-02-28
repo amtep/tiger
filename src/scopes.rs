@@ -455,6 +455,9 @@ pub enum ArgumentValue {
     /// The value must be a single word
     #[cfg(any(feature = "vic3", feature = "ck3", feature = "eu5"))]
     Identifier(&'static str),
+    /// The value consists of multiple arguments separated by `|`
+    #[cfg(feature = "eu5")]
+    Multiple(&'static [ArgumentValue]),
     /// The value can be anything
     UncheckedValue,
     /// This trigger no longer exists. Arguments are version and explanation
