@@ -1,6 +1,7 @@
 //! [`ScopeContext`] tracks our knowledge of the scope types used in script and validates its consistency.
 
 use std::borrow::Cow;
+use std::thread::panicking;
 
 use crate::game::Game;
 use crate::helpers::{ActionOrEvent, TigerHashMap, stringify_choices};
@@ -1109,8 +1110,15 @@ impl ScopeContext {
 impl Drop for ScopeContext {
     /// This `drop` function checks that every opened scope level was also closed.
     fn drop(&mut self) {
-        // Expect only the prev levels and the `this` level to remain.
-        // assert_eq!(self.scope_stack.len(), self.prev_levels + 1, "scope chain not properly unwound");
+        // Only assert if not already panicking, to avoid a double panic during unwind.
+        if !panicking() {
+            // Expect only the prev levels and the `this` level to remain.
+            assert_eq!(
+                self.scope_stack.len(),
+                self.prev_levels + 1,
+                "scope chain not properly unwound"
+            );
+        }
     }
 }
 
