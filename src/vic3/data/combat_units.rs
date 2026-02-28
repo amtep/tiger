@@ -42,15 +42,15 @@ impl DbKind for CombatUnit {
         vd.field_item("group", Item::CombatUnitGroup);
         vd.field_integer("max_manpower");
         vd.field_bool("conscript_peasant_levies");
-        vd.field_validated_block("battle_modifier", |block, data| {
+        vd.multi_field_validated_block("battle_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Unit, vd);
         });
-        vd.field_validated_block("upkeep_modifier", |block, data| {
+        vd.multi_field_validated_block("upkeep_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Goods, vd);
         });
-        vd.field_validated_block("formation_modifier", |block, data| {
+        vd.multi_field_validated_block("formation_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::MilitaryFormation, vd);
         });
