@@ -3,7 +3,7 @@ use crate::context::ScopeContext;
 use crate::data::localization::LocaValue;
 use crate::datatype::{Datatype, validate_datatypes};
 use crate::everything::Everything;
-#[cfg(feature = "ck3")]
+#[cfg(any(feature = "ck3", feature = "eu5"))]
 use crate::game::Game;
 use crate::game::GameFlags;
 use crate::gui::properties::{ALIGN, BLENDMODES};
@@ -340,6 +340,18 @@ pub fn validate_property(
                 }
             }
         }
+        GuiValidation::ActionTooltip => match bv {
+            BV::Value(value) => {
+                let msg = "action tooltip needs to be a block";
+                err(ErrorKey::Gui).msg(msg).loc(value).push();
+            }
+            BV::Block(block) => {
+                if !Game::is_eu5() {
+                    let msg = "action tooltip is only for EU5";
+                    err(ErrorKey::Gui).msg(msg).loc(block).push();
+                }
+            }
+        },
         GuiValidation::ComplexProperty => {
             // Complex properties have their own item type, where they get a GuiBlock input
             // rather than a BV.
