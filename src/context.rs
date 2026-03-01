@@ -33,14 +33,18 @@ pub struct ScopeContext {
     from: Vec<ScopeEntry>,
 
     /// Names of named scopes; the values are indices into the `named` vector.
-    /// Names should only be added, never removed, and indices should stay consistent.
-    /// This is because the indices are also used by `ScopeEntry::Named` values throughout this `ScopeContext`.
-    /// `names` and `list_names` occupy separate namespaces, but index into the same `named` array.
-    names: TigerHashMap<&'static str, usize>,
-    list_names: TigerHashMap<&'static str, usize>,
+    scope_names: TigerHashMap<&'static str, usize>,
+    /// Names of named lists; the values are indices into the `named` vector.
+    scope_list_names: TigerHashMap<&'static str, usize>,
+    /// Names of local variables; the values are indices into the `named` vector.
+    local_names: TigerHashMap<&'static str, usize>,
+    /// Names of local variable lists; the values are indices into the `named` vector.
+    local_list_names: TigerHashMap<&'static str, usize>,
 
     /// Named scope values are `ScopeEntry::Scope` or `ScopeEntry::Named` or `ScopeEntry::Rootref`.
     /// Invariant: there are no cycles in the array via `ScopeEntry::Named` entries.
+    /// Invariant: entries are only added, never removed or rearranged.
+    /// This is because the indices are used by `ScopeEntry::Named` values throughout this `ScopeContext`.
     named: Vec<ScopeEntry>,
 
     /// Same indices as `named`, is a token iff the named scope is expected to be set on entry to the current scope context.
@@ -154,9 +158,11 @@ pub struct StashedBuilder {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Signature {
     root: Scopes,
-    // named_scopes and lists are both sorted
-    named_scopes: Vec<(&'static str, Scopes)>,
-    lists: Vec<(&'static str, Scopes)>,
+    // these are all sorted
+    scope_names: Vec<(&'static str, Scopes)>,
+    scope_list_names: Vec<(&'static str, Scopes)>,
+    local_names: Vec<(&'static str, Scopes)>,
+    local_list_names: Vec<(&'static str, Scopes)>,
 }
 
 /// Backref index to pass to refer to the `this` scope.
@@ -209,8 +215,10 @@ impl ScopeContext {
             root: ScopeEntry::Scope(root, Reason::Builtin(token.clone())),
             #[cfg(feature = "hoi4")]
             from: Vec::new(),
-            names: TigerHashMap::default(),
-            list_names: TigerHashMap::default(),
+            scope_names: TigerHashMap::default(),
+            scope_list_names: TigerHashMap::default(),
+            local_names: TigerHashMap::default(),
+            local_list_names: TigerHashMap::default(),
             named: Vec::new(),
             is_input: Vec::new(),
             is_builder: false,
@@ -235,8 +243,10 @@ impl ScopeContext {
             root: ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())),
             #[cfg(feature = "hoi4")]
             from: Vec::new(),
-            names: TigerHashMap::default(),
-            list_names: TigerHashMap::default(),
+            scope_names: TigerHashMap::default(),
+            scope_list_names: TigerHashMap::default(),
+            local_names: TigerHashMap::default(),
+            local_list_names: TigerHashMap::default(),
             named: Vec::new(),
             is_input: Vec::new(),
             is_builder: false,
@@ -353,11 +363,11 @@ impl ScopeContext {
 
     #[doc(hidden)]
     fn define_name_internal(&mut self, name: &'static str, scopes: Scopes, reason: Reason) {
-        if let Some(&idx) = self.names.get(name) {
+        if let Some(&idx) = self.scope_names.get(name) {
             self.break_chains_to(idx);
             self.named[idx] = ScopeEntry::Scope(scopes, reason);
         } else {
-            self.names.insert(name, self.named.len());
+            self.scope_names.insert(name, self.named.len());
             self.named.push(ScopeEntry::Scope(scopes, reason));
             self.is_input.push(None);
         }
@@ -389,7 +399,7 @@ impl ScopeContext {
     ///
     /// Callers should probably check [`Self::is_strict()`] as well.
     pub fn is_name_defined(&mut self, name: &str) -> Option<Scopes> {
-        if let Some(&idx) = self.names.get(name) {
+        if let Some(&idx) = self.scope_names.get(name) {
             #[allow(clippy::indexing_slicing)] // invariant guarantees no panic
             Some(match self.named[idx] {
                 ScopeEntry::Scope(s, _) => s,
@@ -420,9 +430,9 @@ impl ScopeContext {
     /// that if you do `exists` on a scope, then from that point on it exists. Improving this would
     /// be a big project.
     pub fn exists_scope<T: Into<Token>>(&mut self, name: &'static str, token: T) {
-        if !self.names.contains_key(name) {
+        if !self.scope_names.contains_key(name) {
             let idx = self.named.len();
-            self.names.insert(name, idx);
+            self.scope_names.insert(name, idx);
             self.named.push(ScopeEntry::deduce(token));
             self.is_input.push(None);
         }
@@ -430,11 +440,11 @@ impl ScopeContext {
 
     #[doc(hidden)]
     fn define_list_internal(&mut self, name: &'static str, scopes: Scopes, reason: Reason) {
-        if let Some(&idx) = self.list_names.get(name) {
+        if let Some(&idx) = self.scope_list_names.get(name) {
             self.break_chains_to(idx);
             self.named[idx] = ScopeEntry::Scope(scopes, reason);
         } else {
-            self.list_names.insert(name, self.named.len());
+            self.scope_list_names.insert(name, self.named.len());
             self.named.push(ScopeEntry::Scope(scopes, reason));
             self.is_input.push(None);
         }
@@ -454,7 +464,7 @@ impl ScopeContext {
 
     /// This is like [`Self::define_name()`], but `scope:name` is declared equal to the current `this`.
     pub fn save_current_scope(&mut self, name: &'static str) {
-        if let Some(&idx) = self.names.get(name) {
+        if let Some(&idx) = self.scope_names.get(name) {
             self.break_chains_to(idx);
             let entry = self.resolve_backrefs(THIS);
             // Guard against `scope:foo = { save_scope_as = foo }`
@@ -466,7 +476,7 @@ impl ScopeContext {
             }
             self.named[idx] = entry.clone();
         } else {
-            self.names.insert(name, self.named.len());
+            self.scope_names.insert(name, self.named.len());
             self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
@@ -476,7 +486,7 @@ impl ScopeContext {
     /// as having the same scope type as `this`.
     // TODO: I don't think this is doing the right thing for most callers.
     pub fn define_or_expect_list(&mut self, name: &Token) {
-        if let Some(&idx) = self.list_names.get(name.as_str()) {
+        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
             let (s, reason) = self.resolve_named(idx);
             let reason = reason.clone(); // TODO: remove need to clone
             self.expect(s, &reason);
@@ -485,7 +495,7 @@ impl ScopeContext {
             // list is being built here, and isn't an input list.
             self.is_input[idx] = None;
         } else {
-            self.list_names.insert(name.as_str(), self.named.len());
+            self.scope_list_names.insert(name.as_str(), self.named.len());
             self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
@@ -494,7 +504,7 @@ impl ScopeContext {
     /// Expect list `name` to be known and (with strict scopes) warn if it isn't.
     /// Narrow the type of `this` down to the list's type.
     pub fn expect_list(&mut self, name: &Token) {
-        if let Some(&idx) = self.list_names.get(name.as_str()) {
+        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
             let (s, reason) = self.resolve_named(idx);
             let reason = reason.clone(); // TODO: remove need to clone
             self.expect3(s, &reason, name, THIS, "list");
@@ -565,17 +575,25 @@ impl ScopeContext {
     /// Return an object that captures the essentials of this `ScopeContext`, to be used for
     /// hashing.
     pub fn signature(&self) -> Signature {
+        fn process_names(
+            sc: &ScopeContext,
+            names: &TigerHashMap<&'static str, usize>,
+        ) -> Vec<(&'static str, Scopes)> {
+            let mut names: Vec<_> =
+                names.iter().map(|(&name, &i)| (name, sc.resolve_named(i).0)).collect();
+            names.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
+            names
+        }
+
         let root = self.resolve_root().0;
 
-        let mut named_scopes: Vec<(&'static str, Scopes)> =
-            self.names.iter().map(|(&name, &i)| (name, self.resolve_named(i).0)).collect();
-        named_scopes.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
-
-        let mut lists: Vec<(&'static str, Scopes)> =
-            self.list_names.iter().map(|(&name, &i)| (name, self.resolve_named(i).0)).collect();
-        lists.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
-
-        Signature { root, named_scopes, lists }
+        Signature {
+            root,
+            scope_names: process_names(self, &self.scope_names),
+            scope_list_names: process_names(self, &self.scope_list_names),
+            local_names: process_names(self, &self.local_names),
+            local_list_names: process_names(self, &self.local_list_names),
+        }
     }
 
     /// Replace the `this` in a temporary scope level with the given `scopes` type and record
@@ -659,7 +677,7 @@ impl ScopeContext {
     /// If a new index has to be created, and `strict_scopes` is on, then a warning will be emitted.
     #[doc(hidden)]
     fn named_index(&mut self, name: &'static str, token: &Token) -> usize {
-        if let Some(&idx) = self.names.get(name) {
+        if let Some(&idx) = self.scope_names.get(name) {
             idx
         } else {
             let idx = self.named.len();
@@ -668,8 +686,9 @@ impl ScopeContext {
                 if !self.no_warn {
                     let msg = format!("scope:{name} might not be available here");
                     let mut builder = err(ErrorKey::StrictScopes).weak().msg(msg);
-                    if self.names.len() <= MAX_SCOPE_NAME_LIST && !self.names.is_empty() {
-                        let mut names: Vec<_> = self.names.keys().copied().collect();
+                    if self.scope_names.len() <= MAX_SCOPE_NAME_LIST && !self.scope_names.is_empty()
+                    {
+                        let mut names: Vec<_> = self.scope_names.keys().copied().collect();
                         names.sort_unstable();
                         let info = format!("available names are {}", stringify_choices(&names));
                         builder = builder.info(info);
@@ -682,7 +701,7 @@ impl ScopeContext {
                 self.is_input.push(Some(token.clone()));
             }
             // do this after the warnings above, so that it's not listed as available
-            self.names.insert(name, idx);
+            self.scope_names.insert(name, idx);
             idx
         }
     }
@@ -690,11 +709,11 @@ impl ScopeContext {
     /// Same as [`Self::named_index()`], but for lists. No warning is emitted if a new list is created.
     #[doc(hidden)]
     fn named_list_index(&mut self, name: &'static str, token: &Token) -> usize {
-        if let Some(&idx) = self.list_names.get(name) {
+        if let Some(&idx) = self.scope_list_names.get(name) {
             idx
         } else {
             let idx = self.named.len();
-            self.list_names.insert(name, idx);
+            self.scope_list_names.insert(name, idx);
             self.named.push(ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())));
             self.is_input.push(Some(token.clone()));
             idx
@@ -1025,6 +1044,7 @@ impl ScopeContext {
 
         // Compare restrictions on `prev`
         // TODO: for imperator and hoi4, go multiple prev levels back
+        // TODO: The self.prev_levels > 0 check isn't right. Instead, create enough prev levels.
         if other.prev_levels > 0 && self.prev_levels > 0 {
             let (scopes, reason) = other.scopes_reason_backref(PREV);
             self.expect3(scopes, reason, key, PREV + usize::from(self.is_builder), "prev");
@@ -1041,16 +1061,16 @@ impl ScopeContext {
         }
 
         // Compare restrictions on named scopes
-        for (name, &oidx) in &other.names {
-            if self.names.contains_key(name) {
+        for (name, &oidx) in &other.scope_names {
+            if let Some(idx) = self.scope_names.get(name).copied() {
                 let (s, reason) = other.resolve_named(oidx);
                 if other.is_input[oidx].is_some() {
-                    let idx = self.named_index(name, key);
                     let report = format!("scope:{name}");
                     self.expect_named3(idx, s, reason, key, &report);
                 } else {
                     // Their scopes now become our scopes.
-                    self.define_name_internal(name, s, reason.clone());
+                    self.break_chains_to(idx);
+                    self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {
                 let token = other.is_input[oidx].as_ref().unwrap();
@@ -1063,23 +1083,23 @@ impl ScopeContext {
             } else {
                 // Their scopes now become our scopes.
                 let (s, reason) = other.resolve_named(oidx);
-                self.names.insert(name, self.named.len());
+                self.scope_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
             }
         }
 
         // Compare restrictions on lists
-        for (name, &oidx) in &other.list_names {
-            if self.list_names.contains_key(name) {
+        for (name, &oidx) in &other.scope_list_names {
+            if let Some(idx) = self.scope_list_names.get(name).copied() {
                 let (s, reason) = other.resolve_named(oidx);
                 if other.is_input[oidx].is_some() {
-                    let idx = self.named_list_index(name, key);
                     let report = format!("list {name}");
                     self.expect_named3(idx, s, reason, key, &report);
                 } else {
                     // Their lists now become our lists.
-                    self.define_list_internal(name, s, reason.clone());
+                    self.break_chains_to(idx);
+                    self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {
                 let token = other.is_input[oidx].as_ref().unwrap();
@@ -1092,7 +1112,65 @@ impl ScopeContext {
             } else {
                 // Their lists now become our lists.
                 let (s, reason) = other.resolve_named(oidx);
-                self.list_names.insert(name, self.named.len());
+                self.scope_list_names.insert(name, self.named.len());
+                self.named.push(ScopeEntry::Scope(s, reason.clone()));
+                self.is_input.push(other.is_input[oidx].clone());
+            }
+        }
+
+        // Compare restrictions on local variables
+        for (name, &oidx) in &other.local_names {
+            if let Some(idx) = self.local_names.get(name).copied() {
+                let (s, reason) = other.resolve_named(oidx);
+                if other.is_input[oidx].is_some() {
+                    let report = format!("local_var:{name}");
+                    self.expect_named3(idx, s, reason, key, &report);
+                } else {
+                    // Their variables now become our variables
+                    self.break_chains_to(idx);
+                    self.named[idx] = ScopeEntry::Scope(s, reason.clone());
+                }
+            } else if self.strict_scopes && other.is_input[oidx].is_some() {
+                let token = other.is_input[oidx].as_ref().unwrap();
+                let msg = format!("`{key}` expects local_var:{name} to be set");
+                let msg2 = "here";
+                self.log_traceback(
+                    warn(ErrorKey::StrictScopes).msg(msg).loc(key).loc_msg(token, msg2),
+                )
+                .push();
+            } else {
+                // Their variables now become our variables
+                let (s, reason) = other.resolve_named(oidx);
+                self.local_names.insert(name, self.named.len());
+                self.named.push(ScopeEntry::Scope(s, reason.clone()));
+                self.is_input.push(other.is_input[oidx].clone());
+            }
+        }
+
+        // Compare restrictions on local variable lists
+        for (name, &oidx) in &other.local_list_names {
+            if let Some(idx) = self.local_list_names.get(name).copied() {
+                let (s, reason) = other.resolve_named(oidx);
+                if other.is_input[oidx].is_some() {
+                    let report = format!("local list {name}");
+                    self.expect_named3(idx, s, reason, key, &report);
+                } else {
+                    // Their lists now become our lists.
+                    self.break_chains_to(idx);
+                    self.named[idx] = ScopeEntry::Scope(s, reason.clone());
+                }
+            } else if self.strict_scopes && other.is_input[oidx].is_some() {
+                let token = other.is_input[oidx].as_ref().unwrap();
+                let msg = format!("`{key}` expects local variable list {name} to exist");
+                let msg2 = "here";
+                self.log_traceback(
+                    warn(ErrorKey::StrictScopes).msg(msg).loc(key).loc_msg(token, msg2),
+                )
+                .push();
+            } else {
+                // Their lists now become our lists.
+                let (s, reason) = other.resolve_named(oidx);
+                self.local_list_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
             }
