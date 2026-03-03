@@ -905,7 +905,9 @@ pub fn validate_scope_chain(
         let part = &part_vec[i];
 
         match part {
-            Part::TokenArgument(func, arg) => validate_argument(part_flags, func, arg, data, sc),
+            Part::TokenArgument(part, func, arg) => {
+                validate_argument(part_flags, part, func, arg, data, sc);
+            }
             Part::Token(part) => {
                 let part_lc = Lowercase::new(part.as_str());
                 // prefixed scope transition, e.g. cp:councillor_steward
@@ -913,7 +915,7 @@ pub fn validate_scope_chain(
                     #[allow(clippy::if_same_then_else)] // cfg attributes give a false positive here
                     // known prefix
                     if let Some(entry) = scope_prefix(&prefix) {
-                        validate_argument_scope(part_flags, entry, &prefix, &arg, data, sc);
+                        validate_argument_scope(part_flags, entry, part, &prefix, &arg, data, sc);
                     } else {
                         let msg = format!("unknown prefix `{prefix}:`");
                         err(ErrorKey::Validation).msg(msg).loc(prefix).push();

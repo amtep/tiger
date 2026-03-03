@@ -455,7 +455,9 @@ pub fn validate_trigger_key_bv(
         let part = &part_vec[i];
 
         match part {
-            Part::TokenArgument(func, arg) => validate_argument(part_flags, func, arg, data, sc),
+            Part::TokenArgument(part, func, arg) => {
+                validate_argument(part_flags, part, func, arg, data, sc);
+            }
             Part::Token(part) => {
                 let part_lc = Lowercase::new(part.as_str());
                 // prefixed scope transition, e.g. cp:councillor_steward
@@ -465,7 +467,7 @@ pub fn validate_trigger_key_bv(
                     if is_event_id {
                         arg = key.split_once(':').unwrap().1;
                     }
-                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
+                    if !validate_prefix(part_flags, part, &prefix, &arg, data, sc) {
                         sc.close();
                         return side_effects;
                     }
@@ -1252,7 +1254,9 @@ pub fn validate_target_ok_this(
         let part = &part_vec[i];
 
         match part {
-            Part::TokenArgument(func, arg) => validate_argument(part_flags, func, arg, data, sc),
+            Part::TokenArgument(part, func, arg) => {
+                validate_argument(part_flags, part, func, arg, data, sc);
+            }
             Part::Token(part) => {
                 let part_lc = Lowercase::new(part.as_str());
                 // prefixed scope transition, e.g. cp:councillor_steward
@@ -1262,7 +1266,7 @@ pub fn validate_target_ok_this(
                     if is_event_id {
                         arg = token.split_once(':').unwrap().1;
                     }
-                    if !validate_prefix(part_flags, &prefix, &arg, data, sc) {
+                    if !validate_prefix(part_flags, part, &prefix, &arg, data, sc) {
                         sc.close();
                         return Scopes::all();
                     }
@@ -1377,15 +1381,15 @@ pub fn validate_target(
 pub enum Part {
     /// A simple token
     Token(Token),
-    /// Function and argument tokens
-    TokenArgument(Token, Token),
+    /// Whole part, function and argument tokens
+    TokenArgument(Token, Token, Token),
 }
 
 impl std::fmt::Display for Part {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Part::Token(token) => token.fmt(f),
-            Part::TokenArgument(func, arg) => write!(f, "{func}({arg})"),
+            Part::TokenArgument(part, _, _) => part.fmt(f),
         }
     }
 }
@@ -1393,7 +1397,7 @@ impl std::fmt::Display for Part {
 impl Part {
     fn loc(&self) -> Loc {
         match self {
-            Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
+            Part::Token(t) | Part::TokenArgument(t, _, _) => t.loc,
         }
     }
 }
@@ -1471,7 +1475,7 @@ pub fn partition(token: &Token) -> Vec<Part> {
                     arg_loc.column += first_paren_col + 1;
                     let arg_token = token.subtoken_stripped(first_paren_idx + 1..idx, arg_loc);
 
-                    parts.push(Part::TokenArgument(func_token, arg_token));
+                    parts.push(Part::TokenArgument(token.clone(), func_token, arg_token));
                     has_part_argument = true;
                     paren_depth -= 1;
                 } else if paren_depth == 2 {
@@ -1653,6 +1657,7 @@ fn validate_argument_internal(
 pub fn validate_argument_scope(
     part_flags: PartFlags,
     (inscopes, outscopes, validation): (Scopes, Scopes, ArgumentValue),
+    part: &Token,
     func: &Token,
     arg: &Token,
     data: &Everything,
@@ -1661,15 +1666,13 @@ pub fn validate_argument_scope(
     validate_inscopes(part_flags, func, inscopes, sc);
     validate_argument_internal(arg, validation, data, sc);
 
-    let mut outscopes_token = func.clone();
-    outscopes_token.combine(arg, ':');
     if func.lowercase_is("scope") {
         if part_flags.contains(PartFlags::Last | PartFlags::Question) {
-            sc.exists_scope(arg.as_str(), outscopes_token.clone());
+            sc.exists_scope(arg.as_str(), part);
         }
-        sc.replace_named_scope(arg.as_str(), &outscopes_token);
+        sc.replace_named_scope(arg.as_str(), part);
     } else {
-        sc.replace(outscopes, outscopes_token);
+        sc.replace(outscopes, part.clone());
     }
 }
 
@@ -1678,6 +1681,7 @@ pub fn validate_argument_scope(
 #[allow(unreachable_code, unused_variables)]
 pub fn validate_argument(
     part_flags: PartFlags,
+    part: &Token,
     func: &Token,
     arg: &Token,
     data: &Everything,
@@ -1722,7 +1726,7 @@ pub fn validate_argument(
         validate_argument_internal(arg, validation, data, sc);
         sc.replace(outscopes, func.clone());
     } else if let Some(entry) = scope_prefix(func) {
-        validate_argument_scope(part_flags, entry, func, arg, data, sc);
+        validate_argument_scope(part_flags, entry, part, func, arg, data, sc);
     } else {
         let msg = format!("unknown token `{func}:`");
         err(ErrorKey::Validation).msg(msg).loc(func).push();
@@ -1735,6 +1739,7 @@ pub fn validate_argument(
 #[allow(unreachable_code, unused_variables)]
 pub fn validate_prefix(
     part_flags: PartFlags,
+    part: &Token,
     prefix: &Token,
     arg: &Token,
     data: &Everything,
@@ -1762,7 +1767,7 @@ pub fn validate_prefix(
         sc.replace(outscopes, prefix.clone());
         true
     } else if let Some(entry) = scope_prefix(prefix) {
-        validate_argument_scope(part_flags, entry, prefix, arg, data, sc);
+        validate_argument_scope(part_flags, entry, part, prefix, arg, data, sc);
         true
     } else {
         let msg = format!("unknown prefix `{prefix:}`");

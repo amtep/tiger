@@ -175,14 +175,14 @@ impl ErrorLoc for &Block {
 impl ErrorLoc for Part {
     fn into_loc(self) -> Loc {
         match self {
-            Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
+            Part::Token(t) | Part::TokenArgument(t, _, _) => t.loc,
         }
     }
 
     fn loc_length(&self) -> usize {
         match self {
             Part::Token(t) => t.loc_length(),
-            Part::TokenArgument(func, arg) => func.loc_length() + arg.loc_length() + 2,
+            Part::TokenArgument(part, _, _) => part.loc_length(),
         }
     }
 }
@@ -190,14 +190,14 @@ impl ErrorLoc for Part {
 impl ErrorLoc for &Part {
     fn into_loc(self) -> Loc {
         match self {
-            Part::Token(t) | Part::TokenArgument(t, _) => t.loc,
+            Part::Token(t) | Part::TokenArgument(t, _, _) => t.loc,
         }
     }
 
     fn loc_length(&self) -> usize {
         match self {
             Part::Token(t) => t.loc_length(),
-            Part::TokenArgument(func, arg) => func.loc_length() + arg.loc_length() + 2,
+            Part::TokenArgument(part, _, _) => part.loc_length(),
         }
     }
 }
