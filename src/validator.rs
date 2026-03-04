@@ -1277,6 +1277,23 @@ impl<'a> Validator<'a> {
         found
     }
 
+    /// Just like [`Validator::multi_field_any_cmp`], but takes a validation closure.
+    #[allow(dead_code)]
+    pub fn multi_field_validated_any_cmp<F>(&mut self, name: &str, mut f: F) -> bool
+    where
+        F: FnMut(&BV, &Everything),
+    {
+        let mut found = false;
+        for Field(key, _, bv) in self.block.iter_fields() {
+            if key.is(name) {
+                self.known_fields.push(key.as_str());
+                f(bv, self.data);
+                found = true;
+            }
+        }
+        found
+    }
+
     /// Expect field `name`, if present, to be either an assignment (`= value`) or a definition (`= { block }`).
     /// Expect no more than one `name` field in the block.
     /// Calls the closure `f(bv, data)` for every matching field.

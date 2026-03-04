@@ -438,6 +438,30 @@ impl ScopeContext {
         }
     }
 
+    /// This is called when the script does `exists = local_var:name` or `has_local_variable = name`.
+    ///
+    /// It records `name` as "known", but with no scope type information, and records that the
+    /// caller is expected to provide this local variable.
+    pub fn exists_local<T: Into<Token>>(&mut self, name: &'static str, token: T) {
+        if !self.local_names.contains_key(name) {
+            self.local_names.insert(name, self.named.len());
+            self.named.push(ScopeEntry::deduce(token));
+            self.is_input.push(None);
+        }
+    }
+
+    /// This is called when the script does `has_local_variable_list = name`.
+    ///
+    /// It records `name` as "known", but with no scope type information, and records that the
+    /// caller is expected to provide this local variable list.
+    pub fn exists_local_list<T: Into<Token>>(&mut self, name: &'static str, token: T) {
+        if !self.local_list_names.contains_key(name) {
+            self.local_list_names.insert(name, self.named.len());
+            self.named.push(ScopeEntry::deduce(token));
+            self.is_input.push(None);
+        }
+    }
+
     #[doc(hidden)]
     fn define_list_internal(&mut self, name: &'static str, scopes: Scopes, reason: Reason) {
         if let Some(&idx) = self.scope_list_names.get(name) {
@@ -482,14 +506,51 @@ impl ScopeContext {
         }
     }
 
-    /// If list `name` exists, narrow its scope type down to `this`, otherwise define it
-    /// as having the same scope type as `this`.
-    // TODO: I don't think this is doing the right thing for most callers.
-    pub fn define_or_expect_list(&mut self, name: &Token) {
+    /// Sets a local variable to the value of `this`
+    #[cfg(feature = "jomini")]
+    pub fn save_local_variable(&mut self, name: &'static str) {
+        if let Some(&idx) = self.local_names.get(name) {
+            self.break_chains_to(idx);
+            let entry = self.resolve_backrefs(THIS);
+            // Guard against self-assignment
+            if let ScopeEntry::Named(i) = entry {
+                if *i == idx {
+                    // Leave the variable as its original value
+                    return;
+                }
+            }
+            self.named[idx] = entry.clone();
+        } else {
+            self.local_names.insert(name, self.named.len());
+            self.named.push(self.resolve_backrefs(THIS).clone());
+            self.is_input.push(None);
+        }
+    }
+
+    /// Sets a local variable to the provided scope type
+    #[cfg(feature = "jomini")]
+    pub fn set_local_variable(&mut self, name: &Token, scope: Scopes) {
+        if let Some(&idx) = self.local_names.get(name.as_str()) {
+            self.break_chains_to(idx);
+            self.named[idx] = ScopeEntry::Scope(scope, Reason::Token(name.clone()));
+        } else {
+            self.local_names.insert(name.as_str(), self.named.len());
+            self.named.push(ScopeEntry::Scope(scope, Reason::Token(name.clone())));
+            self.is_input.push(None);
+        }
+    }
+
+    /// If list `name` exists, narrow its scope type down to `this` and narrow the `this` scope
+    /// types down to the existing list.
+    /// Otherwise, define it as having the same scope type as `this`.
+    pub fn define_or_expect_list_this(&mut self, name: &Token) {
         if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
+            // TODO: remove need to clone reason
             let (s, reason) = self.resolve_named(idx);
-            let reason = reason.clone(); // TODO: remove need to clone
-            self.expect(s, &reason);
+            self.expect(s, &reason.clone());
+            let (s, reason) = self.scopes_reason();
+            let reason = reason.clone();
+            self.expect_named(idx, s, &reason);
             // It often happens that an iterator does is_in_list before add_to_list,
             // and in those cases we want the add_to_list to take precedence: conclude that the
             // list is being built here, and isn't an input list.
@@ -497,6 +558,39 @@ impl ScopeContext {
         } else {
             self.scope_list_names.insert(name.as_str(), self.named.len());
             self.named.push(self.resolve_backrefs(THIS).clone());
+            self.is_input.push(None);
+        }
+    }
+
+    /// If list `name` exists, narrow its scope type down to the given scopes.
+    /// Otherwise, define it as having the given scopes.
+    #[allow(dead_code)]
+    pub fn define_or_expect_list(&mut self, name: &Token, scope: Scopes) {
+        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
+            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+            // It often happens that an iterator does is_in_list before add_to_list,
+            // and in those cases we want the add_to_list to take precedence: conclude that the
+            // list is being built here, and isn't an input list.
+            self.is_input[idx] = None;
+        } else {
+            self.scope_list_names.insert(name.as_str(), self.named.len());
+            self.named.push(ScopeEntry::Scope(scope, Reason::Token(name.clone())));
+            self.is_input.push(None);
+        }
+    }
+
+    /// If local variable list `name` exists, narrow its scope type down to the given scopes.
+    /// Otherwise, define it as having the given scopes.
+    pub fn define_or_expect_local_list(&mut self, name: &Token, scope: Scopes) {
+        if let Some(&idx) = self.local_list_names.get(name.as_str()) {
+            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+            // It often happens that an iterator does is_in_list before add_to_list,
+            // and in those cases we want the add_to_list to take precedence: conclude that the
+            // list is being built here, and isn't an input list.
+            self.is_input[idx] = None;
+        } else {
+            self.local_list_names.insert(name.as_str(), self.named.len());
+            self.named.push(ScopeEntry::Scope(scope, Reason::Token(name.clone())));
             self.is_input.push(None);
         }
     }
@@ -511,6 +605,17 @@ impl ScopeContext {
         } else if self.strict_scopes {
             let msg = "unknown list";
             err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
+        }
+    }
+
+    /// Expect local variable `name` to be known and (with strict scopes) warn if it isn't.
+    #[cfg(feature = "jomini")]
+    pub fn expect_local(&mut self, name: &Token, scope: Scopes) {
+        if let Some(&idx) = self.local_names.get(name.as_str()) {
+            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+        } else if self.strict_scopes {
+            let msg = "unknown local variable";
+            err(ErrorKey::UnknownVariable).msg(msg).loc(name).push();
         }
     }
 
@@ -661,6 +766,14 @@ impl ScopeContext {
         *self.scope_stack.last_mut().unwrap() = ScopeEntry::Named(self.named_index(name, token));
     }
 
+    /// Replace the `this` in a temporary scope level with a reference to the local variable `name`.
+    ///
+    /// This is used when a scope chain starts with `local_var:name`. The `token` is expected to be the
+    /// `local_var:name` token.
+    pub fn replace_local_variable(&mut self, name: &'static str, token: &Token) {
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::Named(self.local_index(name, token));
+    }
+
     /// Replace the `this` in a temporary scope level with a reference to the scope type of the
     /// list `name`.
     ///
@@ -671,8 +784,7 @@ impl ScopeContext {
             ScopeEntry::Named(self.named_list_index(name, token));
     }
 
-    /// Get the internal index of named scope `name`, either its existing index or a newly created
-    /// one.
+    /// Get the internal index of named scope `name`, either its existing index or a newly created one.
     ///
     /// If a new index has to be created, and `strict_scopes` is on, then a warning will be emitted.
     #[doc(hidden)]
@@ -702,6 +814,40 @@ impl ScopeContext {
             }
             // do this after the warnings above, so that it's not listed as available
             self.scope_names.insert(name, idx);
+            idx
+        }
+    }
+
+    /// Get the internal index of local variable `name`, either its existing index or a newly created one.
+    ///
+    /// If a new index has to be created, and `strict_scopes` is on, then a warning will be emitted.
+    #[doc(hidden)]
+    fn local_index(&mut self, name: &'static str, token: &Token) -> usize {
+        if let Some(&idx) = self.local_names.get(name) {
+            idx
+        } else {
+            let idx = self.named.len();
+            self.named.push(ScopeEntry::deduce(token));
+            if self.strict_scopes {
+                if !self.no_warn {
+                    let msg = format!("local_var:{name} might not be available here");
+                    let mut builder = err(ErrorKey::StrictScopes).weak().msg(msg);
+                    if self.local_names.len() <= MAX_SCOPE_NAME_LIST && !self.local_names.is_empty()
+                    {
+                        let mut names: Vec<_> = self.local_names.keys().copied().collect();
+                        names.sort_unstable();
+                        let info = format!("available names are {}", stringify_choices(&names));
+                        builder = builder.info(info);
+                    }
+                    self.log_traceback(builder.loc(token)).push();
+                }
+                // Don't treat it as an input scope, because we already warned about it
+                self.is_input.push(None);
+            } else {
+                self.is_input.push(Some(token.clone()));
+            }
+            // do this after the warnings above, so that it's not listed as available
+            self.local_names.insert(name, idx);
             idx
         }
     }
@@ -1209,6 +1355,8 @@ impl Drop for ScopeContext {
 fn scope_type_from_name(mut name: &str) -> Option<Scopes> {
     #[cfg(feature = "jomini")]
     if let Some(real_name) = name.strip_prefix("scope:") {
+        name = real_name;
+    } else if let Some(real_name) = name.strip_prefix("local_var:") {
         name = real_name;
     } else {
         return None;

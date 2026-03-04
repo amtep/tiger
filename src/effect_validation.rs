@@ -28,7 +28,7 @@ pub fn validate_add_to_list_imperator(
     _tooltipped: Tooltipped,
 ) {
     vd.identifier("list name");
-    sc.define_or_expect_list(vd.value());
+    sc.define_or_expect_list_this(vd.value());
     vd.accept();
 }
 
@@ -44,7 +44,7 @@ pub fn validate_add_to_list(
     match bv {
         BV::Value(name) => {
             validate_identifier(name, "list name", Severity::Error);
-            sc.define_or_expect_list(name);
+            sc.define_or_expect_list_this(name);
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
@@ -55,9 +55,7 @@ pub fn validate_add_to_list(
                     validate_identifier(name, "list name", Severity::Error);
                     let outscopes =
                         validate_target_ok_this(&target, data, sc, Scopes::all_but_none());
-                    sc.open_scope(outscopes, target);
-                    sc.define_or_expect_list(name);
-                    sc.close();
+                    sc.define_or_expect_list(name, outscopes);
                 }
             }
         }
@@ -65,20 +63,31 @@ pub fn validate_add_to_list(
 }
 
 /// A specific validator for the three `add_to_variable_list` effects (`global`, `local`, and default).
+/// It is also used for the three `remove_list_variable` effects.
 #[cfg(feature = "jomini")]
 pub fn validate_add_to_variable_list(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
     vd.req_field("target");
-    vd.field_identifier("name", "list name");
-    vd.field_target_ok_this("target", sc, Scopes::all_but_none());
-    if Game::is_ck3() || Game::is_vic3() {
+    if key.as_str().contains("_local_") {
+        if let Some(target) = vd.field_value("target").cloned() {
+            if let Some(name) = vd.field_value("name") {
+                validate_identifier(name, "list name", Severity::Error);
+                let outscopes = validate_target_ok_this(&target, data, sc, Scopes::all_but_none());
+                sc.define_or_expect_local_list(name, outscopes);
+            }
+        }
+    } else {
+        vd.field_identifier("name", "list name");
+        vd.field_target_ok_this("target", sc, Scopes::all_but_none());
+    }
+    if key.starts_with("add_") && (Game::is_ck3() || Game::is_vic3()) {
         validate_optional_duration(&mut vd, sc);
     }
 }
@@ -86,7 +95,7 @@ pub fn validate_add_to_variable_list(
 /// A specific validator for the three `change_variable` effects (`global`, `local`, and default).
 #[cfg(feature = "jomini")]
 pub fn validate_change_variable(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
@@ -94,7 +103,14 @@ pub fn validate_change_variable(
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
-    vd.field_identifier("name", "list name");
+    if key.as_str().contains("_local_") {
+        if let Some(name) = vd.field_value("name") {
+            validate_identifier(name, "variable name", Severity::Error);
+            sc.expect_local(name, Scopes::Value);
+        }
+    } else {
+        vd.field_identifier("name", "variable name");
+    }
     vd.field_script_value("add", sc);
     vd.field_script_value("subtract", sc);
     vd.field_script_value("multiply", sc);
@@ -107,7 +123,7 @@ pub fn validate_change_variable(
 /// A specific validator for the three `clamp_variable` effects (`global`, `local`, and default).
 #[cfg(feature = "jomini")]
 pub fn validate_clamp_variable(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
@@ -115,7 +131,14 @@ pub fn validate_clamp_variable(
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
-    vd.field_identifier("name", "list name");
+    if key.as_str().contains("_local_") {
+        if let Some(name) = vd.field_value("name") {
+            validate_identifier(name, "variable name", Severity::Error);
+            sc.expect_local(name, Scopes::Value);
+        }
+    } else {
+        vd.field_identifier("name", "variable name");
+    }
     vd.field_script_value("min", sc);
     vd.field_script_value("max", sc);
 }
@@ -166,7 +189,7 @@ pub fn validate_remove_from_list(
 /// A specific validator for the three `round_variable` effects (`global`, `local`, and default).
 #[cfg(feature = "jomini")]
 pub fn validate_round_variable(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
@@ -175,7 +198,14 @@ pub fn validate_round_variable(
 ) {
     vd.req_field("name");
     vd.req_field("nearest");
-    vd.field_identifier("name", "variable name");
+    if key.as_str().contains("_local_") {
+        if let Some(name) = vd.field_value("name") {
+            validate_identifier(name, "variable name", Severity::Error);
+            sc.expect_local(name, Scopes::Value);
+        }
+    } else {
+        vd.field_identifier("name", "variable name");
+    }
     vd.field_script_value("nearest", sc);
 }
 
@@ -213,7 +243,7 @@ pub fn validate_save_scope_value(
 /// A specific validator for the three `set_variable` effects (`global`, `local`, and default).
 #[cfg(feature = "jomini")]
 pub fn validate_set_variable(
-    _key: &Token,
+    key: &Token,
     bv: &BV,
     data: &Everything,
     sc: &mut ScopeContext,
@@ -222,20 +252,34 @@ pub fn validate_set_variable(
     match bv {
         BV::Value(token) => {
             validate_identifier(token, "variable name", Severity::Error);
+            if key.as_str().contains("_local_") {
+                sc.save_local_variable(token.as_str());
+            }
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
             vd.set_case_sensitive(false);
             vd.req_field("name");
-            vd.field_identifier("name", "variable name");
+            let name = vd.field_identifier("name", "variable name").cloned();
             vd.field_validated("value", |bv, data| match bv {
                 BV::Value(token) => {
-                    validate_target_ok_this(token, data, sc, Scopes::all_but_none());
+                    let outscopes =
+                        validate_target_ok_this(token, data, sc, Scopes::all_but_none());
+                    if let Some(name) = &name {
+                        if key.as_str().contains("_local_") {
+                            sc.set_local_variable(name, outscopes);
+                        }
+                    }
                 }
                 BV::Block(_) => {
                     #[cfg(feature = "jomini")]
                     if Game::is_jomini() {
                         validate_script_value(bv, data, sc);
+                        if let Some(name) = &name {
+                            if key.as_str().contains("_local_") {
+                                sc.set_local_variable(name, Scopes::Value);
+                            }
+                        }
                     }
                     // TODO HOI4
                 }

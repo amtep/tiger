@@ -60,6 +60,7 @@ pub enum ErrorKey {
     LocalizationKeyCollision,
     UnusedFile,
     UnknownList,
+    UnknownVariable,
     Choice,
     UseOfThis,
     CharacterId,

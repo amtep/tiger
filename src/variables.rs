@@ -228,11 +228,10 @@ impl Extract {
     }
 }
 
-// TODO: treat local variables and temp variables like named scopes instead.
+// TODO: treat temp variables like named scopes instead.
 const CREATE_VARIABLE: &[(&str, Extract, GameFlags)] = &[
     ("set_dead_character_variable", Extract::Field("name"), GameFlags::Ck3),
     ("set_global_variable", Extract::AssignOrField("name"), GameFlags::jomini()),
-    ("set_local_variable", Extract::AssignOrField("name"), GameFlags::jomini()),
     ("set_temp_variable", Extract::InternalAssignOrField("var"), GameFlags::Hoi4),
     ("set_temp_variable_to_random", Extract::AssignOrField("var"), GameFlags::Hoi4),
     ("set_variable", Extract::AssignOrField("name"), GameFlags::jomini()),
@@ -243,7 +242,6 @@ const CREATE_VARIABLE: &[(&str, Extract, GameFlags)] = &[
 const CREATE_LIST: &[(&str, Extract, GameFlags)] = &[
     ("add_to_array", Extract::InternalAssignOrField("array"), GameFlags::Hoi4),
     ("add_to_global_variable_list", Extract::Field("name"), GameFlags::jomini()),
-    ("add_to_local_variable_list", Extract::Field("name"), GameFlags::jomini()),
     ("add_to_temp_array", Extract::InternalAssignOrField("array"), GameFlags::Hoi4),
     ("add_to_variable_list", Extract::Field("name"), GameFlags::jomini()),
 ];

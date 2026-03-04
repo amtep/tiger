@@ -600,8 +600,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_limited_diplomacy", UncheckedTodo),
     (Scopes::Loan, "has_loc_key", UncheckedTodo),
     (Scopes::None, "has_local_dlc", UncheckedTodo),
-    (Scopes::None, "has_local_variable", UncheckedTodo),
-    (Scopes::None, "has_local_variable_list", UncheckedTodo),
+    (Scopes::None, "has_local_variable", Special),
+    (Scopes::None, "has_local_variable_list", Special),
     (Scopes::InternationalOrganization, "has_location", UncheckedTodo),
     (
         Scopes::Location
@@ -1187,7 +1187,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Rebels, "is_supported_by_character", UncheckedTodo),
     (Scopes::Rebels, "is_supported_by_country", UncheckedTodo),
     (Scopes::None, "is_target_in_global_variable_list", UncheckedTodo),
-    (Scopes::None, "is_target_in_local_variable_list", UncheckedTodo),
+    (Scopes::None, "is_target_in_local_variable_list", Special),
     (Scopes::None, "is_target_in_variable_list", UncheckedTodo),
     (Scopes::Country, "is_target_of_international_organization_of_type", UncheckedTodo),
     (Scopes::Country, "is_threat_to", UncheckedTodo),
@@ -1284,7 +1284,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Location, "local_political_power_fraction", UncheckedTodo),
     (Scopes::Location, "local_relative_estate_power", UncheckedTodo),
     (Scopes::Location, "local_religious_unity", UncheckedTodo),
-    (Scopes::None, "local_variable_list_size", UncheckedTodo),
+    (Scopes::None, "local_variable_list_size", Special),
     (Scopes::Location, "location_art_quality", UncheckedTodo),
     (Scopes::Location, "location_building_level", UncheckedTodo),
     (

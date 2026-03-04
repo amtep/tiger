@@ -573,8 +573,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target_country", Scope(Scopes::Country)), ("law_type", Scope(Scopes::LawType))]),
     ),
     (Scopes::Country, "has_law_or_variant", Scope(Scopes::LawType)),
-    (Scopes::None, "has_local_variable", Identifier("variable name")),
-    (Scopes::None, "has_local_variable_list", Identifier("list name")),
+    (Scopes::None, "has_local_variable", Special),
+    (Scopes::None, "has_local_variable_list", Special),
     (Scopes::None, "has_map_interaction", Item(Item::MapInteractionType)),
     (Scopes::None, "has_map_interaction_diplomatic_action", Item(Item::DiplomaticAction)),
     (
@@ -985,14 +985,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             ("*target", ScopeOkThis(Scopes::all_but_none())),
         ]),
     ),
-    (
-        Scopes::None,
-        "is_target_in_local_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_local_variable_list", Special),
     (
         Scopes::None,
         "is_target_in_variable_list",
@@ -1075,11 +1068,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "lobby_formation_reason",
         Choice(LOBBY_FORMATION_REASON),
     ),
-    (
-        Scopes::None,
-        "local_variable_list_size",
-        Block(&[("name", Identifier("list name")), ("value", CompareValue)]),
-    ),
+    (Scopes::None, "local_variable_list_size", Special),
     (
         Scopes::Country.union(Scopes::State),
         "loyalist_fraction",

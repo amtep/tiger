@@ -954,7 +954,15 @@ fn match_trigger_bv(
                     } else if token.starts_with("scope:") && !token.as_str().contains('.') {
                         // exists = scope:name is used to check if that scope name was set
                         if !negated {
-                            sc.exists_scope(token.as_str().strip_prefix("scope:").unwrap(), name);
+                            sc.exists_scope(token.as_str().strip_prefix("scope:").unwrap(), token);
+                        }
+                    } else if token.starts_with("local_var:") && !token.as_str().contains('.') {
+                        // exists = local_var:name is used to check if that local variable was set
+                        if !negated {
+                            sc.exists_local(
+                                token.as_str().strip_prefix("local_var:").unwrap(),
+                                token,
+                            );
                         }
                     } else if token.starts_with("flag:") {
                         // exists = flag:$REASON$ is used in vanilla just to shut up their error.log,
@@ -972,6 +980,43 @@ fn match_trigger_bv(
                             }
                         }
                     }
+                }
+            } else if name.is("has_local_variable") {
+                if let Some(token) = bv.expect_value() {
+                    sc.exists_local(token.as_str(), token);
+                }
+            } else if name.is("has_local_variable_list") {
+                if let Some(token) = bv.expect_value() {
+                    sc.exists_local_list(token.as_str(), token);
+                }
+            } else if name.is("is_target_in_local_variable_list") {
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_max_severity(max_sev);
+                    vd.req_field("name");
+                    vd.req_field("target");
+                    let name = vd.field_value("name").cloned();
+                    for value in vd.multi_field_value("target") {
+                        let outscopes =
+                            validate_target_ok_this(value, data, sc, Scopes::all_but_none());
+                        if let Some(ref name) = name {
+                            sc.define_or_expect_local_list(name, outscopes);
+                        }
+                    }
+                }
+            } else if name.is("local_variable_list_size") {
+                #[cfg(feature = "jomini")]
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_max_severity(max_sev);
+                    vd.req_field("name");
+                    vd.req_field("value");
+                    if let Some(name) = vd.field_value("name") {
+                        sc.define_or_expect_local_list(name, Scopes::all_but_none());
+                    }
+                    vd.multi_field_validated_any_cmp("value", |bv, data| {
+                        validate_script_value(bv, data, sc);
+                    });
                 }
             } else if name.is("custom_tooltip") {
                 match bv {
@@ -1101,7 +1146,7 @@ fn match_trigger_bv(
                 }
             } else if name.is("add_to_temporary_list") {
                 if let Some(value) = bv.expect_value() {
-                    sc.define_or_expect_list(value);
+                    sc.define_or_expect_list_this(value);
                     side_effects = true;
                 }
             } else if name.is("is_in_list") {
@@ -1671,6 +1716,11 @@ pub fn validate_argument_scope(
             sc.exists_scope(arg.as_str(), part);
         }
         sc.replace_named_scope(arg.as_str(), part);
+    } else if func.lowercase_is("local_var") {
+        if part_flags.contains(PartFlags::Last | PartFlags::Question) {
+            sc.exists_local(arg.as_str(), part);
+        }
+        sc.replace_local_variable(arg.as_str(), part);
     } else {
         sc.replace(outscopes, part.clone());
     }
