@@ -466,9 +466,16 @@ pub fn validate_inside_iterator(
         vd.req_field_one_of(&["list", "variable"]);
         if let Some(token) = vd.field_value("list") {
             sc.expect_list(token);
-            sc.replace_list_entry(token.as_str(), token);
+            sc.replace_list_entry(token);
         }
-    } else if name == "in_local_list" || name == "in_global_list" {
+    } else if name == "in_local_list" {
+        vd.req_field("variable");
+        vd.ban_field("list", || format!("{listtype}_in_list"));
+        if let Some(token) = vd.field_value("variable") {
+            sc.expect_local_list(token);
+            sc.replace_local_list_entry(token);
+        }
+    } else if name == "in_global_list" {
         vd.req_field("variable");
         vd.ban_field("list", || format!("{listtype}_in_list"));
     } else {

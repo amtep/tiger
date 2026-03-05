@@ -608,6 +608,19 @@ impl ScopeContext {
         }
     }
 
+    /// Expect local variable list `name` to be known and (with strict scopes) warn if it isn't.
+    /// Narrow the type of `this` down to the list's type.
+    pub fn expect_local_list(&mut self, name: &Token) {
+        if let Some(&idx) = self.local_list_names.get(name.as_str()) {
+            let (s, reason) = self.resolve_named(idx);
+            let reason = reason.clone(); // TODO: remove need to clone
+            self.expect3(s, &reason, name, THIS, "local variable list");
+        } else if self.strict_scopes {
+            let msg = "unknown local variable list";
+            err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
+        }
+    }
+
     /// Expect local variable `name` to be known and (with strict scopes) warn if it isn't.
     #[cfg(feature = "jomini")]
     pub fn expect_local(&mut self, name: &Token, scope: Scopes) {
@@ -776,12 +789,16 @@ impl ScopeContext {
 
     /// Replace the `this` in a temporary scope level with a reference to the scope type of the
     /// list `name`.
-    ///
-    /// This is used in list iterators. The `token` is expected to be the token for the name of the
-    /// list.
-    pub fn replace_list_entry(&mut self, name: &'static str, token: &Token) {
+    pub fn replace_list_entry(&mut self, name: &Token) {
         *self.scope_stack.last_mut().unwrap() =
-            ScopeEntry::Named(self.named_list_index(name, token));
+            ScopeEntry::Named(self.named_list_index(name.as_str(), name));
+    }
+
+    /// Replace the `this` in a temporary scope level with a reference to the scope type of the
+    /// local variable list `name`.
+    pub fn replace_local_list_entry(&mut self, name: &Token) {
+        *self.scope_stack.last_mut().unwrap() =
+            ScopeEntry::Named(self.local_list_index(name.as_str(), name));
     }
 
     /// Get the internal index of named scope `name`, either its existing index or a newly created one.
@@ -860,6 +877,21 @@ impl ScopeContext {
         } else {
             let idx = self.named.len();
             self.scope_list_names.insert(name, idx);
+            self.named.push(ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())));
+            self.is_input.push(Some(token.clone()));
+            idx
+        }
+    }
+
+    /// Same as [`Self::named_index()`], but for local variable lists.
+    /// No warning is emitted if a new list is created.
+    #[doc(hidden)]
+    fn local_list_index(&mut self, name: &'static str, token: &Token) -> usize {
+        if let Some(&idx) = self.local_list_names.get(name) {
+            idx
+        } else {
+            let idx = self.named.len();
+            self.local_list_names.insert(name, idx);
             self.named.push(ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())));
             self.is_input.push(Some(token.clone()));
             idx
