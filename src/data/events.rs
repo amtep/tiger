@@ -106,9 +106,9 @@ impl Events {
         None
     }
 
-    pub fn check_scope(&self, token: &Token, sc: &mut ScopeContext) {
+    pub fn check_scope(&self, token: &Token, sc: &mut ScopeContext, data: &Everything) {
         if let Some(event) = self.get_event(token.as_str()) {
-            sc.expect(event.expects_scope, &Reason::Token(token.clone()));
+            sc.expect(event.expects_scope, &Reason::Token(token.clone()), data);
         }
     }
 
@@ -286,7 +286,7 @@ impl Event {
     }
 
     pub fn validate_call(&self, data: &Everything, sc: &mut ScopeContext) {
-        if !self.visited.lock().unwrap().insert(sc.signature()) {
+        if !self.visited.lock().unwrap().insert(sc.signature(data)) {
             // The event was already visited with an equivalent sc
             return;
         }

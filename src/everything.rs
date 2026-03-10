@@ -82,9 +82,15 @@ use crate::parse::json::parse_json_file;
 use crate::pdxfile::PdxFile;
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 use crate::report::err;
+#[cfg(feature = "jomini")]
+use crate::report::warn;
 use crate::report::{ErrorKey, OutputStyle, Severity, report, set_output_style};
 use crate::rivers::Rivers;
+#[cfg(feature = "jomini")]
+use crate::scopes::Scopes;
 use crate::token::{Loc, Token};
+#[cfg(feature = "jomini")]
+use crate::variable_scopes::VariableScopes;
 use crate::variables::Variables;
 #[cfg(feature = "vic3")]
 use crate::vic3::data::{
@@ -227,6 +233,15 @@ pub struct Everything {
     pub(crate) wars: Wars,
 
     pub(crate) variables: Variables,
+
+    #[cfg(feature = "jomini")]
+    pub(crate) global_scopes: VariableScopes,
+    #[cfg(feature = "jomini")]
+    pub(crate) global_list_scopes: VariableScopes,
+    #[cfg(feature = "jomini")]
+    pub(crate) variable_scopes: VariableScopes,
+    #[cfg(feature = "jomini")]
+    pub(crate) variable_list_scopes: VariableScopes,
 }
 
 macro_rules! load_all_generic {
@@ -456,6 +471,56 @@ impl Everything {
         fileset.scan_all()?;
         fileset.finalize();
 
+        #[cfg(feature = "jomini")]
+        let global_scopes = VariableScopes::new("global_var:");
+        #[cfg(feature = "jomini")]
+        let global_list_scopes = VariableScopes::new("global list ");
+        #[cfg(feature = "jomini")]
+        let variable_scopes = VariableScopes::new("var:");
+        #[cfg(feature = "jomini")]
+        let variable_list_scopes = VariableScopes::new("variable list ");
+
+        #[cfg(feature = "ck3")]
+        if Game::is_ck3() {
+            variable_list_scopes
+                .config_override("lover_object_of_importance", Scopes::Character | Scopes::Flag);
+            variable_list_scopes
+                .config_override("lover_object_of_importance_2", Scopes::Character | Scopes::Flag);
+            variable_scopes.config_override("random_location", Scopes::Province | Scopes::Value);
+            variable_scopes
+                .config_override("task_contract_object", Scopes::Character | Scopes::Artifact);
+        }
+
+        #[cfg(feature = "jomini")]
+        if Game::is_jomini() {
+            if let Some(block) = config.get_field_block("scope_override") {
+                for (key, token) in block.iter_assignments() {
+                    let mut scopes = Scopes::empty();
+                    if token.lowercase_is("all") {
+                        scopes = Scopes::all();
+                    } else {
+                        for part in token.split('|') {
+                            if let Some(scope) = Scopes::from_snake_case(part.as_str()) {
+                                scopes |= scope;
+                            } else {
+                                let msg = format!("unknown scope type `{part}`");
+                                warn(ErrorKey::Config).msg(msg).loc(part).push();
+                            }
+                        }
+                    }
+                    if let Some(name) = key.strip_prefix("var:") {
+                        variable_scopes.config_override(name.as_str(), scopes);
+                    } else if let Some(name) = key.strip_prefix("var_list:") {
+                        variable_list_scopes.config_override(name.as_str(), scopes);
+                    } else if let Some(name) = key.strip_prefix("global_var:") {
+                        global_scopes.config_override(name.as_str(), scopes);
+                    } else if let Some(name) = key.strip_prefix("global_list:") {
+                        global_list_scopes.config_override(name.as_str(), scopes);
+                    }
+                }
+            }
+        }
+
         Ok(Everything {
             parser: ParserMemory::default(),
             fileset,
@@ -530,6 +595,14 @@ impl Everything {
             #[cfg(feature = "ck3")]
             wars: Wars::default(),
             variables: Variables::new(),
+            #[cfg(feature = "jomini")]
+            global_scopes,
+            #[cfg(feature = "jomini")]
+            global_list_scopes,
+            #[cfg(feature = "jomini")]
+            variable_scopes,
+            #[cfg(feature = "jomini")]
+            variable_list_scopes,
         })
     }
 
@@ -1501,10 +1574,10 @@ impl Everything {
     pub(crate) fn event_check_scope(&self, id: &Token, sc: &mut ScopeContext) {
         if Game::is_hoi4() {
             #[cfg(feature = "hoi4")]
-            self.events_hoi4.check_scope(id, sc);
+            self.events_hoi4.check_scope(id, sc, self);
         } else {
             #[cfg(feature = "jomini")]
-            self.events.check_scope(id, sc);
+            self.events.check_scope(id, sc, self);
         }
     }
 

@@ -107,14 +107,14 @@ impl ScriptedModifier {
     }
 
     pub fn validate_call(&self, key: &Token, data: &Everything, sc: &mut ScopeContext) {
-        if !self.cached_compat(key, &[], sc) {
+        if !self.cached_compat(key, &[], sc, data) {
             let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
             our_sc.set_strict_scopes(false);
             self.cache.insert(key, &[], Tooltipped::No, false, our_sc.clone());
             let mut vd = Validator::new(&self.block, data);
             validate_modifiers(&mut vd, &mut our_sc);
             validate_scripted_modifier_calls(vd, data, &mut our_sc);
-            sc.expect_compatibility(&our_sc, key);
+            sc.expect_compatibility(&our_sc, key, data);
             self.cache.insert(key, &[], Tooltipped::No, false, our_sc);
         }
     }
@@ -128,9 +128,10 @@ impl ScriptedModifier {
         key: &Token,
         args: &[(&'static str, Token)],
         sc: &mut ScopeContext,
+        data: &Everything,
     ) -> bool {
         self.cache.perform(key, args, Tooltipped::No, false, |our_sc| {
-            sc.expect_compatibility(our_sc, key);
+            sc.expect_compatibility(our_sc, key, data);
         })
     }
 
@@ -143,7 +144,7 @@ impl ScriptedModifier {
     ) {
         // Every invocation is treated as different even if the args are the same,
         // because we want to point to the correct one when reporting errors.
-        if !self.cached_compat(key, args, sc) {
+        if !self.cached_compat(key, args, sc, data) {
             if let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile) {
                 let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
                 our_sc.set_strict_scopes(false);
@@ -153,7 +154,7 @@ impl ScriptedModifier {
                 let mut vd = Validator::new(&block, data);
                 validate_modifiers(&mut vd, &mut our_sc);
                 validate_scripted_modifier_calls(vd, data, &mut our_sc);
-                sc.expect_compatibility(&our_sc, key);
+                sc.expect_compatibility(&our_sc, key, data);
                 self.cache.insert(key, args, Tooltipped::No, false, our_sc);
             }
         }

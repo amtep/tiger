@@ -215,7 +215,7 @@ fn validate_on_action_internal(
             for token in vd.values() {
                 data.verify_exists(Item::Event, token);
                 data.event_check_scope(token, sc);
-                if let Some(mut event_sc) = sc.root_for_event(token) {
+                if let Some(mut event_sc) = sc.root_for_event(token, data) {
                     data.event_validate_call(token, &mut event_sc);
                 }
             }
@@ -248,7 +248,7 @@ fn validate_on_action_internal(
             // Hoi4 uses the scope context directly.
             if Game::is_hoi4() {
                 data.event_validate_call(token, sc);
-            } else if let Some(mut event_sc) = sc.root_for_event(token) {
+            } else if let Some(mut event_sc) = sc.root_for_event(token, data) {
                 data.event_validate_call(token, &mut event_sc);
             }
         }
@@ -268,7 +268,7 @@ fn validate_on_action_internal(
             for token in vd.values() {
                 data.verify_exists(Item::Event, token);
                 data.event_check_scope(token, sc);
-                if let Some(mut event_sc) = sc.root_for_event(token) {
+                if let Some(mut event_sc) = sc.root_for_event(token, data) {
                     data.event_validate_call(token, &mut event_sc);
                 }
             }
@@ -291,7 +291,7 @@ fn validate_on_action_internal(
             }
             for token in vd.values() {
                 data.verify_exists(Item::OnAction, token);
-                if let Some(mut action_sc) = sc.root_for_action(token) {
+                if let Some(mut action_sc) = sc.root_for_action(token, data) {
                     data.on_actions.validate_call(token, data, &mut action_sc);
                 }
             }
@@ -318,7 +318,7 @@ fn validate_on_action_internal(
                     continue;
                 }
                 data.verify_exists(Item::OnAction, token);
-                if let Some(mut action_sc) = sc.root_for_action(token) {
+                if let Some(mut action_sc) = sc.root_for_action(token, data) {
                     data.on_actions.validate_call(token, data, &mut action_sc);
                 }
             }
@@ -337,7 +337,7 @@ fn validate_on_action_internal(
             let mut vd = Validator::new(b, data);
             for token in vd.values() {
                 data.verify_exists(Item::OnAction, token);
-                if let Some(mut action_sc) = sc.root_for_action(token) {
+                if let Some(mut action_sc) = sc.root_for_action(token, data) {
                     data.on_actions.validate_call(token, data, &mut action_sc);
                 }
             }

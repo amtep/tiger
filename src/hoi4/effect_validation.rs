@@ -30,12 +30,12 @@ pub fn validate_add_ace(
 pub fn validate_add_advisor_role(
     _key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
-    if !sc.scopes().contains(Scopes::Character) {
+    if !sc.scopes(data).contains(Scopes::Character) {
         vd.req_field("character");
     }
     // TODO: if scope is a country literal, check that this character belongs to it.

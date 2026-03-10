@@ -176,7 +176,7 @@ fn validate_inner(
                             let msg = "cannot use `any_` iterators in a script value";
                             err(ErrorKey::Validation).msg(msg).loc(token).push();
                         }
-                        sc.expect(inscopes, &Reason::Token(token.clone()));
+                        sc.expect(inscopes, &Reason::Token(token.clone()), data);
                         if let Some(block) = bv.expect_block() {
                             precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
                             sc.open_scope(outscope, token.clone());

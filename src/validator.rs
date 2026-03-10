@@ -470,7 +470,7 @@ impl<'a> Validator<'a> {
         self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(Item::OnAction, token, sev);
-                if let Some(mut action_sc) = sc.root_for_action(token) {
+                if let Some(mut action_sc) = sc.root_for_action(token, self.data) {
                     self.data.on_actions.validate_call(token, data, &mut action_sc);
                 }
             }
@@ -489,7 +489,7 @@ impl<'a> Validator<'a> {
             if let Some(token) = bv.expect_value() {
                 self.data.verify_exists_max_sev(Item::Event, token, sev);
                 self.data.event_check_scope(token, sc);
-                if let Some(mut event_sc) = sc.root_for_event(token) {
+                if let Some(mut event_sc) = sc.root_for_event(token, self.data) {
                     self.data.event_validate_call(token, &mut event_sc);
                 }
             }

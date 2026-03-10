@@ -289,7 +289,7 @@ pub fn validate_trigger_internal(
                         err(ErrorKey::Validation).msg(msg).loc(key).push();
                         return;
                     }
-                    sc.expect(inscopes, &Reason::Token(key.clone()));
+                    sc.expect(inscopes, &Reason::Token(key.clone()), data);
                     if let Some(block) = bv.expect_block() {
                         precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
                         sc.open_scope(outscope, key.clone());
@@ -491,15 +491,16 @@ pub fn validate_trigger_key_bv(
                     #[cfg(feature = "jomini")]
                     data.script_values.validate_call(part, data, sc);
                     sc.replace(Scopes::Value, part.clone());
-                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes()) {
+                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data)) {
                     #[cfg(feature = "imperator")]
                     if let Some((inscopes, trigger)) = scope_trigger(part, data) {
                         // If a trigger of the same name exists, and it's compatible with this
                         // location and scope context, then that trigger takes precedence.
                         if part_flags.contains(PartFlags::Last)
-                            && (inscopes.contains(Scopes::None) || sc.scopes().intersects(inscopes))
+                            && (inscopes.contains(Scopes::None)
+                                || sc.scopes(data).intersects(inscopes))
                         {
-                            validate_inscopes(part_flags, part, inscopes, sc);
+                            validate_inscopes(part_flags, part, inscopes, sc, data);
                             sc.close();
                             side_effects |= match_trigger_bv(
                                 &trigger,
@@ -515,7 +516,7 @@ pub fn validate_trigger_key_bv(
                             return side_effects;
                         }
                     }
-                    validate_inscopes(part_flags, part, inscopes, sc);
+                    validate_inscopes(part_flags, part, inscopes, sc, data);
                     sc.replace(outscope, part.clone());
                 } else if let Some((inscopes, trigger)) = scope_trigger(part, data) {
                     if !part_flags.contains(PartFlags::Last) {
@@ -532,7 +533,7 @@ pub fn validate_trigger_key_bv(
                         sc.close();
                         return side_effects;
                     }
-                    validate_inscopes(part_flags, part, inscopes, sc);
+                    validate_inscopes(part_flags, part, inscopes, sc, data);
                     sc.close();
                     side_effects |= match_trigger_bv(
                         &trigger,
@@ -592,12 +593,12 @@ pub fn validate_trigger_rhs(
         if matches!(cmp, Comparator::NotEquals | Comparator::Equals(Double))
             && bv.get_value().is_some()
         {
-            let scopes = sc.scopes();
+            let scopes = sc.scopes(data);
             sc.close();
             if let Some(token) = bv.expect_value() {
                 validate_target_ok_this(token, data, sc, scopes);
             }
-        } else if sc.can_be(Scopes::Value) {
+        } else if sc.can_be(Scopes::Value, data) {
             sc.close();
             // TODO: check side_effects
             #[cfg(feature = "jomini")]
@@ -612,7 +613,7 @@ pub fn validate_trigger_rhs(
 
     match bv {
         BV::Value(t) => {
-            let scopes = sc.scopes();
+            let scopes = sc.scopes(data);
             sc.close();
             validate_target_ok_this(t, data, sc, scopes);
         }
@@ -943,6 +944,7 @@ fn match_trigger_bv(
         Trigger::Special => {
             if name.is("exists") {
                 if let Some(token) = bv.expect_value() {
+                    let multipart = token.as_str().contains('.');
                     if token.is("yes") || token.is("no") {
                         let msg = "`exists = yes/no` does not work";
                         let info = if token.is("yes") {
@@ -951,12 +953,12 @@ fn match_trigger_bv(
                             "try `NOT = { exists = this }`"
                         };
                         warn(ErrorKey::Scopes).msg(msg).info(info).loc(token).push();
-                    } else if token.starts_with("scope:") && !token.as_str().contains('.') {
+                    } else if token.starts_with("scope:") && !multipart {
                         // exists = scope:name is used to check if that scope name was set
                         if !negated {
                             sc.exists_scope(token.as_str().strip_prefix("scope:").unwrap(), token);
                         }
-                    } else if token.starts_with("local_var:") && !token.as_str().contains('.') {
+                    } else if token.starts_with("local_var:") && !multipart {
                         // exists = local_var:name is used to check if that local variable was set
                         if !negated {
                             sc.exists_local(
@@ -964,11 +966,15 @@ fn match_trigger_bv(
                                 token,
                             );
                         }
+                    } else if (token.starts_with("global_var:") || token.starts_with("var:"))
+                        && !multipart
+                    {
+                        // nothing
                     } else if token.starts_with("flag:") {
                         // exists = flag:$REASON$ is used in vanilla just to shut up their error.log,
                         // so accept it silently even though it's a no-op.
                     } else {
-                        validate_target_ok_this(token, data, sc, Scopes::non_primitive());
+                        validate_target_ok_this(token, data, sc, Scopes::all_but_none());
 
                         if tooltipped.is_tooltipped() {
                             if let Some(firstpart) = token.as_str().strip_suffix(".holder") {
@@ -997,10 +1003,48 @@ fn match_trigger_bv(
                     vd.req_field("target");
                     let name = vd.field_value("name").cloned();
                     for value in vd.multi_field_value("target") {
-                        let outscopes =
-                            validate_target_ok_this(value, data, sc, Scopes::all_but_none());
+                        let target_scopes = name.as_ref().map_or(Scopes::all_but_none(), |name| {
+                            sc.local_list_scopes(name.as_str(), data)
+                        });
+                        let outscopes = validate_target_ok_this(value, data, sc, target_scopes);
                         if let Some(ref name) = name {
-                            sc.define_or_expect_local_list(name, outscopes);
+                            sc.define_or_expect_local_list(name, outscopes, data);
+                        }
+                    }
+                }
+            } else if name.is("is_target_in_global_variable_list") {
+                #[cfg(feature = "jomini")]
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_max_severity(max_sev);
+                    vd.req_field("name");
+                    vd.req_field("target");
+                    let name = vd.field_value("name").cloned();
+                    for value in vd.multi_field_value("target") {
+                        let target_scopes = name.as_ref().map_or(Scopes::all_but_none(), |name| {
+                            data.global_list_scopes.scopes(name.as_str())
+                        });
+                        let outscopes = validate_target_ok_this(value, data, sc, target_scopes);
+                        if let Some(ref name) = name {
+                            data.global_list_scopes.expect(name.as_str(), name, outscopes);
+                        }
+                    }
+                }
+            } else if name.is("is_target_in_variable_list") {
+                #[cfg(feature = "jomini")]
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_max_severity(max_sev);
+                    vd.req_field("name");
+                    vd.req_field("target");
+                    let name = vd.field_value("name").cloned();
+                    for value in vd.multi_field_value("target") {
+                        let target_scopes = name.as_ref().map_or(Scopes::all_but_none(), |name| {
+                            data.variable_list_scopes.scopes(name.as_str())
+                        });
+                        let outscopes = validate_target_ok_this(value, data, sc, target_scopes);
+                        if let Some(ref name) = name {
+                            data.variable_list_scopes.expect(name.as_str(), name, outscopes);
                         }
                     }
                 }
@@ -1012,7 +1056,7 @@ fn match_trigger_bv(
                     vd.req_field("name");
                     vd.req_field("value");
                     if let Some(name) = vd.field_value("name") {
-                        sc.define_or_expect_local_list(name, Scopes::all_but_none());
+                        sc.define_or_expect_local_list(name, Scopes::all_but_none(), data);
                     }
                     vd.multi_field_validated_any_cmp("value", |bv, data| {
                         validate_script_value(bv, data, sc);
@@ -1146,12 +1190,12 @@ fn match_trigger_bv(
                 }
             } else if name.is("add_to_temporary_list") {
                 if let Some(value) = bv.expect_value() {
-                    sc.define_or_expect_list_this(value);
+                    sc.define_or_expect_list_this(value, data);
                     side_effects = true;
                 }
             } else if name.is("is_in_list") {
                 if let Some(value) = bv.expect_value() {
-                    sc.expect_list(value);
+                    sc.expect_list(value, data);
                 }
             } else if name.is("is_researching_technology") {
                 #[cfg(feature = "vic3")]
@@ -1335,20 +1379,21 @@ pub fn validate_target_ok_this(
                     #[cfg(feature = "jomini")]
                     data.script_values.validate_call(part, data, sc);
                     sc.replace(Scopes::Value, part.clone());
-                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes()) {
+                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data)) {
                     #[cfg(feature = "imperator")]
                     if let Some(inscopes) = trigger_comparevalue(part, data) {
                         // If a trigger of the same name exists, and it's compatible with this
                         // location and scope context, then that trigger takes precedence.
                         if part_flags.contains(PartFlags::Last)
-                            && (inscopes.contains(Scopes::None) || sc.scopes().intersects(inscopes))
+                            && (inscopes.contains(Scopes::None)
+                                || sc.scopes(data).intersects(inscopes))
                         {
-                            validate_inscopes(part_flags, part, inscopes, sc);
+                            validate_inscopes(part_flags, part, inscopes, sc, data);
                             sc.replace(Scopes::Value, part.clone());
                             continue;
                         }
                     }
-                    validate_inscopes(part_flags, part, inscopes, sc);
+                    validate_inscopes(part_flags, part, inscopes, sc, data);
                     sc.replace(outscope, part.clone());
                 } else if let Some(inscopes) = trigger_comparevalue(part, data) {
                     if !part_flags.contains(PartFlags::Last) {
@@ -1357,7 +1402,7 @@ pub fn validate_target_ok_this(
                         sc.close();
                         return Scopes::all();
                     }
-                    validate_inscopes(part_flags, part, inscopes, sc);
+                    validate_inscopes(part_flags, part, inscopes, sc, data);
                     sc.replace(Scopes::Value, part.clone());
                 } else if Game::is_hoi4() && is_country_tag(part.as_str()) {
                     if !part_flags.contains(PartFlags::First) {
@@ -1393,7 +1438,7 @@ pub fn validate_target_ok_this(
             }
         }
     }
-    let (final_scopes, because) = sc.scopes_reason();
+    let (final_scopes, because) = sc.scopes_reason(data);
     if !outscopes.intersects(final_scopes | Scopes::None) {
         let part = &part_vec[part_vec.len() - 1];
         let msg = format!("`{part}` produces {final_scopes} but expected {outscopes}");
@@ -1604,13 +1649,14 @@ pub fn validate_inscopes(
     name: &Token,
     inscopes: Scopes,
     sc: &mut ScopeContext,
+    data: &Everything,
 ) {
     // If the part does not use its inscope then any parts that come before it are useless
     // and probably indicate a mistake is being made.
     if inscopes == Scopes::None && !part_flags.contains(PartFlags::First) {
         warn_not_first(name);
     }
-    sc.expect(inscopes, &Reason::Token(name.clone()));
+    sc.expect(inscopes, &Reason::Token(name.clone()), data);
 }
 
 #[allow(unused_variables)] // imperator does not use sc
@@ -1708,7 +1754,7 @@ pub fn validate_argument_scope(
     data: &Everything,
     sc: &mut ScopeContext,
 ) {
-    validate_inscopes(part_flags, func, inscopes, sc);
+    validate_inscopes(part_flags, func, inscopes, sc, data);
     validate_argument_internal(arg, validation, data, sc);
 
     if func.lowercase_is("scope") {
@@ -1721,6 +1767,12 @@ pub fn validate_argument_scope(
             sc.exists_local(arg.as_str(), part);
         }
         sc.replace_local_variable(arg.as_str(), part);
+    } else if func.lowercase_is("global_var") {
+        #[cfg(feature = "jomini")]
+        sc.replace_global_variable(arg.as_str(), part);
+    } else if func.lowercase_is("var") {
+        #[cfg(feature = "jomini")]
+        sc.replace_variable(arg.as_str(), part);
     } else {
         sc.replace(outscopes, part.clone());
     }
@@ -1772,7 +1824,7 @@ pub fn validate_argument(
 
     let func_lc = func.as_str().to_ascii_lowercase();
     if let Some((inscopes, validation, outscopes)) = scope_trigger_complex(&func_lc) {
-        sc.expect(inscopes, &Reason::Token(func.clone()));
+        sc.expect(inscopes, &Reason::Token(func.clone()), data);
         validate_argument_internal(arg, validation, data, sc);
         sc.replace(outscopes, func.clone());
     } else if let Some(entry) = scope_prefix(func) {
@@ -1812,7 +1864,7 @@ pub fn validate_prefix(
 
     let prefix_lc = prefix.as_str().to_ascii_lowercase();
     if let Some((inscopes, validation, outscopes)) = scope_trigger_complex(&prefix_lc) {
-        sc.expect(inscopes, &Reason::Token(prefix.clone()));
+        sc.expect(inscopes, &Reason::Token(prefix.clone()), data);
         validate_argument_internal(arg, validation, data, sc);
         sc.replace(outscopes, prefix.clone());
         true

@@ -153,7 +153,7 @@ impl Trigger {
         tooltipped: Tooltipped,
         negated: bool,
     ) {
-        if !self.cached_compat(key, &[], tooltipped, negated, sc) {
+        if !self.cached_compat(key, &[], tooltipped, negated, sc, data) {
             let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
             our_sc.set_strict_scopes(false);
             if self.scope_override.is_some() {
@@ -175,7 +175,7 @@ impl Trigger {
                 our_sc = ScopeContext::new_unrooted(scopes, key);
                 our_sc.set_strict_scopes(false);
             }
-            sc.expect_compatibility(&our_sc, key);
+            sc.expect_compatibility(&our_sc, key, data);
             self.cache.insert(key, &[], tooltipped, negated, our_sc);
         }
     }
@@ -191,9 +191,10 @@ impl Trigger {
         tooltipped: Tooltipped,
         negated: bool,
         sc: &mut ScopeContext,
+        data: &Everything,
     ) -> bool {
         self.cache.perform(key, args, tooltipped, negated, |our_sc| {
-            sc.expect_compatibility(our_sc, key);
+            sc.expect_compatibility(our_sc, key, data);
         })
     }
 
@@ -208,7 +209,7 @@ impl Trigger {
     ) {
         // Every invocation is treated as different even if the args are the same,
         // because we want to point to the correct one when reporting errors.
-        if !self.cached_compat(key, args, tooltipped, negated, sc) {
+        if !self.cached_compat(key, args, tooltipped, negated, sc, data) {
             if let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile) {
                 let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
                 our_sc.set_strict_scopes(false);
@@ -233,7 +234,7 @@ impl Trigger {
                     our_sc = ScopeContext::new_unrooted(scopes, key);
                     our_sc.set_strict_scopes(false);
                 }
-                sc.expect_compatibility(&our_sc, key);
+                sc.expect_compatibility(&our_sc, key, data);
                 self.cache.insert(key, args, tooltipped, negated, our_sc);
             }
         }

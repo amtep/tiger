@@ -57,7 +57,7 @@ impl DbKind for Modifier {
         vd.field("icon");
 
         // Ensure contained modifs are valid at this location
-        let (scopes, scope_reason) = sc.scopes_reason();
+        let (scopes, scope_reason) = sc.scopes_reason(data);
         let scope_kinds = modif_scope_kind(scopes);
         vd.unknown_fields(|key, _| {
             if let Some(kind) = ModifKinds::lookup_modif(key, data, None) {

@@ -611,7 +611,7 @@ pub fn validate_datatypes(
             // If the game concept is also a passed-in scope, the game concept takes precedence.
             // This is worth warning about.
             // Real life example: [ROOT.Char.Custom2('RelationToMeShort', schemer)]
-            if sc.is_name_defined(code.name.as_str()).is_some() && !game_concept_formatting {
+            if sc.is_name_defined(code.name.as_str(), data).is_some() && !game_concept_formatting {
                 let msg = format!("`{}` is both a named scope and a game concept here", &code.name);
                 let info = format!(
                     "The game concept will take precedence. Do `{}.Self` if you want the named scope.",
@@ -639,7 +639,7 @@ pub fn validate_datatypes(
         // It may still be a passed-in scope even if this check doesn't pass, because sc might be a non-strict scope
         // where the scope names are not known. That's handled heuristically below.
         if !found && is_first {
-            if let Some(scopes) = sc.is_name_defined(code.name.as_str()) {
+            if let Some(scopes) = sc.is_name_defined(code.name.as_str(), data) {
                 found = true;
                 args = Args::Args(&[]);
                 rtype = datatype_from_scopes(scopes);

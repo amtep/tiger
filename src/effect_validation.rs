@@ -28,7 +28,7 @@ pub fn validate_add_to_list_imperator(
     _tooltipped: Tooltipped,
 ) {
     vd.identifier("list name");
-    sc.define_or_expect_list_this(vd.value());
+    sc.define_or_expect_list_this(vd.value(), vd.data());
     vd.accept();
 }
 
@@ -44,7 +44,7 @@ pub fn validate_add_to_list(
     match bv {
         BV::Value(name) => {
             validate_identifier(name, "list name", Severity::Error);
-            sc.define_or_expect_list_this(name);
+            sc.define_or_expect_list_this(name, data);
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
@@ -53,9 +53,9 @@ pub fn validate_add_to_list(
             if let Some(target) = vd.field_value("value").cloned() {
                 if let Some(name) = vd.field_value("name") {
                     validate_identifier(name, "list name", Severity::Error);
-                    let outscopes =
-                        validate_target_ok_this(&target, data, sc, Scopes::all_but_none());
-                    sc.define_or_expect_list(name, outscopes);
+                    let target_scopes = sc.local_list_scopes(name.as_str(), data);
+                    let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+                    sc.define_or_expect_list(name, outscopes, data);
                 }
             }
         }
@@ -75,17 +75,26 @@ pub fn validate_add_to_variable_list(
 ) {
     vd.req_field("name");
     vd.req_field("target");
-    if key.as_str().contains("_local_") {
-        if let Some(target) = vd.field_value("target").cloned() {
-            if let Some(name) = vd.field_value("name") {
-                validate_identifier(name, "list name", Severity::Error);
-                let outscopes = validate_target_ok_this(&target, data, sc, Scopes::all_but_none());
-                sc.define_or_expect_local_list(name, outscopes);
+    if let Some(target) = vd.field_value("target").cloned() {
+        if let Some(name) = vd.field_value("name") {
+            validate_identifier(name, "list name", Severity::Error);
+            // It would be better if the step from scopes() to expect() could be done atomically for
+            // the global and normal variables, but unfortunately that could lead to deadlocks if
+            // the target itself refers to other variables.
+            if key.as_str().contains("_local_") {
+                let target_scopes = sc.local_list_scopes(name.as_str(), data);
+                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+                sc.define_or_expect_local_list(name, outscopes, data);
+            } else if key.as_str().contains("_global_") {
+                let target_scopes = data.global_list_scopes.scopes(name.as_str());
+                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+                data.global_list_scopes.expect(name.as_str(), name, outscopes);
+            } else {
+                let target_scopes = data.variable_list_scopes.scopes(name.as_str());
+                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+                data.variable_list_scopes.expect(name.as_str(), name, outscopes);
             }
         }
-    } else {
-        vd.field_identifier("name", "list name");
-        vd.field_target_ok_this("target", sc, Scopes::all_but_none());
     }
     if key.starts_with("add_") && (Game::is_ck3() || Game::is_vic3()) {
         validate_optional_duration(&mut vd, sc);
@@ -97,19 +106,21 @@ pub fn validate_add_to_variable_list(
 pub fn validate_change_variable(
     key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
-    if key.as_str().contains("_local_") {
-        if let Some(name) = vd.field_value("name") {
-            validate_identifier(name, "variable name", Severity::Error);
-            sc.expect_local(name, Scopes::Value);
+    if let Some(name) = vd.field_value("name") {
+        validate_identifier(name, "variable name", Severity::Error);
+        if key.as_str().contains("_local_") {
+            sc.expect_local(name, Scopes::Value, data);
+        } else if key.as_str().contains("_global_") {
+            data.global_scopes.expect(name.as_str(), name, Scopes::Value);
+        } else {
+            data.variable_scopes.expect(name.as_str(), name, Scopes::Value);
         }
-    } else {
-        vd.field_identifier("name", "variable name");
     }
     vd.field_script_value("add", sc);
     vd.field_script_value("subtract", sc);
@@ -125,19 +136,21 @@ pub fn validate_change_variable(
 pub fn validate_clamp_variable(
     key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
-    if key.as_str().contains("_local_") {
-        if let Some(name) = vd.field_value("name") {
-            validate_identifier(name, "variable name", Severity::Error);
-            sc.expect_local(name, Scopes::Value);
+    if let Some(name) = vd.field_value("name") {
+        validate_identifier(name, "variable name", Severity::Error);
+        if key.as_str().contains("_local_") {
+            sc.expect_local(name, Scopes::Value, data);
+        } else if key.as_str().contains("_global_") {
+            data.global_scopes.expect(name.as_str(), name, Scopes::Value);
+        } else {
+            data.variable_scopes.expect(name.as_str(), name, Scopes::Value);
         }
-    } else {
-        vd.field_identifier("name", "variable name");
     }
     vd.field_script_value("min", sc);
     vd.field_script_value("max", sc);
@@ -182,7 +195,7 @@ pub fn validate_remove_from_list(
     _tooltipped: Tooltipped,
 ) {
     vd.identifier("list name");
-    sc.expect_list(vd.value());
+    sc.expect_list(vd.value(), vd.data());
     vd.accept();
 }
 
@@ -191,20 +204,22 @@ pub fn validate_remove_from_list(
 pub fn validate_round_variable(
     key: &Token,
     _block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("name");
     vd.req_field("nearest");
-    if key.as_str().contains("_local_") {
-        if let Some(name) = vd.field_value("name") {
-            validate_identifier(name, "variable name", Severity::Error);
-            sc.expect_local(name, Scopes::Value);
+    if let Some(name) = vd.field_value("name") {
+        validate_identifier(name, "variable name", Severity::Error);
+        if key.as_str().contains("_local_") {
+            sc.expect_local(name, Scopes::Value, data);
+        } else if key.as_str().contains("_global_") {
+            data.global_scopes.expect(name.as_str(), name, Scopes::Value);
+        } else {
+            data.variable_scopes.expect(name.as_str(), name, Scopes::Value);
         }
-    } else {
-        vd.field_identifier("name", "variable name");
     }
     vd.field_script_value("nearest", sc);
 }
@@ -253,7 +268,11 @@ pub fn validate_set_variable(
         BV::Value(token) => {
             validate_identifier(token, "variable name", Severity::Error);
             if key.as_str().contains("_local_") {
-                sc.save_local_variable(token.as_str());
+                sc.set_local_variable(token, Scopes::Bool);
+            } else if key.as_str().contains("_global_") {
+                data.global_scopes.expect(token.as_str(), token, Scopes::Bool);
+            } else {
+                data.variable_scopes.expect(token.as_str(), token, Scopes::Bool);
             }
         }
         BV::Block(block) => {
@@ -263,11 +282,19 @@ pub fn validate_set_variable(
             let name = vd.field_identifier("name", "variable name").cloned();
             vd.field_validated("value", |bv, data| match bv {
                 BV::Value(token) => {
-                    let outscopes =
-                        validate_target_ok_this(token, data, sc, Scopes::all_but_none());
                     if let Some(name) = &name {
                         if key.as_str().contains("_local_") {
+                            let target_scopes = sc.local_variable_scopes(name.as_str(), data);
+                            let outscopes = validate_target_ok_this(token, data, sc, target_scopes);
                             sc.set_local_variable(name, outscopes);
+                        } else if key.as_str().contains("_global_") {
+                            let target_scopes = data.global_scopes.scopes(name.as_str());
+                            let outscopes = validate_target_ok_this(token, data, sc, target_scopes);
+                            data.global_scopes.expect(name.as_str(), name, outscopes);
+                        } else {
+                            let target_scopes = data.variable_scopes.scopes(name.as_str());
+                            let outscopes = validate_target_ok_this(token, data, sc, target_scopes);
+                            data.variable_scopes.expect(name.as_str(), name, outscopes);
                         }
                     }
                 }
@@ -278,6 +305,10 @@ pub fn validate_set_variable(
                         if let Some(name) = &name {
                             if key.as_str().contains("_local_") {
                                 sc.set_local_variable(name, Scopes::Value);
+                            } else if key.as_str().contains("_global_") {
+                                data.global_scopes.expect(name.as_str(), name, Scopes::Value);
+                            } else {
+                                data.variable_scopes.expect(name.as_str(), name, Scopes::Value);
                             }
                         }
                     }
@@ -301,9 +332,7 @@ pub fn validate_switch(
 ) {
     vd.set_case_sensitive(true);
     vd.req_field("trigger");
-    if let Some(target) = vd.field_value("trigger") {
-        // clone to avoid calling vd again while target is still borrowed
-        let target = target.clone();
+    if let Some(target) = vd.field_value("trigger").cloned() {
         let mut count = 0;
         vd.set_allow_questionmark_equals(true);
         vd.unknown_block_fields(|key, block| {
@@ -344,7 +373,7 @@ pub fn validate_trigger_event(
         BV::Value(token) => {
             data.verify_exists(Item::Event, token);
             data.event_check_scope(token, sc);
-            if let Some(mut event_sc) = sc.root_for_event(token) {
+            if let Some(mut event_sc) = sc.root_for_event(token, data) {
                 data.event_validate_call(token, &mut event_sc);
             }
         }

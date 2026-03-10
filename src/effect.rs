@@ -197,7 +197,7 @@ pub fn validate_effect_field(
     };
 
     if let Some((inscopes, effect)) = scope_effect(key, data) {
-        sc.expect(inscopes, &Reason::Token(key.clone()));
+        sc.expect(inscopes, &Reason::Token(key.clone()), data);
         match effect {
             Effect::Yes => {
                 if let Some(token) = bv.expect_value() {
@@ -412,7 +412,7 @@ pub fn validate_effect_field(
                     err(ErrorKey::Validation).msg(msg).loc(key).push();
                     return;
                 }
-                sc.expect(inscopes, &Reason::Token(key.clone()));
+                sc.expect(inscopes, &Reason::Token(key.clone()), data);
                 if let Some(b) = bv.expect_block() {
                     precheck_iterator_fields(ltype, it_name.as_str(), b, data, sc);
                     sc.open_scope(outscope, key.clone());

@@ -53,10 +53,11 @@ impl DbKind for EventTheme {
         sc: &mut ScopeContext,
     ) {
         // Check if the passed-in scope type has already been validated for
-        if self.validated_scopes.read().unwrap().contains(sc.scopes()) {
+        let scopes = sc.scopes(data);
+        if self.validated_scopes.read().unwrap().contains(scopes) {
             return;
         }
-        *self.validated_scopes.write().unwrap() |= sc.scopes();
+        *self.validated_scopes.write().unwrap() |= scopes;
 
         let mut vd = Validator::new(block, data);
         vd.set_max_severity(Severity::Warning);
@@ -107,10 +108,11 @@ impl DbKind for EventBackground {
         data: &Everything,
         sc: &mut ScopeContext,
     ) {
-        if self.validated_scopes.read().unwrap().contains(sc.scopes()) {
+        let scopes = sc.scopes(data);
+        if self.validated_scopes.read().unwrap().contains(scopes) {
             return;
         }
-        *self.validated_scopes.write().unwrap() |= sc.scopes();
+        *self.validated_scopes.write().unwrap() |= scopes;
 
         data.mark_used(Item::Localization, key.as_str());
 
@@ -163,10 +165,11 @@ impl DbKind for EventTransition {
         data: &Everything,
         sc: &mut ScopeContext,
     ) {
-        if self.validated_scopes.read().unwrap().contains(sc.scopes()) {
+        let scopes = sc.scopes(data);
+        if self.validated_scopes.read().unwrap().contains(scopes) {
             return;
         }
-        *self.validated_scopes.write().unwrap() |= sc.scopes();
+        *self.validated_scopes.write().unwrap() |= scopes;
 
         let mut vd = Validator::new(block, data);
         vd.set_max_severity(Severity::Warning);

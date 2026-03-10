@@ -977,23 +977,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         ]),
     ),
     (Scopes::War, "is_target_of_wargoal_in_war", Scope(Scopes::Country)),
-    (
-        Scopes::None,
-        "is_target_in_global_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_global_variable_list", Special),
     (Scopes::None, "is_target_in_local_variable_list", Special),
-    (
-        Scopes::None,
-        "is_target_in_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_variable_list", Special),
     (Scopes::State, "is_target_of_wargoal", Scope(Scopes::Country)),
     (Scopes::Country, "is_taxing_goods", ScopeOrItem(Scopes::Goods, Item::Goods)),
     (Scopes::None, "is_template_used", Item(Item::CharacterTemplate)),

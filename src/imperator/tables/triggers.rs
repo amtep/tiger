@@ -586,23 +586,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "is_in_list", Special),
     (Scopes::None, "is_iron_man", Boolean),
     (Scopes::None, "is_target_alive", Scope(Scopes::Character)),
-    (
-        Scopes::None,
-        "is_target_in_global_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_global_variable_list", Special),
     (Scopes::None, "is_target_in_local_variable_list", Special),
-    (
-        Scopes::None,
-        "is_target_in_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_variable_list", Special),
     (
         Scopes::None,
         "list_size",

@@ -358,7 +358,7 @@ pub fn precheck_iterator_fields(
 pub fn validate_iterator_fields(
     caller: &Lowercase,
     list_type: ListType,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     vd: &mut Validator,
     tooltipped: &mut Tooltipped,
@@ -441,7 +441,7 @@ pub fn validate_iterator_fields(
 
     #[cfg(feature = "hoi4")]
     if (list_type == ListType::Every || list_type == ListType::Random)
-        && sc.scopes().contains(Scopes::Character | Scopes::IndustrialOrg)
+        && sc.scopes(data).contains(Scopes::Character | Scopes::IndustrialOrg)
     {
         vd.field_bool("include_invisible");
     } else {
@@ -462,22 +462,29 @@ pub fn validate_inside_iterator(
     tooltipped: Tooltipped,
 ) {
     // Docs say that all three can take either list or variable, but global and local lists must be variable lists.
+    #[cfg(feature = "jomini")]
     if name == "in_list" {
         vd.req_field_one_of(&["list", "variable"]);
         if let Some(token) = vd.field_value("list") {
-            sc.expect_list(token);
+            sc.expect_list(token, data);
             sc.replace_list_entry(token);
+        }
+        if let Some(token) = vd.field_value("variable") {
+            sc.replace_variable_list_entry(token);
         }
     } else if name == "in_local_list" {
         vd.req_field("variable");
         vd.ban_field("list", || format!("{listtype}_in_list"));
         if let Some(token) = vd.field_value("variable") {
-            sc.expect_local_list(token);
+            sc.expect_local_list(token, data);
             sc.replace_local_list_entry(token);
         }
     } else if name == "in_global_list" {
         vd.req_field("variable");
         vd.ban_field("list", || format!("{listtype}_in_list"));
+        if let Some(token) = vd.field_value("variable") {
+            sc.replace_global_list_entry(token);
+        }
     } else {
         vd.ban_field("list", || format!("{listtype}_in_list"));
         vd.ban_field("variable", || {
@@ -636,7 +643,7 @@ pub fn validate_inside_iterator(
 
     #[cfg(feature = "ck3")]
     if Game::is_ck3() {
-        if sc.can_be(Scopes::Character) {
+        if sc.can_be(Scopes::Character, data) {
             vd.field_bool("only_if_dead");
             vd.field_bool("even_if_dead");
         } else {
@@ -960,8 +967,8 @@ pub fn validate_scope_chain(
                     data.verify_exists(Item::State, part);
                     #[cfg(feature = "hoi4")]
                     sc.replace(Scopes::State, part.clone());
-                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes()) {
-                    validate_inscopes(part_flags, part, inscopes, sc);
+                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data)) {
+                    validate_inscopes(part_flags, part, inscopes, sc, data);
                     sc.replace(outscope, part.clone());
                 } else {
                     let msg = format!("unknown token `{part}`");

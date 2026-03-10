@@ -99,4 +99,6 @@ mod trigger;
 mod util;
 mod validate;
 mod validator;
+#[cfg(feature = "jomini")]
+mod variable_scopes;
 mod variables;

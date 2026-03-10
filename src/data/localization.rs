@@ -199,6 +199,7 @@ impl LocaEntry {
         count: &mut usize,
         sc: &mut ScopeContext,
         link: Option<MacroMapIndex>,
+        data: &Everything,
     ) -> bool {
         // Are we (probably) stuck in a macro loop?
         if *count > 250 {
@@ -220,6 +221,7 @@ impl LocaEntry {
                                 count,
                                 sc,
                                 Some(MACRO_MAP.get_or_insert_loc(keyword.loc)),
+                                data,
                             ) {
                                 return false;
                             }
@@ -227,7 +229,7 @@ impl LocaEntry {
                             // we can't know what value it really has, so replace it with itself to
                             // at least get comprehensible error messages
                             vec.push(keyword.clone().linked(link));
-                        } else if let Some(scopes) = sc.is_name_defined(keyword.as_str()) {
+                        } else if let Some(scopes) = sc.is_name_defined(keyword.as_str(), data) {
                             if scopes.contains(Scopes::Value) {
                                 // same as above... we can't know what value it really has
                                 vec.push(keyword.clone().linked(link));
@@ -606,7 +608,7 @@ impl Localization {
         if matches!(entry.value, LocaValue::Macro(_)) {
             let mut new_line = Vec::new();
             let mut count = 0;
-            if entry.expand_macros(&mut new_line, from, &mut count, sc, None) {
+            if entry.expand_macros(&mut new_line, from, &mut count, sc, None, data) {
                 // re-parse after macro expansion
                 let new_line_as_ref = new_line.iter().collect();
                 let value = ValueParser::new(new_line_as_ref).parse();

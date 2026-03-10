@@ -1469,23 +1469,9 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Struggle, "is_struggle_phase", Item(Item::StrugglePhase)),
     (Scopes::Struggle, "is_struggle_type", Item(Item::Struggle)),
     (Scopes::Character, "is_successor_of_accolade", Scope(Scopes::Accolade)),
-    (
-        Scopes::None,
-        "is_target_in_global_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_global_variable_list", Special),
     (Scopes::None, "is_target_in_local_variable_list", Special),
-    (
-        Scopes::None,
-        "is_target_in_variable_list",
-        Block(&[
-            ("name", Identifier("list name")),
-            ("*target", ScopeOkThis(Scopes::all_but_none())),
-        ]),
-    ),
+    (Scopes::None, "is_target_in_variable_list", Special),
     (Scopes::LandedTitle, "is_target_of_council_task", Item(Item::CouncilTask)),
     (Scopes::LandedTitle, "is_target_of_council_task_or_clone", Item(Item::CouncilTask)),
     (Scopes::Character, "is_tax_collector", Boolean),

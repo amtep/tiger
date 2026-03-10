@@ -164,9 +164,9 @@ impl ScriptValue {
         Self { key, bv, cache: RwLock::new(TigerHashMap::default()), scope_override }
     }
 
-    pub fn cached_compat(&self, key: &Token, sc: &mut ScopeContext) -> bool {
+    pub fn cached_compat(&self, key: &Token, sc: &mut ScopeContext, data: &Everything) -> bool {
         if let Some(our_sc) = self.cache.read().unwrap().get(&key.loc) {
-            sc.expect_compatibility(our_sc, key);
+            sc.expect_compatibility(our_sc, key, data);
             true
         } else {
             false
@@ -189,7 +189,7 @@ impl ScriptValue {
     }
 
     pub fn validate_call(&self, key: &Token, data: &Everything, sc: &mut ScopeContext) {
-        if !self.cached_compat(key, sc) {
+        if !self.cached_compat(key, sc, data) {
             let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
             our_sc.set_strict_scopes(false);
             if self.scope_override.is_some() {
@@ -201,7 +201,7 @@ impl ScriptValue {
                 our_sc = ScopeContext::new_unrooted(scopes, key);
                 our_sc.set_strict_scopes(false);
             }
-            sc.expect_compatibility(&our_sc, key);
+            sc.expect_compatibility(&our_sc, key, data);
             self.cache.write().unwrap().insert(key.loc, our_sc);
         }
     }

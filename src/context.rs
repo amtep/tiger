@@ -3,6 +3,7 @@
 use std::borrow::Cow;
 use std::thread::panicking;
 
+use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::{ActionOrEvent, TigerHashMap, stringify_choices};
 use crate::report::{ErrorKey, ReportBuilderFull, err, warn};
@@ -120,6 +121,22 @@ enum ScopeEntry {
 
     /// The scope takes its value from a named scope. The `usize` is an index into the `ScopeContext::named` vector.
     Named(usize),
+
+    /// The scope takes its value from a global variable
+    #[cfg(feature = "jomini")]
+    GlobalVar(&'static str, Reason),
+
+    /// The scope takes its value from a global variable list
+    #[cfg(feature = "jomini")]
+    GlobalList(&'static str, Reason),
+
+    /// The scope takes its value from a normal variable
+    #[cfg(feature = "jomini")]
+    Var(&'static str, Reason),
+
+    /// The scope takes its value from a variable list
+    #[cfg(feature = "jomini")]
+    VarList(&'static str, Reason),
 }
 
 /// This enum records the reason why we think a certain scope has the type it does.
@@ -141,6 +158,9 @@ pub enum Reason {
     /// bug. Explain it to the user when it comes up. The `Token` points at the `multiplier` key.
     #[cfg(feature = "vic3")]
     MultiplierBug(Token),
+    /// The scope type was taken from info about a variable or variable list in the given namespace.
+    #[cfg(feature = "jomini")]
+    VariableReference(Token, &'static str),
 }
 
 /// Information about a temporarily suspended scope-building operation.
@@ -176,11 +196,12 @@ impl Reason {
             Reason::Token(t) | Reason::Name(t) | Reason::Builtin(t) => t,
             #[cfg(feature = "vic3")]
             Reason::MultiplierBug(t) => t,
+            #[cfg(feature = "jomini")]
+            Reason::VariableReference(t, _) => t,
         }
     }
 
     // TODO: change this to Display ?
-    // TODO: some callers already have something in front of the reason, that conflicts with the "scope was"
     pub fn msg(&self) -> Cow<'_, str> {
         match self {
             Reason::Token(t) => Cow::Owned(format!("deduced from `{t}` here")),
@@ -189,6 +210,10 @@ impl Reason {
             #[cfg(feature = "vic3")]
             Reason::MultiplierBug(_) => {
                 Cow::Borrowed("evaluated in root scope for `multiplier` (as of 1.9.8")
+            }
+            #[cfg(feature = "jomini")]
+            Reason::VariableReference(t, namespace) => {
+                Cow::Owned(format!("based on {namespace}{t}"))
             }
         }
     }
@@ -314,7 +339,7 @@ impl ScopeContext {
     }
 
     /// Helper function for `root_for_event` and `root_for_action`.
-    fn root_for(&self, trace: ActionOrEvent) -> Option<Self> {
+    fn root_for(&self, trace: ActionOrEvent, data: &Everything) -> Option<Self> {
         if !self.strict_scopes || self.no_warn || self.traceback.contains(&trace) {
             return None;
         }
@@ -326,7 +351,7 @@ impl ScopeContext {
         }
         #[cfg(feature = "hoi4")]
         new_sc.from.insert(0, new_sc.root.clone());
-        let (scopes, reason) = new_sc.scopes_reason();
+        let (scopes, reason) = new_sc.scopes_reason(data);
         new_sc.root = ScopeEntry::Scope(scopes, reason.clone());
         new_sc.scope_stack = vec![ScopeEntry::Rootref];
         new_sc.prev_levels = 0;
@@ -337,18 +362,18 @@ impl ScopeContext {
 
     /// Create a `ScopeContext` to use for a triggered event, if validating the event with this
     /// scope context is useful.
-    pub fn root_for_event<T: Into<Token>>(&self, event_id: T) -> Option<Self> {
-        self.root_for(ActionOrEvent::new_event(event_id.into()))
+    pub fn root_for_event<T: Into<Token>>(&self, event_id: T, data: &Everything) -> Option<Self> {
+        self.root_for(ActionOrEvent::new_event(event_id.into()), data)
     }
 
     /// Create a `ScopeContext` to use for a triggered action, if validating the action with this
     /// scope context is useful.
-    pub fn root_for_action<T: Into<Token>>(&self, action: T) -> Option<Self> {
+    pub fn root_for_action<T: Into<Token>>(&self, action: T, data: &Everything) -> Option<Self> {
         let action = action.into();
         if self.source == action {
             return None;
         }
-        self.root_for(ActionOrEvent::new_action(action))
+        self.root_for(ActionOrEvent::new_action(action), data)
     }
 
     /// Change the scope type and related token of `root` for this `ScopeContext`.
@@ -398,7 +423,7 @@ impl ScopeContext {
     /// Look up a named scope and return its scope types if it's known.
     ///
     /// Callers should probably check [`Self::is_strict()`] as well.
-    pub fn is_name_defined(&mut self, name: &str) -> Option<Scopes> {
+    pub fn is_name_defined(&mut self, name: &str, data: &Everything) -> Option<Scopes> {
         if let Some(&idx) = self.scope_names.get(name) {
             #[allow(clippy::indexing_slicing)] // invariant guarantees no panic
             Some(match self.named[idx] {
@@ -407,7 +432,15 @@ impl ScopeContext {
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
                 ScopeEntry::Rootref => self.resolve_root().0,
-                ScopeEntry::Named(idx) => self.resolve_named(idx).0,
+                ScopeEntry::Named(idx) => self.resolve_named(idx, data).0,
+                #[cfg(feature = "jomini")]
+                ScopeEntry::GlobalVar(name, _) => data.global_scopes.scopes(name),
+                #[cfg(feature = "jomini")]
+                ScopeEntry::GlobalList(name, _) => data.global_list_scopes.scopes(name),
+                #[cfg(feature = "jomini")]
+                ScopeEntry::Var(name, _) => data.variable_scopes.scopes(name),
+                #[cfg(feature = "jomini")]
+                ScopeEntry::VarList(name, _) => data.variable_list_scopes.scopes(name),
             })
         } else {
             None
@@ -506,27 +539,6 @@ impl ScopeContext {
         }
     }
 
-    /// Sets a local variable to the value of `this`
-    #[cfg(feature = "jomini")]
-    pub fn save_local_variable(&mut self, name: &'static str) {
-        if let Some(&idx) = self.local_names.get(name) {
-            self.break_chains_to(idx);
-            let entry = self.resolve_backrefs(THIS);
-            // Guard against self-assignment
-            if let ScopeEntry::Named(i) = entry {
-                if *i == idx {
-                    // Leave the variable as its original value
-                    return;
-                }
-            }
-            self.named[idx] = entry.clone();
-        } else {
-            self.local_names.insert(name, self.named.len());
-            self.named.push(self.resolve_backrefs(THIS).clone());
-            self.is_input.push(None);
-        }
-    }
-
     /// Sets a local variable to the provided scope type
     #[cfg(feature = "jomini")]
     pub fn set_local_variable(&mut self, name: &Token, scope: Scopes) {
@@ -543,14 +555,14 @@ impl ScopeContext {
     /// If list `name` exists, narrow its scope type down to `this` and narrow the `this` scope
     /// types down to the existing list.
     /// Otherwise, define it as having the same scope type as `this`.
-    pub fn define_or_expect_list_this(&mut self, name: &Token) {
+    pub fn define_or_expect_list_this(&mut self, name: &Token, data: &Everything) {
         if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
             // TODO: remove need to clone reason
-            let (s, reason) = self.resolve_named(idx);
-            self.expect(s, &reason.clone());
-            let (s, reason) = self.scopes_reason();
+            let (s, reason) = self.resolve_named(idx, data);
+            self.expect(s, &reason.clone(), data);
+            let (s, reason) = self.scopes_reason(data);
             let reason = reason.clone();
-            self.expect_named(idx, s, &reason);
+            self.expect_named(idx, s, &reason, data);
             // It often happens that an iterator does is_in_list before add_to_list,
             // and in those cases we want the add_to_list to take precedence: conclude that the
             // list is being built here, and isn't an input list.
@@ -565,9 +577,9 @@ impl ScopeContext {
     /// If list `name` exists, narrow its scope type down to the given scopes.
     /// Otherwise, define it as having the given scopes.
     #[allow(dead_code)]
-    pub fn define_or_expect_list(&mut self, name: &Token, scope: Scopes) {
+    pub fn define_or_expect_list(&mut self, name: &Token, scope: Scopes, data: &Everything) {
         if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
-            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+            self.expect_named(idx, scope, &Reason::Token(name.clone()), data);
             // It often happens that an iterator does is_in_list before add_to_list,
             // and in those cases we want the add_to_list to take precedence: conclude that the
             // list is being built here, and isn't an input list.
@@ -581,9 +593,9 @@ impl ScopeContext {
 
     /// If local variable list `name` exists, narrow its scope type down to the given scopes.
     /// Otherwise, define it as having the given scopes.
-    pub fn define_or_expect_local_list(&mut self, name: &Token, scope: Scopes) {
+    pub fn define_or_expect_local_list(&mut self, name: &Token, scope: Scopes, data: &Everything) {
         if let Some(&idx) = self.local_list_names.get(name.as_str()) {
-            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+            self.expect_named(idx, scope, &Reason::Token(name.clone()), data);
             // It often happens that an iterator does is_in_list before add_to_list,
             // and in those cases we want the add_to_list to take precedence: conclude that the
             // list is being built here, and isn't an input list.
@@ -597,11 +609,11 @@ impl ScopeContext {
 
     /// Expect list `name` to be known and (with strict scopes) warn if it isn't.
     /// Narrow the type of `this` down to the list's type.
-    pub fn expect_list(&mut self, name: &Token) {
+    pub fn expect_list(&mut self, name: &Token, data: &Everything) {
         if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
-            let (s, reason) = self.resolve_named(idx);
+            let (s, reason) = self.resolve_named(idx, data);
             let reason = reason.clone(); // TODO: remove need to clone
-            self.expect3(s, &reason, name, THIS, "list");
+            self.expect3(s, &reason, name, THIS, "list", data);
         } else if self.strict_scopes {
             let msg = "unknown list";
             err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
@@ -610,11 +622,12 @@ impl ScopeContext {
 
     /// Expect local variable list `name` to be known and (with strict scopes) warn if it isn't.
     /// Narrow the type of `this` down to the list's type.
-    pub fn expect_local_list(&mut self, name: &Token) {
+    #[cfg(feature = "jomini")]
+    pub fn expect_local_list(&mut self, name: &Token, data: &Everything) {
         if let Some(&idx) = self.local_list_names.get(name.as_str()) {
-            let (s, reason) = self.resolve_named(idx);
+            let (s, reason) = self.resolve_named(idx, data);
             let reason = reason.clone(); // TODO: remove need to clone
-            self.expect3(s, &reason, name, THIS, "local variable list");
+            self.expect3(s, &reason, name, THIS, "local variable list", data);
         } else if self.strict_scopes {
             let msg = "unknown local variable list";
             err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
@@ -623,9 +636,9 @@ impl ScopeContext {
 
     /// Expect local variable `name` to be known and (with strict scopes) warn if it isn't.
     #[cfg(feature = "jomini")]
-    pub fn expect_local(&mut self, name: &Token, scope: Scopes) {
+    pub fn expect_local(&mut self, name: &Token, scope: Scopes, data: &Everything) {
         if let Some(&idx) = self.local_names.get(name.as_str()) {
-            self.expect_named(idx, scope, &Reason::Token(name.clone()));
+            self.expect_named(idx, scope, &Reason::Token(name.clone()), data);
         } else if self.strict_scopes {
             let msg = "unknown local variable";
             err(ErrorKey::UnknownVariable).msg(msg).loc(name).push();
@@ -692,13 +705,14 @@ impl ScopeContext {
 
     /// Return an object that captures the essentials of this `ScopeContext`, to be used for
     /// hashing.
-    pub fn signature(&self) -> Signature {
+    pub fn signature(&self, data: &Everything) -> Signature {
         fn process_names(
             sc: &ScopeContext,
             names: &TigerHashMap<&'static str, usize>,
+            data: &Everything,
         ) -> Vec<(&'static str, Scopes)> {
             let mut names: Vec<_> =
-                names.iter().map(|(&name, &i)| (name, sc.resolve_named(i).0)).collect();
+                names.iter().map(|(&name, &i)| (name, sc.resolve_named(i, data).0)).collect();
             names.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
             names
         }
@@ -707,10 +721,10 @@ impl ScopeContext {
 
         Signature {
             root,
-            scope_names: process_names(self, &self.scope_names),
-            scope_list_names: process_names(self, &self.scope_list_names),
-            local_names: process_names(self, &self.local_names),
-            local_list_names: process_names(self, &self.local_list_names),
+            scope_names: process_names(self, &self.scope_names, data),
+            scope_list_names: process_names(self, &self.scope_list_names, data),
+            local_names: process_names(self, &self.local_names, data),
+            local_list_names: process_names(self, &self.local_list_names, data),
         }
     }
 
@@ -787,8 +801,29 @@ impl ScopeContext {
         *self.scope_stack.last_mut().unwrap() = ScopeEntry::Named(self.local_index(name, token));
     }
 
+    /// Replace the `this` in a temporary scope level with a reference to the global variable `name`.
+    ///
+    /// This is used when a scope chain starts with `global_var:name`. The `token` is expected to be the
+    /// `global_var:name` token.
+    #[cfg(feature = "jomini")]
+    pub fn replace_global_variable(&mut self, name: &'static str, token: &Token) {
+        *self.scope_stack.last_mut().unwrap() =
+            ScopeEntry::GlobalVar(name, Reason::VariableReference(token.clone(), "global_var:"));
+    }
+
+    /// Replace the `this` in a temporary scope level with a reference to the variable `name`.
+    ///
+    /// This is used when a scope chain starts with `var:name`. The `token` is expected to be the
+    /// `var:name` token.
+    #[cfg(feature = "jomini")]
+    pub fn replace_variable(&mut self, name: &'static str, token: &Token) {
+        *self.scope_stack.last_mut().unwrap() =
+            ScopeEntry::Var(name, Reason::VariableReference(token.clone(), "var:"));
+    }
+
     /// Replace the `this` in a temporary scope level with a reference to the scope type of the
     /// list `name`.
+    #[cfg(feature = "jomini")]
     pub fn replace_list_entry(&mut self, name: &Token) {
         *self.scope_stack.last_mut().unwrap() =
             ScopeEntry::Named(self.named_list_index(name.as_str(), name));
@@ -796,9 +831,30 @@ impl ScopeContext {
 
     /// Replace the `this` in a temporary scope level with a reference to the scope type of the
     /// local variable list `name`.
+    #[cfg(feature = "jomini")]
     pub fn replace_local_list_entry(&mut self, name: &Token) {
         *self.scope_stack.last_mut().unwrap() =
             ScopeEntry::Named(self.local_list_index(name.as_str(), name));
+    }
+
+    /// Replace the `this` in a temporary scope level with a reference to the scope type of the
+    /// global variable list `name`.
+    #[cfg(feature = "jomini")]
+    pub fn replace_global_list_entry(&mut self, name: &Token) {
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::GlobalList(
+            name.as_str(),
+            Reason::VariableReference(name.clone(), "global list "),
+        );
+    }
+
+    /// Replace the `this` in a temporary scope level with a reference to the scope type of the
+    /// variable list `name`.
+    #[cfg(feature = "jomini")]
+    pub fn replace_variable_list_entry(&mut self, name: &Token) {
+        *self.scope_stack.last_mut().unwrap() = ScopeEntry::VarList(
+            name.as_str(),
+            Reason::VariableReference(name.clone(), "variable list "),
+        );
     }
 
     /// Get the internal index of named scope `name`, either its existing index or a newly created one.
@@ -871,6 +927,7 @@ impl ScopeContext {
 
     /// Same as [`Self::named_index()`], but for lists. No warning is emitted if a new list is created.
     #[doc(hidden)]
+    #[cfg(feature = "jomini")]
     fn named_list_index(&mut self, name: &'static str, token: &Token) -> usize {
         if let Some(&idx) = self.scope_list_names.get(name) {
             idx
@@ -886,6 +943,7 @@ impl ScopeContext {
     /// Same as [`Self::named_index()`], but for local variable lists.
     /// No warning is emitted if a new list is created.
     #[doc(hidden)]
+    #[cfg(feature = "jomini")]
     fn local_list_index(&mut self, name: &'static str, token: &Token) -> usize {
         if let Some(&idx) = self.local_list_names.get(name) {
             idx
@@ -899,14 +957,33 @@ impl ScopeContext {
     }
 
     /// Return true iff it's possible that `this` is the same type as one of the `scopes` types.
-    pub fn can_be(&self, scopes: Scopes) -> bool {
-        self.scopes().intersects(scopes)
+    pub fn can_be(&self, scopes: Scopes, data: &Everything) -> bool {
+        self.scopes(data).intersects(scopes)
     }
 
     /// Return the possible scope types of this scope level.
     // TODO: maybe specialize this function for performance?
-    pub fn scopes(&self) -> Scopes {
-        self.scopes_reason().0
+    pub fn scopes(&self, data: &Everything) -> Scopes {
+        self.scopes_reason(data).0
+    }
+
+    /// Return the possible scope types of this local variable.
+    #[cfg(feature = "jomini")]
+    pub fn local_variable_scopes(&self, name: &str, data: &Everything) -> Scopes {
+        if let Some(idx) = self.local_names.get(name).copied() {
+            self.resolve_named(idx, data).0
+        } else {
+            Scopes::all_but_none()
+        }
+    }
+
+    /// Return the possible scope types of this local variable list.
+    pub fn local_list_scopes(&self, name: &str, data: &Everything) -> Scopes {
+        if let Some(idx) = self.local_list_names.get(name).copied() {
+            self.resolve_named(idx, data).0
+        } else {
+            Scopes::all_but_none()
+        }
     }
 
     #[cfg(feature = "vic3")]
@@ -930,15 +1007,28 @@ impl ScopeContext {
     ///
     /// The `idx` must be an index from the `names` or `list_names` vectors.
     #[doc(hidden)]
-    fn resolve_named(&self, idx: usize) -> (Scopes, &Reason) {
+    #[allow(clippy::only_used_in_recursion)] // hoi4 doesn't use data
+    fn resolve_named(&self, idx: usize, data: &Everything) -> (Scopes, &Reason) {
         #[allow(clippy::indexing_slicing)]
         match self.named[idx] {
             ScopeEntry::Scope(s, ref reason) => (s, reason),
             ScopeEntry::Rootref => self.resolve_root(),
-            ScopeEntry::Named(idx) => self.resolve_named(idx),
+            ScopeEntry::Named(idx) => self.resolve_named(idx, data),
             ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
             ScopeEntry::Fromref(_) => unreachable!(),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(name, ref reason) => (data.global_scopes.scopes(name), reason),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalList(name, ref reason) => {
+                (data.global_list_scopes.scopes(name), reason)
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::Var(name, ref reason) => (data.variable_scopes.scopes(name), reason),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::VarList(name, ref reason) => {
+                (data.variable_list_scopes.scopes(name), reason)
+            }
         }
     }
 
@@ -987,8 +1077,8 @@ impl ScopeContext {
 
     /// Return the possible scope types for the current scope layer, together with the reason why
     /// we think that.
-    pub fn scopes_reason(&self) -> (Scopes, &Reason) {
-        self.scopes_reason_backref(THIS)
+    pub fn scopes_reason(&self, data: &Everything) -> (Scopes, &Reason) {
+        self.scopes_reason_backref(THIS, data)
     }
 
     /// Return the possible scope types for a `from` entry, together with the reason why we think
@@ -1012,14 +1102,22 @@ impl ScopeContext {
     }
 
     #[doc(hidden)]
-    fn scopes_reason_backref(&self, back: usize) -> (Scopes, &Reason) {
+    fn scopes_reason_backref(&self, back: usize, data: &Everything) -> (Scopes, &Reason) {
         match self.resolve_backrefs(back) {
             ScopeEntry::Scope(s, reason) => (*s, reason),
             ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
             ScopeEntry::Fromref(r) => self.resolve_from(*r),
             ScopeEntry::Rootref => self.resolve_root(),
-            ScopeEntry::Named(idx) => self.resolve_named(*idx),
+            ScopeEntry::Named(idx) => self.resolve_named(*idx, data),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(name, reason) => (data.global_scopes.scopes(name), reason),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalList(name, reason) => (data.global_list_scopes.scopes(name), reason),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::Var(name, reason) => (data.variable_scopes.scopes(name), reason),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::VarList(name, reason) => (data.variable_list_scopes.scopes(name), reason),
         }
     }
 
@@ -1032,7 +1130,8 @@ impl ScopeContext {
     }
 
     #[doc(hidden)]
-    fn expect_check(e: &mut ScopeEntry, scopes: Scopes, reason: &Reason) {
+    #[allow(unused_variables)] // hoi4 does not use data
+    fn expect_check(e: &mut ScopeEntry, scopes: Scopes, reason: &Reason, data: &Everything) {
         match e {
             ScopeEntry::Scope(s, r) => {
                 if s.intersects(scopes) {
@@ -1048,17 +1147,35 @@ impl ScopeContext {
                     warn(ErrorKey::Scopes).msg(msg).loc(token).loc_msg(r.token(), msg2).push();
                 }
             }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(name, reason) => {
+                data.global_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalList(name, reason) => {
+                data.global_list_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::Var(name, reason) => {
+                data.variable_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::VarList(name, reason) => {
+                data.variable_list_scopes.expect(name, reason.token(), scopes);
+            }
             _ => unreachable!(),
         }
     }
 
     #[doc(hidden)]
+    #[allow(unused_variables)] // hoi4 does not use data
     fn expect_check3(
         e: &mut ScopeEntry,
         scopes: Scopes,
         reason: &Reason,
         key: &Token,
         report: &str,
+        data: &Everything,
     ) {
         match e {
             ScopeEntry::Scope(s, r) => {
@@ -1082,15 +1199,31 @@ impl ScopeContext {
                         .push();
                 }
             }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(name, reason) => {
+                data.global_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalList(name, reason) => {
+                data.global_list_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::Var(name, reason) => {
+                data.variable_scopes.expect(name, reason.token(), scopes);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::VarList(name, reason) => {
+                data.variable_list_scopes.expect(name, reason.token(), scopes);
+            }
             _ => unreachable!(),
         }
     }
 
     #[doc(hidden)]
     #[cfg(feature = "hoi4")]
-    fn expect_fromref(&mut self, idx: usize, scopes: Scopes, reason: &Reason) {
+    fn expect_fromref(&mut self, idx: usize, scopes: Scopes, reason: &Reason, data: &Everything) {
         if idx < self.from.len() {
-            Self::expect_check(&mut self.from[idx], scopes, reason);
+            Self::expect_check(&mut self.from[idx], scopes, reason, data);
         }
     }
 
@@ -1103,30 +1236,39 @@ impl ScopeContext {
         reason: &Reason,
         key: &Token,
         report: &str,
+        data: &Everything,
     ) {
         if idx < self.from.len() {
-            Self::expect_check3(&mut self.from[idx], scopes, reason, key, report);
+            Self::expect_check3(&mut self.from[idx], scopes, reason, key, report, data);
         }
     }
 
     // TODO: find a way to report the chain of Named tokens to the user
     #[doc(hidden)]
-    fn expect_named(&mut self, mut idx: usize, scopes: Scopes, reason: &Reason) {
+    fn expect_named(&mut self, mut idx: usize, scopes: Scopes, reason: &Reason, data: &Everything) {
         loop {
             #[allow(clippy::indexing_slicing)]
             match self.named[idx] {
                 ScopeEntry::Scope(_, _) => {
-                    Self::expect_check(&mut self.named[idx], scopes, reason);
+                    Self::expect_check(&mut self.named[idx], scopes, reason, data);
                     return;
                 }
                 ScopeEntry::Rootref => {
-                    Self::expect_check(&mut self.root, scopes, reason);
+                    Self::expect_check(&mut self.root, scopes, reason, data);
                     return;
                 }
                 ScopeEntry::Named(i) => idx = i,
                 ScopeEntry::Backref(_) => unreachable!(),
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
+                #[cfg(feature = "jomini")]
+                ScopeEntry::GlobalVar(_, _)
+                | ScopeEntry::GlobalList(_, _)
+                | ScopeEntry::Var(_, _)
+                | ScopeEntry::VarList(_, _) => {
+                    Self::expect_check(&mut self.named[idx], scopes, reason, data);
+                    return;
+                }
             }
         }
     }
@@ -1139,22 +1281,31 @@ impl ScopeContext {
         reason: &Reason,
         key: &Token,
         report: &str,
+        data: &Everything,
     ) {
         loop {
             #[allow(clippy::indexing_slicing)]
             match self.named[idx] {
                 ScopeEntry::Scope(_, _) => {
-                    Self::expect_check3(&mut self.named[idx], scopes, reason, key, report);
+                    Self::expect_check3(&mut self.named[idx], scopes, reason, key, report, data);
                     return;
                 }
                 ScopeEntry::Rootref => {
-                    Self::expect_check3(&mut self.root, scopes, reason, key, report);
+                    Self::expect_check3(&mut self.root, scopes, reason, key, report, data);
                     return;
                 }
                 ScopeEntry::Named(i) => idx = i,
                 ScopeEntry::Backref(_) => unreachable!(),
                 #[cfg(feature = "hoi4")]
                 ScopeEntry::Fromref(_) => unreachable!(),
+                #[cfg(feature = "jomini")]
+                ScopeEntry::GlobalVar(_, _)
+                | ScopeEntry::GlobalList(_, _)
+                | ScopeEntry::Var(_, _)
+                | ScopeEntry::VarList(_, _) => {
+                    Self::expect_check3(&mut self.named[idx], scopes, reason, key, report, data);
+                    return;
+                }
             }
         }
     }
@@ -1162,19 +1313,24 @@ impl ScopeContext {
     /// Record that the `this` in the current scope level is one of the scope types `scopes`, and
     /// if this is new information, record `token` as the reason we think that.
     /// Emit an error if what we already know about `this` is incompatible with `scopes`.
-    pub fn expect(&mut self, scopes: Scopes, reason: &Reason) {
+    pub fn expect(&mut self, scopes: Scopes, reason: &Reason, data: &Everything) {
         // The None scope is special, it means the scope isn't used or inspected
         if self.no_warn || scopes == Scopes::None {
             return;
         }
         let this = self.resolve_backrefs_mut(THIS);
         match this {
-            ScopeEntry::Scope(_, _) => Self::expect_check(this, scopes, reason),
+            ScopeEntry::Scope(_, _) => Self::expect_check(this, scopes, reason, data),
             ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
-            &mut ScopeEntry::Fromref(r) => self.expect_fromref(r, scopes, reason),
-            ScopeEntry::Rootref => Self::expect_check(&mut self.root, scopes, reason),
-            &mut ScopeEntry::Named(idx) => self.expect_named(idx, scopes, reason),
+            &mut ScopeEntry::Fromref(r) => self.expect_fromref(r, scopes, reason, data),
+            ScopeEntry::Rootref => Self::expect_check(&mut self.root, scopes, reason, data),
+            &mut ScopeEntry::Named(idx) => self.expect_named(idx, scopes, reason, data),
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(_, _)
+            | ScopeEntry::GlobalList(_, _)
+            | ScopeEntry::Var(_, _)
+            | ScopeEntry::VarList(_, _) => Self::expect_check(this, scopes, reason, data),
         }
     }
 
@@ -1182,19 +1338,40 @@ impl ScopeContext {
     ///
     /// This function is used when the expectation of scope compatibility comes from `key`, for
     /// example when matching up a caller's scope context with a scripted effect's scope context.
-    fn expect3(&mut self, scopes: Scopes, reason: &Reason, key: &Token, back: usize, report: &str) {
+    fn expect3(
+        &mut self,
+        scopes: Scopes,
+        reason: &Reason,
+        key: &Token,
+        back: usize,
+        report: &str,
+        data: &Everything,
+    ) {
         // The None scope is special, it means the scope isn't used or inspected
         if scopes == Scopes::None {
             return;
         }
         let this = self.resolve_backrefs_mut(back);
         match this {
-            ScopeEntry::Scope(_, _) => Self::expect_check3(this, scopes, reason, key, report),
+            ScopeEntry::Scope(_, _) => Self::expect_check3(this, scopes, reason, key, report, data),
             ScopeEntry::Backref(_) => unreachable!(),
             #[cfg(feature = "hoi4")]
-            &mut ScopeEntry::Fromref(r) => self.expect_fromref3(r, scopes, reason, key, report),
-            ScopeEntry::Rootref => Self::expect_check3(&mut self.root, scopes, reason, key, report),
-            &mut ScopeEntry::Named(idx) => self.expect_named3(idx, scopes, reason, key, report),
+            &mut ScopeEntry::Fromref(r) => {
+                self.expect_fromref3(r, scopes, reason, key, report, data);
+            }
+            ScopeEntry::Rootref => {
+                Self::expect_check3(&mut self.root, scopes, reason, key, report, data);
+            }
+            &mut ScopeEntry::Named(idx) => {
+                self.expect_named3(idx, scopes, reason, key, report, data);
+            }
+            #[cfg(feature = "jomini")]
+            ScopeEntry::GlobalVar(_, _)
+            | ScopeEntry::GlobalList(_, _)
+            | ScopeEntry::Var(_, _)
+            | ScopeEntry::VarList(_, _) => {
+                Self::expect_check3(this, scopes, reason, key, report, data);
+            }
         }
     }
 
@@ -1204,28 +1381,28 @@ impl ScopeContext {
     /// contexts and warns about any contradictions it finds.
     ///
     /// It expects `self` to be the caller and `other` to be the callee.
-    pub fn expect_compatibility(&mut self, other: &ScopeContext, key: &Token) {
+    pub fn expect_compatibility(&mut self, other: &ScopeContext, key: &Token, data: &Everything) {
         if self.no_warn {
             return;
         }
         // Compare restrictions on `root`
         match other.root {
             ScopeEntry::Scope(scopes, ref token) => {
-                Self::expect_check3(&mut self.root, scopes, token, key, "root");
+                Self::expect_check3(&mut self.root, scopes, token, key, "root", data);
             }
             _ => unreachable!(),
         }
 
         // Compare restrictions on `this`
-        let (scopes, reason) = other.scopes_reason();
-        self.expect3(scopes, reason, key, THIS, "scope");
+        let (scopes, reason) = other.scopes_reason(data);
+        self.expect3(scopes, reason, key, THIS, "scope", data);
 
         // Compare restrictions on `prev`
         // TODO: for imperator and hoi4, go multiple prev levels back
         // TODO: The self.prev_levels > 0 check isn't right. Instead, create enough prev levels.
         if other.prev_levels > 0 && self.prev_levels > 0 {
-            let (scopes, reason) = other.scopes_reason_backref(PREV);
-            self.expect3(scopes, reason, key, PREV + usize::from(self.is_builder), "prev");
+            let (scopes, reason) = other.scopes_reason_backref(PREV, data);
+            self.expect3(scopes, reason, key, PREV + usize::from(self.is_builder), "prev", data);
         }
 
         // Compare restrictions on `from`
@@ -1233,18 +1410,18 @@ impl ScopeContext {
         #[cfg(feature = "hoi4")]
         {
             let (scopes, reason) = other.resolve_from(0);
-            self.expect_fromref3(0, scopes, reason, key, "from");
+            self.expect_fromref3(0, scopes, reason, key, "from", data);
             let (scopes, reason) = other.resolve_from(1);
-            self.expect_fromref3(1, scopes, reason, key, "from.from");
+            self.expect_fromref3(1, scopes, reason, key, "from.from", data);
         }
 
         // Compare restrictions on named scopes
         for (name, &oidx) in &other.scope_names {
             if let Some(idx) = self.scope_names.get(name).copied() {
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("scope:{name}");
-                    self.expect_named3(idx, s, reason, key, &report);
+                    self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their scopes now become our scopes.
                     self.break_chains_to(idx);
@@ -1260,7 +1437,7 @@ impl ScopeContext {
                 .push();
             } else {
                 // Their scopes now become our scopes.
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 self.scope_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
@@ -1270,10 +1447,10 @@ impl ScopeContext {
         // Compare restrictions on lists
         for (name, &oidx) in &other.scope_list_names {
             if let Some(idx) = self.scope_list_names.get(name).copied() {
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("list {name}");
-                    self.expect_named3(idx, s, reason, key, &report);
+                    self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their lists now become our lists.
                     self.break_chains_to(idx);
@@ -1289,7 +1466,7 @@ impl ScopeContext {
                 .push();
             } else {
                 // Their lists now become our lists.
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 self.scope_list_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
@@ -1299,10 +1476,10 @@ impl ScopeContext {
         // Compare restrictions on local variables
         for (name, &oidx) in &other.local_names {
             if let Some(idx) = self.local_names.get(name).copied() {
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("local_var:{name}");
-                    self.expect_named3(idx, s, reason, key, &report);
+                    self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their variables now become our variables
                     self.break_chains_to(idx);
@@ -1318,7 +1495,7 @@ impl ScopeContext {
                 .push();
             } else {
                 // Their variables now become our variables
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 self.local_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
@@ -1328,10 +1505,10 @@ impl ScopeContext {
         // Compare restrictions on local variable lists
         for (name, &oidx) in &other.local_list_names {
             if let Some(idx) = self.local_list_names.get(name).copied() {
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("local list {name}");
-                    self.expect_named3(idx, s, reason, key, &report);
+                    self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their lists now become our lists.
                     self.break_chains_to(idx);
@@ -1347,7 +1524,7 @@ impl ScopeContext {
                 .push();
             } else {
                 // Their lists now become our lists.
-                let (s, reason) = other.resolve_named(oidx);
+                let (s, reason) = other.resolve_named(oidx, data);
                 self.local_list_names.insert(name, self.named.len());
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());

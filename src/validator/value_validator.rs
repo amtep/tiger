@@ -62,6 +62,11 @@ impl<'a> ValueValidator<'a> {
         Self { value: Cow::Owned(value), data, validated: false, max_severity: Severity::Fatal }
     }
 
+    #[allow(dead_code)]
+    pub fn data(&self) -> &Everything {
+        self.data
+    }
+
     /// Maximum severity of problems reported by this `ValueValidator`. Defaults to `Error`.
     /// This is intended to be set lower by validators for less-important items.
     /// As an exception, `Fatal` severity reports will still always be logged as `Fatal`.
