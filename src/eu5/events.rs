@@ -82,7 +82,11 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     vd.field_bool("interface_lock");
     vd.field_bool("hide_portraits");
 
-    vd.field_list("illustration_tags");
+    //TODO: eu5 match with "game/loading_screen/gfx/illustrations/database"
+    // Can be formated as either:
+    //  10 = interior
+    //  interior = 10
+    vd.field_block("illustration_tags");
 
     vd.field_choice("outcome", EVENT_OUTCOMES);
     vd.field_choice("category", EVENT_CATEGORY);
