@@ -28,7 +28,7 @@ static TRIGGER_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Trigger)>> = La
 /// A key ends with '(' if it is the version that takes a parenthesized argument in script.
 const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     // TODO: EU5 fill in the UncheckedTodo
-    (Scopes::Country, "active_religious_focus", UncheckedTodo),
+    (Scopes::Country, "active_religious_focus", Item(Item::ReligiousFocus)),
     (Scopes::Country, "add_estate_satisfaction_utility", UncheckedTodo),
     (
         Scopes::Location.union(Scopes::Country).union(Scopes::Character),
