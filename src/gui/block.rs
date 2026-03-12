@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::Game;
 use crate::block::{BV, Block, BlockItem, Comparator, Eq::Single, Field};
 use crate::data::gui::{GuiTemplate, GuiType};
 use crate::everything::Everything;
@@ -17,6 +18,9 @@ enum GuiItem {
     Property(WidgetProperty, Token, BV),
     /// A contained widget.
     Widget(Arc<GuiBlock>),
+    /// A set of specific properties for action tooltips.
+    #[allow(dead_code)]
+    ActionTooltip(Arc<GuiBlock>),
     /// A property which contains other properties. It can have `Subst` blocks too.
     ComplexProperty(Arc<GuiBlock>),
     /// A property which contains a widget. It can have Subst blocks too.
@@ -184,6 +188,13 @@ impl GuiBlock {
                                         ));
                                     }
                                 }
+                            } else if validation == GuiValidation::ActionTooltip {
+                                if !Game::is_eu5() {
+                                    let msg = "action tooltip is only for EU5";
+                                    err(ErrorKey::WrongGame).msg(msg).loc(bv).push();
+                                }
+                                bv.expect_block();
+                                gui.items.push(GuiItem::Property(prop, key.clone(), bv.clone()));
                             } else {
                                 gui.items.push(GuiItem::Property(prop, key.clone(), bv.clone()));
                             }
@@ -284,7 +295,8 @@ impl GuiBlock {
                 GuiItem::Property(_, _, _) | GuiItem::Override(_, _) => (),
                 GuiItem::Widget(gui)
                 | GuiItem::ComplexProperty(gui)
-                | GuiItem::WidgetProperty(gui) => {
+                | GuiItem::WidgetProperty(gui)
+                | GuiItem::ActionTooltip(gui) => {
                     *gui = Self::apply_override_arc(gui, name, overrideblock);
                 }
                 GuiItem::Subst(substname, gui) => {
@@ -334,7 +346,28 @@ impl GuiBlock {
                 | GuiItem::WidgetProperty(gui_block) => {
                     gui_block.validate(None, data);
                 }
+                GuiItem::ActionTooltip(gui_block) => {
+                    gui_block.validate_action_tooltip(None, data);
+                }
                 GuiItem::Override(_, _) => (),
+            }
+        }
+    }
+
+    pub fn validate_action_tooltip(&self, container: Option<PropertyContainer>, data: &Everything) {
+        for item in &self.items {
+            match item {
+                GuiItem::Property(prop, key, bv) => {
+                    validate_property(*prop, container, key, bv, data);
+                }
+                GuiItem::Subst(_, gui_block) => {
+                    gui_block.validate(container, data);
+                }
+                GuiItem::Widget(_)
+                | GuiItem::ComplexProperty(_)
+                | GuiItem::WidgetProperty(_)
+                | GuiItem::ActionTooltip(_)
+                | GuiItem::Override(_, _) => (),
             }
         }
     }

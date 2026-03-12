@@ -340,6 +340,9 @@ pub fn validate_property(
                 }
             }
         }
+        GuiValidation::ActionTooltip => {
+            bv.expect_block();
+        }
         GuiValidation::ComplexProperty => {
             // Complex properties have their own item type, where they get a GuiBlock input
             // rather than a BV.

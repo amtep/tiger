@@ -270,7 +270,11 @@ impl Asset {
                 vd.req_field("name");
                 vd.req_field_one_of(&["blend_shape", "additive_animation"]);
                 vd.field_item("name", Item::GeneAttribute);
-                vd.field_item("additive_animation", Item::GeneAttribute);
+                if Game::is_eu5() {
+                    vd.field("additive_animation"); // TODO: eu5 link to defined "additive_animation"
+                } else {
+                    vd.field_item("additive_animation", Item::GeneAttribute);
+                }
                 vd.field_item("blend_shape", Item::BlendShape);
                 vd.field_numeric("default");
             });
