@@ -2162,11 +2162,15 @@ impl Item {
             #[cfg(feature = "eu5")]
             Item::InternationalOrganization => "common/international_organizations/",
             #[cfg(feature = "eu5")]
-            Item::InternationalOrganizationLandOwnershipRule => "common/international_organization_land_ownership_rules/",
+            Item::InternationalOrganizationLandOwnershipRule => {
+                "common/international_organization_land_ownership_rules/"
+            }
             #[cfg(feature = "eu5")]
             Item::InternationalOrganizationPayment => "common/international_organization_payments/",
             #[cfg(feature = "eu5")]
-            Item::InternationalOrganizationSpecialStatus => "common/international_organization_special_statuses/",
+            Item::InternationalOrganizationSpecialStatus => {
+                "common/international_organization_special_statuses/"
+            }
             #[cfg(feature = "eu5")]
             Item::JoinWarRule => "common/join_war_rules/",
             #[cfg(feature = "eu5")]

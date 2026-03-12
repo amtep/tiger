@@ -719,6 +719,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_multiple_players", UncheckedTodo),
     (Scopes::Country, "has_mutual_scripted_relation", UncheckedTodo),
     (Scopes::Country, "has_mutual_scripted_relation_of_type", UncheckedTodo),
+    (Scopes::Market, "has_new_world_goods_in_market", UncheckedTodo),
     (Scopes::None, "has_newsletter_subscription", UncheckedTodo),
     (Scopes::Character, "has_nickname", UncheckedTodo),
     (
@@ -728,6 +729,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::Country, "has_opinion", UncheckedTodo),
     (Scopes::Country, "has_or_had_tag", UncheckedTodo),
+    (Scopes::Goods, "has_origin_in_new_world", UncheckedTodo),
+    (Scopes::Goods, "has_origin_in_old_world", UncheckedTodo),
     (Scopes::SubjectType, "has_overlords_ruler", UncheckedTodo),
     (Scopes::Location, "has_owned_buildings", UncheckedTodo),
     (Scopes::Location, "has_owner", UncheckedTodo),
@@ -1677,6 +1680,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "owns", UncheckedTodo),
     (Scopes::Country, "owns_any_foreign_buildings_in", UncheckedTodo),
     (Scopes::Country, "owns_most_foreign_buildings_in_location", UncheckedTodo),
+    (Scopes::Country, "owns_or_has_subject_in", UncheckedTodo),
     (Scopes::Country, "owns_or_non_sovereign_subject_owns", UncheckedTodo),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),

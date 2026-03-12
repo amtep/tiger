@@ -45,6 +45,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "add_casus_belli", UncheckedTodo),
     (Scopes::Character, "add_character_modifier", UncheckedTodo),
     (Scopes::Country, "add_colonial_claim", UncheckedTodo),
+    (Scopes::Country.union(Scopes::InternationalOrganization), "add_complacency", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "add_cooldown", UncheckedTodo),
     (Scopes::Location, "add_core", Scope(Scopes::Country)),
     (Scopes::Country, "add_country_modifier", UncheckedTodo),
@@ -64,6 +65,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "add_dip", UncheckedTodo),
     (Scopes::Country, "add_diplomats", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "add_doom", UncheckedTodo),
+    (Scopes::Dynasty, "add_dynasty_modifier", UncheckedTodo),
     (
         Scopes::InternationalOrganization,
         "add_enemy_to_international_organization",
@@ -159,10 +161,13 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Market, "add_temporary_demand", UncheckedTodo),
     (Scopes::Cabinet, "add_to_cabinet", Scope(Scopes::Character)),
     (Scopes::None, "add_to_global_variable_list", UncheckedTodo),
+    (Scopes::None, "add_to_global_variable_map", UncheckedTodo),
     (Scopes::None, "add_to_list", UncheckedTodo),
     (Scopes::None, "add_to_local_variable_list", UncheckedTodo),
+    (Scopes::None, "add_to_local_variable_map", UncheckedTodo),
     (Scopes::None, "add_to_temporary_list", UncheckedTodo),
     (Scopes::None, "add_to_variable_list", UncheckedTodo),
+    (Scopes::None, "add_to_variable_map", UncheckedTodo),
     (Scopes::Country, "add_tolerated_culture", Scope(Scopes::Culture)),
     (Scopes::Character, "add_trait", Scope(Scopes::Trait)),
     (
@@ -182,6 +187,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "adopt_character", Scope(Scopes::Character)),
     (Scopes::Country, "align_societal_values_to", Scope(Scopes::Country)),
     (Scopes::Country, "annex_country", UncheckedTodo),
+    (Scopes::Country, "annul_all_treaties_with", UncheckedTodo),
     (Scopes::None, "assert_if", UncheckedTodo),
     (Scopes::None, "assert_read", UncheckedTodo),
     (Scopes::Mercenary, "become_hired_by", Scope(Scopes::Country)),
@@ -203,6 +209,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "change_character_allegiance", Scope(Scopes::Rebels)),
     (Scopes::Character, "change_character_culture", Scope(Scopes::Culture)),
     (Scopes::Character, "change_character_estate", Scope(Scopes::EstateType)),
+    (Scopes::Character, "change_character_modifier_size", UncheckedTodo),
     (Scopes::Character, "change_character_religion", Scope(Scopes::Religion)),
     (Scopes::ColonialCharter, "change_colonial_charter_owner", Scope(Scopes::Country)),
     (Scopes::Location, "change_control", UncheckedTodo),
@@ -210,14 +217,16 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "change_country_color", UncheckedTodo),
     (Scopes::Country, "change_country_dynastic_name", UncheckedTodo),
     (Scopes::Country, "change_country_flag", UncheckedTodo),
+    (Scopes::Country, "change_country_modifier_size", UncheckedTodo),
     (Scopes::Country, "change_country_name", UncheckedTodo),
-    (Scopes::Country, "change_country_tag", UncheckedTodo),
+    (Scopes::Country, "change_country_tag", UncheckedTodo), // TODO: REMOVED
     (Scopes::Country, "change_country_type", UncheckedTodo),
     (Scopes::Culture, "change_cultural_view", UncheckedTodo),
     (Scopes::Country, "change_culture", Scope(Scopes::Culture)),
     (Scopes::Location, "change_development", UncheckedTodo),
     (Scopes::Location.union(Scopes::SubUnit), "change_disease_presence", UncheckedTodo),
     (Scopes::Character, "change_dynasty", Scope(Scopes::Dynasty)),
+    (Scopes::Dynasty, "change_dynasty_modifier_size", UncheckedTodo),
     (Scopes::Exploration, "change_exploration_progress", UncheckedTodo),
     (Scopes::Country, "change_explorer", UncheckedTodo),
     (Scopes::Character, "change_father", Scope(Scopes::Character)),
@@ -228,6 +237,11 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Location, "change_institution_progress", UncheckedTodo),
     (Scopes::Location, "change_integration_level", UncheckedTodo),
     (Scopes::Location, "change_integration_progress", UncheckedTodo),
+    (
+        Scopes::InternationalOrganization,
+        "change_international_organization_modifier_size",
+        UncheckedTodo,
+    ),
     (Scopes::Culture, "change_language", Scope(Scopes::Dialect)),
     (Scopes::Loan, "change_loan_amount", UncheckedTodo),
     (Scopes::Loan, "change_loan_borrower", Scope(Scopes::Country)),
@@ -235,10 +249,13 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Loan, "change_loan_owner", Scope(Scopes::Country)),
     (Scopes::None, "change_local_variable", UncheckedTodo),
     (Scopes::Location, "change_location_controller", Scope(Scopes::Country)),
+    (Scopes::Location, "change_location_modifier_size", UncheckedTodo),
     (Scopes::Location, "change_location_owner", Scope(Scopes::Country)),
+    (Scopes::Location, "change_location_owner_forcefully", UncheckedTodo),
     (Scopes::Location, "change_location_rank", Scope(Scopes::LocationRank)),
     (Scopes::Location, "change_maritime_presence_power", UncheckedTodo),
     (Scopes::Location, "change_max_raw_material_workers", UncheckedTodo),
+    (Scopes::Mercenary, "change_mercenary_modifier_size", UncheckedTodo),
     (Scopes::Character, "change_mother", Scope(Scopes::Character)),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
@@ -257,22 +274,30 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Province, "change_province_food", UncheckedTodo),
     (Scopes::Province, "change_province_food_percentage", UncheckedTodo),
     (Scopes::Province, "change_province_integration", UncheckedTodo),
+    (Scopes::Province, "change_province_modifier_size", UncheckedTodo),
     (Scopes::Province, "change_province_owner", Scope(Scopes::Country)),
     (Scopes::Location, "change_raw_material", Scope(Scopes::Goods)),
+    (Scopes::Rebels, "change_rebel_modifier_size", UncheckedTodo),
     (Scopes::Country, "change_religion", Scope(Scopes::Religion)),
+    (Scopes::Religion, "change_religion_modifier_size", UncheckedTodo),
     (Scopes::Religion, "change_religion_view", UncheckedTodo),
+    (Scopes::Location, "change_siege_progress", UncheckedTodo),
     (Scopes::Country, "change_societal_value", UncheckedTodo),
     (Scopes::Country, "change_subject_type", Scope(Scopes::SubjectType)),
     (Scopes::SubUnit, "change_subunit_type", Scope(Scopes::UnitType)),
+    (Scopes::Unit, "change_unit_modifier_size", UncheckedTodo),
     (Scopes::Unit, "change_unit_owner", Scope(Scopes::Country)),
     (Scopes::None, "change_variable", UncheckedTodo),
     (Scopes::None, "clamp_global_variable", UncheckedTodo),
     (Scopes::None, "clamp_local_variable", UncheckedTodo),
     (Scopes::None, "clamp_variable", UncheckedTodo),
     (Scopes::None, "clear_global_variable_list", UncheckedTodo),
+    (Scopes::None, "clear_global_variable_map", UncheckedTodo),
     (Scopes::None, "clear_local_variable_list", UncheckedTodo),
+    (Scopes::None, "clear_local_variable_map", UncheckedTodo),
     (Scopes::None, "clear_saved_scope", UncheckedTodo),
     (Scopes::None, "clear_variable_list", UncheckedTodo),
+    (Scopes::None, "clear_variable_map", UncheckedTodo),
     (Scopes::None, "close_all_views", UncheckedTodo),
     (Scopes::Country, "complete_mission_task", Scope(Scopes::MissionTask)),
     (Scopes::None, "conditional_effect", UncheckedTodo),
@@ -323,9 +348,11 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "debug_log_scopes", UncheckedTodo),
     (Scopes::Country, "declare_war", Scope(Scopes::Country)),
     (Scopes::Country, "declare_war_with_cb", UncheckedTodo),
+    (Scopes::Country, "define_unique_country_tag", UncheckedTodo),
     (Scopes::Location, "destroy_all_buildings_of_type", Scope(Scopes::BuildingType)),
     (Scopes::None, "destroy_art", Scope(Scopes::WorkOfArt)),
     (Scopes::Location, "destroy_building", Scope(Scopes::Building)),
+    (Scopes::Location, "destroy_building_forcefully", UncheckedTodo),
     (Scopes::None, "destroy_colonial_charter", Scope(Scopes::ColonialCharter)),
     (Scopes::None, "destroy_holy_site", Scope(Scopes::HolySite)),
     (Scopes::Country, "destroy_international_organization", UncheckedTodo),
@@ -410,6 +437,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "join_war_with", UncheckedTodo),
     (Scopes::None, "kill_character", Scope(Scopes::Character)),
     (Scopes::None, "kill_character_silently", Scope(Scopes::Character)),
+    (Scopes::Country, "leave_all_wars_with", UncheckedTodo),
     (Scopes::Country, "leave_war", UncheckedTodo),
     (Scopes::Country, "lift_fog_of_war", Scope(Scopes::Country)),
     (Scopes::Unit, "lock_unit", UncheckedTodo),
@@ -424,79 +452,79 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Character, "move_country", Scope(Scopes::Country)),
     (Scopes::Unit, "move_prisoners_to_safety", UncheckedTodo),
     (Scopes::Unit, "move_to_assist_on_adjacent_combat", UncheckedTodo),
-    (Scopes::Country, "ordered_accepted_culture", Scope(Scopes::Culture)),
-    (Scopes::Country, "ordered_active_disaster", Scope(Scopes::Disaster)),
-    (Scopes::None, "ordered_active_estate", Scope(Scopes::EstateType)),
+    (Scopes::Country, "ordered_accepted_culture", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::Country, "ordered_active_disaster", Scope(Scopes::Disaster)), // TODO: REMOVED
+    (Scopes::None, "ordered_active_estate", Scope(Scopes::EstateType)),    // TODO: REMOVED
     (
         Scopes::InternationalOrganization.union(Scopes::Situation),
-        "ordered_active_resolution",
+        "ordered_active_resolution", // TODO: REMOVED
         Scope(Scopes::ActiveResolution),
     ),
-    (Scopes::Area, "ordered_adjacent_ports_to_area", Scope(Scopes::Location)),
-    (Scopes::HeirSelection, "ordered_allowed_estate_in_heir_selection", Scope(Scopes::EstateType)),
-    (Scopes::Character, "ordered_ancestor", Scope(Scopes::Character)),
-    (Scopes::None, "ordered_area", Scope(Scopes::Area)),
-    (Scopes::Region, "ordered_area_in_region", Scope(Scopes::Area)),
-    (Scopes::Country, "ordered_area_with_core", Scope(Scopes::Area)),
-    (Scopes::Country, "ordered_area_with_owned_province", Scope(Scopes::Area)),
-    (Scopes::Country, "ordered_army", Scope(Scopes::Unit)),
-    (Scopes::Country, "ordered_artist", Scope(Scopes::Character)),
-    (Scopes::War, "ordered_attacker", Scope(Scopes::Country)),
-    (Scopes::God, "ordered_avatar_for_god", Scope(Scopes::Avatar)),
-    (Scopes::Siege, "ordered_besieging_unit", Scope(Scopes::Unit)),
-    (Scopes::Country, "ordered_border_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_buildable_building_type", Scope(Scopes::BuildingType)),
-    (Scopes::None, "ordered_building_type", Scope(Scopes::BuildingType)),
-    (Scopes::Location, "ordered_buildings_in_location", Scope(Scopes::Building)),
-    (Scopes::Country, "ordered_cabinet", Scope(Scopes::Cabinet)),
-    (Scopes::Country, "ordered_cabinet_action", Scope(Scopes::CabinetAction)),
-    (Scopes::Country, "ordered_cabinet_character", Scope(Scopes::Character)),
-    (Scopes::Country, "ordered_cardinal_in_country", Scope(Scopes::Cardinal)),
-    (Scopes::Religion, "ordered_cardinal_in_religion", Scope(Scopes::Cardinal)),
-    (Scopes::Country, "ordered_casus_belli_on_us", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_casus_belli_target", Scope(Scopes::Country)),
-    (Scopes::CombatSide, "ordered_center", Scope(Scopes::SubUnit)),
-    (Scopes::Country, "ordered_character", Scope(Scopes::Character)),
-    (Scopes::Dynasty, "ordered_character_in_dynasty", Scope(Scopes::Character)),
-    (Scopes::Rebels, "ordered_character_supporting_rebel", Scope(Scopes::Character)),
-    (Scopes::Character, "ordered_child", Scope(Scopes::Character)),
-    (Scopes::Character, "ordered_close_relative", Scope(Scopes::Character)),
-    (Scopes::Location, "ordered_coast_border_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_colonial_charter", Scope(Scopes::ColonialCharter)),
+    (Scopes::Area, "ordered_adjacent_ports_to_area", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::HeirSelection, "ordered_allowed_estate_in_heir_selection", Scope(Scopes::EstateType)), // TODO: REMOVED
+    (Scopes::Character, "ordered_ancestor", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::None, "ordered_area", Scope(Scopes::Area)),               // TODO: REMOVED
+    (Scopes::Region, "ordered_area_in_region", Scope(Scopes::Area)),   // TODO: REMOVED
+    (Scopes::Country, "ordered_area_with_core", Scope(Scopes::Area)),  // TODO: REMOVED
+    (Scopes::Country, "ordered_area_with_owned_province", Scope(Scopes::Area)), // TODO: REMOVED
+    (Scopes::Country, "ordered_army", Scope(Scopes::Unit)),            // TODO: REMOVED
+    (Scopes::Country, "ordered_artist", Scope(Scopes::Character)),     // TODO: REMOVED
+    (Scopes::War, "ordered_attacker", Scope(Scopes::Country)),         // TODO: REMOVED
+    (Scopes::God, "ordered_avatar_for_god", Scope(Scopes::Avatar)),    // TODO: REMOVED
+    (Scopes::Siege, "ordered_besieging_unit", Scope(Scopes::Unit)),    // TODO: REMOVED
+    (Scopes::Country, "ordered_border_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_buildable_building_type", Scope(Scopes::BuildingType)), // TODO: REMOVED
+    (Scopes::None, "ordered_building_type", Scope(Scopes::BuildingType)), // TODO: REMOVED
+    (Scopes::Location, "ordered_buildings_in_location", Scope(Scopes::Building)), // TODO: REMOVED
+    (Scopes::Country, "ordered_cabinet", Scope(Scopes::Cabinet)),         // TODO: REMOVED
+    (Scopes::Country, "ordered_cabinet_action", Scope(Scopes::CabinetAction)), // TODO: REMOVED
+    (Scopes::Country, "ordered_cabinet_character", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Country, "ordered_cardinal_in_country", Scope(Scopes::Cardinal)), // TODO: REMOVED
+    (Scopes::Religion, "ordered_cardinal_in_religion", Scope(Scopes::Cardinal)), // TODO: REMOVED
+    (Scopes::Country, "ordered_casus_belli_on_us", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_casus_belli_target", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_center", Scope(Scopes::SubUnit)),       // TODO: REMOVED
+    (Scopes::Country, "ordered_character", Scope(Scopes::Character)),     // TODO: REMOVED
+    (Scopes::Dynasty, "ordered_character_in_dynasty", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Rebels, "ordered_character_supporting_rebel", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Character, "ordered_child", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Character, "ordered_close_relative", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Location, "ordered_coast_border_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_colonial_charter", Scope(Scopes::ColonialCharter)), // TODO: REMOVED
     (
         Scopes::Country,
-        "ordered_colonial_claim_province_definition",
+        "ordered_colonial_claim_province_definition", // TODO: REMOVED
         Scope(Scopes::ProvinceDefinition),
     ),
-    (Scopes::None, "ordered_colonial_country", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_colonial_overlord", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_colonial_top_overlord", Scope(Scopes::Country)),
-    (Scopes::Location, "ordered_connected_location", Scope(Scopes::Location)),
-    (Scopes::BuildingType, "ordered_construction_material_for_building_type", Scope(Scopes::Goods)),
-    (Scopes::None, "ordered_continent", Scope(Scopes::Continent)),
-    (Scopes::Country, "ordered_controlled_location", Scope(Scopes::Location)),
-    (Scopes::Location, "ordered_core_in_location", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_core_location", Scope(Scopes::Location)),
-    (Scopes::None, "ordered_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_annexing_us", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_at_war_with", Scope(Scopes::Country)),
-    (Scopes::Culture, "ordered_country_in_culture", Scope(Scopes::Country)),
-    (Scopes::CultureGroup, "ordered_country_in_culture_group", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_in_diplomatic_range", Scope(Scopes::Country)),
-    (Scopes::Dynasty, "ordered_country_in_dynasty", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_in_hierarchy", Scope(Scopes::Country)),
-    (Scopes::Religion, "ordered_country_in_religion", Scope(Scopes::Country)),
-    (Scopes::Group, "ordered_country_in_religion_group", Scope(Scopes::Country)),
-    (Scopes::ReligiousSchool, "ordered_country_in_religious_school", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_lent_to", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_country_of_country_type", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_sub_unit", Scope(Scopes::SubUnit)),
-    (Scopes::Rebels, "ordered_country_supporting_rebel", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_that_can_be_called_defensively", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_that_can_be_called_offensively", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_together_in_war_with", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_we_are_annexing", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_country_with_antagonism_against_us", Scope(Scopes::Country)),
+    (Scopes::None, "ordered_colonial_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_colonial_overlord", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_colonial_top_overlord", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Location, "ordered_connected_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::BuildingType, "ordered_construction_material_for_building_type", Scope(Scopes::Goods)), // TODO: REMOVED
+    (Scopes::None, "ordered_continent", Scope(Scopes::Continent)), // TODO: REMOVED
+    (Scopes::Country, "ordered_controlled_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Location, "ordered_core_in_location", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_core_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::None, "ordered_country", Scope(Scopes::Country)),     // TODO: REMOVED
+    (Scopes::Country, "ordered_country_annexing_us", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_at_war_with", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Culture, "ordered_country_in_culture", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::CultureGroup, "ordered_country_in_culture_group", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_in_diplomatic_range", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Dynasty, "ordered_country_in_dynasty", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_in_hierarchy", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Religion, "ordered_country_in_religion", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Group, "ordered_country_in_religion_group", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::ReligiousSchool, "ordered_country_in_religious_school", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_lent_to", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_country_of_country_type", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_sub_unit", Scope(Scopes::SubUnit)), // TODO: REMOVED
+    (Scopes::Rebels, "ordered_country_supporting_rebel", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_that_can_be_called_defensively", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_that_can_be_called_offensively", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_together_in_war_with", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_we_are_annexing", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_country_with_antagonism_against_us", Scope(Scopes::Country)), // TODO: REMOVED
     (
         Scopes::Location
             .union(Scopes::ProvinceDefinition)
@@ -504,216 +532,216 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
             .union(Scopes::Region)
             .union(Scopes::SubContinent)
             .union(Scopes::Continent),
-        "ordered_country_with_capital_in_geography",
+        "ordered_country_with_capital_in_geography", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
-    (Scopes::Religion, "ordered_country_with_cardinals", Scope(Scopes::Country)),
+    (Scopes::Religion, "ordered_country_with_cardinals", Scope(Scopes::Country)), // TODO: REMOVED
     (
         Scopes::Country,
-        "ordered_country_with_coalition_grade_antagonism_against_us",
+        "ordered_country_with_coalition_grade_antagonism_against_us", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_country_with_special_status_of_type",
+        "ordered_country_with_special_status_of_type", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
-    (Scopes::None, "ordered_country_with_succession_law", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_culture", Scope(Scopes::Culture)),
-    (Scopes::Culture, "ordered_culture_group", Scope(Scopes::CultureGroup)),
-    (Scopes::CultureGroup, "ordered_culture_in_culture_group", Scope(Scopes::Culture)),
-    (Scopes::CultureGroup, "ordered_culture_in_group", Scope(Scopes::Culture)),
-    (Scopes::Country, "ordered_current_avatars", Scope(Scopes::Avatar)),
-    (Scopes::Country, "ordered_current_gods", Scope(Scopes::God)),
-    (Scopes::Country, "ordered_current_law", Scope(Scopes::Law)),
+    (Scopes::None, "ordered_country_with_succession_law", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_culture", Scope(Scopes::Culture)),                     // TODO: REMOVED
+    (Scopes::Culture, "ordered_culture_group", Scope(Scopes::CultureGroup)),       // TODO: REMOVED
+    (Scopes::CultureGroup, "ordered_culture_in_culture_group", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::CultureGroup, "ordered_culture_in_group", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::Country, "ordered_current_avatars", Scope(Scopes::Avatar)),        // TODO: REMOVED
+    (Scopes::Country, "ordered_current_gods", Scope(Scopes::God)),              // TODO: REMOVED
+    (Scopes::Country, "ordered_current_law", Scope(Scopes::Law)),               // TODO: REMOVED
     (
         Scopes::InternationalOrganization,
-        "ordered_current_law_in_international_organization",
+        "ordered_current_law_in_international_organization", // TODO: REMOVED
         Scope(Scopes::Law),
     ),
-    (Scopes::Country, "ordered_current_policy", Scope(Scopes::Policy)),
+    (Scopes::Country, "ordered_current_policy", Scope(Scopes::Policy)), // TODO: REMOVED
     (
         Scopes::InternationalOrganization,
-        "ordered_current_policy_in_international_organization",
+        "ordered_current_policy_in_international_organization", // TODO: REMOVED
         Scope(Scopes::Policy),
     ),
-    (Scopes::Country, "ordered_current_reforms", Scope(Scopes::GovernmentReform)),
-    (Scopes::Country, "ordered_current_war", Scope(Scopes::War)),
-    (Scopes::War, "ordered_defender", Scope(Scopes::Country)),
-    (Scopes::Character, "ordered_descendant", Scope(Scopes::Character)),
-    (Scopes::Country, "ordered_disloyal_subject", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_dynasty", Scope(Scopes::Dynasty)),
+    (Scopes::Country, "ordered_current_reforms", Scope(Scopes::GovernmentReform)), // TODO: REMOVED
+    (Scopes::Country, "ordered_current_war", Scope(Scopes::War)),                  // TODO: REMOVED
+    (Scopes::War, "ordered_defender", Scope(Scopes::Country)),                     // TODO: REMOVED
+    (Scopes::Character, "ordered_descendant", Scope(Scopes::Character)),           // TODO: REMOVED
+    (Scopes::Country, "ordered_disloyal_subject", Scope(Scopes::Country)),         // TODO: REMOVED
+    (Scopes::Country, "ordered_dynasty", Scope(Scopes::Dynasty)),                  // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_east_of_province_definition",
+        "ordered_east_of_province_definition", // TODO: REMOVED
         Scope(Scopes::ProvinceDefinition),
     ),
-    (Scopes::Country, "ordered_election_candidates", Scope(Scopes::Character)),
-    (Scopes::Country, "ordered_enemy", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_enemy_war_leader", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_estate", Scope(Scopes::Estate)),
-    (Scopes::Country, "ordered_estate_privilege", Scope(Scopes::EstatePrivilege)),
-    (Scopes::Policy, "ordered_estate_type_preferring", Scope(Scopes::EstateType)),
-    (Scopes::Country, "ordered_exploration_from_country", Scope(Scopes::Exploration)),
-    (Scopes::Market, "ordered_export", Scope(Scopes::Trade)),
-    (Scopes::Location, "ordered_export_from_location", Scope(Scopes::Location)),
-    (Scopes::Location, "ordered_foreign_building_countries_in_location", Scope(Scopes::Country)),
-    (Scopes::Location, "ordered_foreign_buildings_in_location", Scope(Scopes::Building)),
-    (Scopes::Country, "ordered_fort_in_country", Scope(Scopes::Location)),
-    (Scopes::Location, "ordered_friendly_coast_border_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_friendly_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_friendly_or_high_opinion_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_friendly_to_friendly_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_friendly_to_hostile_country", Scope(Scopes::Country)),
-    (Scopes::Religion, "ordered_god_in_religion", Scope(Scopes::God)),
-    (Scopes::Demand, "ordered_good_in_demand", Scope(Scopes::Goods)),
-    (Scopes::None, "ordered_goods", Scope(Scopes::Goods)),
-    (Scopes::Culture, "ordered_graphical_culture_in_culture", Scope(Scopes::GraphicalCulture)),
-    (Scopes::None, "ordered_great_power", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_heathen_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_heretic_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_hired_mercenary", Scope(Scopes::Mercenary)),
-    (Scopes::Country, "ordered_historical_enemy", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_historical_rival", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_holy_site_in_country", Scope(Scopes::HolySite)),
-    (Scopes::Religion, "ordered_holy_site_in_religion", Scope(Scopes::HolySite)),
-    (Scopes::Country, "ordered_hostile_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_hostile_or_low_opinion_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_hostile_to_friendly_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_hostile_to_hostile_country", Scope(Scopes::Country)),
-    (Scopes::Market, "ordered_import", Scope(Scopes::Trade)),
-    (Scopes::Location, "ordered_import_from_location", Scope(Scopes::Location)),
-    (Scopes::None, "ordered_in_global_list", UncheckedTodo),
-    (Scopes::None, "ordered_in_list", UncheckedTodo),
-    (Scopes::None, "ordered_in_local_list", UncheckedTodo),
-    (Scopes::Country, "ordered_institutions_embraced", Scope(Scopes::Institution)),
-    (Scopes::None, "ordered_international_organization", Scope(Scopes::InternationalOrganization)),
+    (Scopes::Country, "ordered_election_candidates", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Country, "ordered_enemy", Scope(Scopes::Country)),                 // TODO: REMOVED
+    (Scopes::Country, "ordered_enemy_war_leader", Scope(Scopes::Country)),      // TODO: REMOVED
+    (Scopes::Country, "ordered_estate", Scope(Scopes::Estate)),                 // TODO: REMOVED
+    (Scopes::Country, "ordered_estate_privilege", Scope(Scopes::EstatePrivilege)), // TODO: REMOVED
+    (Scopes::Policy, "ordered_estate_type_preferring", Scope(Scopes::EstateType)), // TODO: REMOVED
+    (Scopes::Country, "ordered_exploration_from_country", Scope(Scopes::Exploration)), // TODO: REMOVED
+    (Scopes::Market, "ordered_export", Scope(Scopes::Trade)), // TODO: REMOVED
+    (Scopes::Location, "ordered_export_from_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Location, "ordered_foreign_building_countries_in_location", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Location, "ordered_foreign_buildings_in_location", Scope(Scopes::Building)), // TODO: REMOVED
+    (Scopes::Country, "ordered_fort_in_country", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Location, "ordered_friendly_coast_border_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_friendly_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_friendly_or_high_opinion_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_friendly_to_friendly_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_friendly_to_hostile_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Religion, "ordered_god_in_religion", Scope(Scopes::God)), // TODO: REMOVED
+    (Scopes::Demand, "ordered_good_in_demand", Scope(Scopes::Goods)),  // TODO: REMOVED
+    (Scopes::None, "ordered_goods", Scope(Scopes::Goods)),             // TODO: REMOVED
+    (Scopes::Culture, "ordered_graphical_culture_in_culture", Scope(Scopes::GraphicalCulture)), // TODO: REMOVED
+    (Scopes::None, "ordered_great_power", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_heathen_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_heretic_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_hired_mercenary", Scope(Scopes::Mercenary)), // TODO: REMOVED
+    (Scopes::Country, "ordered_historical_enemy", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_historical_rival", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_holy_site_in_country", Scope(Scopes::HolySite)), // TODO: REMOVED
+    (Scopes::Religion, "ordered_holy_site_in_religion", Scope(Scopes::HolySite)), // TODO: REMOVED
+    (Scopes::Country, "ordered_hostile_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_hostile_or_low_opinion_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_hostile_to_friendly_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_hostile_to_hostile_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Market, "ordered_import", Scope(Scopes::Trade)), // TODO: REMOVED
+    (Scopes::Location, "ordered_import_from_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::None, "ordered_in_global_list", UncheckedTodo),  // TODO: REMOVED
+    (Scopes::None, "ordered_in_list", UncheckedTodo),         // TODO: REMOVED
+    (Scopes::None, "ordered_in_local_list", UncheckedTodo),   // TODO: REMOVED
+    (Scopes::Country, "ordered_institutions_embraced", Scope(Scopes::Institution)), // TODO: REMOVED
+    (Scopes::None, "ordered_international_organization", Scope(Scopes::InternationalOrganization)), // TODO: REMOVED
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_elector",
+        "ordered_international_organization_elector", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_enemy",
+        "ordered_international_organization_enemy", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_member",
+        "ordered_international_organization_member", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_owned_location",
+        "ordered_international_organization_owned_location", // TODO: REMOVED
         Scope(Scopes::Location),
     ),
     (
         Scopes::Location,
-        "ordered_international_organization_owner",
+        "ordered_international_organization_owner", // TODO: REMOVED
         Scope(Scopes::InternationalOrganization),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_parliament_opposers",
+        "ordered_international_organization_parliament_opposers", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::InternationalOrganization,
-        "ordered_international_organization_parliament_supporter",
+        "ordered_international_organization_parliament_supporter", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
     (
         Scopes::Country,
-        "ordered_international_organizations_member_of",
+        "ordered_international_organizations_member_of", // TODO: REMOVED
         Scope(Scopes::InternationalOrganization),
     ),
     (
         Scopes::Country,
-        "ordered_international_organizations_target_of",
+        "ordered_international_organizations_target_of", // TODO: REMOVED
         Scope(Scopes::InternationalOrganization),
     ),
-    (Scopes::Country, "ordered_invited_religious_figure", Scope(Scopes::Character)),
-    (Scopes::Country, "ordered_known_country", Scope(Scopes::Country)),
-    (Scopes::CombatSide, "ordered_left_flank", Scope(Scopes::SubUnit)),
-    (Scopes::Country, "ordered_lent_loan", Scope(Scopes::Loan)),
-    (Scopes::Country, "ordered_loan", Scope(Scopes::Loan)),
-    (Scopes::Country, "ordered_loan_lent_to_country", Scope(Scopes::Loan)),
-    (Scopes::Area, "ordered_location_in_area", Scope(Scopes::Location)),
-    (Scopes::Continent, "ordered_location_in_continent", Scope(Scopes::Location)),
-    (Scopes::Market, "ordered_location_in_market", Scope(Scopes::Location)),
-    (Scopes::Province, "ordered_location_in_province", Scope(Scopes::Location)),
+    (Scopes::Country, "ordered_invited_religious_figure", Scope(Scopes::Character)), // TODO: REMOVED
+    (Scopes::Country, "ordered_known_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_left_flank", Scope(Scopes::SubUnit)), // TODO: REMOVED
+    (Scopes::Country, "ordered_lent_loan", Scope(Scopes::Loan)),        // TODO: REMOVED
+    (Scopes::Country, "ordered_loan", Scope(Scopes::Loan)),             // TODO: REMOVED
+    (Scopes::Country, "ordered_loan_lent_to_country", Scope(Scopes::Loan)), // TODO: REMOVED
+    (Scopes::Area, "ordered_location_in_area", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Continent, "ordered_location_in_continent", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Market, "ordered_location_in_market", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Province, "ordered_location_in_province", Scope(Scopes::Location)), // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_location_in_province_definition",
+        "ordered_location_in_province_definition", // TODO: REMOVED
         Scope(Scopes::Location),
     ),
-    (Scopes::Region, "ordered_location_in_region", Scope(Scopes::Location)),
-    (Scopes::SubContinent, "ordered_location_in_sub_continent", Scope(Scopes::Location)),
-    (Scopes::None, "ordered_location_in_the_world", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_loyal_subject", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_maritime_area", Scope(Scopes::Area)),
-    (Scopes::Country, "ordered_market_center_in_country", Scope(Scopes::Market)),
-    (Scopes::None, "ordered_market_in_world", Scope(Scopes::Market)),
-    (Scopes::Country, "ordered_market_present_in_country", Scope(Scopes::Market)),
-    (Scopes::Country, "ordered_market_with_merchants", Scope(Scopes::Market)),
-    (Scopes::None, "ordered_mercenary", Scope(Scopes::Mercenary)),
-    (Scopes::Mercenary, "ordered_mercenary_sub_unit", Scope(Scopes::SubUnit)),
-    (Scopes::Market, "ordered_merchant_in_market", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_navy", Scope(Scopes::Unit)),
-    (Scopes::Area, "ordered_neighbor_area", Scope(Scopes::Area)),
-    (Scopes::Country, "ordered_neighbor_country", Scope(Scopes::Country)),
-    (Scopes::Location, "ordered_neighbor_location", Scope(Scopes::Location)),
+    (Scopes::Region, "ordered_location_in_region", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::SubContinent, "ordered_location_in_sub_continent", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::None, "ordered_location_in_the_world", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_loyal_subject", Scope(Scopes::Country)),       // TODO: REMOVED
+    (Scopes::Country, "ordered_maritime_area", Scope(Scopes::Area)),          // TODO: REMOVED
+    (Scopes::Country, "ordered_market_center_in_country", Scope(Scopes::Market)), // TODO: REMOVED
+    (Scopes::None, "ordered_market_in_world", Scope(Scopes::Market)),         // TODO: REMOVED
+    (Scopes::Country, "ordered_market_present_in_country", Scope(Scopes::Market)), // TODO: REMOVED
+    (Scopes::Country, "ordered_market_with_merchants", Scope(Scopes::Market)), // TODO: REMOVED
+    (Scopes::None, "ordered_mercenary", Scope(Scopes::Mercenary)),            // TODO: REMOVED
+    (Scopes::Mercenary, "ordered_mercenary_sub_unit", Scope(Scopes::SubUnit)), // TODO: REMOVED
+    (Scopes::Market, "ordered_merchant_in_market", Scope(Scopes::Country)),   // TODO: REMOVED
+    (Scopes::Country, "ordered_navy", Scope(Scopes::Unit)),                   // TODO: REMOVED
+    (Scopes::Area, "ordered_neighbor_area", Scope(Scopes::Area)),             // TODO: REMOVED
+    (Scopes::Country, "ordered_neighbor_country", Scope(Scopes::Country)),    // TODO: REMOVED
+    (Scopes::Location, "ordered_neighbor_location", Scope(Scopes::Location)), // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_neighbor_province_definition",
+        "ordered_neighbor_province_definition", // TODO: REMOVED
         Scope(Scopes::ProvinceDefinition),
     ),
-    (Scopes::Location, "ordered_nomad_countries_in_location", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_non_state_religion_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_other_core_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_other_country", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_other_great_power", Scope(Scopes::Country)),
-    (Scopes::Religion, "ordered_other_religion_in_same_group", Scope(Scopes::Religion)),
-    (Scopes::Country, "ordered_other_revolutionary", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_overlord_or_above", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_ownable_location", Scope(Scopes::Location)),
-    (Scopes::Area, "ordered_ownable_location_in_area", Scope(Scopes::Location)),
-    (Scopes::Continent, "ordered_ownable_location_in_continent", Scope(Scopes::Location)),
+    (Scopes::Location, "ordered_nomad_countries_in_location", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_non_state_religion_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_other_core_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_other_country", Scope(Scopes::Country)),      // TODO: REMOVED
+    (Scopes::Country, "ordered_other_great_power", Scope(Scopes::Country)),  // TODO: REMOVED
+    (Scopes::Religion, "ordered_other_religion_in_same_group", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::Country, "ordered_other_revolutionary", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_overlord_or_above", Scope(Scopes::Country)),   // TODO: REMOVED
+    (Scopes::None, "ordered_ownable_location", Scope(Scopes::Location)),      // TODO: REMOVED
+    (Scopes::Area, "ordered_ownable_location_in_area", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Continent, "ordered_ownable_location_in_continent", Scope(Scopes::Location)), // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_ownable_location_in_province_definition",
+        "ordered_ownable_location_in_province_definition", // TODO: REMOVED
         Scope(Scopes::Location),
     ),
-    (Scopes::Region, "ordered_ownable_location_in_region", Scope(Scopes::Location)),
-    (Scopes::SubContinent, "ordered_ownable_location_in_sub_continent", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_owned_building", Scope(Scopes::Building)),
-    (Scopes::Country, "ordered_owned_foreign_building", Scope(Scopes::Building)),
-    (Scopes::Country, "ordered_owned_foreign_building_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_owned_foreign_building_region", Scope(Scopes::Region)),
-    (Scopes::Country, "ordered_owned_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_owned_nomad_pop", Scope(Scopes::Pop)),
-    (Scopes::Country, "ordered_owned_non_rural_location", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_owned_rural_location", Scope(Scopes::Location)),
-    (Scopes::Region, "ordered_owner_in_region", Scope(Scopes::Country)),
-    (Scopes::Character, "ordered_parent", Scope(Scopes::Character)),
-    (Scopes::CombatSide, "ordered_participating_countries", Scope(Scopes::Country)),
-    (Scopes::CombatSide, "ordered_participating_units", Scope(Scopes::Unit)),
-    (Scopes::Country, "ordered_past_liturgical_dialect", Scope(Scopes::Country)),
-    (Scopes::Law, "ordered_policy_in_law", Scope(Scopes::Policy)),
-    (Scopes::Country, "ordered_political_border_location", Scope(Scopes::Location)),
-    (Scopes::Location.union(Scopes::Country), "ordered_pop", Scope(Scopes::Pop)),
-    (Scopes::Rebels, "ordered_pops_supporting_rebel", Scope(Scopes::Pop)),
-    (Scopes::Country, "ordered_port_in_country", Scope(Scopes::Location)),
-    (Scopes::Country, "ordered_possible_disaster", Scope(Scopes::Disaster)),
+    (Scopes::Region, "ordered_ownable_location_in_region", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::SubContinent, "ordered_ownable_location_in_sub_continent", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_building", Scope(Scopes::Building)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_foreign_building", Scope(Scopes::Building)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_foreign_building_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_foreign_building_region", Scope(Scopes::Region)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_nomad_pop", Scope(Scopes::Pop)),     // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_non_rural_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Country, "ordered_owned_rural_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Region, "ordered_owner_in_region", Scope(Scopes::Country)),  // TODO: REMOVED
+    (Scopes::Character, "ordered_parent", Scope(Scopes::Character)),      // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_participating_countries", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_participating_units", Scope(Scopes::Unit)), // TODO: REMOVED
+    (Scopes::Country, "ordered_past_liturgical_dialect", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Law, "ordered_policy_in_law", Scope(Scopes::Policy)),            // TODO: REMOVED
+    (Scopes::Country, "ordered_political_border_location", Scope(Scopes::Location)), // TODO: REMOVED
+    (Scopes::Location.union(Scopes::Country), "ordered_pop", Scope(Scopes::Pop)), // TODO: REMOVED
+    (Scopes::Rebels, "ordered_pops_supporting_rebel", Scope(Scopes::Pop)),        // TODO: REMOVED
+    (Scopes::Country, "ordered_port_in_country", Scope(Scopes::Location)),        // TODO: REMOVED
+    (Scopes::Country, "ordered_possible_disaster", Scope(Scopes::Disaster)),      // TODO: REMOVED
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
-        "ordered_possible_parliament_issue",
+        "ordered_possible_parliament_issue", // TODO: REMOVED
         Scope(Scopes::ParliamentIssue),
     ),
-    (Scopes::Country, "ordered_possible_policy", Scope(Scopes::Policy)),
-    (Scopes::Estate, "ordered_possible_privilege", Scope(Scopes::EstatePrivilege)),
-    (Scopes::Country, "ordered_possible_recruit_location", Scope(Scopes::Location)),
+    (Scopes::Country, "ordered_possible_policy", Scope(Scopes::Policy)), // TODO: REMOVED
+    (Scopes::Estate, "ordered_possible_privilege", Scope(Scopes::EstatePrivilege)), // TODO: REMOVED
+    (Scopes::Country, "ordered_possible_recruit_location", Scope(Scopes::Location)), // TODO: REMOVED
     (
         Scopes::Location
             .union(Scopes::ProvinceDefinition)
@@ -721,11 +749,11 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
             .union(Scopes::Region)
             .union(Scopes::SubContinent)
             .union(Scopes::Continent),
-        "ordered_present_country",
+        "ordered_present_country", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
-    (Scopes::Country, "ordered_present_culture_in_country", Scope(Scopes::Culture)),
-    (Scopes::Location, "ordered_present_culture_in_location", Scope(Scopes::Culture)),
+    (Scopes::Country, "ordered_present_culture_in_country", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::Location, "ordered_present_culture_in_location", Scope(Scopes::Culture)), // TODO: REMOVED
     (
         Scopes::Location
             .union(Scopes::ProvinceDefinition)
@@ -733,78 +761,78 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
             .union(Scopes::Region)
             .union(Scopes::SubContinent)
             .union(Scopes::Continent),
-        "ordered_present_overlord",
+        "ordered_present_overlord", // TODO: REMOVED
         Scope(Scopes::Country),
     ),
-    (Scopes::Country, "ordered_present_religion_in_country", Scope(Scopes::Religion)),
-    (Scopes::Location, "ordered_present_religion_in_location", Scope(Scopes::Religion)),
-    (Scopes::Country, "ordered_primary_or_accepted_culture", Scope(Scopes::Culture)),
-    (Scopes::Country, "ordered_primary_or_accepted_or_tolerated_culture", Scope(Scopes::Culture)),
-    (Scopes::None, "ordered_privateer", Scope(Scopes::Privateer)),
-    (Scopes::Country, "ordered_privateer_from_country", Scope(Scopes::Privateer)),
-    (Scopes::Area, "ordered_privateer_in_area", Scope(Scopes::Privateer)),
-    (Scopes::None, "ordered_production_method", Scope(Scopes::ProductionMethod)),
-    (Scopes::Building, "ordered_production_method_of_building", Scope(Scopes::ProductionMethod)),
-    (Scopes::Country, "ordered_province", Scope(Scopes::Province)),
-    (Scopes::None, "ordered_province_definition", Scope(Scopes::ProvinceDefinition)),
-    (Scopes::Area, "ordered_province_definition_in_area", Scope(Scopes::ProvinceDefinition)),
-    (Scopes::Area, "ordered_province_in_area", Scope(Scopes::Province)),
+    (Scopes::Country, "ordered_present_religion_in_country", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::Location, "ordered_present_religion_in_location", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::Country, "ordered_primary_or_accepted_culture", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::Country, "ordered_primary_or_accepted_or_tolerated_culture", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::None, "ordered_privateer", Scope(Scopes::Privateer)), // TODO: REMOVED
+    (Scopes::Country, "ordered_privateer_from_country", Scope(Scopes::Privateer)), // TODO: REMOVED
+    (Scopes::Area, "ordered_privateer_in_area", Scope(Scopes::Privateer)), // TODO: REMOVED
+    (Scopes::None, "ordered_production_method", Scope(Scopes::ProductionMethod)), // TODO: REMOVED
+    (Scopes::Building, "ordered_production_method_of_building", Scope(Scopes::ProductionMethod)), // TODO: REMOVED
+    (Scopes::Country, "ordered_province", Scope(Scopes::Province)), // TODO: REMOVED
+    (Scopes::None, "ordered_province_definition", Scope(Scopes::ProvinceDefinition)), // TODO: REMOVED
+    (Scopes::Area, "ordered_province_definition_in_area", Scope(Scopes::ProvinceDefinition)), // TODO: REMOVED
+    (Scopes::Area, "ordered_province_in_area", Scope(Scopes::Province)), // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_province_in_province_definition",
+        "ordered_province_in_province_definition", // TODO: REMOVED
         Scope(Scopes::Province),
     ),
-    (Scopes::Country, "ordered_rebel", Scope(Scopes::Rebels)),
-    (Scopes::None, "ordered_region", Scope(Scopes::Region)),
-    (Scopes::SubContinent, "ordered_region_in_continent", Scope(Scopes::Region)),
-    (Scopes::Country, "ordered_related_country", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_religion", Scope(Scopes::Religion)),
-    (Scopes::God, "ordered_religion_for_god", Scope(Scopes::Religion)),
-    (Scopes::Group, "ordered_religion_in_religion_group", Scope(Scopes::Religion)),
+    (Scopes::Country, "ordered_rebel", Scope(Scopes::Rebels)), // TODO: REMOVED
+    (Scopes::None, "ordered_region", Scope(Scopes::Region)),   // TODO: REMOVED
+    (Scopes::SubContinent, "ordered_region_in_continent", Scope(Scopes::Region)), // TODO: REMOVED
+    (Scopes::Country, "ordered_related_country", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_religion", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::God, "ordered_religion_for_god", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::Group, "ordered_religion_in_religion_group", Scope(Scopes::Religion)), // TODO: REMOVED
     (
         Scopes::Religion,
-        "ordered_religion_international_organization",
+        "ordered_religion_international_organization", // TODO: REMOVED
         Scope(Scopes::InternationalOrganization),
     ),
-    (Scopes::Country, "ordered_religious_aspect", Scope(Scopes::ReligiousAspect)),
-    (Scopes::Country, "ordered_religious_focus", Scope(Scopes::ReligiousFocus)),
-    (Scopes::Country, "ordered_rented_out_mercenary", Scope(Scopes::Mercenary)),
-    (Scopes::ProductionMethod, "ordered_required_goods", Scope(Scopes::Goods)),
-    (Scopes::CombatSide, "ordered_reserves", Scope(Scopes::SubUnit)),
-    (Scopes::CombatSide, "ordered_retreated", Scope(Scopes::SubUnit)),
-    (Scopes::None, "ordered_revolutionary", Scope(Scopes::Country)),
-    (Scopes::CombatSide, "ordered_right_flank", Scope(Scopes::SubUnit)),
-    (Scopes::Country, "ordered_rival", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_road_type", Scope(Scopes::RoadType)),
-    (Scopes::Country, "ordered_royal_marriage", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_ruler", Scope(Scopes::Character)),
-    (Scopes::Character, "ordered_ruling_countries", Scope(Scopes::Country)),
-    (Scopes::Character, "ordered_spouse", Scope(Scopes::Character)),
-    (Scopes::Country, "ordered_spy_network_built_in_us", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_sub_continent", Scope(Scopes::SubContinent)),
-    (Scopes::Continent, "ordered_sub_continent_in_continent", Scope(Scopes::SubContinent)),
-    (Scopes::Unit, "ordered_sub_unit", Scope(Scopes::SubUnit)),
-    (Scopes::Country, "ordered_subject", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_subject_or_below", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_tolerated_culture", Scope(Scopes::Culture)),
-    (Scopes::Country, "ordered_trade", Scope(Scopes::Trade)),
-    (Scopes::Country, "ordered_union_partner", Scope(Scopes::Country)),
-    (Scopes::Country, "ordered_unit", Scope(Scopes::Unit)),
-    (Scopes::Location, "ordered_unit_in_location", Scope(Scopes::Unit)),
-    (Scopes::ReligiousAspect, "ordered_valid_religion_for_aspect", Scope(Scopes::Religion)),
-    (Scopes::ActiveResolution, "ordered_voter", Scope(Scopes::Country)),
-    (Scopes::None, "ordered_war", Scope(Scopes::War)),
-    (Scopes::War, "ordered_war_participant", Scope(Scopes::Country)),
-    (Scopes::Location, "ordered_weather_system_in_location", Scope(Scopes::WeatherSystem)),
+    (Scopes::Country, "ordered_religious_aspect", Scope(Scopes::ReligiousAspect)), // TODO: REMOVED
+    (Scopes::Country, "ordered_religious_focus", Scope(Scopes::ReligiousFocus)),   // TODO: REMOVED
+    (Scopes::Country, "ordered_rented_out_mercenary", Scope(Scopes::Mercenary)),   // TODO: REMOVED
+    (Scopes::ProductionMethod, "ordered_required_goods", Scope(Scopes::Goods)),    // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_reserves", Scope(Scopes::SubUnit)),              // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_retreated", Scope(Scopes::SubUnit)),             // TODO: REMOVED
+    (Scopes::None, "ordered_revolutionary", Scope(Scopes::Country)),               // TODO: REMOVED
+    (Scopes::CombatSide, "ordered_right_flank", Scope(Scopes::SubUnit)),           // TODO: REMOVED
+    (Scopes::Country, "ordered_rival", Scope(Scopes::Country)),                    // TODO: REMOVED
+    (Scopes::None, "ordered_road_type", Scope(Scopes::RoadType)),                  // TODO: REMOVED
+    (Scopes::Country, "ordered_royal_marriage", Scope(Scopes::Country)),           // TODO: REMOVED
+    (Scopes::Country, "ordered_ruler", Scope(Scopes::Character)),                  // TODO: REMOVED
+    (Scopes::Character, "ordered_ruling_countries", Scope(Scopes::Country)),       // TODO: REMOVED
+    (Scopes::Character, "ordered_spouse", Scope(Scopes::Character)),               // TODO: REMOVED
+    (Scopes::Country, "ordered_spy_network_built_in_us", Scope(Scopes::Country)),  // TODO: REMOVED
+    (Scopes::None, "ordered_sub_continent", Scope(Scopes::SubContinent)),          // TODO: REMOVED
+    (Scopes::Continent, "ordered_sub_continent_in_continent", Scope(Scopes::SubContinent)), // TODO: REMOVED
+    (Scopes::Unit, "ordered_sub_unit", Scope(Scopes::SubUnit)), // TODO: REMOVED
+    (Scopes::Country, "ordered_subject", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_subject_or_below", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_tolerated_culture", Scope(Scopes::Culture)), // TODO: REMOVED
+    (Scopes::Country, "ordered_trade", Scope(Scopes::Trade)),   // TODO: REMOVED
+    (Scopes::Country, "ordered_union_partner", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::Country, "ordered_unit", Scope(Scopes::Unit)),     // TODO: REMOVED
+    (Scopes::Location, "ordered_unit_in_location", Scope(Scopes::Unit)), // TODO: REMOVED
+    (Scopes::ReligiousAspect, "ordered_valid_religion_for_aspect", Scope(Scopes::Religion)), // TODO: REMOVED
+    (Scopes::ActiveResolution, "ordered_voter", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::None, "ordered_war", Scope(Scopes::War)),                   // TODO: REMOVED
+    (Scopes::War, "ordered_war_participant", Scope(Scopes::Country)),    // TODO: REMOVED
+    (Scopes::Location, "ordered_weather_system_in_location", Scope(Scopes::WeatherSystem)), // TODO: REMOVED
     (
         Scopes::ProvinceDefinition,
-        "ordered_west_of_province_definition",
+        "ordered_west_of_province_definition", // TODO: REMOVED
         Scope(Scopes::ProvinceDefinition),
     ),
-    (Scopes::None, "ordered_work_of_art", Scope(Scopes::WorkOfArt)),
-    (Scopes::Character, "ordered_work_of_art_by_creator", Scope(Scopes::WorkOfArt)),
-    (Scopes::Country, "ordered_work_of_art_in_country", Scope(Scopes::WorkOfArt)),
-    (Scopes::Location, "ordered_work_of_art_in_location", Scope(Scopes::WorkOfArt)),
+    (Scopes::None, "ordered_work_of_art", Scope(Scopes::WorkOfArt)), // TODO: REMOVED
+    (Scopes::Character, "ordered_work_of_art_by_creator", Scope(Scopes::WorkOfArt)), // TODO: REMOVED
+    (Scopes::Country, "ordered_work_of_art_in_country", Scope(Scopes::WorkOfArt)), // TODO: REMOVED
+    (Scopes::Location, "ordered_work_of_art_in_location", Scope(Scopes::WorkOfArt)), // TODO: REMOVED
     (Scopes::Country, "pay_off_loans", UncheckedTodo),
     (
         Scopes::Country.union(Scopes::InternationalOrganization),
@@ -828,6 +856,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "remove_accepted_culture", Scope(Scopes::Culture)),
     (Scopes::ColonialCharter, "remove_additional_migration", UncheckedTodo),
     (Scopes::Country, "remove_all_casus_belli", Scope(Scopes::Country)),
+    (Scopes::Country, "remove_all_casus_belli_of_type", UncheckedTodo),
     (Scopes::Country, "remove_antagonism", UncheckedTodo),
     (Scopes::Country, "remove_avatar", Scope(Scopes::Avatar)),
     (Scopes::Siege, "remove_breach", UncheckedTodo),
@@ -869,18 +898,35 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
         UncheckedTodo,
     ),
     (
+        Scopes::Location
+            .union(Scopes::Country)
+            .union(Scopes::Unit)
+            .union(Scopes::Character)
+            .union(Scopes::Dynasty)
+            .union(Scopes::Religion)
+            .union(Scopes::Province)
+            .union(Scopes::Rebels)
+            .union(Scopes::Mercenary)
+            .union(Scopes::InternationalOrganization),
+        "remove_dynasty_modifier",
+        UncheckedTodo,
+    ),
+    (
         Scopes::InternationalOrganization,
         "remove_enemy_from_international_organization",
         Scope(Scopes::Country),
     ),
     (Scopes::None, "remove_extended_winter", Scope(Scopes::Area)),
     (Scopes::Country, "remove_from_cabinet", Scope(Scopes::Character)),
+    (Scopes::None, "remove_from_global_variable_map", UncheckedTodo),
     (
         Scopes::Location,
         "remove_from_international_organization",
         Scope(Scopes::InternationalOrganization),
     ),
     (Scopes::None, "remove_from_list", UncheckedTodo),
+    (Scopes::None, "remove_from_local_variable_map", UncheckedTodo),
+    (Scopes::None, "remove_from_variable_map", UncheckedTodo),
     (Scopes::None, "remove_global_variable", UncheckedTodo),
     (Scopes::Country, "remove_god", Scope(Scopes::God)),
     (Scopes::Country, "remove_historical_rival", Scope(Scopes::Country)),
@@ -1047,6 +1093,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "set_capital", Scope(Scopes::Location)),
     (Scopes::Character, "set_child_education", Scope(Scopes::ChildEducation)),
     (Scopes::None, "set_collection_pin", UncheckedTodo),
+    (Scopes::Country.union(Scopes::InternationalOrganization), "set_complacency", UncheckedTodo),
     (Scopes::Country, "set_country_employment_system", Scope(Scopes::EmploymentSystem)),
     (Scopes::None, "set_country_military_stance", Scope(Scopes::MilitaryStance)),
     (Scopes::Country, "set_country_rank", Scope(Scopes::CountryRank)),
@@ -1179,6 +1226,8 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "switch", UncheckedTodo),
     (Scopes::Country, "take_over_all_wars", Scope(Scopes::Country)),
     (Scopes::None, "test_log", UncheckedTodo),
+    (Scopes::Location, "transfer_location_occupation", UncheckedTodo),
+    (Scopes::Country, "transfer_subject", UncheckedTodo),
     (Scopes::Country, "transfer_yearly_gold", UncheckedTodo),
     (Scopes::Country, "transfer_yearly_manpower", UncheckedTodo),
     (Scopes::Country, "transfer_yearly_sailors", UncheckedTodo),
