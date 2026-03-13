@@ -1088,7 +1088,7 @@ impl Item {
                 Game::Ck3 => "common/deathreasons/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/deathreasons/",
-                #[cfg(feature = "hoi4")]
+                #[cfg(feature = "eu5")]
                 Game::Eu5 => "common/death_reason/",
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
