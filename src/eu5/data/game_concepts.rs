@@ -22,6 +22,9 @@ const CONCEPT_FAMILIES: &[&str] = &[
     "role",
     "location_rank",
     "ability",
+    "wealth",
+    "building",
+    "war",
 ];
 
 #[derive(Clone, Debug)]

@@ -1035,6 +1035,8 @@ impl Everything {
             Item::ScriptedModifier => self.scripted_modifiers.exists(key),
             Item::ScriptValue => self.script_values.exists(key),
             Item::Sound => self.valid_sound(key),
+            Item::Currency => CURRENCIES.contains(&key),
+            Item::CharacterTraitCategory => CHARACTER_TRAIT_CATEGORY.contains(&key),
             _ => self.database.exists(itype, key),
         }
     }

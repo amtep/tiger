@@ -347,6 +347,7 @@ bitflags! {
         #[cfg(feature = "eu5")] const UnitFormationPreference = 1<<121;
         #[cfg(feature = "eu5")] const ScriptableHintDefinition = 1<<122;
         #[cfg(feature = "eu5")] const ScriptedGeography = 1<<123;
+        #[cfg(feature = "eu5")] const ReligionGroup = 1<<124;
 
         #[cfg(feature = "hoi4")] const Ace = 1<<16;
         #[cfg(feature = "hoi4")] const Combatant = 1<<17;

@@ -10,19 +10,19 @@ use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
-pub struct InsultType {}
+pub struct Insult {}
 
 inventory::submit! {
-    ItemLoader::Normal(GameFlags::Eu5, Item::InsultType, InsultType::add)
+    ItemLoader::Normal(GameFlags::Eu5, Item::Insult, Insult::add)
 }
 
-impl InsultType {
+impl Insult {
     pub fn add(db: &mut Db, key: Token, block: Block) {
-        db.add(Item::InsultType, key, block, Box::new(Self {}));
+        db.add(Item::Insult, key, block, Box::new(Self {}));
     }
 }
 
-impl DbKind for InsultType {
+impl DbKind for Insult {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         let mut sc = ScopeContext::new(Scopes::None, key);

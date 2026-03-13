@@ -162,6 +162,8 @@ pub enum Item {
     AiStrategy,
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
     Building,
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    BuildingType,
     #[cfg(any(feature = "ck3", feature = "eu5"))]
     CasusBelli,
     #[cfg(any(feature = "ck3", feature = "hoi4"))]
@@ -170,44 +172,68 @@ pub enum Item {
     CharacterTemplate,
     #[cfg(any(feature = "vic3", feature = "imperator"))]
     CharacterTrait,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    Climate,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     CombatTactic,
     #[cfg(any(feature = "vic3", feature = "imperator", feature = "hoi4"))]
     Country,
-    #[cfg(any(feature = "ck3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    CountryRank,
+    #[cfg(any(feature = "imperator", feature = "eu5"))]
+    CultureGroup,
+    #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
     DeathReason,
-    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     Dna,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
     EventTheme,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    HolySite,
     #[cfg(any(feature = "imperator", feature = "hoi4"))]
     Idea,
     #[cfg(any(feature = "vic3", feature = "hoi4"))]
     Ideology,
-    #[cfg(any(feature = "ck3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    Institution,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    Language,
+    #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
     Law,
     #[cfg(any(feature = "ck3", feature = "vic3"))]
     Message,
-    #[cfg(any(feature = "imperator", feature = "hoi4"))]
+    #[cfg(any(feature = "imperator", feature = "hoi4", feature = "eu5"))]
     Mission,
     #[cfg(any(feature = "vic3", feature = "eu5"))]
     ModifierTypeDefinition,
     #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     PopType,
+    #[cfg(any(feature = "imperator", feature = "eu5"))]
+    Price,
+    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    ProductionMethod,
     #[cfg(any(feature = "ck3", feature = "imperator"))]
     Region,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    Situation,
     #[cfg(any(feature = "vic3", feature = "hoi4"))] 
     StrategicRegion,
-    #[cfg(any(feature = "vic3", feature = "imperator"))]
+    #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
     SubjectType,
     #[cfg(any(feature = "vic3", feature = "hoi4"))]
     Technology,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    Trait,
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLesson,
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonChain,
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     TutorialLessonStep,
+    #[cfg(any(feature = "imperator", feature = "eu5"))]
+    UnitAbility,
+    #[cfg(any(feature = "imperator", feature = "eu5"))]
+    Wargoal,
 
     // Items for ck3
     #[cfg(feature = "ck3")] AccoladeCategory,
@@ -251,7 +277,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] ChallengeCharacter,
     #[cfg(feature = "ck3")] CharacterBackground,
     #[cfg(feature = "ck3")] CharacterInteractionCategory,
-    #[cfg(feature = "ck3")] Climate,
     #[cfg(feature = "ck3")] ClothingGfx,
     #[cfg(feature = "ck3")] CoaGfx,
     #[cfg(feature = "ck3")] CoaDynamicDefinition,
@@ -319,7 +344,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] HeadDetermination,
     #[cfg(feature = "ck3")] HoldingParameter,
     #[cfg(feature = "ck3")] HoldingType,
-    #[cfg(feature = "ck3")] HolySite,
     #[cfg(feature = "ck3")] HolySiteFlag,
     #[cfg(feature = "ck3")] Hook,
     #[cfg(feature = "ck3")] House,
@@ -334,7 +358,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] InnovationFlag,
     #[cfg(feature = "ck3")] InnovationParameter,
     #[cfg(feature = "ck3")] Inspiration,
-    #[cfg(feature = "ck3")] Language,
     #[cfg(feature = "ck3")] LawFlag,
     #[cfg(feature = "ck3")] LeaseContract,
     #[cfg(feature = "ck3")] LegendChapter,
@@ -383,7 +406,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] ScriptedIllustration,
     #[cfg(feature = "ck3")] Secret,
     #[cfg(feature = "ck3")] Sexuality,
-    #[cfg(feature = "ck3")] Situation,
     #[cfg(feature = "ck3")] SituationCatalyst,
     #[cfg(feature = "ck3")] SituationGroupType,
     #[cfg(feature = "ck3")] SituationHistory,
@@ -414,7 +436,6 @@ pub enum Item {
     #[cfg(feature = "ck3")] TaxSlotType,
     #[cfg(feature = "ck3")] Title,
     #[cfg(feature = "ck3")] TitleHistory,
-    #[cfg(feature = "ck3")] Trait,
     #[cfg(feature = "ck3")] TraitCategory,
     #[cfg(feature = "ck3")] TraitFlag,
     #[cfg(feature = "ck3")] TraitPortraitModifier,
@@ -434,7 +455,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] Attitude,
     #[cfg(feature = "vic3")] BattleCondition,
     #[cfg(feature = "vic3")] BuildingGroup,
-    #[cfg(feature = "vic3")] BuildingType,
     #[cfg(feature = "vic3")] BuyPackage,
     #[cfg(feature = "vic3")] CanalType,
     #[cfg(feature = "vic3")] CharacterRole,
@@ -452,7 +472,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] CohesionLevel,
     #[cfg(feature = "vic3")] CountryCreation,
     #[cfg(feature = "vic3")] CountryFormation,
-    #[cfg(feature = "vic3")] CountryRank,
     #[cfg(feature = "vic3")] CountryTier,
     #[cfg(feature = "vic3")] CountryType,
     #[cfg(feature = "vic3")] CultureGraphics,
@@ -478,7 +497,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] HarvestConditionType,
     #[cfg(feature = "vic3")] HeritageTrait,
     #[cfg(feature = "vic3")] InfamyThreshold,
-    #[cfg(feature = "vic3")] Institution,
     #[cfg(feature = "vic3")] InterestGroup,
     #[cfg(feature = "vic3")] InterestGroupTrait,
     #[cfg(feature = "vic3")] JournalEntry,
@@ -512,7 +530,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] PrestigeGoods,
     #[cfg(feature = "vic3")] Principle,
     #[cfg(feature = "vic3")] PrincipleGroup,
-    #[cfg(feature = "vic3")] ProductionMethod,
     #[cfg(feature = "vic3")] ProductionMethodGroup,
     #[cfg(feature = "vic3")] ProposalType,
     #[cfg(feature = "vic3")] RelationsThreshold,
@@ -542,7 +559,6 @@ pub enum Item {
     #[cfg(feature = "imperator")] Ambition,
     #[cfg(feature = "imperator")] AiPlanGoals,
     #[cfg(feature = "imperator")] Area,
-    #[cfg(feature = "imperator")] CultureGroup,
     #[cfg(feature = "imperator")] Deity,
     #[cfg(feature = "imperator")] DeityCategory,
     #[cfg(feature = "imperator")] DiplomaticStance,
@@ -570,7 +586,6 @@ pub enum Item {
     #[cfg(feature = "imperator")] PartyAgenda,
     #[cfg(feature = "imperator")] PartyType,
     #[cfg(feature = "imperator")] PostSetupCharacters,
-    #[cfg(feature = "imperator")] Price,
     #[cfg(feature = "imperator")] ProvinceRank,
     #[cfg(feature = "imperator")] SetupCharacters,
     #[cfg(feature = "imperator")] SetupProvinces,
@@ -578,8 +593,6 @@ pub enum Item {
     #[cfg(feature = "imperator")] TradeGood,
     #[cfg(feature = "imperator")] Treasure,
     #[cfg(feature = "imperator")] Unit,
-    #[cfg(feature = "imperator")] UnitAbility,
-    #[cfg(feature = "imperator")] Wargoal,
 
     #[cfg(feature = "hoi4")] Ability,
     #[cfg(feature = "hoi4")] Acclimatation,
@@ -656,11 +669,84 @@ pub enum Item {
     #[cfg(feature = "hoi4")] UnitLeaderTrait,
     #[cfg(feature = "hoi4")] UnitNames,
 
-    #[cfg(feature = "eu5")] InsultType,
-    #[cfg(feature = "eu5")] InternationalOrganization,
+    #[cfg(feature = "eu5")] Advance,
+    #[cfg(feature = "eu5")] Age,
+    #[cfg(feature = "eu5")] AiDiplochance,
+    #[cfg(feature = "eu5")] AlertDescription,
+    #[cfg(feature = "eu5")] ArtistType,
+    #[cfg(feature = "eu5")] ArtistWork,
+    #[cfg(feature = "eu5")] AttributeColumn,
+    #[cfg(feature = "eu5")] AutoModifier,
+    #[cfg(feature = "eu5")] Avatar,
     #[cfg(feature = "eu5")] Bias,
     #[cfg(feature = "eu5")] BuildingCategory,
-    #[cfg(feature = "eu5")] ArtistType,
+    #[cfg(feature = "eu5")] CabinetAction,
+    #[cfg(feature = "eu5")] CharacterTraitCategory,
+    #[cfg(feature = "eu5")] ChildEducation,
+    #[cfg(feature = "eu5")] CountryDescriptionCategory,
+    #[cfg(feature = "eu5")] CountryInteraction,
+    #[cfg(feature = "eu5")] Currency,
+    #[cfg(feature = "eu5")] DesignatedHeirReason,
+    #[cfg(feature = "eu5")] DiplomaticCost,
+    #[cfg(feature = "eu5")] Disaster,
+    #[cfg(feature = "eu5")] Disease,
+    #[cfg(feature = "eu5")] EmploymentSystem,
+    #[cfg(feature = "eu5")] EstatePrivilege,
+    #[cfg(feature = "eu5")] Estate,
+    #[cfg(feature = "eu5")] FormableCountry,
+    #[cfg(feature = "eu5")] GenericActionAiList,
+    #[cfg(feature = "eu5")] GenericAction,
+    #[cfg(feature = "eu5")] God,
+    #[cfg(feature = "eu5")] Good,
+    #[cfg(feature = "eu5")] GoodsDemand,
+    #[cfg(feature = "eu5")] GoodsDemandCategory,
+    #[cfg(feature = "eu5")] GovernmentReform,
+    #[cfg(feature = "eu5")] Hegemon,
+    #[cfg(feature = "eu5")] HeirSelection,
+    #[cfg(feature = "eu5")] HistoricalScore,
+    #[cfg(feature = "eu5")] HolySiteType,
+    #[cfg(feature = "eu5")] Insult,
+    #[cfg(feature = "eu5")] InternationalOrganizationLandOwnershipRule,
+    #[cfg(feature = "eu5")] InternationalOrganizationPayment,
+    #[cfg(feature = "eu5")] InternationalOrganizationSpecialStatus,
+    #[cfg(feature = "eu5")] InternationalOrganization,
+    #[cfg(feature = "eu5")] JoinWarRule,
+    #[cfg(feature = "eu5")] LanguageFamily,
+    #[cfg(feature = "eu5")] Levy,
+    #[cfg(feature = "eu5")] LocationRank,
+    #[cfg(feature = "eu5")] MusicPlayerTrack,
+    #[cfg(feature = "eu5")] ParliamentAgenda,
+    #[cfg(feature = "eu5")] ParliamentIssue,
+    #[cfg(feature = "eu5")] ParliamentType,
+    #[cfg(feature = "eu5")] PeaceTreaty,
+    #[cfg(feature = "eu5")] Policy,
+    #[cfg(feature = "eu5")] RecruitmentMethod,
+    #[cfg(feature = "eu5")] Regency,
+    #[cfg(feature = "eu5")] ReligionGroup,
+    #[cfg(feature = "eu5")] ReligiousAspect,
+    #[cfg(feature = "eu5")] ReligiousFaction,
+    #[cfg(feature = "eu5")] ReligiousFigure,
+    #[cfg(feature = "eu5")] ReligiousFocus,
+    #[cfg(feature = "eu5")] ReligiousSchools,
+    #[cfg(feature = "eu5")] Resolution,
+    #[cfg(feature = "eu5")] RivalCriteria,
+    #[cfg(feature = "eu5")] RoadType,
+    #[cfg(feature = "eu5")] ScriptableHint,
+    #[cfg(feature = "eu5")] ScriptedCountryName,
+    #[cfg(feature = "eu5")] ScriptedDiplomaticObjective,
+    #[cfg(feature = "eu5")] ScriptedGeography,
+    #[cfg(feature = "eu5")] ScriptedModifiers,
+    #[cfg(feature = "eu5")] ScriptedRelations,
+    #[cfg(feature = "eu5")] SocietalValue,
+    #[cfg(feature = "eu5")] SubjectMilitaryStance,
+    #[cfg(feature = "eu5")] Test,
+    #[cfg(feature = "eu5")] Topography,
+    #[cfg(feature = "eu5")] TownSetup,
+    #[cfg(feature = "eu5")] TraitFlavor,
+    #[cfg(feature = "eu5")] UnitCategory,
+    #[cfg(feature = "eu5")] UnitFormationPreference,
+    #[cfg(feature = "eu5")] UnitType,
+    #[cfg(feature = "eu5")] Vegetation,
 }
 
 /// Display items in `separated word case` for maximum friendliness.
@@ -701,7 +787,6 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/achievements/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
                 Game::Eu5 => "common/achievements/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/achievements.txt",
@@ -743,7 +828,6 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/cultures/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
                 Game::Eu5 => "common/cultures/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
@@ -758,8 +842,7 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "decisions/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
-                Game::Eu5 => "commmon/decisions/",
+                Game::Eu5 => unreachable!(),
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/decisions/",
             },
@@ -798,7 +881,6 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/governments/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
                 Game::Eu5 => "common/government_types/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
@@ -835,8 +917,7 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/on_action/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
-                Game::Eu5 => "common/on_actions/",
+                Game::Eu5 => "common/on_action/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/on_actions/", // TODO HOI4
             },
@@ -859,7 +940,6 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "map_data/provinces.png",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
                 Game::Eu5 => "map_data/provinces.png",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "map/definition.csv", // TODO HOI4
@@ -873,7 +953,6 @@ impl Item {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/religions/",
                 #[cfg(feature = "eu5")]
-                // TODO: EU5 verify
                 Game::Eu5 => "common/religions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => unreachable!(),
@@ -927,12 +1006,30 @@ impl Item {
             },
             #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
             Item::Building => "common/buildings/",
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::CasusBelli => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/casus_belli_types/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/casus_belli/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(any(feature = "ck3", feature = "hoi4"))]
             Item::Character => match Game::game() {
                 #[cfg(feature = "ck3")]
                 Game::Ck3 => "history/characters/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/characters/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::BuildingType => match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/buildings/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/building_types/",
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
@@ -951,6 +1048,15 @@ impl Item {
                 Game::Vic3 => "common/character_traits/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/traits/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::Climate => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "map_data/climate.txt",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/climates",
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
@@ -974,17 +1080,73 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "ck3", feature = "imperator"))]
-            Item::DeathReason => "common/deathreasons/",
-            #[cfg(any(feature = "ck3", feature = "vic3"))]
-            Item::Dna => "common/dna_data/",
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::CountryRank => "common/country_ranks/",
+            #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
+            Item::DeathReason => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/deathreasons/",
+                #[cfg(feature = "imperator")]
+                Game::Imperator => "common/deathreasons/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/death_reason/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "imperator", feature = "eu5"))]
+            Item::CultureGroup => match Game::game() {
+                #[cfg(feature = "imperator")]
+                Game::Imperator => "common/cultures/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/culture_groups/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
+            Item::Dna => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/dna_data/",
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/dna_data/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/persistent_dna/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(any(feature = "ck3", feature = "imperator"))]
             Item::EventTheme => "common/event_themes/",
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::HolySite => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/religion/holy_sites/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/holy_sites/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
             #[cfg(any(feature = "imperator", feature = "hoi4"))]
             Item::Idea => "common/ideas/", // TODO HOI4
             #[cfg(any(feature = "vic3", feature = "hoi4"))]
             Item::Ideology => "common/ideologies/",
-            #[cfg(any(feature = "ck3", feature = "imperator"))]
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::Institution => match Game::game() {
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => "common/institutions/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/institution/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::Language => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/culture/pillars/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/languages/",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
             Item::Law => "common/laws/",
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
             Item::LawGroup => match Game::game() {
@@ -999,23 +1161,40 @@ impl Item {
             },
             #[cfg(any(feature = "ck3", feature = "vic3"))]
             Item::Message => "common/messages",
-            #[cfg(any(feature = "imperator", feature = "hoi4"))]
+            #[cfg(any(feature = "imperator", feature = "hoi4", feature = "eu5"))]
             Item::Mission => match Game::game() {
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/missions/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/missions/",
                 #[cfg(feature = "hoi4")]
                 Game::Hoi4 => "common/script_enums.txt",
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::ModifierTypeDefinition => "common/modifier_type_definitions/",
             #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
             Item::PopType => "common/pop_types/",
+            #[cfg(any(feature = "imperator", feature = "eu5"))]
+            Item::Price => "common/prices/",
+            #[cfg(any(feature = "vic3", feature = "eu5"))]
+            Item::ProductionMethod => "common/production_methods/",
             #[cfg(any(feature = "ck3", feature = "imperator"))]
             Item::Region => match Game::game() {
                 #[cfg(feature = "ck3")]
                 Game::Ck3 => "map_data/geographical_regions/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "map_data/regions.txt",
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            },
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::Situation => match Game::game() {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => "common/situation/situations/",
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => "common/situations/",
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
@@ -1028,7 +1207,7 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
-            #[cfg(any(feature = "vic3", feature = "imperator"))]
+            #[cfg(any(feature = "vic3", feature = "imperator", feature = "eu5"))]
             Item::SubjectType => "common/subject_types/",
             #[cfg(any(feature = "vic3", feature = "hoi4"))]
             Item::Technology => match Game::game() {
@@ -1039,12 +1218,18 @@ impl Item {
                 #[allow(unreachable_patterns)]
                 _ => unreachable!(),
             },
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::Trait => "common/traits/",
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLesson => "common/tutorial_lessons",
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonChain => "common/tutorial_lesson_chains",
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
             Item::TutorialLessonStep => "common/tutorial_lessons",
+            #[cfg(any(feature = "imperator", feature = "eu5"))]
+            Item::UnitAbility => "common/unit_abilities/",
+            #[cfg(any(feature = "imperator", feature = "eu5"))]
+            Item::Wargoal => "common/wargoals",
 
             #[cfg(feature = "ck3")]
             Item::AccoladeCategory => "common/accolade_types/",
@@ -1118,15 +1303,6 @@ impl Item {
             Item::BuildingFlag => "common/buildings/",
             #[cfg(feature = "ck3")]
             Item::BuildingGfx => "common/culture/cultures/",
-            #[cfg(any(feature = "ck3", feature = "eu5"))]
-            Item::CasusBelli => match Game::game() {
-                #[cfg(feature = "ck3")]
-                Game::Ck3 => "common/casus_belli_types/",
-                #[cfg(feature = "eu5")]
-                Game::Eu5 => "common/casus_belli/",
-                #[allow(unreachable_patterns)]
-                _ => unreachable!(),
-            },
             #[cfg(feature = "ck3")]
             Item::CasusBelliGroup => "common/casus_belli_groups/",
             #[cfg(feature = "ck3")]
@@ -1137,8 +1313,6 @@ impl Item {
             Item::CharacterBackground => "common/character_backgrounds/",
             #[cfg(feature = "ck3")]
             Item::CharacterInteractionCategory => "common/character_interaction_categories/",
-            #[cfg(feature = "ck3")]
-            Item::Climate => "map_data/climate.txt",
             #[cfg(feature = "ck3")]
             Item::ClothingGfx => "common/culture/cultures/",
             #[cfg(feature = "ck3")]
@@ -1275,8 +1449,6 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::HoldingType => "common/holdings/",
             #[cfg(feature = "ck3")]
-            Item::HolySite => "common/religion/holy_sites/",
-            #[cfg(feature = "ck3")]
             Item::HolySiteFlag => "common/religion/holy_sites/",
             #[cfg(feature = "ck3")]
             Item::Hook => "common/hook_types/",
@@ -1304,8 +1476,6 @@ impl Item {
             Item::InnovationParameter => "common/culture/innovations/",
             #[cfg(feature = "ck3")]
             Item::Inspiration => "common/inspirations/",
-            #[cfg(feature = "ck3")]
-            Item::Language => "common/culture/pillars/",
             #[cfg(feature = "ck3")]
             Item::LawFlag => "common/laws/",
             #[cfg(feature = "ck3")]
@@ -1411,8 +1581,6 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::Sexuality => "",
             #[cfg(feature = "ck3")]
-            Item::Situation => "common/situation/situations/",
-            #[cfg(feature = "ck3")]
             Item::SituationCatalyst => "common/situation/catalysts/",
             #[cfg(feature = "ck3")]
             Item::SituationGroupType => "common/situation/situation_group_types/",
@@ -1465,8 +1633,6 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::TitleHistory => "history/titles/",
             #[cfg(feature = "ck3")]
-            Item::Trait => "common/traits/",
-            #[cfg(feature = "ck3")]
             Item::TraitCategory => "",
             #[cfg(feature = "ck3")]
             Item::TraitFlag => "common/traits/",
@@ -1502,8 +1668,6 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::BuildingGroup => "common/building_groups/",
             #[cfg(feature = "vic3")]
-            Item::BuildingType => "common/buildings/",
-            #[cfg(feature = "vic3")]
             Item::BuyPackage => "common/buy_packages/",
             #[cfg(feature = "vic3")]
             Item::CanalType => "common/canals/",
@@ -1537,8 +1701,6 @@ impl Item {
             Item::CountryCreation => "common/country_creation/",
             #[cfg(feature = "vic3")]
             Item::CountryFormation => "common/country_formation/",
-            #[cfg(feature = "vic3")]
-            Item::CountryRank => "common/country_ranks/",
             #[cfg(feature = "vic3")]
             Item::CountryTier => "",
             #[cfg(feature = "vic3")]
@@ -1591,8 +1753,6 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::InfamyThreshold => "",
             #[cfg(feature = "vic3")]
-            Item::Institution => "common/institutions/",
-            #[cfg(feature = "vic3")]
             Item::InterestGroup => "common/interest_groups/",
             #[cfg(feature = "vic3")]
             Item::InterestGroupTrait => "common/interest_group_traits/",
@@ -1624,8 +1784,6 @@ impl Item {
             Item::MobilizationOption => "common/mobilization_options/",
             #[cfg(feature = "vic3")]
             Item::MobilizationOptionGroup => "common/mobilization_option_groups/",
-            #[cfg(any(feature = "vic3", feature = "eu5"))]
-            Item::ModifierTypeDefinition => "common/modifier_type_definitions/",
             #[cfg(feature = "vic3")]
             Item::Objective => "common/objectives/",
             #[cfg(feature = "vic3")]
@@ -1660,8 +1818,6 @@ impl Item {
             Item::Principle => "common/power_bloc_principles/",
             #[cfg(feature = "vic3")]
             Item::PrincipleGroup => "common/power_bloc_principle_groups/",
-            #[cfg(feature = "vic3")]
-            Item::ProductionMethod => "common/production_methods/",
             #[cfg(feature = "vic3")]
             Item::ProductionMethodGroup => "common/production_method_groups/",
             #[cfg(feature = "vic3")]
@@ -1718,8 +1874,6 @@ impl Item {
             #[cfg(feature = "imperator")]
             Item::Area => "map_data/areas.txt",
             #[cfg(feature = "imperator")]
-            Item::CultureGroup => "common/cultures/",
-            #[cfg(feature = "imperator")]
             Item::Deity => "common/deities/",
             #[cfg(feature = "imperator")]
             Item::DeityCategory => "common/deity_categories/",
@@ -1774,8 +1928,6 @@ impl Item {
             #[cfg(feature = "imperator")]
             Item::PostSetupCharacters => "setup/post_character/",
             #[cfg(feature = "imperator")]
-            Item::Price => "common/prices/",
-            #[cfg(feature = "imperator")]
             Item::ProvinceRank => "common/province_ranks/",
             #[cfg(feature = "imperator")]
             Item::TechnologyTable => "common/technology_tables/",
@@ -1789,10 +1941,6 @@ impl Item {
             Item::Treasure => "setup/main/",
             #[cfg(feature = "imperator")]
             Item::Unit => "common/units/",
-            #[cfg(feature = "imperator")]
-            Item::UnitAbility => "common/unit_abilities/",
-            #[cfg(feature = "imperator")]
-            Item::Wargoal => "common/wargoals",
 
             #[cfg(feature = "hoi4")]
             Item::Ability => "common/abilities/",
@@ -1944,15 +2092,165 @@ impl Item {
             Item::UnitNames => "common/units/names/",
 
             #[cfg(feature = "eu5")]
+            Item::Advance => "common/advances/",
+            #[cfg(feature = "eu5")]
+            Item::Age => "common/age/",
+            #[cfg(feature = "eu5")]
+            Item::AiDiplochance => "common/ai_diplochance/",
+            #[cfg(feature = "eu5")]
+            Item::AlertDescription => "common/alert_descriptions/",
+            #[cfg(feature = "eu5")]
             Item::ArtistType => "common/artist_types/",
+            #[cfg(feature = "eu5")]
+            Item::ArtistWork => "common/artist_work/",
+            #[cfg(feature = "eu5")]
+            Item::AttributeColumn => "common/attribute_columns/",
+            #[cfg(feature = "eu5")]
+            Item::AutoModifier => "common/auto_modifiers/",
+            #[cfg(feature = "eu5")]
+            Item::Avatar => "common/avatars/",
             #[cfg(feature = "eu5")]
             Item::Bias => "common/biases/",
             #[cfg(feature = "eu5")]
             Item::BuildingCategory => "common/building_categories/",
             #[cfg(feature = "eu5")]
-            Item::InsultType => "common/insults/",
+            Item::CabinetAction => "common/cabinet_actions/",
+            #[cfg(feature = "eu5")]
+            Item::CharacterTraitCategory => "",
+            #[cfg(feature = "eu5")]
+            Item::ChildEducation => "common/child_educations/",
+            #[cfg(feature = "eu5")]
+            Item::CountryDescriptionCategory => "common/country_description_categories/",
+            #[cfg(feature = "eu5")]
+            Item::CountryInteraction => "common/country_interactions/",
+            #[cfg(feature = "eu5")]
+            Item::Currency => "",
+            #[cfg(feature = "eu5")]
+            Item::DesignatedHeirReason => "common/designated_heir_reason/",
+            #[cfg(feature = "eu5")]
+            Item::DiplomaticCost => "common/diplomatic_costs/",
+            #[cfg(feature = "eu5")]
+            Item::Disaster => "common/disasters/",
+            #[cfg(feature = "eu5")]
+            Item::Disease => "common/diseases/",
+            #[cfg(feature = "eu5")]
+            Item::EmploymentSystem => "common/employment_systems/",
+            #[cfg(feature = "eu5")]
+            Item::EstatePrivilege => "common/estate_privileges/",
+            #[cfg(feature = "eu5")]
+            Item::Estate => "common/estates/",
+            #[cfg(feature = "eu5")]
+            Item::FormableCountry => "common/formable_countries/",
+            #[cfg(feature = "eu5")]
+            Item::GenericActionAiList => "common/generic_action_ai_lists/",
+            #[cfg(feature = "eu5")]
+            Item::GenericAction => "common/generic_actions/",
+            #[cfg(feature = "eu5")]
+            Item::God => "common/gods/",
+            #[cfg(feature = "eu5")]
+            Item::Good => "common/goods/",
+            #[cfg(feature = "eu5")]
+            Item::GoodsDemand => "common/goods_demand/",
+            #[cfg(feature = "eu5")]
+            Item::GoodsDemandCategory => "common/goods_demand_category/",
+            #[cfg(feature = "eu5")]
+            Item::GovernmentReform => "common/government_reforms/",
+            #[cfg(feature = "eu5")]
+            Item::Hegemon => "common/hegemons/",
+            #[cfg(feature = "eu5")]
+            Item::HeirSelection => "common/heir_selections/",
+            #[cfg(feature = "eu5")]
+            Item::HistoricalScore => "common/historical_scores/",
+            #[cfg(feature = "eu5")]
+            Item::HolySiteType => "common/holy_site_types/",
+            #[cfg(feature = "eu5")]
+            Item::Insult => "common/insults/",
             #[cfg(feature = "eu5")]
             Item::InternationalOrganization => "common/international_organizations/",
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganizationLandOwnershipRule => {
+                "common/international_organization_land_ownership_rules/"
+            }
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganizationPayment => "common/international_organization_payments/",
+            #[cfg(feature = "eu5")]
+            Item::InternationalOrganizationSpecialStatus => {
+                "common/international_organization_special_statuses/"
+            }
+            #[cfg(feature = "eu5")]
+            Item::JoinWarRule => "common/join_war_rules/",
+            #[cfg(feature = "eu5")]
+            Item::LanguageFamily => "common/language_families/",
+            #[cfg(feature = "eu5")]
+            Item::Levy => "common/levies/",
+            #[cfg(feature = "eu5")]
+            Item::LocationRank => "common/location_ranks/",
+            #[cfg(feature = "eu5")]
+            Item::MusicPlayerTrack => "common/music_player_tracks/",
+            #[cfg(feature = "eu5")]
+            Item::ParliamentAgenda => "common/parliament_agendas/",
+            #[cfg(feature = "eu5")]
+            Item::ParliamentIssue => "common/parliament_issues/",
+            #[cfg(feature = "eu5")]
+            Item::ParliamentType => "common/parliament_types/",
+            #[cfg(feature = "eu5")]
+            Item::PeaceTreaty => "common/peace_treaties/",
+            #[cfg(feature = "eu5")]
+            Item::Policy => "common/policies/",
+            #[cfg(feature = "eu5")]
+            Item::RecruitmentMethod => "common/recruitment_method/",
+            #[cfg(feature = "eu5")]
+            Item::Regency => "common/regencies/",
+            #[cfg(feature = "eu5")]
+            Item::ReligionGroup => "common/religion_groups/",
+            #[cfg(feature = "eu5")]
+            Item::ReligiousAspect => "common/religious_aspects/",
+            #[cfg(feature = "eu5")]
+            Item::ReligiousFaction => "common/religious_factions/",
+            #[cfg(feature = "eu5")]
+            Item::ReligiousFigure => "common/religious_figures/",
+            #[cfg(feature = "eu5")]
+            Item::ReligiousFocus => "common/religious_focuses/",
+            #[cfg(feature = "eu5")]
+            Item::ReligiousSchools => "common/religious_schools/",
+            #[cfg(feature = "eu5")]
+            Item::Resolution => "common/resolutions/",
+            #[cfg(feature = "eu5")]
+            Item::RivalCriteria => "common/rival_criteria/",
+            #[cfg(feature = "eu5")]
+            Item::RoadType => "common/road_types/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptableHint => "common/scriptable_hints/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptedCountryName => "common/scripted_country_names/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptedDiplomaticObjective => "common/scripted_diplomatic_objectives/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptedGeography => "common/scripted_geography/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptedModifiers => "common/scripted_modifiers/",
+            #[cfg(feature = "eu5")]
+            Item::ScriptedRelations => "common/scripted_relations/",
+            #[cfg(feature = "eu5")]
+            Item::SocietalValue => "common/societal_values/",
+            #[cfg(feature = "eu5")]
+            Item::SubjectMilitaryStance => "common/subject_military_stances/",
+            #[cfg(feature = "eu5")]
+            Item::Test => "common/tests/",
+            #[cfg(feature = "eu5")]
+            Item::Topography => "common/topography/",
+            #[cfg(feature = "eu5")]
+            Item::TownSetup => "common/town_setups/",
+            #[cfg(feature = "eu5")]
+            Item::TraitFlavor => "common/trait_flavor/",
+            #[cfg(feature = "eu5")]
+            Item::UnitCategory => "common/unit_categories/",
+            #[cfg(feature = "eu5")]
+            Item::UnitFormationPreference => "common/unit_formation_preference/",
+            #[cfg(feature = "eu5")]
+            Item::UnitType => "common/unit_types/",
+            #[cfg(feature = "eu5")]
+            Item::Vegetation => "common/vegetation/",
         }
     }
 

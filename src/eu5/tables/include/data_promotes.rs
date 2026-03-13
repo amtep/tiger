@@ -940,6 +940,7 @@
     ("GetMercenary", Eu5(RecruitInLocationLateralView), Args::Args(&[]), Eu5(Mercenary)),
     ("GetMercenary", Eu5(SubUnit), Args::Args(&[]), Eu5(Mercenary)),
     ("GetMercenary", Scope, Args::Args(&[]), Eu5(Mercenary)),
+    ("GetMerchant", Eu5(Market), Args::Args(&[DType(Unknown)]), Eu5(Merchant)),
     ("GetMerchantMarket", Eu5(PossibleTrade), Args::Args(&[]), Eu5(Market)),
     ("GetMerchantsSortSearch", Eu5(SelectedMarketLateralView), Args::Args(&[]), Eu5(FilteredSortedList)),
     ("GetMessagePopup", Eu5(BattleResultMessageSide), Args::Args(&[]), Eu5(BattleResultMessage)),
