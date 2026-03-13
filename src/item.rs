@@ -681,9 +681,11 @@ pub enum Item {
     #[cfg(feature = "eu5")] Bias,
     #[cfg(feature = "eu5")] BuildingCategory,
     #[cfg(feature = "eu5")] CabinetAction,
+    #[cfg(feature = "eu5")] CharacterTraitCategory,
     #[cfg(feature = "eu5")] ChildEducation,
     #[cfg(feature = "eu5")] CountryDescriptionCategory,
     #[cfg(feature = "eu5")] CountryInteraction,
+    #[cfg(feature = "eu5")] Currency,
     #[cfg(feature = "eu5")] DesignatedHeirReason,
     #[cfg(feature = "eu5")] DiplomaticCost,
     #[cfg(feature = "eu5")] Disaster,
@@ -2114,11 +2116,15 @@ impl Item {
             #[cfg(feature = "eu5")]
             Item::CabinetAction => "common/cabinet_actions/",
             #[cfg(feature = "eu5")]
+            Item::CharacterTraitCategory => "",
+            #[cfg(feature = "eu5")]
             Item::ChildEducation => "common/child_educations/",
             #[cfg(feature = "eu5")]
             Item::CountryDescriptionCategory => "common/country_description_categories/",
             #[cfg(feature = "eu5")]
             Item::CountryInteraction => "common/country_interactions/",
+            #[cfg(feature = "eu5")]
+            Item::Currency => "",
             #[cfg(feature = "eu5")]
             Item::DesignatedHeirReason => "common/designated_heir_reason/",
             #[cfg(feature = "eu5")]

@@ -8,8 +8,6 @@ use crate::item::Item;
 use crate::scopes::*;
 use crate::token::Token;
 use crate::trigger::Trigger;
-
-use crate::gui::GuiValidation::ComplexProperty;
 use Trigger::*;
 
 pub fn scope_trigger(name: &Token, _data: &Everything) -> Option<(Scopes, Trigger)> {
@@ -586,7 +584,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_consort", UncheckedTodo),
     (Scopes::Country.union(Scopes::InternationalOrganization), "has_cooldown", UncheckedTodo),
     (Scopes::Country, "has_core", UncheckedTodo),
-    (Scopes::Country, "has_countries_with_antagonism", UncheckedTodo), // TODO: REMOVED
     (Scopes::Country, "has_countries_with_coalition_grade_antagonism", UncheckedTodo),
     (Scopes::Country, "has_countries_with_near_coalition_grade_antagonism", UncheckedTodo),
     (Scopes::Country, "has_countries_with_timed_antagonism", UncheckedTodo),
@@ -1502,8 +1499,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "max_manpower", UncheckedTodo),
     (Scopes::HeirSelection, "max_possible_candidates", UncheckedTodo),
     (Scopes::Religion, "max_religious_aspects", UncheckedTodo),
-    (Scopes::Location, "max_rgo_workers", UncheckedTodo),
-    (Scopes::Country, "max_sailors", UncheckedTodo),
+    (Scopes::Location, "max_rgo_workers", CompareValue),
+    (Scopes::Country, "max_sailors", CompareValue),
     (Scopes::Religion, "max_sects", UncheckedTodo),
     (Scopes::Mercenary, "mercenary_has_owner", UncheckedTodo),
     (
@@ -2113,7 +2110,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Province, "unfilled_jobs_in_province_percentage", UncheckedTodo),
     (Scopes::Country, "union_length_days", UncheckedTodo),
     (Scopes::None, "unique_international_organization_type_exists", UncheckedTodo),
-    (Scopes::Unit, "unit_has_leader", UncheckedTodo), // TODO: REMOVED
     (
         Scopes::Location
             .union(Scopes::Country)
@@ -2245,7 +2241,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (
             Scopes::Country,
             "add_estate_satisfaction_utility",
-            Multiple(&[Item(Item::Estate), UncheckedValue]), // TODO: numeric values
+            Multiple(&[Item(Item::Estate), Scope(Scopes::Value)]),
             Scopes::Value,
         ),
         (
@@ -2392,7 +2388,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Item(Item::Modifier),
             Scopes::Value,
         ),
-        (Scopes::Country, "country_rank_level_on_date", UncheckedValue, Scopes::Value), // TODO: date value/scope
+        (Scopes::Country, "country_rank_level_on_date", Scope(Scopes::Date), Scopes::Value),
         (
             Scopes::Language.union(Scopes::Dialect),
             "court_language_utility",
@@ -2407,7 +2403,8 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
                 .union(Scopes::Area)
                 .union(Scopes::Region)
                 .union(Scopes::SubContinent)
-                .union(Scopes::Continent),
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
             "culture_group_percentage",
             Scope(Scopes::CultureGroup),
             Scopes::Value,
@@ -2425,7 +2422,8 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
                 .union(Scopes::Area)
                 .union(Scopes::Region)
                 .union(Scopes::SubContinent)
-                .union(Scopes::Continent),
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
             "culture_group_population",
             Scope(Scopes::CultureGroup),
             Scopes::Value,
@@ -2444,7 +2442,8 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
                 .union(Scopes::Area)
                 .union(Scopes::Region)
                 .union(Scopes::SubContinent)
-                .union(Scopes::Continent),
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
             "culture_percentage",
             Scope(Scopes::Culture),
             Scopes::Value,
@@ -2456,6 +2455,635 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scopes::Value,
         ),
         (Scopes::Country, "culture_percentage_in_country", Scope(Scopes::Culture), Scopes::Value),
-        // TODO: EU5 fill in table.
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
+            "culture_population",
+            Scope(Scopes::Culture),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "culture_population_in_country", Scope(Scopes::Culture), Scopes::Value),
+        (
+            Scopes::Country.union(Scopes::InternationalOrganization),
+            "currency_percentage_towards_limit",
+            Item(Item::Currency),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "currency_utility",
+            Multiple(&[Item(Item::Currency), Scope(Scopes::Value)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "dependency_length_days", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "destroy_market_utility", Scope(Scopes::Market), Scopes::Value),
+        (Scopes::Country, "disease_country_deaths", Scope(Scopes::Disease), Scopes::Value),
+        (
+            Scopes::Country,
+            "disease_outbreak_country_deaths",
+            Scope(Scopes::DiseaseOutbreak),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "disease_outbreak_presence",
+            Scope(Scopes::DiseaseOutbreak),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location.union(Scopes::SubUnit),
+            "disease_presence",
+            Scope(Scopes::Disease),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location.union(Scopes::SubUnit),
+            "disease_resistance",
+            Scope(Scopes::Disease),
+            Scopes::Value,
+        ),
+        (Scopes::Location, "distance_to", Scope(Scopes::Location), Scopes::Value),
+        (Scopes::Location, "distance_to_area", Scope(Scopes::Area), Scopes::Value),
+        (Scopes::Country, "distance_to_squared", Scope(Scopes::Location), Scopes::Value),
+        (
+            Scopes::Country.union(Scopes::Dynasty),
+            "dynastic_power",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "dynasty_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "employment_system_desire",
+            Scope(Scopes::EmploymentSystem),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "estate_max_tax", Scope(Scopes::EstateType), Scopes::Value),
+        (
+            Scopes::Country,
+            "estate_opinion",
+            Multiple(&[Scope(Scopes::EstateType), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "estate_satisfaction", Scope(Scopes::EstateType), Scopes::Value),
+        (
+            Scopes::Country,
+            "exploration_utility",
+            Multiple(&[Scope(Scopes::Area), Scope(Scopes::Character), Scope(Scopes::Location)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "favors", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Country,
+            "favors_needed_to_annul_relations_with",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "get_antagonism", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "get_opinion", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "get_trust", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Market, "goods_demand_in_market", Scope(Scopes::Goods), Scopes::Value),
+        (Scopes::Location, "goods_output", Scope(Scopes::Goods), Scopes::Value),
+        (Scopes::Market, "goods_supply_in_market", Scope(Scopes::Goods), Scopes::Value),
+        (Scopes::Country, "had_disaster_for_years", Scope(Scopes::DisasterType), Scopes::Value),
+        (
+            Scopes::Law
+                .union(Scopes::Policy)
+                .union(Scopes::EstatePrivilege)
+                .union(Scopes::CabinetAction)
+                .union(Scopes::GovernmentReform)
+                .union(Scopes::God)
+                .union(Scopes::Avatar),
+            "implementation_progress_percentage",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "international_organization_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (Scopes::Goods, "is_in_surplus_in_market", Scope(Scopes::Market), Scopes::Value),
+        (
+            Scopes::Country,
+            "join_organization_ai_desire",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "language_percentage_in_country", Scope(Scopes::Language), Scopes::Value),
+        (Scopes::Country, "liturgical_language_utility", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Location, "local_relative_estate_power", Scope(Scopes::EstateType), Scopes::Value),
+        (Scopes::Location, "location_building_level", Scope(Scopes::BuildingType), Scopes::Value),
+        (
+            Scopes::Location,
+            "location_maritime_merchant_power",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location,
+            "location_maritime_presence_power",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "location_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location,
+            "location_peace_cost",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (Scopes::Location, "location_privateer_power", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "location_progress_for_formable", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Location,
+            "location_unemployed_population_for_building_type",
+            Scope(Scopes::BuildingType),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "mercenary_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::ReligiousSchool)
+                .union(Scopes::InternationalOrganization)
+                .union(Scopes::Policy)
+                .union(Scopes::ReligiousAspect)
+                .union(Scopes::GovernmentReform)
+                .union(Scopes::God)
+                .union(Scopes::Avatar),
+            "modifier_utility",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::ReligiousSchool)
+                .union(Scopes::InternationalOrganization)
+                .union(Scopes::Policy)
+                .union(Scopes::ReligiousAspect)
+                .union(Scopes::GovernmentReform)
+                .union(Scopes::God)
+                .union(Scopes::Avatar),
+            "modifier_utility_include_locations",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "needs_opinion_with", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Country,
+            "num_of_traits_of_category",
+            Item(Item::CharacterTraitCategory),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "offer_relation_acceptance",
+            Multiple(&[Scope(Scopes::RelationType), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "opinion", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Country,
+            "opinion_difference_between",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "organization_strength_relative_to_country",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Bool)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country.union(Scopes::InternationalOrganization),
+            "parliament_issue_chance",
+            Scope(Scopes::ParliamentIssue),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "parliament_type_utility",
+            Multiple(&[Scope(Scopes::ParliamentType), Scope(Scopes::Bool)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "payment_contribution",
+            Multiple(&[
+                Scope(Scopes::InternationalOrganization),
+                Item(Item::InternationalOrganizationPayment),
+            ]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "payment_maintenance",
+            Multiple(&[
+                Scope(Scopes::InternationalOrganization),
+                Item(Item::InternationalOrganizationPayment),
+            ]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "peace_treaty_antagonism",
+            Multiple(&[
+                Scope(Scopes::PeaceTreaty),
+                Scope(Scopes::Country),
+                Scope(Scopes::all_but_none()),
+            ]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "peace_treaty_war_score_cost",
+            Multiple(&[
+                Scope(Scopes::PeaceTreaty),
+                Scope(Scopes::Country),
+                Scope(Scopes::all_but_none()),
+            ]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "pop_type_percentage_in_country", Scope(Scopes::PopType), Scopes::Value),
+        (Scopes::Country, "pop_type_population_in_country", Scope(Scopes::PopType), Scopes::Value),
+        (Scopes::Location, "population_with_traits", Item(Item::ScriptedTrigger), Scopes::Pop),
+        (Scopes::Goods, "price_in_market", Scope(Scopes::Market), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "province_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Market
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent),
+            "raw_material_amount",
+            Scope(Scopes::Goods),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "rebel_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "relative_defensive_alliance_strength",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "relative_military_strength", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Location, "relative_raw_material_price", Scope(Scopes::Location), Scopes::Value),
+        (Scopes::Country, "relative_strength", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
+            "religion_group_percentage",
+            Scope(Scopes::ReligionGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "religion_group_percentage_in_country",
+            Scope(Scopes::ReligionGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
+            "religion_group_population",
+            Scope(Scopes::ReligionGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "religion_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
+            "religion_percentage",
+            Scope(Scopes::Religion),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "religion_percentage_in_country", Scope(Scopes::Religion), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent)
+                .union(Scopes::ScriptedGeography),
+            "religion_population",
+            Scope(Scopes::Religion),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "religion_population_in_country", Scope(Scopes::Religion), Scopes::Value),
+        (Scopes::Religion, "religious_view_impact", Scope(Scopes::Religion), Scopes::Value),
+        (
+            Scopes::Country,
+            "relocate_market_utility",
+            Multiple(&[Scope(Scopes::Location), Scope(Scopes::Location)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location.union(Scopes::Country).union(Scopes::Character),
+            "remove_static_modifier_utility",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "request_relation_acceptance",
+            Multiple(&[Scope(Scopes::RelationType), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "resolution_opinion",
+            Multiple(&[
+                Scope(Scopes::InternationalOrganization),
+                Scope(Scopes::Resolution),
+                Scope(Scopes::Country),
+            ]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "reverse_country_interaction_acceptance",
+            Multiple(&[Scope(Scopes::RelationType), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (Scopes::Religion, "reverse_religious_view", Scope(Scopes::Religion), Scopes::Value),
+        (Scopes::Religion, "reverse_religious_view_impact", Scope(Scopes::Religion), Scopes::Value),
+        (
+            Scopes::Country,
+            "reverse_request_relation_acceptance",
+            Multiple(&[Scope(Scopes::RelationType), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "short_term_trigger_currency_utility",
+            Multiple(&[UncheckedValue, UncheckedValue, UncheckedValue]), // TODO: this one is strange
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "special_status_power",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::SpecialStatus)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "special_status_power_fraction",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::SpecialStatus)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "spy_network", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "threat_level_to", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "topography_count", Scope(Scopes::Topography), Scopes::Value),
+        (Scopes::Country, "topography_percent", Scope(Scopes::Topography), Scopes::Value),
+        (
+            Scopes::Country,
+            "total_effective_goods_production_buildings",
+            Scope(Scopes::Goods),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "total_payment_contribution",
+            Multiple(&[Scope(Scopes::Country), Item(Item::InternationalOrganizationPayment)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "total_population_in_international_organization",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "total_population_in_international_organization_percentage",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "total_special_status_power",
+            Scope(Scopes::SpecialStatus),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "total_special_status_power_fraction",
+            Scope(Scopes::SpecialStatus),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "total_unique_special_status_power",
+            Scope(Scopes::SpecialStatus),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "trust", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "union_length_days", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "unit_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "vegetation_count", Scope(Scopes::Vegetation), Scopes::Value),
+        (Scopes::Country, "vegetation_percent", Scope(Scopes::Vegetation), Scopes::Value),
+        (
+            Scopes::Country,
+            "vote_impact_in_resolution",
+            Multiple(&[Scope(Scopes::InternationalOrganization), Scope(Scopes::Resolution)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "vote_percentage_impact_in_resolution",
+            Multiple(&[Scope(Scopes::InternationalOrganization), Scope(Scopes::Resolution)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization.union(Scopes::Situation),
+            "votes_for_resolution",
+            Multiple(&[Scope(Scopes::Resolution), Scope(Scopes::all_but_none())]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "war_enthusiasm", Scope(Scopes::War), Scopes::Value),
+        (Scopes::Country, "war_score_in_war", Scope(Scopes::War), Scopes::Value),
+        (Scopes::Country, "war_score_in_war_whole_side", Scope(Scopes::War), Scopes::Value),
+        (Scopes::War, "war_score_of_country", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::War, "war_score_of_country_side", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "war_score_versus", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::all(),
+            "world_culture_group_percentage",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::all(),
+            "world_culture_group_population",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (Scopes::all(), "world_culture_percentage", Scope(Scopes::Culture), Scopes::Value),
+        (Scopes::all(), "world_culture_population", Scope(Scopes::Culture), Scopes::Value),
+        (
+            Scopes::all(),
+            "world_religion_group_percentage",
+            Scope(Scopes::ReligionGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::all(),
+            "world_religion_group_population",
+            Scope(Scopes::ReligionGroup),
+            Scopes::Value,
+        ),
+        (Scopes::all(), "world_religion_percentage", Scope(Scopes::Religion), Scopes::Value),
+        (Scopes::all(), "world_religion_population", Scope(Scopes::Religion), Scopes::Value),
+        (
+            Scopes::Country,
+            "years_in_international_organization",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
     ]
 };

@@ -134,3 +134,32 @@ pub const COMMON_DIRS: &[&str] = &[
 pub const COMMON_SUBDIRS_OK: &[&str] = &["common/defines"];
 
 pub const FOCUS_TYPES: &[&str] = &["adm", "mil", "dip"];
+
+pub const CURRENCIES: &[&str] = &[
+    "prestige",
+    "gold",
+    "doom",
+    "harmony",
+    "manpower",
+    "sailors",
+    "honor",
+    "karma",
+    "purity",
+    "yanantin",
+    "honor",
+    "horde_unity",
+    "righteousness",
+    "rite_power",
+    "self_control",
+    "tribal_cohesion",
+    "stability",
+    "government_power",
+    "religious_influence",
+    "legitimacy",
+    "war_exhaustion",
+    "army_tradition",
+    "inflation",
+];
+
+pub const CHARACTER_TRAIT_CATEGORY: &[&str] =
+    &["admiral", "artist", "explorer", "general", "child", "ruler", "none"];
