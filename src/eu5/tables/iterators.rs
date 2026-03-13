@@ -311,7 +311,11 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "province", Scopes::Province),
     (Scopes::None, "province_definition", Scopes::ProvinceDefinition),
     (Scopes::Area, "province_definition_in_area", Scopes::ProvinceDefinition),
-    (Scopes::ScriptedGeography, "province_definition_in_scripted_geography", Scopes::ProvinceDefinition),
+    (
+        Scopes::ScriptedGeography,
+        "province_definition_in_scripted_geography",
+        Scopes::ProvinceDefinition,
+    ),
     (Scopes::Area, "province_in_area", Scopes::Province),
     (Scopes::ProvinceDefinition, "province_in_province_definition", Scopes::Province),
     (Scopes::Country, "rebel", Scopes::Rebels),

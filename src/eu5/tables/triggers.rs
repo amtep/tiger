@@ -9,6 +9,7 @@ use crate::scopes::*;
 use crate::token::Token;
 use crate::trigger::Trigger;
 
+use crate::gui::GuiValidation::ComplexProperty;
 use Trigger::*;
 
 pub fn scope_trigger(name: &Token, _data: &Everything) -> Option<(Scopes, Trigger)> {
@@ -29,11 +30,15 @@ static TRIGGER_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Trigger)>> = La
 const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     // TODO: EU5 fill in the UncheckedTodo
     (Scopes::Country, "active_religious_focus", Item(Item::ReligiousFocus)),
-    (Scopes::Country, "add_estate_satisfaction_utility", UncheckedTodo),
+    (
+        Scopes::Country,
+        "add_estate_satisfaction_utility",
+        Block(&[("type", Item(Item::Estate)), ("amount", CompareValue)]),
+    ),
     (
         Scopes::Location.union(Scopes::Country).union(Scopes::Character),
         "add_static_modifier_utility",
-        UncheckedTodo,
+        Block(&[("modifier", Item(Item::Modifier)), ("value", CompareValue)]),
     ),
     (Scopes::all_but_none(), "add_to_temporary_list", Special),
     (Scopes::Location.union(Scopes::Area), "adjacent_to_owned_by", Scope(Scopes::Country)),
@@ -43,7 +48,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Scope(Scopes::Country),
     ),
     (Scopes::Character, "adm", CompareValue),
-    (Scopes::Country, "advance_no_longer_activated", UncheckedTodo),
+    (Scopes::Country, "advance_no_longer_activated", Item(Item::Advance)),
     (Scopes::Character, "age_in_days", CompareValue),
     (Scopes::Character, "age_in_years", CompareValue),
     (Scopes::Country, "age_preference", UncheckedTodo),
@@ -2229,22 +2234,74 @@ static TRIGGER_COMPLEX_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Argumen
         hash
     });
 
-/// LAST UPDATED VIC3 VERSION 1.8.4
+/// LAST UPDATED EU5 VERSION 1.1.9
 /// See `triggers.log` from the game data dumps
 /// `(inscopes, trigger name, argtype, outscopes)`
 /// Currently only works with single argument triggers
-// TODO Update argtype when vic3 updated to 1.5+
 const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
     use crate::item::Item;
     use ArgumentValue::*;
     &[
+        (
+            Scopes::Country,
+            "add_estate_satisfaction_utility",
+            Multiple(&[Item(Item::Estate), UncheckedValue]), // TODO: numeric values
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location.union(Scopes::Country).union(Scopes::Character),
+            "add_static_modifier_utility",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (
+            Scopes::all(),
+            "ai_issue_voting_bias",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Country), Scope(Scopes::Policy)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::ParliamentIssue,
+            "ai_parliament_issue_resolution_vote_bias",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Policy,
+            "ai_policy_reason_to_join",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::InternationalOrganization)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Policy,
+            "ai_policy_resolution_keep_bias",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::InternationalOrganization)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Policy,
+            "ai_policy_resolution_propose_bias",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::InternationalOrganization)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Policy,
+            "ai_policy_resolution_vote_bias",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::InternationalOrganization)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "ai_unlock_unit_score", Item(Item::UnitType), Scopes::Value),
         (Scopes::Country, "annexation_cost", Scope(Scopes::Country), Scopes::Value),
         (Scopes::Country, "annexation_progress", Scope(Scopes::Country), Scopes::Value),
         (Scopes::Country, "antagonism", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Area, "area_average_control", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Area, "area_average_integration", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Area, "area_exploration_progress", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Market, "available_merchant_capacity", Scope(Scopes::Country), Scopes::Value),
         (
             Scopes::InternationalOrganization,
             "average_special_status_power",
-            Item(Item::InternationalOrganization),
+            Item(Item::InternationalOrganizationSpecialStatus),
             Scopes::Value,
         ),
         (Scopes::all(), "bias_value", Item(Item::Bias), Scopes::Value),
@@ -2254,6 +2311,151 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Scope(Scopes::Country),
             Scopes::Value,
         ),
+        (Scopes::Location, "building_efficiency", Scope(Scopes::BuildingType), Scopes::Value),
+        (Scopes::Building, "building_goods_input", Scope(Scopes::Goods), Scopes::Value),
+        (Scopes::Location, "building_type_max_level", Scope(Scopes::BuildingType), Scopes::Value),
+        (Scopes::Country, "cancel_exploration_utility", Scope(Scopes::Area), Scopes::Value),
+        (Scopes::Country, "cb_creation_progress_against", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "character_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "climate_count", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "climate_percent", Scope(Scopes::Country), Scopes::Value),
+        (
+            Scopes::Country,
+            "colonial_charter_progress",
+            Scope(Scopes::ProvinceDefinition),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "colonial_charter_utility",
+            Scope(Scopes::ProvinceDefinition),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "conquer_desire", Scope(Scopes::Country), Scopes::Value),
+        (Scopes::Country, "conquistador_utility", Scope(Scopes::Area), Scopes::Value),
+        (
+            Scopes::Country,
+            "country_combined_special_status_power",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "country_combined_special_status_power_fraction",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::InternationalOrganization,
+            "country_has_been_member_for_years",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "country_highest_rated_special_status_power",
+            Scope(Scopes::InternationalOrganization),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "country_interaction_acceptance",
+            Multiple(&[Scope(Scopes::CountryInteraction), Scope(Scopes::Country)]),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Country)
+                .union(Scopes::Unit)
+                .union(Scopes::Character)
+                .union(Scopes::Dynasty)
+                .union(Scopes::Religion)
+                .union(Scopes::Province)
+                .union(Scopes::Rebels)
+                .union(Scopes::Mercenary)
+                .union(Scopes::InternationalOrganization),
+            "country_modifier_strength",
+            Item(Item::Modifier),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "country_rank_level_on_date", UncheckedValue, Scopes::Value), // TODO: date value/scope
+        (
+            Scopes::Language.union(Scopes::Dialect),
+            "court_language_utility",
+            Scope(Scopes::Country),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "create_market_utility", Scope(Scopes::Location), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent),
+            "culture_group_percentage",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "culture_group_percentage_in_country",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent),
+            "culture_group_population",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Country,
+            "culture_group_population_in_country",
+            Scope(Scopes::CultureGroup),
+            Scopes::Value,
+        ),
+        (Scopes::Culture, "culture_opinion_impact", Scope(Scopes::Culture), Scopes::Value),
+        (
+            Scopes::Location
+                .union(Scopes::Province)
+                .union(Scopes::ProvinceDefinition)
+                .union(Scopes::Area)
+                .union(Scopes::Region)
+                .union(Scopes::SubContinent)
+                .union(Scopes::Continent),
+            "culture_percentage",
+            Scope(Scopes::Culture),
+            Scopes::Value,
+        ),
+        (
+            Scopes::Area,
+            "culture_percentage_in_area",
+            Multiple(&[Scope(Scopes::Country), Scope(Scopes::Culture)]),
+            Scopes::Value,
+        ),
+        (Scopes::Country, "culture_percentage_in_country", Scope(Scopes::Culture), Scopes::Value),
         // TODO: EU5 fill in table.
     ]
 };
