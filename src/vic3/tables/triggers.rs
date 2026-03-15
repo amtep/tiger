@@ -487,6 +487,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_convoys_being_sunk", Boolean),
     (Scopes::PoliticalMovement, "has_core_ideology", Boolean),
     (Scopes::None, "has_cosmetic_dlc", UncheckedTodo),
+    (Scopes::None, "has_cosmetic_dlc_feature", UncheckedTodo),
     (Scopes::State, "has_cultural_community", Scope(Scopes::Culture)),
     (Scopes::Culture, "has_cultural_obsession", Item(Item::Goods)),
     (Scopes::Character, "has_culture", Scope(Scopes::Character.union(Scopes::Culture))),
