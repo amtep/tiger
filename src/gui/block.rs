@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::Game;
 use crate::block::{BV, Block, BlockItem, Comparator, Eq::Single, Field};
 use crate::data::gui::{GuiTemplate, GuiType};
+use crate::datacontext::DataContext;
 use crate::everything::Everything;
 use crate::gui::validate::validate_property;
 use crate::gui::{BuiltinWidget, GuiValidation, PropertyContainer, WidgetProperty};
@@ -327,41 +328,51 @@ impl GuiBlock {
     /// Validate the property fields of this [`GuiBlock`] and all its contents.
     ///
     /// `container` is extra information to be used if `self.container` is `None`.
-    pub fn validate(&self, container: Option<PropertyContainer>, data: &Everything) {
+    pub fn validate(
+        &self,
+        container: Option<PropertyContainer>,
+        data: &Everything,
+        dc: &mut DataContext,
+    ) {
         let container = self.container.or(container);
         if let Some(base) = &self.base {
-            base.validate(container, data);
+            base.validate(container, data, dc);
         }
 
         for item in &self.items {
             match item {
                 GuiItem::Property(prop, key, bv) => {
-                    validate_property(*prop, container, key, bv, data);
+                    validate_property(*prop, container, key, bv, data, dc);
                 }
                 GuiItem::Subst(_, gui_block) => {
-                    gui_block.validate(container, data);
+                    gui_block.validate(container, data, dc);
                 }
                 GuiItem::Widget(gui_block)
                 | GuiItem::ComplexProperty(gui_block)
                 | GuiItem::WidgetProperty(gui_block) => {
-                    gui_block.validate(None, data);
+                    gui_block.validate(None, data, dc);
                 }
                 GuiItem::ActionTooltip(gui_block) => {
-                    gui_block.validate_action_tooltip(None, data);
+                    gui_block.validate_action_tooltip(None, data, dc);
                 }
                 GuiItem::Override(_, _) => (),
             }
         }
     }
 
-    pub fn validate_action_tooltip(&self, container: Option<PropertyContainer>, data: &Everything) {
+    pub fn validate_action_tooltip(
+        &self,
+        container: Option<PropertyContainer>,
+        data: &Everything,
+        dc: &mut DataContext,
+    ) {
         for item in &self.items {
             match item {
                 GuiItem::Property(prop, key, bv) => {
-                    validate_property(*prop, container, key, bv, data);
+                    validate_property(*prop, container, key, bv, data, dc);
                 }
                 GuiItem::Subst(_, gui_block) => {
-                    gui_block.validate(container, data);
+                    gui_block.validate(container, data, dc);
                 }
                 GuiItem::Widget(_)
                 | GuiItem::ComplexProperty(_)

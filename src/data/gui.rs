@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
 use crate::block::{BV, Block, BlockItem, Field};
+use crate::datacontext::DataContext;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::game::Game;
@@ -430,7 +431,8 @@ impl GuiWidget {
             &data.gui.types,
             &data.gui.templates,
         );
-        guiblock.validate(None, data);
+        let mut dc = DataContext::new();
+        guiblock.validate(None, data, &mut dc);
     }
 }
 
@@ -505,8 +507,9 @@ impl GuiTemplate {
     }
 
     pub fn validate(&self, data: &Everything) {
+        let mut dc = DataContext::new();
         // unwrapping the Option is safe because they were all calculated during finalize
-        self.gui_block.read().unwrap().as_ref().unwrap().validate(None, data);
+        self.gui_block.read().unwrap().as_ref().unwrap().validate(None, data, &mut dc);
     }
 
     pub fn calculate_gui_block(
@@ -586,8 +589,9 @@ impl GuiType {
                 .loc(&self.key)
                 .push();
         }
+        let mut dc = DataContext::new();
         // Unwrapping the Option is safe because they were all calculated during finalize
-        self.gui_block.read().unwrap().as_ref().unwrap().validate(None, data);
+        self.gui_block.read().unwrap().as_ref().unwrap().validate(None, data, &mut dc);
     }
 
     pub fn calculate_builtin(

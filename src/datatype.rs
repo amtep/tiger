@@ -15,6 +15,9 @@ use crate::context::ScopeContext;
 #[cfg(feature = "jomini")]
 use crate::data::customloca::CustomLocalization;
 use crate::data::localization::Language;
+#[cfg(feature = "jomini")]
+use crate::data::scripted_guis::ScriptedGui;
+use crate::datacontext::DataContext;
 use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::BiTigerHashMap;
@@ -256,6 +259,15 @@ impl CodeChain {
             None
         }
     }
+
+    #[cfg(feature = "jomini")]
+    pub fn without_last(&self) -> Self {
+        if self.codes.is_empty() {
+            CodeChain { codes: Box::new([]) }
+        } else {
+            CodeChain { codes: Box::from(&self.codes[..self.codes.len() - 1]) }
+        }
+    }
 }
 
 /// [`Arg`] is the counterpart to [`CodeArg`]. Where `CodeArg` represents an actual argument given
@@ -322,6 +334,7 @@ fn validate_argument(
     arg: &CodeArg,
     data: &Everything,
     sc: &mut ScopeContext,
+    dc: &DataContext,
     expect_arg: Arg,
     lang: Option<Language>,
     format: Option<&Token>,
@@ -330,7 +343,7 @@ fn validate_argument(
         Arg::DType(expect_type) => {
             match arg {
                 CodeArg::Chain(chain) => {
-                    validate_datatypes(chain, data, sc, expect_type, lang, format, false);
+                    validate_datatypes(chain, data, sc, dc, expect_type, lang, format, false);
                 }
                 CodeArg::Literal(token) => {
                     if token.as_str().starts_with('(') && token.as_str().contains(')') {
@@ -360,7 +373,7 @@ fn validate_argument(
         }
         Arg::IType(itype) => match arg {
             CodeArg::Chain(chain) => {
-                validate_datatypes(chain, data, sc, Datatype::CString, lang, format, false);
+                validate_datatypes(chain, data, sc, dc, Datatype::CString, lang, format, false);
             }
             CodeArg::Literal(token) => {
                 data.verify_exists(itype, token);
@@ -382,15 +395,17 @@ fn validate_argument(
 ///   Promotes and functions are very similar but they are defined separately in the datafunction tables
 ///   and usually only a function can end a chain.
 #[allow(unused_variables)] // TODO HOI4: use `format`
+#[allow(clippy::too_many_arguments)] // Can't really cut anything
 pub fn validate_datatypes(
     chain: &CodeChain,
     data: &Everything,
     sc: &mut ScopeContext,
+    dc: &DataContext,
     expect_type: Datatype,
     lang: Option<Language>,
     format: Option<&Token>,
     expect_promote: bool,
-) {
+) -> Datatype {
     let mut curtype = Datatype::Unknown;
     #[allow(unused_mut)] // imperator does not need the mut
     let mut codes = Cow::from(&chain.codes[..]);
@@ -409,11 +424,11 @@ pub fn validate_datatypes(
                         let msg =
                             format!("substituted data bindings {macro_count} times, giving up");
                         err(ErrorKey::Macro).msg(msg).loc(&codes[i].name).push();
-                        return;
+                        return Datatype::Unknown;
                     }
                     codes.to_mut().splice(i..=i, replacement.codes);
                 } else {
-                    return;
+                    return Datatype::Unknown;
                 }
             }
         }
@@ -427,7 +442,7 @@ pub fn validate_datatypes(
         if code.name.is("") {
             // TODO: verify if the game engine is okay with this
             warn(ErrorKey::Datafunctions).msg("empty fragment").loc(&code.name).push();
-            return;
+            return Datatype::Unknown;
         }
 
         let lookup_gf = lookup_global_function(code.name.as_str());
@@ -464,7 +479,7 @@ pub fn validate_datatypes(
                 LookupResult::WrongType => {
                     let msg = format!("{} cannot follow a {curtype} promote", code.name);
                     warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                    return;
+                    return Datatype::Unknown;
                 }
                 LookupResult::NotFound => (),
             }
@@ -478,7 +493,7 @@ pub fn validate_datatypes(
                 LookupResult::WrongType => {
                     let msg = format!("{} cannot follow a {curtype} promote", code.name);
                     warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                    return;
+                    return Datatype::Unknown;
                 }
                 LookupResult::NotFound => (),
             }
@@ -502,33 +517,33 @@ pub fn validate_datatypes(
             if is_first && (p_found || f_found) && !gp_found && !gf_found {
                 let msg = format!("{} cannot be the first in a chain", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
             if is_last && (gp_found || p_found) && !gf_found && !f_found && !expect_promote {
                 let msg = format!("{} cannot be last in a chain", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
             if expect_promote && (gf_found || f_found) {
                 let msg = format!("{} cannot be used in this field", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
             if !is_first && (gp_found || gf_found) && !p_found && !f_found {
                 let msg = format!("{} must be the first in a chain", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
             if !is_last && (gf_found || f_found) && !gp_found && !p_found {
                 let msg = format!("{} must be last in the chain", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
             // A catch-all condition if none of the above match
             if gp_found || gf_found || p_found || f_found {
                 let msg = format!("{} is improperly used here", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
         }
 
@@ -716,7 +731,7 @@ pub fn validate_datatypes(
             } else {
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
             }
-            return;
+            return Datatype::Unknown;
         }
 
         // This `if let` skips this check if args is `Args::Unknown`
@@ -729,7 +744,35 @@ pub fn validate_datatypes(
                     code.arguments.len()
                 );
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
+            }
+        }
+
+        #[cfg(feature = "jomini")]
+        // TODO: handle the case where there is a previous `datacontext = [GetScriptedGui(...)]`
+        if Game::is_jomini() && is_first {
+            let name = if code.name.is("GetScriptedGui") {
+                // Get the name from GetScriptedGui('name')
+                if let Some(CodeArg::Literal(name)) = code.arguments.first() {
+                    Some(name)
+                } else {
+                    None
+                }
+            } else if code.name.is("ScriptedGui") {
+                // Get the name from a previously declared datacontext property
+                dc.sgui_name()
+            } else {
+                None
+            };
+            if let Some(name) = name {
+                // Get the operation on the scriptedgui ScriptedGui.Execute(...) or similar.
+                if let Some(code) = codes.get(1) {
+                    if let Some((key, block, kind)) =
+                        data.get_item::<ScriptedGui>(Item::ScriptedGui, name.as_str())
+                    {
+                        kind.validate_guicall(key, block, data, sc, dc, code);
+                    }
+                }
             }
         }
 
@@ -825,7 +868,7 @@ pub fn validate_datatypes(
                         }
                     }
                 }
-                validate_argument(&code.arguments[i], data, sc, *arg, lang, format);
+                validate_argument(&code.arguments[i], data, sc, dc, *arg, lang, format);
             }
         }
 
@@ -841,18 +884,19 @@ pub fn validate_datatypes(
                     let msg =
                         format!("{} returns {curtype} but a scope type is needed here", code.name);
                     warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                    return;
+                    return Datatype::Unknown;
                 }
             } else {
                 let msg =
                     format!("{} returns {curtype} but a {expect_type} is needed here", code.name);
                 warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return;
+                return Datatype::Unknown;
             }
         }
 
         i += 1;
     }
+    curtype
 }
 
 fn lookup_global_promote(lookup_name: &str) -> Option<(Args, Datatype)> {
@@ -1019,7 +1063,7 @@ fn datatype_and_scope_map() -> &'static LazyLock<BiTigerHashMap<Datatype, Scopes
 
 /// Return the scope type that best matches `dtype`, or `None` if there is no match.
 /// Nearly every scope type has a matching datatype, but there are far more datatypes than scope types.
-fn scope_from_datatype(dtype: Datatype) -> Option<Scopes> {
+pub fn scope_from_datatype(dtype: Datatype) -> Option<Scopes> {
     datatype_and_scope_map().get_by_left(&dtype).copied()
 }
 

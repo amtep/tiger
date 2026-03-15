@@ -61,6 +61,7 @@ mod block;
 mod config_load;
 mod context;
 mod data;
+mod datacontext;
 mod datatype;
 mod date;
 mod db;

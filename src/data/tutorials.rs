@@ -1,6 +1,7 @@
 use crate::block::Block;
 #[cfg(feature = "vic3")]
 use crate::context::ScopeContext;
+use crate::datacontext::DataContext;
 use crate::datatype::Datatype;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
@@ -57,7 +58,14 @@ impl DbKind for TutorialLesson {
         vd.field_value("highlight_widget");
         // TODO: verify this works in CK3 too
         vd.field_validated_key("highlight_widget_dynamic_loc", |key, bv, data| {
-            validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+            validate_datatype_field(
+                Datatype::Unknown,
+                key,
+                bv,
+                data,
+                &mut DataContext::new(),
+                false,
+            );
         });
         #[cfg(feature = "vic3")]
         {
@@ -145,7 +153,14 @@ impl DbKind for TutorialLessonStep {
         vd.multi_field_value("highlight_widget");
         // TODO: verify this works in CK3 too
         vd.field_validated_key("highlight_widget_dynamic_loc", |key, bv, data| {
-            validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+            validate_datatype_field(
+                Datatype::Unknown,
+                key,
+                bv,
+                data,
+                &mut DataContext::new(),
+                false,
+            );
         });
         #[cfg(feature = "vic3")]
         {

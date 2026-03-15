@@ -1,7 +1,8 @@
 use crate::block::{BV, Block};
 use crate::context::ScopeContext;
 use crate::data::localization::LocaValue;
-use crate::datatype::{Datatype, validate_datatypes};
+use crate::datacontext::DataContext;
+use crate::datatype::{CodeArg, Datatype, validate_datatypes};
 use crate::everything::Everything;
 #[cfg(feature = "ck3")]
 use crate::game::Game;
@@ -22,6 +23,7 @@ pub fn validate_property(
     key: &Token,
     bv: &BV,
     data: &Everything,
+    dc: &mut DataContext,
 ) {
     let game = GameFlags::game();
     let gameflags = property.to_game_flags();
@@ -56,15 +58,15 @@ pub fn validate_property(
             _ = bv.expect_value();
         }
         GuiValidation::DatatypeExpr | GuiValidation::Datamodel => {
-            validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+            validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
         }
         GuiValidation::Datacontext => {
-            validate_datatype_field(Datatype::Unknown, key, bv, data, true);
+            validate_datatype_field(Datatype::Unknown, key, bv, data, dc, true);
         }
         GuiValidation::Boolean => {
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
-                    validate_datatype_field(Datatype::bool, key, bv, data, false);
+                    validate_datatype_field(Datatype::bool, key, bv, data, dc, false);
                 } else if !value.lowercase_is("yes") && !value.lowercase_is("no") {
                     // TODO: decide based on the field name whether to upgrade to error?
                     warn(ErrorKey::Validation).msg("expected yes or no").loc(value).push();
@@ -92,7 +94,7 @@ pub fn validate_property(
         GuiValidation::Integer => {
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
-                    validate_datatype_field(Datatype::int32, key, bv, data, false);
+                    validate_datatype_field(Datatype::int32, key, bv, data, dc, false);
                 } else {
                     value.expect_integer();
                 }
@@ -101,7 +103,7 @@ pub fn validate_property(
         GuiValidation::UnsignedInteger => {
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
-                    validate_datatype_field(Datatype::uint32, key, bv, data, false);
+                    validate_datatype_field(Datatype::uint32, key, bv, data, dc, false);
                 } else if let Some(i) = value.expect_integer() {
                     if i < 0 {
                         let msg = format!("{key} needs an unsigned integer");
@@ -113,7 +115,7 @@ pub fn validate_property(
         GuiValidation::Number => {
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
-                    validate_datatype_field(Datatype::float, key, bv, data, false);
+                    validate_datatype_field(Datatype::float, key, bv, data, dc, false);
                 } else {
                     value.expect_number();
                 }
@@ -123,7 +125,7 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need a way to express it can be int32 or float
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else {
                     value.expect_number();
                 }
@@ -133,7 +135,7 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need a way to express it can be int32 or float
-                    validate_datatype_field(Datatype::float, key, bv, data, false);
+                    validate_datatype_field(Datatype::float, key, bv, data, dc, false);
                 } else if let Some(value) = value.strip_suffix("f") {
                     // TODO: this f is used in vanilla; check it really works.
                     value.expect_number();
@@ -146,7 +148,7 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need a way to express it can be int32 or float
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else if let Some(value) = value.strip_suffix("%") {
                     value.expect_number();
                 } else {
@@ -156,7 +158,7 @@ pub fn validate_property(
         }
         GuiValidation::TwoNumberOrPercent => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::CVector2f, key, bv, data, false);
+                validate_datatype_field(Datatype::CVector2f, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 for value in block.iter_values_warn() {
@@ -172,7 +174,7 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need a way to express which datatypes it can be
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else {
                     value.expect_number();
                 }
@@ -180,7 +182,7 @@ pub fn validate_property(
         }
         GuiValidation::CVector2f => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::CVector2f, key, bv, data, false);
+                validate_datatype_field(Datatype::CVector2f, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 let mut vd = Validator::new(block, data);
@@ -190,7 +192,7 @@ pub fn validate_property(
         },
         GuiValidation::CVector2i => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::CVector2i, key, bv, data, false);
+                validate_datatype_field(Datatype::CVector2i, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 let mut vd = Validator::new(block, data);
@@ -200,7 +202,7 @@ pub fn validate_property(
         },
         GuiValidation::CVector3f => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::CVector3f, key, bv, data, false);
+                validate_datatype_field(Datatype::CVector3f, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 let mut vd = Validator::new(block, data);
@@ -210,7 +212,7 @@ pub fn validate_property(
         },
         GuiValidation::CVector4f => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::CVector4f, key, bv, data, false);
+                validate_datatype_field(Datatype::CVector4f, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 let mut vd = Validator::new(block, data);
@@ -220,7 +222,7 @@ pub fn validate_property(
         },
         GuiValidation::PointsList => match bv {
             BV::Value(_) => {
-                validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 let mut vd = Validator::new(block, data);
@@ -235,20 +237,20 @@ pub fn validate_property(
         GuiValidation::Color => match bv {
             BV::Value(_) => {
                 // TODO: can be CVector4f or CString
-                validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
             }
             BV::Block(block) => {
                 validate_gui_color(block, data);
             }
         },
         GuiValidation::CString => {
-            validate_datatype_field(Datatype::CString, key, bv, data, false);
+            validate_datatype_field(Datatype::CString, key, bv, data, dc, false);
         }
         GuiValidation::Item(itype) => {
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need some way of specifying "stringable" datatypes
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else {
                     data.verify_exists(itype, value);
                 }
@@ -258,7 +260,7 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     // TODO: need some way of specifying "stringable" datatypes
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else if !value.is("") {
                     data.verify_exists(itype, value);
                 }
@@ -280,7 +282,7 @@ pub fn validate_property(
                 // Is it valid for the others?
                 if value.starts_with("[") {
                     // TODO: need some way of specifying "stringable" datatypes
-                    validate_datatype_field(Datatype::Unknown, key, bv, data, false);
+                    validate_datatype_field(Datatype::Unknown, key, bv, data, dc, false);
                 } else {
                     let value_lc = value.as_str().to_ascii_lowercase();
                     if !choices.contains(&&*value_lc) {
@@ -379,6 +381,7 @@ pub fn validate_datatype_field(
     key: &Token,
     bv: &BV,
     data: &Everything,
+    dc: &mut DataContext,
     allow_promote: bool,
 ) {
     if let Some(value) = bv.expect_value() {
@@ -388,10 +391,21 @@ pub fn validate_datatype_field(
             match loca_value {
                 // TODO: validate format
                 LocaValue::Code(chain, format) => {
+                    if key.is("datacontext") && chain.codes.len() == 1 {
+                        if let Some(code) = chain.codes.first() {
+                            if code.name.is("GetScriptedGui") {
+                                // Get the name from GetScriptedGui('name')
+                                if let Some(CodeArg::Literal(name)) = code.arguments.first() {
+                                    dc.set_sgui_name(name.clone());
+                                }
+                            }
+                        }
+                    }
                     validate_datatypes(
                         &chain,
                         data,
                         &mut sc,
+                        dc,
                         dtype,
                         None,
                         format.as_ref(),
@@ -438,6 +452,7 @@ fn validate_gui_loca(key: &Token, loca_value: LocaValue, data: &Everything) {
                 &chain,
                 data,
                 &mut sc,
+                &DataContext::new(),
                 Datatype::Unknown,
                 None,
                 format.as_ref(),

@@ -25,6 +25,7 @@ use crate::block::Block;
 #[cfg(feature = "ck3")]
 use crate::ck3::tables::localization::{BUILTIN_MACROS_CK3, COMPLEX_TOOLTIPS_CK3};
 use crate::context::ScopeContext;
+use crate::datacontext::DataContext;
 use crate::datatype::{CodeChain, Datatype, validate_datatypes};
 #[cfg(feature = "eu5")]
 use crate::eu5::tables::localization::BUILTIN_MACROS_EU5;
@@ -513,6 +514,7 @@ impl Localization {
                     chain,
                     data,
                     sc,
+                    &DataContext::new(),
                     Datatype::Unknown,
                     Some(lang),
                     format.as_ref(),
