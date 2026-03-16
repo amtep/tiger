@@ -74,6 +74,7 @@ pub enum ErrorKey {
     Variables,
     DefinitionName,
     Prefixes,
+    WrongUse,
 
     PrincesOfDarkness,
 

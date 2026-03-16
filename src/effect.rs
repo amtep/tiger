@@ -17,6 +17,7 @@ use crate::scopes::{Scopes, scope_iterator};
 use crate::script_value::validate_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
+use crate::trigger::scope_trigger;
 #[cfg(any(feature = "ck3", feature = "imperator"))]
 use crate::trigger::validate_target_ok_this;
 use crate::trigger::{validate_target, validate_trigger};
@@ -33,6 +34,24 @@ use crate::validate::{
     validate_inside_iterator, validate_iterator_fields, validate_scope_chain,
 };
 use crate::validator::{Validator, ValueValidator};
+
+/// Look up an effect name token in the effects table.
+/// `name` is the token. `data` is used in special cases to verify the name dynamically.
+pub fn scope_effect(name: &Token, data: &Everything) -> Option<(Scopes, Effect)> {
+    let scope_effect = match Game::game() {
+        #[cfg(feature = "ck3")]
+        Game::Ck3 => crate::ck3::tables::effects::scope_effect,
+        #[cfg(feature = "vic3")]
+        Game::Vic3 => crate::vic3::tables::effects::scope_effect,
+        #[cfg(feature = "imperator")]
+        Game::Imperator => crate::imperator::tables::effects::scope_effect,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::effects::scope_effect,
+        #[cfg(feature = "hoi4")]
+        Game::Hoi4 => crate::hoi4::tables::effects::scope_effect,
+    };
+    scope_effect(name, data)
+}
 
 /// The standard interface to effect validation. Validates an effect in the given [`ScopeContext`].
 ///
@@ -182,19 +201,6 @@ pub fn validate_effect_field(
             return;
         }
     }
-
-    let scope_effect = match Game::game() {
-        #[cfg(feature = "ck3")]
-        Game::Ck3 => crate::ck3::tables::effects::scope_effect,
-        #[cfg(feature = "vic3")]
-        Game::Vic3 => crate::vic3::tables::effects::scope_effect,
-        #[cfg(feature = "imperator")]
-        Game::Imperator => crate::imperator::tables::effects::scope_effect,
-        #[cfg(feature = "eu5")]
-        Game::Eu5 => crate::eu5::tables::effects::scope_effect,
-        #[cfg(feature = "hoi4")]
-        Game::Hoi4 => crate::hoi4::tables::effects::scope_effect,
-    };
 
     if let Some((inscopes, effect)) = scope_effect(key, data) {
         sc.expect(inscopes, &Reason::Token(key.clone()), data);
@@ -441,6 +447,12 @@ pub fn validate_effect_field(
             validate_effect(block, data, sc, tooltipped);
             sc.close();
         }
+        return;
+    }
+
+    if scope_trigger(key, data).is_some() {
+        let msg = format!("`{key}` is a trigger and can't be used as an effect");
+        err(ErrorKey::WrongUse).msg(msg).loc(key).push();
         return;
     }
 

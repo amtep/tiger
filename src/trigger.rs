@@ -12,6 +12,7 @@ use crate::data::genes::Gene;
 use crate::data::trigger_localization::validate_trigger_localization;
 use crate::date::Date;
 use crate::desc::validate_desc;
+use crate::effect::scope_effect;
 use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::is_country_tag;
@@ -555,9 +556,14 @@ pub fn validate_trigger_key_bv(
                     data.verify_exists(Item::CountryTag, part);
                     #[cfg(feature = "hoi4")]
                     sc.replace(Scopes::Country, part.clone());
-                } else if is_character_token(part.as_str(), data) {
+                } else if Game::is_hoi4() && is_character_token(part.as_str(), data) {
                     #[cfg(feature = "hoi4")]
                     sc.replace(Scopes::Character, part.clone());
+                } else if scope_effect(part, data).is_some() {
+                    let msg = format!("`{part}` is an effect, and can't be used in a trigger");
+                    err(ErrorKey::WrongUse).msg(msg).loc(part).push();
+                    sc.close();
+                    return side_effects;
                 } else {
                     // TODO: warn if trying to use iterator here
                     let msg = format!("unknown token `{part}`");
