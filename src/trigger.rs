@@ -5,7 +5,7 @@ use bitflags::bitflags;
 use std::str::FromStr;
 
 use crate::block::{BV, Block, Comparator, Eq::*, Field};
-use crate::context::{Reason, ScopeContext};
+use crate::context::{Reason, ScopeContext, Temporary};
 #[cfg(feature = "jomini")]
 use crate::data::genes::Gene;
 #[cfg(feature = "jomini")]
@@ -1106,7 +1106,7 @@ fn match_trigger_bv(
                     vd.req_field("target");
                     vd.field_target("target", sc, Scopes::Character);
                     if let Some(name) = vd.field_value("name") {
-                        sc.define_name_token(name.as_str(), Scopes::Value, name);
+                        sc.define_name_token(name.as_str(), Scopes::Value, name, Temporary::Yes);
                         side_effects = true;
                     }
                 }
@@ -1125,13 +1125,18 @@ fn match_trigger_bv(
                     });
                     // TODO: figure out the scope type of `value` and use that
                     if let Some(name) = vd.field_value("name") {
-                        sc.define_name_token(name.as_str(), Scopes::primitive(), name);
+                        sc.define_name_token(
+                            name.as_str(),
+                            Scopes::primitive(),
+                            name,
+                            Temporary::Yes,
+                        );
                         side_effects = true;
                     }
                 }
             } else if name.is("save_temporary_scope_as") {
                 if let Some(name) = bv.expect_value() {
-                    sc.save_current_scope(name.as_str());
+                    sc.save_current_scope(name.as_str(), Temporary::Yes);
                     side_effects = true;
                 }
             } else if name.is("weighted_calc_true_if") {
@@ -1196,7 +1201,7 @@ fn match_trigger_bv(
                 }
             } else if name.is("add_to_temporary_list") {
                 if let Some(value) = bv.expect_value() {
-                    sc.define_or_expect_list_this(value, data);
+                    sc.define_or_expect_list_this(value, data, Temporary::Yes);
                     side_effects = true;
                 }
             } else if name.is("is_in_list") {

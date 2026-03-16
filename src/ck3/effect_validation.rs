@@ -6,7 +6,7 @@ use crate::ck3::tables::misc::{
 use crate::ck3::validate::{
     validate_random_culture, validate_random_faith, validate_random_traits_list,
 };
-use crate::context::ScopeContext;
+use crate::context::{ScopeContext, Temporary};
 use crate::data::effect_localization::validate_effect_localization;
 use crate::desc::validate_desc;
 use crate::effect::{validate_effect, validate_effect_internal};
@@ -209,7 +209,7 @@ pub fn validate_add_secret(
     vd.field_item("type", Item::Secret);
     vd.field_target("target", sc, Scopes::Character);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Secret, name);
+        sc.define_name_token(name.as_str(), Scopes::Secret, name, Temporary::No);
     }
 }
 
@@ -547,7 +547,7 @@ pub fn validate_create_artifact(
 
     if caller == "create_artifact" {
         if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-            sc.define_name_token(name.as_str(), Scopes::Artifact, name);
+            sc.define_name_token(name.as_str(), Scopes::Artifact, name, Temporary::No);
         }
         vd.field_target("title_history", sc, Scopes::LandedTitle);
         vd.field_date("title_history_date");
@@ -570,10 +570,10 @@ pub fn validate_create_character(
     vd.replaced_field("save_event_target_as", "save_scope_as");
     vd.replaced_field("save_temporary_event_target_as", "save_temporary_scope_as");
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Character, name);
+        sc.define_name_token(name.as_str(), Scopes::Character, name, Temporary::No);
     }
     if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Character, name);
+        sc.define_name_token(name.as_str(), Scopes::Character, name, Temporary::Yes);
     }
 
     vd.field_validated_sc("name", sc, validate_desc);
@@ -715,7 +715,7 @@ pub fn validate_create_nomad_title(
     vd.field_target("holder", sc, Scopes::Character);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name);
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
     }
 }
 
@@ -734,10 +734,10 @@ pub fn validate_create_holy_order(
     vd.field_item("name", Item::Localization);
     vd.field_item("coat_of_arms", Item::Coa);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::HolyOrder, name);
+        sc.define_name_token(name.as_str(), Scopes::HolyOrder, name, Temporary::No);
     }
     if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::HolyOrder, name);
+        sc.define_name_token(name.as_str(), Scopes::HolyOrder, name, Temporary::Yes);
     }
 }
 
@@ -769,7 +769,7 @@ pub fn validate_create_title_and_vassal_change(
         }
     }
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::TitleAndVassalChange, name);
+        sc.define_name_token(name.as_str(), Scopes::TitleAndVassalChange, name, Temporary::No);
     }
     vd.field_bool("add_claim_on_loss");
 }
@@ -1037,7 +1037,7 @@ pub fn validate_revoke_court_position(
 }
 
 pub fn validate_save_opinion_value(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
@@ -1046,8 +1046,10 @@ pub fn validate_save_opinion_value(
 ) {
     vd.req_field("name");
     vd.req_field("target");
+    let temp =
+        if key.is("save_temporary_opinion_value_as") { Temporary::Yes } else { Temporary::No };
     if let Some(name) = vd.field_value("name") {
-        sc.define_name_token(name.as_str(), Scopes::Value, name);
+        sc.define_name_token(name.as_str(), Scopes::Value, name, temp);
     }
     vd.field_target("target", sc, Scopes::Character);
 }
@@ -1210,10 +1212,10 @@ pub fn validate_spawn_army(
     vd.field_bool("uses_supply");
     vd.field_target("army", sc, Scopes::Army);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Army, name);
+        sc.define_name_token(name.as_str(), Scopes::Army, name, Temporary::No);
     }
     if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Army, name);
+        sc.define_name_token(name.as_str(), Scopes::Army, name, Temporary::Yes);
     }
     vd.field_validated_sc("name", sc, validate_desc);
 }
@@ -1243,7 +1245,7 @@ pub fn validate_start_scheme(
     vd.field_target("target_faith", sc, Scopes::Faith);
     vd.field_bool("targets_nothing");
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Scheme, name);
+        sc.define_name_token(name.as_str(), Scopes::Scheme, name, Temporary::No);
     }
 
     // undocumented
@@ -1597,7 +1599,7 @@ pub fn validate_create_epidemic_outbreak(
     vd.field_item("type", Item::EpidemicType);
     vd.field_choice("intensity", OUTBREAK_INTENSITIES);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Epidemic, name);
+        sc.define_name_token(name.as_str(), Scopes::Epidemic, name, Temporary::No);
     }
 }
 
@@ -1635,10 +1637,10 @@ pub fn validate_create_story(
             vd.req_field("type");
             vd.field_item("type", Item::Story);
             if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-                sc.define_name_token(name.as_str(), Scopes::StoryCycle, name);
+                sc.define_name_token(name.as_str(), Scopes::StoryCycle, name, Temporary::No);
             }
             if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-                sc.define_name_token(name.as_str(), Scopes::StoryCycle, name);
+                sc.define_name_token(name.as_str(), Scopes::StoryCycle, name, Temporary::Yes);
             }
         }
     }
@@ -1875,7 +1877,7 @@ pub fn validate_create_legend(
     if key.is("create_legend") {
         vd.field_target("protagonist", sc, Scopes::Character);
         if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-            sc.define_name_token(name.as_str(), Scopes::Legend, name);
+            sc.define_name_token(name.as_str(), Scopes::Legend, name, Temporary::No);
         }
     }
 }
@@ -1915,7 +1917,7 @@ pub fn validate_create_adventurer_title(
     vd.field_validated_sc("adjective", sc, validate_desc);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name);
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
     }
 
     // undocumented
@@ -1990,13 +1992,13 @@ pub fn validate_create_task_contract(
     vd.field_target("destination", sc, Scopes::Province);
     vd.field_target("target", sc, Scopes::Character);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::TaskContract, name);
+        sc.define_name_token(name.as_str(), Scopes::TaskContract, name, Temporary::No);
     }
 
     // undocumented
 
     if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::TaskContract, name);
+        sc.define_name_token(name.as_str(), Scopes::TaskContract, name, Temporary::Yes);
     }
 }
 
@@ -2013,7 +2015,7 @@ pub fn validate_give_noble_family_title(
     vd.field_validated_sc("article", sc, validate_desc);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name);
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
     }
 }
 
@@ -2167,10 +2169,10 @@ pub fn validate_start_situation(
     vd.field_item("type", Item::Situation);
     vd.field_item("start_phase", Item::SituationPhase);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Situation, name);
+        sc.define_name_token(name.as_str(), Scopes::Situation, name, Temporary::No);
     }
     if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Situation, name);
+        sc.define_name_token(name.as_str(), Scopes::Situation, name, Temporary::Yes);
     }
     vd.multi_field_validated_block("sub_region", |block, data| {
         let mut vd = Validator::new(block, data);
@@ -2232,7 +2234,7 @@ pub fn validate_create_cadet_branch(
     vd.field_item("coat_of_arms", Item::Coa);
     vd.field_bool("spread_to_descendants");
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::DynastyHouse, name);
+        sc.define_name_token(name.as_str(), Scopes::DynastyHouse, name, Temporary::No);
     }
 }
 
@@ -2249,7 +2251,7 @@ pub fn validate_create_dynasty(
     vd.field_item("coat_of_arms", Item::Coa);
     vd.field_bool("spread_to_descendants");
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Dynasty, name);
+        sc.define_name_token(name.as_str(), Scopes::Dynasty, name, Temporary::No);
     }
 }
 
@@ -2317,7 +2319,7 @@ pub fn validate_house_relation(
     vd.field_item("level", Item::HouseRelationLevel);
     vd.field_validated_sc("description", sc, validate_desc);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::HouseRelation, name);
+        sc.define_name_token(name.as_str(), Scopes::HouseRelation, name, Temporary::No);
     }
 }
 
@@ -2354,7 +2356,7 @@ pub fn validate_plan_great_project(
     vd.field_item("great_project_type", Item::GreatProjectType);
     vd.field_target("founder", sc, Scopes::Character);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::GreatProject, name);
+        sc.define_name_token(name.as_str(), Scopes::GreatProject, name, Temporary::No);
     }
 }
 

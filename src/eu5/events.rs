@@ -62,6 +62,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     vd.field_trigger("trigger", Tooltipped::No, sc);
     vd.field_trigger("major_trigger", Tooltipped::No, sc);
     vd.field_effect("on_trigger_fail", Tooltipped::No, sc);
+    sc.wipe_temporaries();
     vd.field_validated_block_sc("weight_multiplier", sc, validate_modifiers_with_base);
     vd.field_effect("immediate", tooltipped_immediate, sc);
     vd.field_item("image", Item::File);
@@ -101,6 +102,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     let mut has_options = false;
     vd.multi_field_validated_block("option", |block, data| {
         has_options = true;
+        sc.wipe_temporaries();
         validate_event_option(block, data, sc, tooltipped);
     });
     vd.field_validated_key_block("after", |key, block, data| {

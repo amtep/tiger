@@ -1,7 +1,7 @@
 //! Validators for effects that are generic across multiple games.
 
 use crate::block::{BV, Block, Comparator, Eq::Single};
-use crate::context::ScopeContext;
+use crate::context::{ScopeContext, Temporary};
 use crate::desc::validate_desc;
 use crate::effect::{validate_effect, validate_effect_control};
 use crate::everything::Everything;
@@ -22,29 +22,31 @@ use crate::validator::{Validator, ValueValidator};
 #[allow(dead_code)]
 #[cfg(feature = "imperator")]
 pub fn validate_add_to_list_imperator(
-    _key: &Token,
+    key: &Token,
     mut vd: ValueValidator,
     sc: &mut ScopeContext,
     _tooltipped: Tooltipped,
 ) {
+    let temp = if key.as_str().contains("_temporary_") { Temporary::Yes } else { Temporary::No };
     vd.identifier("list name");
-    sc.define_or_expect_list_this(vd.value(), vd.data());
+    sc.define_or_expect_list_this(vd.value(), vd.data(), temp);
     vd.accept();
 }
 
 #[allow(dead_code)]
 #[cfg(any(feature = "ck3", feature = "vic3"))]
 pub fn validate_add_to_list(
-    _key: &Token,
+    key: &Token,
     bv: &BV,
     data: &Everything,
     sc: &mut ScopeContext,
     _tooltipped: Tooltipped,
 ) {
+    let temp = if key.as_str().contains("_temporary_") { Temporary::Yes } else { Temporary::No };
     match bv {
         BV::Value(name) => {
             validate_identifier(name, "list name", Severity::Error);
-            sc.define_or_expect_list_this(name, data);
+            sc.define_or_expect_list_this(name, data, temp);
         }
         BV::Block(block) => {
             let mut vd = Validator::new(block, data);
@@ -55,7 +57,7 @@ pub fn validate_add_to_list(
                     validate_identifier(name, "list name", Severity::Error);
                     let target_scopes = sc.local_list_scopes(name.as_str(), data);
                     let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
-                    sc.define_or_expect_list(name, outscopes, data);
+                    sc.define_or_expect_list(name, outscopes, data, temp);
                 }
             }
         }
@@ -226,31 +228,33 @@ pub fn validate_round_variable(
 
 #[cfg(feature = "jomini")]
 pub fn validate_save_scope(
-    _key: &Token,
+    key: &Token,
     mut vd: ValueValidator,
     sc: &mut ScopeContext,
     _tooltipped: Tooltipped,
 ) {
+    let temp = if key.as_str().contains("_temporary_") { Temporary::Yes } else { Temporary::No };
     vd.identifier("scope name");
-    sc.save_current_scope(vd.value().as_str());
+    sc.save_current_scope(vd.value().as_str(), temp);
     vd.accept();
 }
 
 /// A specific validator for the `save_scope_value` effect.
 #[cfg(feature = "jomini")]
 pub fn validate_save_scope_value(
-    _key: &Token,
+    key: &Token,
     _block: &Block,
     _data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
+    let temp = if key.as_str().contains("_temporary_") { Temporary::Yes } else { Temporary::No };
     vd.req_field("name");
     vd.req_field("value");
     if let Some(name) = vd.field_identifier_or_flag("name", sc) {
         // TODO: examine `value` field to check its real scope type
-        sc.define_name_token(name.as_str(), Scopes::primitive(), name);
+        sc.define_name_token(name.as_str(), Scopes::primitive(), name, temp);
     }
     vd.field_script_value_or_flag("value", sc);
 }

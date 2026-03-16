@@ -5,7 +5,7 @@
 //! another script value.
 
 use crate::block::{BV, Block, BlockItem, Comparator, Eq::*};
-use crate::context::{Reason, ScopeContext};
+use crate::context::{Reason, ScopeContext, Temporary};
 use crate::everything::Everything;
 use crate::helpers::TriBool;
 use crate::item::Item;
@@ -57,12 +57,12 @@ fn validate_inner(
         if token.is("save_temporary_scope_as") {
             // save_temporary_scope_as is now allowed in script values
             if let Some(name) = bv.expect_value() {
-                sc.save_current_scope(name.as_str());
+                sc.save_current_scope(name.as_str(), Temporary::Yes);
                 made_changes = true;
             }
         } else if token.is("save_temporary_value_as") {
             if let Some(name) = bv.expect_value() {
-                sc.define_name_token(name.as_str(), Scopes::Value, name);
+                sc.define_name_token(name.as_str(), Scopes::Value, name, Temporary::Yes);
                 made_changes = true;
                 saved_value = true;
             }

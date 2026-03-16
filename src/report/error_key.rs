@@ -75,6 +75,7 @@ pub enum ErrorKey {
     DefinitionName,
     Prefixes,
     WrongUse,
+    TemporaryScope,
 
     PrincesOfDarkness,
 

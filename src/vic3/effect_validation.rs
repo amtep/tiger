@@ -1,5 +1,5 @@
 use crate::block::{BV, Block};
-use crate::context::ScopeContext;
+use crate::context::{ScopeContext, Temporary};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::helpers::TigerHashSet;
@@ -403,7 +403,7 @@ pub fn validate_create_character(
     vd.field_item("template", Item::CharacterTemplate);
     vd.field_effect_rooted("on_created", Tooltipped::No, Scopes::Character);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::Character, name);
+        sc.define_name_token(name.as_str(), Scopes::Character, name, Temporary::No);
     }
     vd.field_effect_rooted("trait_generation", Tooltipped::No, Scopes::Character);
     // The item option is undocumented
@@ -574,7 +574,7 @@ pub fn validate_create_military_formation(
     // undocumented
 
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
-        sc.define_name_token(name.as_str(), Scopes::MilitaryFormation, name);
+        sc.define_name_token(name.as_str(), Scopes::MilitaryFormation, name, Temporary::No);
     }
 }
 

@@ -450,7 +450,9 @@ pub fn validate_effect_field(
         return;
     }
 
-    if scope_trigger(key, data).is_some() {
+    // skip this check for imperator because it has too many dynamic triggers that get
+    // inappropriately matched.
+    if !Game::is_imperator() && scope_trigger(key, data).is_some() {
         let msg = format!("`{key}` is a trigger and can't be used as an effect");
         err(ErrorKey::WrongUse).msg(msg).loc(key).push();
         return;

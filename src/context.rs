@@ -34,9 +34,9 @@ pub struct ScopeContext {
     from: Vec<ScopeEntry>,
 
     /// Names of named scopes; the values are indices into the `named` vector.
-    scope_names: TigerHashMap<&'static str, usize>,
+    scope_names: TigerHashMap<&'static str, (usize, Temporary)>,
     /// Names of named lists; the values are indices into the `named` vector.
-    scope_list_names: TigerHashMap<&'static str, usize>,
+    scope_list_names: TigerHashMap<&'static str, (usize, Temporary)>,
     /// Names of local variables; the values are indices into the `named` vector.
     local_names: TigerHashMap<&'static str, usize>,
     /// Names of local variable lists; the values are indices into the `named` vector.
@@ -183,6 +183,13 @@ pub struct Signature {
     scope_list_names: Vec<(&'static str, Scopes)>,
     local_names: Vec<(&'static str, Scopes)>,
     local_list_names: Vec<(&'static str, Scopes)>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Temporary {
+    No,
+    Yes,
+    Wiped,
 }
 
 /// Backref index to pass to refer to the `this` scope.
@@ -357,6 +364,7 @@ impl ScopeContext {
         new_sc.prev_levels = 0;
         new_sc.is_unrooted = false;
         new_sc.traceback.push(trace);
+        new_sc.wipe_temporaries();
         Some(new_sc)
     }
 
@@ -376,6 +384,19 @@ impl ScopeContext {
         self.root_for(ActionOrEvent::new_action(action), data)
     }
 
+    pub fn wipe_temporaries(&mut self) {
+        for (_, t) in self.scope_names.values_mut() {
+            if *t == Temporary::Yes {
+                *t = Temporary::Wiped;
+            }
+        }
+        for (_, t) in self.scope_list_names.values_mut() {
+            if *t == Temporary::Yes {
+                *t = Temporary::Wiped;
+            }
+        }
+    }
+
     /// Change the scope type and related token of `root` for this `ScopeContext`.
     ///
     /// This function is mainly used in the setup of a `ScopeContext` before using it.
@@ -387,12 +408,20 @@ impl ScopeContext {
     }
 
     #[doc(hidden)]
-    fn define_name_internal(&mut self, name: &'static str, scopes: Scopes, reason: Reason) {
-        if let Some(&idx) = self.scope_names.get(name) {
-            self.break_chains_to(idx);
+    fn define_name_internal(
+        &mut self,
+        name: &'static str,
+        scopes: Scopes,
+        reason: Reason,
+        temp: Temporary,
+    ) {
+        if let Some((idx, t)) = self.scope_names.get_mut(name) {
+            *t = temp;
+            let idx = *idx;
+            Self::break_chains_to(&mut self.named, idx);
             self.named[idx] = ScopeEntry::Scope(scopes, reason);
         } else {
-            self.scope_names.insert(name, self.named.len());
+            self.scope_names.insert(name, (self.named.len(), temp));
             self.named.push(ScopeEntry::Scope(scopes, reason));
             self.is_input.push(None);
         }
@@ -403,7 +432,7 @@ impl ScopeContext {
     ///
     /// The associated `token` will be used in error reports related to this named scope.
     pub fn define_name<T: Into<Token>>(&mut self, name: &'static str, scopes: Scopes, token: T) {
-        self.define_name_internal(name, scopes, Reason::Builtin(token.into()));
+        self.define_name_internal(name, scopes, Reason::Builtin(token.into()), Temporary::No);
     }
 
     /// Declare that this `ScopeContext` contains a named scope of the given name and type,
@@ -416,32 +445,37 @@ impl ScopeContext {
         name: &'static str,
         scopes: Scopes,
         token: T,
+        temp: Temporary,
     ) {
-        self.define_name_internal(name, scopes, Reason::Token(token.into()));
+        self.define_name_internal(name, scopes, Reason::Token(token.into()), temp);
     }
 
     /// Look up a named scope and return its scope types if it's known.
     ///
     /// Callers should probably check [`Self::is_strict()`] as well.
     pub fn is_name_defined(&mut self, name: &str, data: &Everything) -> Option<Scopes> {
-        if let Some(&idx) = self.scope_names.get(name) {
-            #[allow(clippy::indexing_slicing)] // invariant guarantees no panic
-            Some(match self.named[idx] {
-                ScopeEntry::Scope(s, _) => s,
-                ScopeEntry::Backref(_) => unreachable!(),
-                #[cfg(feature = "hoi4")]
-                ScopeEntry::Fromref(_) => unreachable!(),
-                ScopeEntry::Rootref => self.resolve_root().0,
-                ScopeEntry::Named(idx) => self.resolve_named(idx, data).0,
-                #[cfg(feature = "jomini")]
-                ScopeEntry::GlobalVar(name, _) => data.global_scopes.scopes(name),
-                #[cfg(feature = "jomini")]
-                ScopeEntry::GlobalList(name, _) => data.global_list_scopes.scopes(name),
-                #[cfg(feature = "jomini")]
-                ScopeEntry::Var(name, _) => data.variable_scopes.scopes(name),
-                #[cfg(feature = "jomini")]
-                ScopeEntry::VarList(name, _) => data.variable_list_scopes.scopes(name),
-            })
+        if let Some(&(idx, temp)) = self.scope_names.get(name) {
+            if temp == Temporary::Wiped {
+                None
+            } else {
+                #[allow(clippy::indexing_slicing)] // invariant guarantees no panic
+                Some(match self.named[idx] {
+                    ScopeEntry::Scope(s, _) => s,
+                    ScopeEntry::Backref(_) => unreachable!(),
+                    #[cfg(feature = "hoi4")]
+                    ScopeEntry::Fromref(_) => unreachable!(),
+                    ScopeEntry::Rootref => self.resolve_root().0,
+                    ScopeEntry::Named(idx) => self.resolve_named(idx, data).0,
+                    #[cfg(feature = "jomini")]
+                    ScopeEntry::GlobalVar(name, _) => data.global_scopes.scopes(name),
+                    #[cfg(feature = "jomini")]
+                    ScopeEntry::GlobalList(name, _) => data.global_list_scopes.scopes(name),
+                    #[cfg(feature = "jomini")]
+                    ScopeEntry::Var(name, _) => data.variable_scopes.scopes(name),
+                    #[cfg(feature = "jomini")]
+                    ScopeEntry::VarList(name, _) => data.variable_list_scopes.scopes(name),
+                })
+            }
         } else {
             None
         }
@@ -465,7 +499,7 @@ impl ScopeContext {
     pub fn exists_scope<T: Into<Token>>(&mut self, name: &'static str, token: T) {
         if !self.scope_names.contains_key(name) {
             let idx = self.named.len();
-            self.scope_names.insert(name, idx);
+            self.scope_names.insert(name, (idx, Temporary::No));
             self.named.push(ScopeEntry::deduce(token));
             self.is_input.push(None);
         }
@@ -496,12 +530,18 @@ impl ScopeContext {
     }
 
     #[doc(hidden)]
-    fn define_list_internal(&mut self, name: &'static str, scopes: Scopes, reason: Reason) {
-        if let Some(&idx) = self.scope_list_names.get(name) {
-            self.break_chains_to(idx);
+    fn define_list_internal(
+        &mut self,
+        name: &'static str,
+        scopes: Scopes,
+        reason: Reason,
+        temp: Temporary,
+    ) {
+        if let Some(&(idx, _)) = self.scope_list_names.get(name) {
+            Self::break_chains_to(&mut self.named, idx);
             self.named[idx] = ScopeEntry::Scope(scopes, reason);
         } else {
-            self.scope_list_names.insert(name, self.named.len());
+            self.scope_list_names.insert(name, (self.named.len(), temp));
             self.named.push(ScopeEntry::Scope(scopes, reason));
             self.is_input.push(None);
         }
@@ -516,13 +556,15 @@ impl ScopeContext {
     /// `ScopeContext` treats them the same. This means that lists are expected to
     /// contain items of a single scope type, which sometimes leads to false positives.
     pub fn define_list<T: Into<Token>>(&mut self, name: &'static str, scopes: Scopes, token: T) {
-        self.define_list_internal(name, scopes, Reason::Builtin(token.into()));
+        self.define_list_internal(name, scopes, Reason::Builtin(token.into()), Temporary::No);
     }
 
     /// This is like [`Self::define_name()`], but `scope:name` is declared equal to the current `this`.
-    pub fn save_current_scope(&mut self, name: &'static str) {
-        if let Some(&idx) = self.scope_names.get(name) {
-            self.break_chains_to(idx);
+    pub fn save_current_scope(&mut self, name: &'static str, temp: Temporary) {
+        if let Some((idx, t)) = self.scope_names.get_mut(name) {
+            *t = temp;
+            let idx = *idx;
+            Self::break_chains_to(&mut self.named, idx);
             let entry = self.resolve_backrefs(THIS);
             // Guard against `scope:foo = { save_scope_as = foo }`
             if let ScopeEntry::Named(i) = entry {
@@ -533,7 +575,7 @@ impl ScopeContext {
             }
             self.named[idx] = entry.clone();
         } else {
-            self.scope_names.insert(name, self.named.len());
+            self.scope_names.insert(name, (self.named.len(), temp));
             self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
@@ -543,7 +585,7 @@ impl ScopeContext {
     #[cfg(feature = "jomini")]
     pub fn set_local_variable(&mut self, name: &Token, scope: Scopes) {
         if let Some(&idx) = self.local_names.get(name.as_str()) {
-            self.break_chains_to(idx);
+            Self::break_chains_to(&mut self.named, idx);
             self.named[idx] = ScopeEntry::Scope(scope, Reason::Token(name.clone()));
         } else {
             self.local_names.insert(name.as_str(), self.named.len());
@@ -555,8 +597,10 @@ impl ScopeContext {
     /// If list `name` exists, narrow its scope type down to `this` and narrow the `this` scope
     /// types down to the existing list.
     /// Otherwise, define it as having the same scope type as `this`.
-    pub fn define_or_expect_list_this(&mut self, name: &Token, data: &Everything) {
-        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
+    pub fn define_or_expect_list_this(&mut self, name: &Token, data: &Everything, temp: Temporary) {
+        if let Some((idx, t)) = self.scope_list_names.get_mut(name.as_str()) {
+            *t = temp;
+            let idx = *idx;
             // TODO: remove need to clone reason
             let (s, reason) = self.resolve_named(idx, data);
             self.expect(s, &reason.clone(), data);
@@ -568,7 +612,7 @@ impl ScopeContext {
             // list is being built here, and isn't an input list.
             self.is_input[idx] = None;
         } else {
-            self.scope_list_names.insert(name.as_str(), self.named.len());
+            self.scope_list_names.insert(name.as_str(), (self.named.len(), temp));
             self.named.push(self.resolve_backrefs(THIS).clone());
             self.is_input.push(None);
         }
@@ -577,15 +621,23 @@ impl ScopeContext {
     /// If list `name` exists, narrow its scope type down to the given scopes.
     /// Otherwise, define it as having the given scopes.
     #[allow(dead_code)]
-    pub fn define_or_expect_list(&mut self, name: &Token, scope: Scopes, data: &Everything) {
-        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
+    pub fn define_or_expect_list(
+        &mut self,
+        name: &Token,
+        scope: Scopes,
+        data: &Everything,
+        temp: Temporary,
+    ) {
+        if let Some((idx, t)) = self.scope_list_names.get_mut(name.as_str()) {
+            *t = temp;
+            let idx = *idx;
             self.expect_named(idx, scope, &Reason::Token(name.clone()), data);
             // It often happens that an iterator does is_in_list before add_to_list,
             // and in those cases we want the add_to_list to take precedence: conclude that the
             // list is being built here, and isn't an input list.
             self.is_input[idx] = None;
         } else {
-            self.scope_list_names.insert(name.as_str(), self.named.len());
+            self.scope_list_names.insert(name.as_str(), (self.named.len(), temp));
             self.named.push(ScopeEntry::Scope(scope, Reason::Token(name.clone())));
             self.is_input.push(None);
         }
@@ -610,10 +662,15 @@ impl ScopeContext {
     /// Expect list `name` to be known and (with strict scopes) warn if it isn't.
     /// Narrow the type of `this` down to the list's type.
     pub fn expect_list(&mut self, name: &Token, data: &Everything) {
-        if let Some(&idx) = self.scope_list_names.get(name.as_str()) {
-            let (s, reason) = self.resolve_named(idx, data);
-            let reason = reason.clone(); // TODO: remove need to clone
-            self.expect3(s, &reason, name, THIS, "list", data);
+        if let Some((idx, t)) = self.scope_list_names.get(name.as_str()) {
+            if *t == Temporary::Wiped {
+                let msg = format!("list `{name}` was temporary and is no longer available here");
+                err(ErrorKey::TemporaryScope).weak().msg(msg).loc(name).push();
+            } else {
+                let (s, reason) = self.resolve_named(*idx, data);
+                let reason = reason.clone(); // TODO: remove need to clone
+                self.expect3(s, &reason, name, THIS, "list", data);
+            }
         } else if self.strict_scopes {
             let msg = "unknown list";
             err(ErrorKey::UnknownList).weak().msg(msg).loc(name).push();
@@ -647,14 +704,14 @@ impl ScopeContext {
 
     /// Cut `idx` out of any [`ScopeEntry::Named`] chains. This avoids infinite loops.
     #[doc(hidden)]
-    fn break_chains_to(&mut self, idx: usize) {
-        for i in 0..self.named.len() {
+    fn break_chains_to(named: &mut [ScopeEntry], idx: usize) {
+        for i in 0..named.len() {
             if i == idx {
                 continue;
             }
-            if let ScopeEntry::Named(ni) = self.named[i] {
+            if let ScopeEntry::Named(ni) = named[i] {
                 if ni == idx {
-                    self.named[i] = self.named[idx].clone();
+                    named[i] = named[idx].clone();
                 }
             }
         }
@@ -706,7 +763,21 @@ impl ScopeContext {
     /// Return an object that captures the essentials of this `ScopeContext`, to be used for
     /// hashing.
     pub fn signature(&self, data: &Everything) -> Signature {
-        fn process_names(
+        fn process_scope_names(
+            sc: &ScopeContext,
+            names: &TigerHashMap<&'static str, (usize, Temporary)>,
+            data: &Everything,
+        ) -> Vec<(&'static str, Scopes)> {
+            let mut names: Vec<_> = names
+                .iter()
+                .filter(|(_, (_, temp))| *temp != Temporary::Wiped)
+                .map(|(&name, (i, _))| (name, sc.resolve_named(*i, data).0))
+                .collect();
+            names.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
+            names
+        }
+
+        fn process_local_names(
             sc: &ScopeContext,
             names: &TigerHashMap<&'static str, usize>,
             data: &Everything,
@@ -721,10 +792,10 @@ impl ScopeContext {
 
         Signature {
             root,
-            scope_names: process_names(self, &self.scope_names, data),
-            scope_list_names: process_names(self, &self.scope_list_names, data),
-            local_names: process_names(self, &self.local_names, data),
-            local_list_names: process_names(self, &self.local_list_names, data),
+            scope_names: process_scope_names(self, &self.scope_names, data),
+            scope_list_names: process_scope_names(self, &self.scope_list_names, data),
+            local_names: process_local_names(self, &self.local_names, data),
+            local_list_names: process_local_names(self, &self.local_list_names, data),
         }
     }
 
@@ -862,7 +933,11 @@ impl ScopeContext {
     /// If a new index has to be created, and `strict_scopes` is on, then a warning will be emitted.
     #[doc(hidden)]
     fn named_index(&mut self, name: &'static str, token: &Token) -> usize {
-        if let Some(&idx) = self.scope_names.get(name) {
+        if let Some(&(idx, t)) = self.scope_names.get(name) {
+            if t == Temporary::Wiped {
+                let msg = format!("`scope:{name}` was temporary and is no longer available here");
+                self.log_traceback(err(ErrorKey::TemporaryScope).weak().msg(msg).loc(token)).push();
+            }
             idx
         } else {
             let idx = self.named.len();
@@ -886,7 +961,7 @@ impl ScopeContext {
                 self.is_input.push(Some(token.clone()));
             }
             // do this after the warnings above, so that it's not listed as available
-            self.scope_names.insert(name, idx);
+            self.scope_names.insert(name, (idx, Temporary::No));
             idx
         }
     }
@@ -926,14 +1001,19 @@ impl ScopeContext {
     }
 
     /// Same as [`Self::named_index()`], but for lists. No warning is emitted if a new list is created.
+    /// Do warn if a temporary list was used after it was wiped.
     #[doc(hidden)]
     #[cfg(feature = "jomini")]
     fn named_list_index(&mut self, name: &'static str, token: &Token) -> usize {
-        if let Some(&idx) = self.scope_list_names.get(name) {
+        if let Some(&(idx, t)) = self.scope_list_names.get(name) {
+            if t == Temporary::Wiped {
+                let msg = format!("list `{name}` was temporary and is no longer available here");
+                self.log_traceback(err(ErrorKey::TemporaryScope).weak().msg(msg).loc(token)).push();
+            }
             idx
         } else {
             let idx = self.named.len();
-            self.scope_list_names.insert(name, idx);
+            self.scope_list_names.insert(name, (idx, Temporary::No));
             self.named.push(ScopeEntry::Scope(Scopes::all(), Reason::Token(token.clone())));
             self.is_input.push(Some(token.clone()));
             idx
@@ -1416,15 +1496,22 @@ impl ScopeContext {
         }
 
         // Compare restrictions on named scopes
-        for (name, &oidx) in &other.scope_names {
-            if let Some(idx) = self.scope_names.get(name).copied() {
+        for (name, &(oidx, otemp)) in &other.scope_names {
+            if let Some((idx, t)) = self.scope_names.get(name).copied() {
                 let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("scope:{name}");
+                    if t == Temporary::Wiped {
+                        let msg = format!(
+                            "`{key}` expects {report} to be set but {report} was temporary and is no longer available here"
+                        );
+                        err(ErrorKey::TemporaryScope).weak().msg(msg).loc(key).push();
+                    }
                     self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their scopes now become our scopes.
-                    self.break_chains_to(idx);
+                    self.scope_names.get_mut(name).unwrap().1 = otemp;
+                    Self::break_chains_to(&mut self.named, idx);
                     self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {
@@ -1438,22 +1525,29 @@ impl ScopeContext {
             } else {
                 // Their scopes now become our scopes.
                 let (s, reason) = other.resolve_named(oidx, data);
-                self.scope_names.insert(name, self.named.len());
+                self.scope_names.insert(name, (self.named.len(), otemp));
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
             }
         }
 
         // Compare restrictions on lists
-        for (name, &oidx) in &other.scope_list_names {
-            if let Some(idx) = self.scope_list_names.get(name).copied() {
+        for (name, &(oidx, otemp)) in &other.scope_list_names {
+            if let Some((idx, t)) = self.scope_list_names.get(name).copied() {
                 let (s, reason) = other.resolve_named(oidx, data);
                 if other.is_input[oidx].is_some() {
                     let report = format!("list {name}");
+                    if t == Temporary::Wiped {
+                        let msg = format!(
+                            "`{key}` expects {report} to be set but {report} was temporary and is no longer available here"
+                        );
+                        err(ErrorKey::TemporaryScope).weak().msg(msg).loc(key).push();
+                    }
                     self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their lists now become our lists.
-                    self.break_chains_to(idx);
+                    self.scope_list_names.get_mut(name).unwrap().1 = otemp;
+                    Self::break_chains_to(&mut self.named, idx);
                     self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {
@@ -1467,7 +1561,7 @@ impl ScopeContext {
             } else {
                 // Their lists now become our lists.
                 let (s, reason) = other.resolve_named(oidx, data);
-                self.scope_list_names.insert(name, self.named.len());
+                self.scope_list_names.insert(name, (self.named.len(), otemp));
                 self.named.push(ScopeEntry::Scope(s, reason.clone()));
                 self.is_input.push(other.is_input[oidx].clone());
             }
@@ -1482,7 +1576,7 @@ impl ScopeContext {
                     self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their variables now become our variables
-                    self.break_chains_to(idx);
+                    Self::break_chains_to(&mut self.named, idx);
                     self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {
@@ -1511,7 +1605,7 @@ impl ScopeContext {
                     self.expect_named3(idx, s, reason, key, &report, data);
                 } else {
                     // Their lists now become our lists.
-                    self.break_chains_to(idx);
+                    Self::break_chains_to(&mut self.named, idx);
                     self.named[idx] = ScopeEntry::Scope(s, reason.clone());
                 }
             } else if self.strict_scopes && other.is_input[oidx].is_some() {

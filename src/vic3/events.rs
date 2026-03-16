@@ -56,6 +56,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
 
     vd.field_trigger("trigger", Tooltipped::No, sc);
     vd.field_validated_block_sc("weight_multiplier", sc, validate_modifiers_with_base);
+    sc.wipe_temporaries();
     vd.field_effect("immediate", tooltipped_immediate, sc);
 
     vd.multi_field_validated_block("event_image", |block, data| {
@@ -105,6 +106,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     let mut has_options = false;
     vd.multi_field_validated_block("option", |block, data| {
         has_options = true;
+        sc.wipe_temporaries();
         validate_event_option(block, data, sc, tooltipped);
     });
     vd.field_validated_key_block("after", |key, block, data| {
@@ -113,6 +115,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
             let info = "you can put it in `immediate` instead";
             err(ErrorKey::Logic).msg(msg).info(info).loc(key).push();
         }
+        sc.wipe_temporaries();
         validate_effect(block, data, sc, tooltipped);
     });
 }

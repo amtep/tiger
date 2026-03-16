@@ -74,11 +74,12 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     vd.field_bool("major");
     vd.field_trigger("major_trigger", Tooltipped::No, sc);
 
-    vd.field_effect("immediate", tooltipped_immediate, sc);
     vd.field_trigger("trigger", Tooltipped::No, sc);
     vd.field_effect("on_trigger_fail", Tooltipped::No, sc);
     vd.field_validated_block_sc("weight_multiplier", sc, validate_modifiers_with_base);
 
+    sc.wipe_temporaries();
+    vd.field_effect("immediate", tooltipped_immediate, sc);
     vd.field_validated_sc("title", sc, validate_desc);
     vd.field_validated_sc("desc", sc, validate_desc);
 
@@ -142,6 +143,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     let mut has_options = false;
     vd.multi_field_validated_block("option", |block, data| {
         has_options = true;
+        sc.wipe_temporaries();
         validate_event_option(block, data, sc, tooltipped);
     });
 
@@ -151,6 +153,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
             let info = "you can put it in `immediate` instead";
             err(ErrorKey::Logic).msg(msg).info(info).loc(key).push();
         }
+        sc.wipe_temporaries();
         validate_effect(block, data, sc, tooltipped);
     });
     vd.field_validated_block_sc("cooldown", sc, validate_duration);
