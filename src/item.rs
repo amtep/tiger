@@ -430,6 +430,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] SuccessionAppointment,
     #[cfg(feature = "ck3")] SuccessionElection,
     #[cfg(feature = "ck3")] Suggestion,
+    #[cfg(feature = "ck3")] TableStyle,
     #[cfg(feature = "ck3")] TaskContractGroup,
     #[cfg(feature = "ck3")] TaskContractReward,
     #[cfg(feature = "ck3")] TaskContractType,
@@ -1621,6 +1622,8 @@ impl Item {
             Item::SuccessionElection => "common/succession_election/",
             #[cfg(feature = "ck3")]
             Item::Suggestion => "common/suggestions/",
+            #[cfg(feature = "ck3")]
+            Item::TableStyle => "gfx/map/table_styles/",
             #[cfg(feature = "ck3")]
             Item::TaskContractGroup => "common/task_contracts/",
             #[cfg(feature = "ck3")]

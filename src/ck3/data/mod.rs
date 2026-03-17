@@ -93,6 +93,7 @@ pub mod struggle;
 pub mod subjectcontract;
 pub mod succession;
 pub mod suggestions;
+pub mod table_styles;
 pub mod task_contracts;
 pub mod tax_slots;
 pub mod terrain;
