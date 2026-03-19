@@ -3,20 +3,24 @@ use std::path::PathBuf;
 
 use crate::block::Block;
 use crate::context::ScopeContext;
-use crate::effect::validate_effect;
+use crate::effect::validate_effect_internal;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 #[cfg(feature = "hoi4")]
 use crate::game::Game;
 use crate::helpers::{BANNED_NAMES, TigerHashMap, limited_item_prefix_should_insert};
 use crate::item::Item;
+use crate::lowercase::Lowercase;
 use crate::macros::{MACRO_MAP, MacroCache};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
+use crate::validate::ListType;
+use crate::validator::Validator;
 use crate::variables::Variables;
 
 #[derive(Debug, Default)]
@@ -117,7 +121,7 @@ impl FileHandler<Block> for Effects {
 pub struct Effect {
     pub key: Token,
     pub block: Block,
-    cache: MacroCache<ScopeContext>,
+    cache: MacroCache<(ScopeContext, SpecialTokens, bool)>,
     scope_override: Option<Scopes>,
 }
 
@@ -133,7 +137,13 @@ impl Effect {
             if self.scope_override.is_some() {
                 sc.set_no_warn(true);
             }
-            self.validate_call(&self.key, data, &mut sc, Tooltipped::No);
+            self.validate_call(
+                &self.key,
+                data,
+                &mut sc,
+                Tooltipped::No,
+                &mut SpecialTokens::none(),
+            );
         }
     }
 
@@ -143,28 +153,50 @@ impl Effect {
         data: &Everything,
         sc: &mut ScopeContext,
         tooltipped: Tooltipped,
-    ) {
-        if !self.cached_compat(key, &[], tooltipped, sc, data) {
+        special_tokens: &mut SpecialTokens,
+    ) -> bool {
+        let mut has_tooltip = false;
+        if !self.cached_compat(key, &[], tooltipped, sc, data, special_tokens, &mut has_tooltip) {
             let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
             our_sc.set_strict_scopes(false);
             if self.scope_override.is_some() {
                 our_sc.set_no_warn(true);
             }
-            self.cache.insert(key, &[], tooltipped, false, our_sc.clone());
-            validate_effect(&self.block, data, &mut our_sc, tooltipped);
+            self.cache.insert(
+                key,
+                &[],
+                tooltipped,
+                false,
+                (our_sc.clone(), SpecialTokens::none(), false),
+            );
+            let mut our_st = SpecialTokens::empty();
+            let mut vd = Validator::new(&self.block, data);
+            has_tooltip |= validate_effect_internal(
+                Lowercase::empty(),
+                ListType::None,
+                &self.block,
+                data,
+                &mut our_sc,
+                &mut vd,
+                tooltipped,
+                &mut our_st,
+            );
             if let Some(scopes) = self.scope_override {
                 our_sc = ScopeContext::new_unrooted(scopes, key);
                 our_sc.set_strict_scopes(false);
             }
             sc.expect_compatibility(&our_sc, key, data);
-            self.cache.insert(key, &[], tooltipped, false, our_sc);
+            special_tokens.merge(&our_st);
+            self.cache.insert(key, &[], tooltipped, false, (our_sc, our_st, has_tooltip));
         }
+        has_tooltip && tooltipped.is_tooltipped()
     }
 
     pub fn macro_parms(&self) -> Vec<&'static str> {
         self.block.macro_parms()
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn cached_compat(
         &self,
         key: &Token,
@@ -172,9 +204,13 @@ impl Effect {
         tooltipped: Tooltipped,
         sc: &mut ScopeContext,
         data: &Everything,
+        special_tokens: &mut SpecialTokens,
+        has_tooltip: &mut bool,
     ) -> bool {
-        self.cache.perform(key, args, tooltipped, false, |our_sc| {
+        self.cache.perform(key, args, tooltipped, false, |(our_sc, our_st, ht)| {
             sc.expect_compatibility(our_sc, key, data);
+            special_tokens.merge(our_st);
+            *has_tooltip |= ht;
         })
     }
 
@@ -185,10 +221,12 @@ impl Effect {
         data: &Everything,
         sc: &mut ScopeContext,
         tooltipped: Tooltipped,
-    ) {
+        special_tokens: &mut SpecialTokens,
+    ) -> bool {
+        let mut has_tooltip = false;
         // Every invocation is treated as different even if the args are the same,
         // because we want to point to the correct one when reporting errors.
-        if !self.cached_compat(key, args, tooltipped, sc, data) {
+        if !self.cached_compat(key, args, tooltipped, sc, data, special_tokens, &mut has_tooltip) {
             if let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile) {
                 let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
                 our_sc.set_strict_scopes(false);
@@ -197,16 +235,35 @@ impl Effect {
                 }
                 // Insert the dummy sc before continuing. That way, if we recurse, we'll hit
                 // that dummy context instead of macro-expanding again.
-                self.cache.insert(key, args, tooltipped, false, our_sc.clone());
-                validate_effect(&block, data, &mut our_sc, tooltipped);
+                self.cache.insert(
+                    key,
+                    args,
+                    tooltipped,
+                    false,
+                    (our_sc.clone(), SpecialTokens::none(), false),
+                );
+                let mut our_st = SpecialTokens::empty();
+                let mut vd = Validator::new(&block, data);
+                has_tooltip |= validate_effect_internal(
+                    Lowercase::empty(),
+                    ListType::None,
+                    &block,
+                    data,
+                    &mut our_sc,
+                    &mut vd,
+                    tooltipped,
+                    &mut our_st,
+                );
                 if let Some(scopes) = self.scope_override {
                     our_sc = ScopeContext::new_unrooted(scopes, key);
                     our_sc.set_strict_scopes(false);
                 }
 
                 sc.expect_compatibility(&our_sc, key, data);
-                self.cache.insert(key, args, tooltipped, false, our_sc);
+                special_tokens.merge(&our_st);
+                self.cache.insert(key, args, tooltipped, false, (our_sc, our_st, has_tooltip));
             }
         }
+        has_tooltip && tooltipped.is_tooltipped()
     }
 }

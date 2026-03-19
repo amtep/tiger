@@ -18,6 +18,7 @@ use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, Severity, err, warn};
 use crate::scopes::Scopes;
 use crate::script_value::{validate_non_dynamic_script_value, validate_script_value};
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_target, validate_target_ok_this};
@@ -34,7 +35,8 @@ pub fn validate_add_activity_log_entry(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     vd.req_field("key");
     vd.req_field("character");
@@ -53,7 +55,16 @@ pub fn validate_add_activity_log_entry(
     vd.field_target("location", sc, Scopes::Province);
     vd.field_target("artifact", sc, Scopes::Artifact);
     // effects can be put directly in this block
-    validate_effect_internal(&caller, ListType::None, block, data, sc, &mut vd, tooltipped);
+    validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    )
 }
 
 pub fn validate_add_artifact_history(
@@ -808,7 +819,8 @@ pub fn validate_duel(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     vd.field_item("skill", Item::Skill);
     vd.field_list_items("skills", Item::Skill);
     vd.field_target("target", sc, Scopes::Character);
@@ -828,7 +840,11 @@ pub fn validate_duel(
         data.verify_exists_implied(Item::Localization, &loca, token);
     });
     sc.define_name("duel_value", Scopes::Value, key);
-    validate_random_list(key, block, data, sc, vd, tooltipped);
+    let has_tooltip = validate_random_list(key, block, data, sc, vd, tooltipped, special_tokens);
+    if has_tooltip {
+        special_tokens.insert(key);
+    }
+    has_tooltip
 }
 
 pub fn validate_faction_start_war(
@@ -2369,4 +2385,89 @@ pub fn validate_phase_duration(
     _tooltipped: Tooltipped,
 ) {
     validate_mandatory_duration(block, &mut vd, sc);
+}
+
+pub fn validate_send_interface(
+    key: &Token,
+    block: &Block,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+    special_tokens: &mut SpecialTokens,
+) -> bool {
+    vd.field_item("type", Item::Message);
+    if let Some(token) = vd.field_value("goto") {
+        let msg = "`goto` was removed from interface messages in 1.9";
+        warn(ErrorKey::Removed).msg(msg).loc(token).push();
+    }
+    // Mark all these as known fields. This exempts them from the unknown-fields loop in `validate_effect_internal`.
+    // They must be validated after that loop, because the effects may have set named scopes for them to use.
+    vd.field("title");
+    vd.field("desc");
+    vd.field("tooltip");
+    vd.field("left_icon");
+    vd.field("right_icon");
+    vd.field("localization_values");
+
+    let random_is_problem = if let Some(message_type) = block.get_field_value("type") {
+        data.item_has_property(Item::Message, message_type.as_str(), "displays_effect")
+    } else {
+        true
+    };
+    let mut st = SpecialTokens::empty();
+    let caller = Lowercase::new(key.as_str());
+    validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        Tooltipped::Yes,
+        &mut st,
+    );
+    for token in st.into_iter() {
+        if token.is("random") || token.is("random_list") || token.is("duel") {
+            if random_is_problem {
+                warn(ErrorKey::Logic)
+                    .msg(format!("running `{token}` inside `{key}` does not work right"))
+                    .info("the message performs one roll and the execution performs another")
+                    .loc(token)
+                    .loc_msg(key, "executed inside this")
+                    .push();
+            }
+        } else {
+            special_tokens.insert(token);
+        }
+    }
+
+    // These are both scopes and $-parameters to set for the loca.
+    // They are applied only to the following loca.
+    let mut loca_sc = sc.clone();
+    vd.field_validated_block("localization_values", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.unknown_value_fields(|key, value| {
+            let scopes = validate_target_ok_this(value, data, sc, Scopes::all());
+            loca_sc.define_name(key.as_str(), scopes, value);
+        });
+    });
+    vd.field_validated_sc("title", &mut loca_sc, validate_desc);
+    vd.field_validated_sc("desc", &mut loca_sc, validate_desc);
+    vd.field_validated_sc("tooltip", &mut loca_sc, validate_desc);
+    loca_sc.destroy();
+    let icon_scopes = Scopes::Character
+        | Scopes::LandedTitle
+        | Scopes::Artifact
+        | Scopes::Faith
+        | Scopes::Dynasty
+        | Scopes::DynastyHouse
+        | Scopes::Confederation;
+    if let Some(token) = vd.field_value("left_icon") {
+        validate_target_ok_this(token, data, sc, icon_scopes);
+    }
+    if let Some(token) = vd.field_value("right_icon") {
+        validate_target_ok_this(token, data, sc, icon_scopes);
+    }
+    false
 }

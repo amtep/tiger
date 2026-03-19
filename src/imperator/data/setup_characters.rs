@@ -7,6 +7,7 @@ use crate::imperator::effect_validation::validate_create_character;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::pdxfile::PdxEncoding;
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
@@ -31,7 +32,15 @@ impl DbKind for SetupCharacters {
         vd.field_item("country", Item::Localization);
         vd.unknown_block_fields(|key, block| {
             let vd = Validator::new(block, data);
-            validate_create_character(key, block, data, &mut sc, vd, Tooltipped::No);
+            validate_create_character(
+                key,
+                block,
+                data,
+                &mut sc,
+                vd,
+                Tooltipped::No,
+                &mut SpecialTokens::none(),
+            );
         });
     }
 }

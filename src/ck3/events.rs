@@ -12,6 +12,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, Severity, err, warn};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_target;
@@ -223,6 +224,7 @@ fn validate_event_option(
         sc,
         &mut vd,
         tooltipped,
+        &mut SpecialTokens::none(),
     );
 }
 

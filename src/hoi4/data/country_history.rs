@@ -8,6 +8,7 @@ use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::lowercase::Lowercase;
 use crate::pdxfile::PdxEncoding;
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::ListType;
@@ -80,5 +81,6 @@ fn validate_history(key: &Token, block: &Block, data: &Everything, mut vd: Valid
         &mut sc,
         &mut vd,
         Tooltipped::No,
+        &mut SpecialTokens::none(),
     );
 }

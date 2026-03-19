@@ -343,7 +343,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::State, "raid_reduce_project_progress_ratio", UncheckedTodo),
     (Scopes::None, "random", UncheckedTodo),
     (Scopes::Country, "random_country_division", Iterator(ListType::Random, Scopes::Division)),
-    (Scopes::None, "random_list", Vb(validate_random_list)),
+    (Scopes::None, "random_list", Vbc(validate_random_list)),
     (
         Scopes::Country.union(Scopes::Operation),
         "random_operative",

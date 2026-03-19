@@ -15,6 +15,7 @@ use crate::report::{ErrorKey, Severity, err, fatal, tips, warn};
 use crate::scopes::{Scopes, scope_iterator};
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::scope_trigger;
@@ -62,7 +63,7 @@ pub fn validate_effect(
     data: &Everything,
     sc: &mut ScopeContext,
     tooltipped: Tooltipped,
-) {
+) -> bool {
     let mut vd = Validator::new(block, data);
     validate_effect_internal(
         Lowercase::empty(),
@@ -72,7 +73,8 @@ pub fn validate_effect(
         sc,
         &mut vd,
         tooltipped,
-    );
+        &mut SpecialTokens::none(),
+    )
 }
 
 /// The interface to effect validation when [`validate_effect`] is too limited.
@@ -86,6 +88,7 @@ pub fn validate_effect(
 ///
 /// `vd` is a `Validator` that may have already been checked for some fields by the caller. This is
 /// because some effects are in contexts where other keys than just the effects are valid.
+#[allow(clippy::too_many_arguments)]
 pub fn validate_effect_internal(
     caller: &Lowercase,
     list_type: ListType,
@@ -94,7 +97,8 @@ pub fn validate_effect_internal(
     sc: &mut ScopeContext,
     vd: &mut Validator,
     mut tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     vd.set_case_sensitive(false);
     if caller == "if"
         || caller == "else_if"
@@ -130,13 +134,17 @@ pub fn validate_effect_internal(
     validate_ifelse_sequence(block, "if", "else_if", "else");
 
     vd.set_allow_questionmark_equals(true);
+    let mut has_tooltip = false;
     vd.unknown_fields_cmp(|key, cmp, bv| {
-        validate_effect_field(caller, key, cmp, bv, data, sc, tooltipped);
+        has_tooltip |=
+            validate_effect_field(caller, key, cmp, bv, data, sc, tooltipped, special_tokens);
     });
+    has_tooltip
 }
 
 /// Validate a single effect field
 #[allow(unused_variables)] // hoi4 does not use `caller`
+#[allow(clippy::too_many_arguments)]
 pub fn validate_effect_field(
     caller: &Lowercase,
     key: &Token,
@@ -145,7 +153,9 @@ pub fn validate_effect_field(
     data: &Everything,
     sc: &mut ScopeContext,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
+    let mut has_tooltip = false;
     if let Some(effect) = data.get_effect(key) {
         match bv {
             BV::Value(token) => {
@@ -154,7 +164,7 @@ pub fn validate_effect_field(
                 } else if !token.is("yes") {
                     warn(ErrorKey::Validation).msg("expected just effect = yes").loc(token).push();
                 }
-                effect.validate_call(key, data, sc, tooltipped);
+                has_tooltip |= effect.validate_call(key, data, sc, tooltipped, special_tokens);
             }
             BV::Block(block) => {
                 let parms = effect.macro_parms();
@@ -173,7 +183,7 @@ pub fn validate_effect_field(
                         } else {
                             let msg = format!("this scripted effect needs parameter {parm}");
                             err(ErrorKey::Macro).msg(msg).loc(block).push();
-                            return;
+                            return false;
                         }
                     }
                     vd.unknown_value_fields(|key, _value| {
@@ -182,11 +192,18 @@ pub fn validate_effect_field(
                         fatal(ErrorKey::Macro).msg(msg).info(info).loc(key).push();
                     });
                     let args: Vec<_> = parms.into_iter().zip(vec).collect();
-                    effect.validate_macro_expansion(key, &args, data, sc, tooltipped);
+                    has_tooltip |= effect.validate_macro_expansion(
+                        key,
+                        &args,
+                        data,
+                        sc,
+                        tooltipped,
+                        special_tokens,
+                    );
                 }
             }
         }
-        return;
+        return has_tooltip && tooltipped.is_tooltipped();
     }
 
     #[cfg(feature = "jomini")]
@@ -195,15 +212,19 @@ pub fn validate_effect_field(
             if caller != "random" && caller != "random_list" && caller != "duel" {
                 let msg = "cannot use scripted modifier here";
                 err(ErrorKey::Validation).msg(msg).loc(key).push();
-                return;
+                return false;
             }
             validate_scripted_modifier_call(key, bv, modifier, data, sc);
-            return;
+            return false;
         }
     }
 
     if let Some((inscopes, effect)) = scope_effect(key, data) {
         sc.expect(inscopes, &Reason::Token(key.clone()), data);
+        #[cfg(feature = "jomini")]
+        if tooltipped.is_tooltipped() {
+            has_tooltip |= data.item_exists(Item::EffectLocalization, key.as_str());
+        }
         match effect {
             Effect::Yes => {
                 if let Some(token) = bv.expect_value() {
@@ -336,6 +357,13 @@ pub fn validate_effect_field(
                     f(key, block, data, sc, vd, tooltipped);
                 }
             }
+            Effect::Vbc(f) => {
+                if let Some(block) = bv.expect_block() {
+                    let mut vd = Validator::new(block, data);
+                    vd.set_case_sensitive(false);
+                    f(key, block, data, sc, vd, tooltipped, special_tokens);
+                }
+            }
             Effect::Vv(f) => {
                 if let Some(token) = bv.expect_value() {
                     let vd = ValueValidator::new(token, data);
@@ -351,18 +379,30 @@ pub fn validate_effect_field(
                     data.validate_localization_sc(t.as_str(), sc);
                 }
                 BV::Block(b) => {
-                    validate_effect_control(&Lowercase::new(key.as_str()), b, data, sc, tooltipped);
+                    has_tooltip |= validate_effect_control(
+                        &Lowercase::new(key.as_str()),
+                        b,
+                        data,
+                        sc,
+                        tooltipped,
+                        special_tokens,
+                    );
                 }
             },
             Effect::Control => {
                 if let Some(block) = bv.expect_block() {
-                    validate_effect_control(
+                    let local_has_tooltip = validate_effect_control(
                         &Lowercase::new(key.as_str()),
                         block,
                         data,
                         sc,
                         tooltipped,
+                        special_tokens,
                     );
+                    if local_has_tooltip && key.is("random") {
+                        special_tokens.insert(key);
+                    }
+                    has_tooltip |= local_has_tooltip;
                 }
             }
             #[cfg(feature = "hoi4")]
@@ -372,7 +412,7 @@ pub fn validate_effect_field(
                     precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
                     sc.open_scope(outscope, key.clone());
                     let mut vd = Validator::new(block, data);
-                    validate_effect_internal(
+                    has_tooltip |= validate_effect_internal(
                         &Lowercase::new(it_name.as_str()),
                         ltype,
                         block,
@@ -380,6 +420,7 @@ pub fn validate_effect_field(
                         sc,
                         &mut vd,
                         tooltipped,
+                        special_tokens,
                     );
                 }
                 sc.close();
@@ -407,7 +448,7 @@ pub fn validate_effect_field(
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5", feature = "hoi4"))]
             Effect::UncheckedTodo => (),
         }
-        return;
+        return has_tooltip && tooltipped.is_tooltipped();
     }
 
     if let Some((it_type, it_name)) = key.split_once('_') {
@@ -416,14 +457,14 @@ pub fn validate_effect_field(
                 if ltype.is_for_triggers() {
                     let msg = format!("cannot use `{it_type}_` lists in an effect");
                     err(ErrorKey::Validation).msg(msg).loc(key).push();
-                    return;
+                    return false;
                 }
                 sc.expect(inscopes, &Reason::Token(key.clone()), data);
                 if let Some(b) = bv.expect_block() {
                     precheck_iterator_fields(ltype, it_name.as_str(), b, data, sc);
                     sc.open_scope(outscope, key.clone());
                     let mut vd = Validator::new(b, data);
-                    validate_effect_internal(
+                    has_tooltip |= validate_effect_internal(
                         &Lowercase::new(it_name.as_str()),
                         ltype,
                         b,
@@ -431,10 +472,11 @@ pub fn validate_effect_field(
                         sc,
                         &mut vd,
                         tooltipped,
+                        special_tokens,
                     );
                 }
                 sc.close();
-                return;
+                return has_tooltip && tooltipped.is_tooltipped();
             }
         }
     }
@@ -444,10 +486,10 @@ pub fn validate_effect_field(
         validate_variable(key, data, sc, Severity::Error);
         if let Some(block) = bv.expect_block() {
             sc.open_scope(Scopes::all_but_none(), key.clone());
-            validate_effect(block, data, sc, tooltipped);
+            has_tooltip |= validate_effect(block, data, sc, tooltipped);
             sc.close();
         }
-        return;
+        return has_tooltip;
     }
 
     // skip this check for imperator because it has too many dynamic triggers that get
@@ -455,7 +497,7 @@ pub fn validate_effect_field(
     if !Game::is_imperator() && scope_trigger(key, data).is_some() {
         let msg = format!("`{key}` is a trigger and can't be used as an effect");
         err(ErrorKey::WrongUse).msg(msg).loc(key).push();
-        return;
+        return false;
     }
 
     // Check if it's a target = { target_scope } block.
@@ -467,10 +509,11 @@ pub fn validate_effect_field(
             err(ErrorKey::Scopes).msg(msg).loc(key).push();
         }
         if let Some(block) = bv.expect_block() {
-            validate_effect(block, data, sc, tooltipped);
+            has_tooltip |= validate_effect(block, data, sc, tooltipped);
         }
     }
     sc.close();
+    has_tooltip && tooltipped.is_tooltipped()
 }
 
 /// Validate an effect that has other effects inside its block.
@@ -480,7 +523,8 @@ pub fn validate_effect_control(
     data: &Everything,
     sc: &mut ScopeContext,
     mut tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let mut vd = Validator::new(block, data);
 
     if caller == "if" || caller == "else_if" {
@@ -537,27 +581,6 @@ pub fn validate_effect_control(
         vd.ban_field("chance", || "`random`");
     }
 
-    #[cfg(feature = "ck3")]
-    if Game::is_ck3()
-        && (caller == "send_interface_message"
-            || caller == "send_interface_toast"
-            || caller == "send_interface_popup")
-    {
-        vd.field_item("type", Item::Message);
-        if let Some(token) = vd.field_value("goto") {
-            let msg = "`goto` was removed from interface messages in 1.9";
-            warn(ErrorKey::Removed).msg(msg).loc(token).push();
-        }
-        // Mark all these as known fields. This exempts them from the unknown-fields loop in `validate_effect_internal`.
-        // They will be validated after that loop, because the effects may have set named scopes for them to use.
-        vd.field("title");
-        vd.field("desc");
-        vd.field("tooltip");
-        vd.field("left_icon");
-        vd.field("right_icon");
-        vd.field("localization_values");
-    }
-
     if caller == "while" {
         // TODO HOI4
         if !(block.has_key("limit") || block.has_key("count")) {
@@ -605,43 +628,16 @@ pub fn validate_effect_control(
         vd.ban_field("show_chance", || "`random_list` or `duel`");
     }
 
-    validate_effect_internal(caller, ListType::None, block, data, sc, &mut vd, tooltipped);
-
-    #[cfg(feature = "ck3")]
-    if Game::is_ck3()
-        && (caller == "send_interface_message"
-            || caller == "send_interface_toast"
-            || caller == "send_interface_popup")
-    {
-        // These are both scopes and $-parameters to set for the loca.
-        // They are applied only to the following loca.
-        let mut loca_sc = sc.clone();
-        vd.field_validated_block("localization_values", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.unknown_value_fields(|key, value| {
-                let scopes = validate_target_ok_this(value, data, sc, Scopes::all());
-                loca_sc.define_name(key.as_str(), scopes, value);
-            });
-        });
-        vd.field_validated_sc("title", &mut loca_sc, validate_desc);
-        vd.field_validated_sc("desc", &mut loca_sc, validate_desc);
-        vd.field_validated_sc("tooltip", &mut loca_sc, validate_desc);
-        loca_sc.destroy();
-
-        let icon_scopes = Scopes::Character
-            | Scopes::LandedTitle
-            | Scopes::Artifact
-            | Scopes::Faith
-            | Scopes::Dynasty
-            | Scopes::DynastyHouse
-            | Scopes::Confederation;
-        if let Some(token) = vd.field_value("left_icon") {
-            validate_target_ok_this(token, data, sc, icon_scopes);
-        }
-        if let Some(token) = vd.field_value("right_icon") {
-            validate_target_ok_this(token, data, sc, icon_scopes);
-        }
-    }
+    validate_effect_internal(
+        caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    )
 }
 
 /// This `enum` describes what arguments an effect takes, so that they can be validated.
@@ -757,6 +753,19 @@ pub enum Effect {
     Removed(&'static str, &'static str),
     /// The effect takes a block that will be validated by this function
     Vb(fn(&Token, &Block, &Everything, &mut ScopeContext, Validator, Tooltipped)),
+    /// The effect is a control effect (containing other effects) and it takes a block that will be validated by this function
+    Vbc(
+        #[allow(clippy::type_complexity)]
+        fn(
+            &Token,
+            &Block,
+            &Everything,
+            &mut ScopeContext,
+            Validator,
+            Tooltipped,
+            &mut SpecialTokens,
+        ) -> bool,
+    ),
     /// The effect takes a block or value that will be validated by this function
     Vbv(fn(&Token, &BV, &Everything, &mut ScopeContext, Tooltipped)),
     /// The effect takes a value that will be validated by this function

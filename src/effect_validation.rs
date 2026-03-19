@@ -13,6 +13,7 @@ use crate::report::{ErrorKey, Severity, err, warn};
 use crate::scopes::Scopes;
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_target_ok_this, validate_trigger_key_bv};
@@ -167,11 +168,13 @@ pub fn validate_random_list(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     vd.field_integer("pick");
     vd.field_bool("unique"); // don't know what this does
     vd.field_validated_sc("desc", sc, validate_desc);
+    let mut has_tooltip = false;
     vd.unknown_block_fields(|key, block| {
         if let Some(n) = key.expect_number() {
             if n < 0.0 {
@@ -184,9 +187,14 @@ pub fn validate_random_list(
                 let msg = "fractions are discarded in `random_list` weights";
                 warn(ErrorKey::Range).strong().msg(msg).loc(key).push();
             }
-            validate_effect_control(&caller, block, data, sc, tooltipped);
+            has_tooltip |=
+                validate_effect_control(&caller, block, data, sc, tooltipped, special_tokens);
         }
     });
+    if has_tooltip && key.is("random_list") {
+        special_tokens.insert(key);
+    }
+    has_tooltip
 }
 
 #[cfg(feature = "jomini")]

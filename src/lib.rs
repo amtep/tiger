@@ -94,6 +94,7 @@ mod rivers;
 mod scopes;
 #[cfg(feature = "jomini")]
 mod script_value;
+mod special_tokens;
 mod token;
 mod tooltipped;
 mod trigger;

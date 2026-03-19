@@ -6,6 +6,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::{Validator, ValueValidator};
@@ -322,11 +323,13 @@ pub fn validate_random_list(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     vd.field_bool("log");
     // TODO: validate variable expression if not 'const' or 'random'
     vd.field_value("seed"); // var_name/const/random
+    let mut has_tooltip = false;
     vd.unknown_block_fields(|key, block| {
         // TODO: validate variable expression in else branch
         if let Some(n) = key.get_number() {
@@ -335,6 +338,8 @@ pub fn validate_random_list(
                 err(ErrorKey::Range).strong().msg(msg).loc(key).push();
             }
         }
-        validate_effect_control(&caller, block, data, sc, tooltipped);
+        has_tooltip |=
+            validate_effect_control(&caller, block, data, sc, tooltipped, special_tokens);
     });
+    has_tooltip
 }

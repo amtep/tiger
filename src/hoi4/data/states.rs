@@ -8,6 +8,7 @@ use crate::item::{Item, ItemLoader};
 use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::{ListType, validate_color};
@@ -113,6 +114,7 @@ fn validate_state_history(key: &Token, block: &Block, data: &Everything, mut vd:
         &mut sc,
         &mut vd,
         Tooltipped::No,
+        &mut SpecialTokens::none(),
     );
 }
 

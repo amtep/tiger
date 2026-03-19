@@ -19,6 +19,7 @@ use crate::report::{ErrorKey, Severity, report};
 use crate::scopes::Scopes;
 #[cfg(feature = "jomini")]
 use crate::script_value::{validate_script_value, validate_script_value_no_breakdown};
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_target, validate_target_ok_this, validate_trigger_internal};
@@ -915,6 +916,7 @@ impl<'a> Validator<'a> {
                 sc,
                 &mut vd,
                 tooltipped,
+                &mut SpecialTokens::none(),
             );
         })
     }
@@ -944,6 +946,7 @@ impl<'a> Validator<'a> {
                 &mut sc,
                 &mut vd,
                 tooltipped,
+                &mut SpecialTokens::none(),
             );
         })
     }
@@ -976,6 +979,7 @@ impl<'a> Validator<'a> {
                 &mut sc,
                 &mut vd,
                 tooltipped,
+                &mut SpecialTokens::none(),
             );
         })
     }

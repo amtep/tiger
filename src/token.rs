@@ -503,3 +503,39 @@ impl Display for Token {
         write!(f, "{}", self.s)
     }
 }
+
+/// A wrapper around [`Token`] that compares for equality with its loc as well as its string.
+#[derive(Debug, Clone)]
+#[repr(transparent)]
+pub struct TokenIdentity(Token);
+
+impl PartialEq for TokenIdentity {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.s == other.0.s && self.0.loc == other.0.loc
+    }
+}
+
+impl Eq for TokenIdentity {}
+
+impl Hash for TokenIdentity {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.s.hash(state);
+        self.0.loc.hash(state);
+    }
+}
+
+impl TokenIdentity {
+    pub fn new(token: Token) -> Self {
+        TokenIdentity(token)
+    }
+
+    #[allow(dead_code)]
+    pub fn inner(&self) -> &Token {
+        &self.0
+    }
+
+    #[allow(dead_code)]
+    pub fn into_inner(self) -> Token {
+        self.0
+    }
+}

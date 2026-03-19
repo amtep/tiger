@@ -8,6 +8,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::{ListType, validate_ai_chance, validate_modifiers_with_base};
@@ -140,5 +141,6 @@ fn validate_event_option(
         sc,
         &mut vd,
         tooltipped,
+        &mut SpecialTokens::none(),
     );
 }

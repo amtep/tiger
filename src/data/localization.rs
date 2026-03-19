@@ -476,6 +476,24 @@ impl Localization {
         }
     }
 
+    /// Return whether any language uses the given macro in its loca entry for this key.
+    /// Only a macro at the top level of this entry counts; ones hidden recursively in
+    /// other macros do not.
+    #[allow(dead_code)]
+    pub fn uses_macro(&self, key: &str, look_for: &str) -> bool {
+        let look_for = format!("${look_for}$");
+        for lang in self.iter_lang() {
+            if let Some(entry) = self.locas[lang].get(key) {
+                if let Some(orig) = &entry.orig {
+                    if orig.as_str().contains(&look_for) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
     // Does every `[concept|E]` reference have a defined game concept?
     // Does every other `[code]` block have valid promotes and functions?
     // Does every $key$ in a macro have a corresponding loca key or named scope?

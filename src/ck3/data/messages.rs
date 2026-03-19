@@ -36,6 +36,18 @@ impl DbKind for Message {
         vd.multi_field_value("flag");
         vd.field_bool("combine_into_one");
     }
+
+    fn has_property(&self, _key: &Token, block: &Block, property: &str, data: &Everything) -> bool {
+        if property == "displays_effect" {
+            if let Some(desc) = block.get_field_value("desc") {
+                data.localization.uses_macro(desc.as_str(), "EFFECT")
+            } else {
+                true
+            }
+        } else {
+            false
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

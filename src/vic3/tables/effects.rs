@@ -259,7 +259,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::None, "post_notification", Vv(validate_post_notification)),
     (Scopes::None, "post_proposal", Item(Item::ProposalType)),
     (Scopes::None, "random", Control),
-    (Scopes::None, "random_list", Vb(validate_random_list)),
+    (Scopes::None, "random_list", Vbc(validate_random_list)),
     (Scopes::None, "random_log_scopes", Boolean),
     (Scopes::Country, "recalculate_pop_ig_support", Boolean),
     (Scopes::Country, "regime_change", Scope(Scopes::Country)),

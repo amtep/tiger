@@ -7,6 +7,7 @@ use crate::item::Item;
 use crate::lowercase::Lowercase;
 use crate::modif::validate_modifs;
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::validate_target;
@@ -301,12 +302,23 @@ pub fn validate_raise_legion(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     sc.open_scope(Scopes::Legion, key.clone());
     vd.req_field_warn("create_unit");
-    validate_effect_internal(&caller, ListType::None, block, data, sc, &mut vd, tooltipped);
+    let has_tooltip = validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    );
     sc.close();
+    has_tooltip
 }
 
 pub fn validate_create_character(
@@ -316,7 +328,8 @@ pub fn validate_create_character(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     sc.open_scope(Scopes::Character, key.clone());
     vd.field_item("first_name", Item::Localization);
@@ -335,8 +348,18 @@ pub fn validate_create_character(
     vd.field_date("birth_date");
     vd.field_date("death_date");
     vd.field_item_or_target("birth_province", sc, Item::Province, Scopes::Province);
-    validate_effect_internal(&caller, ListType::None, block, data, sc, &mut vd, tooltipped);
+    let has_tooltip = validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    );
     sc.close();
+    has_tooltip
 }
 
 pub fn validate_create_unit(
@@ -346,7 +369,8 @@ pub fn validate_create_unit(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     sc.open_scope(Scopes::Unit, key.clone());
     vd.field_item("name", Item::Localization);
@@ -354,8 +378,18 @@ pub fn validate_create_unit(
     vd.field_target("commander", sc, Scopes::Character);
     vd.field_bool("navy");
     vd.field_item("sub_unit", Item::Unit);
-    validate_effect_internal(&caller, ListType::None, block, data, sc, &mut vd, tooltipped);
+    let has_tooltip = validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    );
     sc.close();
+    has_tooltip
 }
 
 pub fn validate_create_country(
@@ -365,7 +399,8 @@ pub fn validate_create_country(
     sc: &mut ScopeContext,
     mut vd: Validator,
     tooltipped: Tooltipped,
-) {
+    special_tokens: &mut SpecialTokens,
+) -> bool {
     let caller = Lowercase::new(key.as_str());
     sc.open_scope(Scopes::Country, key.clone());
     vd.field_validated_block("name", |block, data| {
@@ -373,8 +408,18 @@ pub fn validate_create_country(
         vd.field_item("name", Item::Localization);
         vd.field_item("adjective", Item::Localization);
     });
-    validate_effect_internal(&caller, ListType::None, block, data, sc, &mut vd, tooltipped);
+    let has_tooltip = validate_effect_internal(
+        &caller,
+        ListType::None,
+        block,
+        data,
+        sc,
+        &mut vd,
+        tooltipped,
+        special_tokens,
+    );
     sc.close();
+    has_tooltip
 }
 
 pub fn validate_pay_gold(

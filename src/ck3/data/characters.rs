@@ -22,6 +22,7 @@ use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{ErrorKey, Severity, err, fatal, untidy, warn};
 use crate::scopes::Scopes;
+use crate::special_tokens::SpecialTokens;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::validate_color;
@@ -467,6 +468,7 @@ impl Character {
             data,
             sc,
             Tooltipped::No,
+            &mut SpecialTokens::none(),
         );
 
         None
