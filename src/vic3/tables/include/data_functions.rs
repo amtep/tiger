@@ -1294,7 +1294,7 @@
     ("AddUserData", Vic3(EmitterNodeWindow), Args::Args(&[DType(Unknown)]), void),
     ("AddVariable", Vic3(VariableInspectorPlugin), Args::Args(&[]), void),
     ("AddVfxLayer", Vic3(EntityEditor), Args::Args(&[]), void),
-    ("AddWarGoal", Vic3(DiplomaticPlay), Args::Args(&[DType(Vic3(WarGoal))]), Vic3(Command)),
+    ("AddWarGoal", Vic3(DiplomaticPlay), Args::Args(&[DType(Vic3(WarGoalDraft))]), Vic3(Command)),
     ("AddingFinished", Vic3(Alert), Args::Args(&[]), void),
     ("Agree", Vic3(LegalDocsViewer), Args::Args(&[]), void),
     ("AllowApply", Vic3(EditorSettingsWindow), Args::Args(&[]), bool),
