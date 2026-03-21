@@ -29,7 +29,6 @@ pub mod domiciles;
 pub mod dynasties;
 pub mod dynasty_legacies;
 pub mod election;
-pub mod environment;
 pub mod epidemics;
 pub mod event_effect_2d;
 pub mod event_themes;

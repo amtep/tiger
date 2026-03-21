@@ -1048,3 +1048,37 @@ pub fn validate_identifier(token: &Token, kind: &str, sev: Severity) {
         report(ErrorKey::Validation, sev).msg(msg).loc(token).push();
     }
 }
+
+/// Camera colors must be hsv, and value can be > 1
+#[cfg(feature = "jomini")]
+pub fn validate_camera_color(block: &Block, data: &Everything) {
+    let mut count = 0;
+    // Get the color tag, as in color = hsv { 0.5 1.0 1.0 }
+    let tag = block.tag.as_deref().map_or("rgb", Token::as_str);
+    if tag != "hsv" {
+        let msg = "camera colors should be in hsv";
+        warn(ErrorKey::Colors).msg(msg).loc(block).push();
+        validate_color(block, data);
+        return;
+    }
+
+    for item in block.iter_items() {
+        if let Some(t) = item.get_value() {
+            t.check_number();
+            if let Some(f) = t.get_number() {
+                if count <= 1 && !(0.0..=1.0).contains(&f) {
+                    let msg = "h and s values should be between 0.0 and 1.0";
+                    err(ErrorKey::Colors).msg(msg).loc(t).push();
+                }
+            } else {
+                let msg = "expected hsv value";
+                err(ErrorKey::Colors).msg(msg).loc(t).push();
+            }
+            count += 1;
+        }
+    }
+    if count != 3 {
+        let msg = "expected 3 color values";
+        err(ErrorKey::Colors).msg(msg).loc(block).push();
+    }
+}

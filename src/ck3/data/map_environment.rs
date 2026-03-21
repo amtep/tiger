@@ -1,11 +1,11 @@
 use crate::block::Block;
-use crate::ck3::validate::validate_camera_color;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
 use crate::pdxfile::PdxEncoding;
 use crate::token::Token;
+use crate::validate::validate_camera_color;
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]

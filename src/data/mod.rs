@@ -22,6 +22,8 @@ pub mod dna;
 #[cfg(feature = "jomini")]
 pub mod effect_localization;
 #[cfg(feature = "jomini")]
+pub mod environment;
+#[cfg(feature = "jomini")]
 pub mod ethnicity;
 #[cfg(feature = "jomini")]
 pub mod events;

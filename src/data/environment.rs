@@ -1,17 +1,18 @@
 use crate::block::{BV, Block};
-use crate::ck3::validate::validate_camera_color;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
+use crate::game::Game;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::token::Token;
+use crate::validate::validate_camera_color;
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
 pub struct PortraitEnvironment {}
 
 inventory::submit! {
-    ItemLoader::Normal(GameFlags::Ck3, Item::PortraitEnvironment, PortraitEnvironment::add)
+    ItemLoader::Normal(GameFlags::jomini(), Item::PortraitEnvironment, PortraitEnvironment::add)
 }
 
 impl PortraitEnvironment {
@@ -47,7 +48,11 @@ impl DbKind for PortraitEnvironment {
                             || block.field_value_is("type", "directional_light")
                         {
                             vd.field_list_precise_numeric_exactly("look_at", 3);
-                            vd.field_block("look_at_node"); // TODO
+                            if Game::is_ck3() {
+                                vd.field_block("look_at_node"); // TODO
+                            } else if Game::is_vic3() {
+                                vd.field_value("look_at_node");
+                            }
                         } else {
                             vd.ban_field("look_at", || "spot_light or directional_light");
                             vd.ban_field("look_at_node", || "spot_light or directional_light");
@@ -91,7 +96,11 @@ impl DbKind for PortraitEnvironment {
 
                     vd.field_list_precise_numeric_exactly("position", 3);
                     vd.field_list_precise_numeric_exactly("look_at", 3);
-                    vd.field_block("look_at_node"); // TODO
+                    if Game::is_ck3() {
+                        vd.field_block("look_at_node"); // TODO
+                    } else if Game::is_vic3() {
+                        vd.field_value("look_at_node"); // TODO
+                    }
                     vd.field_block("position_node"); // TODO
                     vd.field_precise_numeric("fov");
                     vd.field_list_integers_exactly("camera_near_far", 2);

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DATADIR=$1
+GAMEDIR=$2
+
+for id in $(git grep DType.Unknown $DATADIR | sed -e 's/[^"]*"//' -e 's/".*//' | uniq); do
+  cd $GAMEDIR
+  grep -rw --color=always "$id(" game/gui game/localization/english jomini/gui jomini/localization clausewitz/gui clausewitz/localization
+done
