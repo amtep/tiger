@@ -338,12 +338,15 @@ fn validate_argument(
     expect_arg: Arg,
     lang: Option<Language>,
     format: Option<&Token>,
+    report: Option<&str>,
 ) {
     match expect_arg {
         Arg::DType(expect_type) => {
+            let got_dtype;
             match arg {
                 CodeArg::Chain(chain) => {
-                    validate_datatypes(chain, data, sc, dc, expect_type, lang, format, false);
+                    got_dtype =
+                        validate_datatypes(chain, data, sc, dc, expect_type, lang, format, false);
                 }
                 CodeArg::Literal(token) => {
                     if token.as_str().starts_with('(') && token.as_str().contains(')') {
@@ -355,19 +358,30 @@ fn validate_argument(
                                 let msg = format!("expected {expect_type}, got {dtype}");
                                 warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
                             }
+                            got_dtype = Datatype::int32;
                         } else if let Ok(dtype) = Datatype::from_str(dtype) {
                             if expect_type != Datatype::Unknown && expect_type != dtype {
                                 let msg = format!("expected {expect_type}, got {dtype}");
                                 warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
                             }
+                            got_dtype = dtype;
                         } else {
                             let msg = format!("unrecognized datatype {dtype}");
                             warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
+                            got_dtype = Datatype::Unknown;
                         }
                     } else if expect_type != Datatype::Unknown && expect_type != Datatype::CString {
                         let msg = format!("expected {expect_type}, got CString");
                         warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
+                        got_dtype = Datatype::CString;
+                    } else {
+                        got_dtype = Datatype::CString;
                     }
+                }
+            }
+            if let Some(report) = report {
+                if expect_type == Datatype::Unknown && got_dtype != Datatype::Unknown {
+                    eprintln!("{report} = {got_dtype}");
                 }
             }
         }
@@ -456,18 +470,21 @@ pub fn validate_datatypes(
         let p_found = !matches!(lookup_p, LookupResult::NotFound);
 
         let mut found = false;
+        let mut report = None;
 
         if is_first && is_last && !expect_promote {
             if let Some((xargs, xrtype)) = lookup_gf {
                 found = true;
                 args = xargs;
                 rtype = xrtype;
+                report = Some(format!("global function {}", code.name));
             }
         } else if is_first && (!is_last || expect_promote) {
             if let Some((xargs, xrtype)) = lookup_gp {
                 found = true;
                 args = xargs;
                 rtype = xrtype;
+                report = Some(format!("global promote {}", code.name));
             }
         } else if !is_first && (!is_last || expect_promote) {
             match lookup_p {
@@ -475,6 +492,7 @@ pub fn validate_datatypes(
                     found = true;
                     args = xargs;
                     rtype = xrtype;
+                    report = Some(format!("promote {} {curtype}", code.name));
                 }
                 LookupResult::WrongType => {
                     let msg = format!("{} cannot follow a {curtype} promote", code.name);
@@ -489,6 +507,7 @@ pub fn validate_datatypes(
                     found = true;
                     args = xargs;
                     rtype = xrtype;
+                    report = Some(format!("function {} {curtype}", code.name));
                 }
                 LookupResult::WrongType => {
                     let msg = format!("{} cannot follow a {curtype} promote", code.name);
@@ -749,7 +768,6 @@ pub fn validate_datatypes(
         }
 
         #[cfg(feature = "jomini")]
-        // TODO: handle the case where there is a previous `datacontext = [GetScriptedGui(...)]`
         if Game::is_jomini() && is_first {
             let name = if code.name.is("GetScriptedGui") {
                 // Get the name from GetScriptedGui('name')
@@ -868,7 +886,17 @@ pub fn validate_datatypes(
                         }
                     }
                 }
-                validate_argument(&code.arguments[i], data, sc, dc, *arg, lang, format);
+                let report = report.clone().map(|r| format!("{r} arg {i}"));
+                validate_argument(
+                    &code.arguments[i],
+                    data,
+                    sc,
+                    dc,
+                    *arg,
+                    lang,
+                    format,
+                    report.as_deref(),
+                );
             }
         }
 
