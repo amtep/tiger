@@ -938,6 +938,7 @@ impl Everything {
             Item::CharacterInteractionCategory => self.interaction_cats.exists(key),
             Item::Coa => self.coas.exists(key),
             Item::CoaTemplate => self.coas.template_exists(key),
+            Item::Currency => CURRENCIES_CK3.contains(&key),
             Item::DangerType => DANGER_TYPES.contains(&key),
             Item::DlcFeature => DLC_FEATURES_CK3.contains(&key),
             Item::Doctrine => self.doctrines.exists(key),

@@ -10,7 +10,7 @@ use phf::phf_map;
 use strum_macros::{Display, EnumString};
 
 #[cfg(feature = "ck3")]
-use crate::ck3::data::religions::CUSTOM_RELIGION_LOCAS;
+use crate::ck3::tables::misc::CUSTOM_RELIGION_LOCAS;
 use crate::context::ScopeContext;
 #[cfg(feature = "jomini")]
 use crate::data::customloca::CustomLocalization;
@@ -283,6 +283,10 @@ pub enum Arg {
     /// chain that returns a `CString` (in which case the `Item` lookup is not checked).
     #[cfg(feature = "jomini")]
     IType(Item),
+    /// The argument is considered to be one of the literals in this array, or a code chain that
+    /// returns as `CString`.
+    #[allow(dead_code)]
+    Choice(&'static [&'static str]),
 }
 
 /// [`Args`] is the list of arguments expected by a given promote or function. The actual arguments
@@ -377,6 +381,17 @@ fn validate_argument(
             }
             CodeArg::Literal(token) => {
                 data.verify_exists(itype, token);
+            }
+        },
+        Arg::Choice(choices) => match arg {
+            CodeArg::Chain(chain) => {
+                validate_datatypes(chain, data, sc, dc, Datatype::CString, lang, format, false);
+            }
+            CodeArg::Literal(token) => {
+                if !choices.contains(&token.as_str()) {
+                    let msg = format!("expected one of {}", choices.join(", "));
+                    err(ErrorKey::Choice).weak().msg(msg).loc(token).push();
+                }
             }
         },
     }
@@ -776,7 +791,6 @@ pub fn validate_datatypes(
             }
         }
 
-        // TODO: validate the Faith customs
         #[cfg(feature = "ck3")]
         if Game::is_ck3()
             && curtype != Datatype::Ck3(Ck3Datatype::Faith)

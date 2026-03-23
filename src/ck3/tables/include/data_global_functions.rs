@@ -536,7 +536,7 @@
     ("IntToFixedPoint", Args::Args(&[DType(int32)]), CFixedPoint),
     ("IntToFloat", Args::Args(&[DType(int32)]), float),
     ("IntToFrameIndex", Args::Args(&[DType(int32)]), int32),
-    ("IntToUnsigned", Args::Args(&[DType(Unknown)]), uint32),
+    ("IntToUnsigned", Args::Args(&[DType(int32)]), uint32),
     ("IsAdminVassalDetailViewShown", Args::Args(&[DType(Ck3(Title))]), bool),
     ("IsAdministrativeArmyDetailViewShown", Args::Args(&[DType(Unknown)]), bool),
     ("IsAltDown", Args::Args(&[]), bool),

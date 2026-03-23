@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use crate::ck3::tables::misc::CUSTOM_RELIGION_LOCAS;
 use crate::datatype::{Arg, Args, CaseInsensitiveStr, Ck3Datatype, Datatype};
 use crate::helpers::{BiTigerHashMap, TigerHashMap, TigerHashSet};
 use crate::item::Item;
@@ -8,6 +9,15 @@ use crate::scopes::Scopes;
 use Arg::*;
 use Ck3Datatype::*;
 use Datatype::*;
+
+const PORTRAITS: &[&str] = &[
+    "left_portrait",
+    "center_portrait",
+    "right_portrait",
+    "lower_left_portrait",
+    "lower_right_portrait",
+];
+const XYZ: &[&str] = &["x", "y", "z"];
 
 pub static LOWERCASE_DATATYPE_SET: LazyLock<TigerHashSet<CaseInsensitiveStr>> =
     LazyLock::new(|| {

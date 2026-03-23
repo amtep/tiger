@@ -182,6 +182,8 @@ pub enum Item {
     CountryRank,
     #[cfg(any(feature = "imperator", feature = "eu5"))]
     CultureGroup,
+    #[cfg(any(feature = "ck3", feature = "eu5"))]
+    Currency,
     #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
     DeathReason,
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
@@ -687,7 +689,6 @@ pub enum Item {
     #[cfg(feature = "eu5")] ChildEducation,
     #[cfg(feature = "eu5")] CountryDescriptionCategory,
     #[cfg(feature = "eu5")] CountryInteraction,
-    #[cfg(feature = "eu5")] Currency,
     #[cfg(feature = "eu5")] DesignatedHeirReason,
     #[cfg(feature = "eu5")] DiplomaticCost,
     #[cfg(feature = "eu5")] Disaster,
@@ -1084,6 +1085,8 @@ impl Item {
             },
             #[cfg(any(feature = "vic3", feature = "eu5"))]
             Item::CountryRank => "common/country_ranks/",
+            #[cfg(any(feature = "ck3", feature = "eu5"))]
+            Item::Currency => "",
             #[cfg(any(feature = "ck3", feature = "imperator", feature = "eu5"))]
             Item::DeathReason => match Game::game() {
                 #[cfg(feature = "ck3")]
@@ -2129,8 +2132,6 @@ impl Item {
             Item::CountryDescriptionCategory => "common/country_description_categories/",
             #[cfg(feature = "eu5")]
             Item::CountryInteraction => "common/country_interactions/",
-            #[cfg(feature = "eu5")]
-            Item::Currency => "",
             #[cfg(feature = "eu5")]
             Item::DesignatedHeirReason => "common/designated_heir_reason/",
             #[cfg(feature = "eu5")]
