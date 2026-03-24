@@ -8,6 +8,7 @@ members = [
     "tiger-bin-shared",
     "tiger-tables",
     "utils",
+    "tiger-lsp",
     ".",
 ]
 

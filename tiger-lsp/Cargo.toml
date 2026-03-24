@@ -1,0 +1,16 @@
+[package]
+name = "tiger-lsp"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
+[dependencies]
+anyhow = "1.0.102"
+log = "0.4.29"
+serde = "1.0.228"
+serde_derive = "1.0.228"
+serde_json = "1.0.149"
+simplelog = "0.12.2"
+
+[lints]
+workspace = true
