@@ -10,7 +10,7 @@ repository = "https://github.com/amtep/tiger"
 readme = "../README.md"
 keywords = ["eu5", "linter", "mods", "validator"]
 categories = ["command-line-utilities", "development-tools", "game-development"]
-rust-version = "1.85"
+rust-version = "1.88"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
