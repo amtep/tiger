@@ -34,10 +34,10 @@ impl DbKind for Amenity {
 
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
-        if let Some(value) = vd.field_value("default") {
-            if !block.has_key(value.as_str()) {
-                err(ErrorKey::MissingItem).msg("default not found in amenity").loc(value).push();
-            }
+        if let Some(value) = vd.field_value("default")
+            && !block.has_key(value.as_str())
+        {
+            err(ErrorKey::MissingItem).msg("default not found in amenity").loc(value).push();
         }
         // validated in AmenitySetting::validate
         vd.unknown_block_fields(|_, _| {});

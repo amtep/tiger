@@ -30,15 +30,14 @@ impl Coas {
         if key.is("template") {
             if let Some(block) = bv.expect_block() {
                 for (key, block) in block.iter_definitions_warn() {
-                    if let Some(other) = self.templates.get(key.as_str()) {
-                        if other.key.loc.kind >= key.loc.kind {
-                            if let BV::Block(otherblock) = &other.bv {
-                                if otherblock.equivalent(block) {
-                                    exact_dup_advice(key, &other.key, "coa template");
-                                } else {
-                                    dup_error(key, &other.key, "coa template");
-                                }
-                            }
+                    if let Some(other) = self.templates.get(key.as_str())
+                        && other.key.loc.kind >= key.loc.kind
+                        && let BV::Block(otherblock) = &other.bv
+                    {
+                        if otherblock.equivalent(block) {
+                            exact_dup_advice(key, &other.key, "coa template");
+                        } else {
+                            dup_error(key, &other.key, "coa template");
                         }
                     }
                     self.templates.insert(
@@ -48,13 +47,13 @@ impl Coas {
                 }
             }
         } else {
-            if let Some(other) = self.coas.get(key.as_str()) {
-                if other.key.loc.kind >= key.loc.kind {
-                    if other.bv.equivalent(bv) {
-                        exact_dup_advice(key, &other.key, "coat of arms");
-                    } else {
-                        dup_error(key, &other.key, "coat of arms");
-                    }
+            if let Some(other) = self.coas.get(key.as_str())
+                && other.key.loc.kind >= key.loc.kind
+            {
+                if other.bv.equivalent(bv) {
+                    exact_dup_advice(key, &other.key, "coat of arms");
+                } else {
+                    dup_error(key, &other.key, "coat of arms");
                 }
             }
             self.coas.insert(key.as_str(), Coa::new(key.clone(), bv.clone()));
@@ -191,10 +190,10 @@ pub fn validate_coa_layout(block: &Block, data: &Everything) {
             let mut vd = Validator::new(block, data);
             vd.set_max_severity(Severity::Warning);
             for token in vd.values() {
-                if let Some(mask) = token.expect_integer() {
-                    if !(1..=3).contains(&mask) {
-                        warn(ErrorKey::Range).msg("mask should be from 1 to 3").loc(token).push();
-                    }
+                if let Some(mask) = token.expect_integer()
+                    && !(1..=3).contains(&mask)
+                {
+                    warn(ErrorKey::Range).msg("mask should be from 1 to 3").loc(token).push();
                 }
             }
         });

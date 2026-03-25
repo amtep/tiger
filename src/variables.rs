@@ -196,10 +196,10 @@ impl Extract {
     pub fn extract(&self, bv: &BV) -> Option<&'static str> {
         match self {
             Self::Field(field) => {
-                if let Some(block) = bv.get_block() {
-                    if let Some(name) = block.get_field_value(field) {
-                        return Some(name.as_str());
-                    }
+                if let Some(block) = bv.get_block()
+                    && let Some(name) = block.get_field_value(field)
+                {
+                    return Some(name.as_str());
                 }
             }
             Self::AssignOrField(field) => match bv {
@@ -216,10 +216,10 @@ impl Extract {
                 if let Some(block) = bv.get_block() {
                     if let Some(name) = block.get_field_value(field) {
                         return Some(name.as_str());
-                    } else if block.num_items() == 1 {
-                        if let Some((name, _)) = block.iter_assignments().next() {
-                            return Some(name.as_str());
-                        }
+                    } else if block.num_items() == 1
+                        && let Some((name, _)) = block.iter_assignments().next()
+                    {
+                        return Some(name.as_str());
                     }
                 }
             }

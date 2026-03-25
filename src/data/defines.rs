@@ -22,10 +22,11 @@ pub struct Defines {
 impl Defines {
     pub fn load_item(&mut self, group: Token, name: Token, bv: &BV) {
         let key = format!("{}|{}", &group, &name);
-        if let Some(other) = self.defines.get(&key) {
-            if other.name.loc.kind >= name.loc.kind && !bv.equivalent(&other.bv) {
-                dup_error(&name, &other.name, "define");
-            }
+        if let Some(other) = self.defines.get(&key)
+            && other.name.loc.kind >= name.loc.kind
+            && !bv.equivalent(&other.bv)
+        {
+            dup_error(&name, &other.name, "define");
         }
         self.defines.insert(key, Define::new(group, name, bv.clone()));
     }
@@ -113,22 +114,21 @@ impl Define {
         }
 
         #[cfg(feature = "ck3")]
-        if self.group.is("NGameIcons") && self.name.is("PIETY_GROUPS") {
-            if let Some(icon_path) =
+        if self.group.is("NGameIcons")
+            && self.name.is("PIETY_GROUPS")
+            && let Some(icon_path) =
                 data.get_defined_string_warn(&self.name, "NGameIcons|PIETY_LEVEL_PATH")
-            {
-                if let Some(groups) = self.bv.expect_block() {
-                    for icon_group in groups.iter_values_warn() {
-                        for nr in &["00", "01", "02", "03", "04", "05"] {
-                            let pathname = format!("{icon_path}/icon_piety_{icon_group}_{nr}.dds");
-                            data.verify_exists_implied_max_sev(
-                                Item::File,
-                                &pathname,
-                                icon_group,
-                                Severity::Warning,
-                            );
-                        }
-                    }
+            && let Some(groups) = self.bv.expect_block()
+        {
+            for icon_group in groups.iter_values_warn() {
+                for nr in &["00", "01", "02", "03", "04", "05"] {
+                    let pathname = format!("{icon_path}/icon_piety_{icon_group}_{nr}.dds");
+                    data.verify_exists_implied_max_sev(
+                        Item::File,
+                        &pathname,
+                        icon_group,
+                        Severity::Warning,
+                    );
                 }
             }
         }

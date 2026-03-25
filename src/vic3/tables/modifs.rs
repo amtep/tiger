@@ -178,16 +178,16 @@ pub fn lookup_engine_modif(
     }
 
     // building_input_$Goods$_add (obsolete)
-    if let Some(part) = name_lc.strip_prefix_unchecked("building_input_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::Goods, &part, name, data, warn);
-            if let Some(sev) = warn {
-                let msg = format!("`{name}` was removed in 1.5");
-                let info = format!("replaced with `goods_input_{part}_add`");
-                report(ErrorKey::Removed, sev).msg(msg).info(info).loc(name).push();
-            }
-            return Some(ModifKinds::Building);
+    if let Some(part) = name_lc.strip_prefix_unchecked("building_input_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::Goods, &part, name, data, warn);
+        if let Some(sev) = warn {
+            let msg = format!("`{name}` was removed in 1.5");
+            let info = format!("replaced with `goods_input_{part}_add`");
+            report(ErrorKey::Removed, sev).msg(msg).info(info).loc(name).push();
         }
+        return Some(ModifKinds::Building);
     }
 
     // goods_input_$Goods$_add
@@ -202,11 +202,11 @@ pub fn lookup_engine_modif(
     }
 
     // goods_trade_advantage_$Goods$_mult
-    if let Some(part) = name_lc.strip_prefix_unchecked("goods_trade_advantage_") {
-        if let Some(part) = part.strip_suffix_unchecked("_mult") {
-            maybe_warn(Item::Goods, &part, name, data, warn);
-            return Some(ModifKinds::Goods);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("goods_trade_advantage_")
+        && let Some(part) = part.strip_suffix_unchecked("_mult")
+    {
+        maybe_warn(Item::Goods, &part, name, data, warn);
+        return Some(ModifKinds::Goods);
     }
 
     // building_output_$Goods$_add (obsolete)
@@ -236,11 +236,11 @@ pub fn lookup_engine_modif(
     }
 
     // character_$BattleCondition$_mult
-    if let Some(part) = name_lc.strip_prefix_unchecked("character_") {
-        if let Some(part) = part.strip_suffix_unchecked("_mult") {
-            maybe_warn(Item::BattleCondition, &part, name, data, warn);
-            return Some(ModifKinds::Character);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("character_")
+        && let Some(part) = part.strip_suffix_unchecked("_mult")
+    {
+        maybe_warn(Item::BattleCondition, &part, name, data, warn);
+        return Some(ModifKinds::Character);
     }
 
     // country_institution_cost_$Institution$_add
@@ -255,27 +255,27 @@ pub fn lookup_engine_modif(
     }
 
     // country_institution_impact_$Institution$_mult
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_impact_") {
-        if let Some(part) = part.strip_suffix_unchecked("_mult") {
-            maybe_warn(Item::Institution, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_impact_")
+        && let Some(part) = part.strip_suffix_unchecked("_mult")
+    {
+        maybe_warn(Item::Institution, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_institution_size_change_speed_$Institution$_mult
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_size_change_speed_") {
-        if let Some(part) = part.strip_suffix_unchecked("_mult") {
-            maybe_warn(Item::Institution, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_institution_size_change_speed_")
+        && let Some(part) = part.strip_suffix_unchecked("_mult")
+    {
+        maybe_warn(Item::Institution, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_can_impose_same_$LawGroup$_in_power_bloc_bool
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_can_impose_same_") {
-        if let Some(part) = part.strip_suffix_unchecked("_in_power_bloc_bool") {
-            maybe_warn(Item::LawGroup, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_can_impose_same_")
+        && let Some(part) = part.strip_suffix_unchecked("_in_power_bloc_bool")
+    {
+        maybe_warn(Item::LawGroup, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_$PopType$_pol_str_mult
@@ -290,11 +290,11 @@ pub fn lookup_engine_modif(
     }
 
     // country_$Institution$_max_investment_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
-        if let Some(part) = part.strip_suffix_unchecked("_max_investment_add") {
-            maybe_warn(Item::Institution, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_")
+        && let Some(part) = part.strip_suffix_unchecked("_max_investment_add")
+    {
+        maybe_warn(Item::Institution, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_subsidies_$BuildingGroup$
@@ -308,11 +308,11 @@ pub fn lookup_engine_modif(
     }
 
     // country_enactment_success_chance_$Law$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_enactment_success_chance_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::LawType, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_enactment_success_chance_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::LawType, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_allow_assimilation_$AcceptanceStatus$_bool
@@ -327,20 +327,20 @@ pub fn lookup_engine_modif(
         "country_disallow_government_work_",
         "country_disallow_military_work_",
     ] {
-        if let Some(part) = name_lc.strip_prefix_unchecked(pfx) {
-            if let Some(part) = part.strip_suffix_unchecked("_bool") {
-                maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
-                return Some(ModifKinds::Country);
-            }
+        if let Some(part) = name_lc.strip_prefix_unchecked(pfx)
+            && let Some(part) = part.strip_suffix_unchecked("_bool")
+        {
+            maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
+            return Some(ModifKinds::Country);
         }
     }
 
     // country_disallow_$Law$_bool
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_disallow_") {
-        if let Some(part) = part.strip_suffix_unchecked("_bool") {
-            maybe_warn(Item::LawType, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_disallow_")
+        && let Some(part) = part.strip_suffix_unchecked("_bool")
+    {
+        maybe_warn(Item::LawType, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_assimilation_$AcceptanceStatus$_mult
@@ -359,45 +359,44 @@ pub fn lookup_engine_modif(
         "country_voting_power_",
         "country_wage_",
     ] {
-        if let Some(part) = name_lc.strip_prefix_unchecked(pfx) {
-            if let Some(part) = part.strip_suffix_unchecked("_mult") {
-                maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
-                return Some(ModifKinds::Country);
-            }
-        }
-    }
-
-    // country_standard_of_living_$AcceptanceStatus$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_standard_of_living_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
+        if let Some(part) = name_lc.strip_prefix_unchecked(pfx)
+            && let Some(part) = part.strip_suffix_unchecked("_mult")
+        {
             maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
             return Some(ModifKinds::Country);
         }
     }
 
+    // country_standard_of_living_$AcceptanceStatus$_add
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_standard_of_living_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
+        return Some(ModifKinds::Country);
+    }
+
     // country_fervor_target_$Culture$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::Culture, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::Culture, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_$SocialClass$_cultural_acceptance_add
     // country_$Culture$_cultural_acceptance_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
-        if let Some(part) = part.strip_suffix_unchecked("_cultural_acceptance_add") {
-            if let Some(sev) = warn {
-                if !data.item_exists_lc(Item::SocialClass, &part)
-                    && !data.item_exists_lc(Item::Culture, &part)
-                {
-                    let msg = format!("{part} not found as culture or social class");
-                    let info = format!("so the modifier {name} will have no effect");
-                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-                }
-            }
-            return Some(ModifKinds::Country);
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_")
+        && let Some(part) = part.strip_suffix_unchecked("_cultural_acceptance_add")
+    {
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::SocialClass, &part)
+            && !data.item_exists_lc(Item::Culture, &part)
+        {
+            let msg = format!("{part} not found as culture or social class");
+            let info = format!("so the modifier {name} will have no effect");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
+        return Some(ModifKinds::Country);
     }
 
     // country_$SocialClass$_acceptance_max_add
@@ -430,28 +429,27 @@ pub fn lookup_engine_modif(
     }
 
     // country_enactment_time_$Law$_mult
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_enactment_time_") {
-        if let Some(part) = part.strip_suffix_unchecked("_mult") {
-            maybe_warn(Item::LawType, &part, name, data, warn);
-            return Some(ModifKinds::Country);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_enactment_time_")
+        && let Some(part) = part.strip_suffix_unchecked("_mult")
+    {
+        maybe_warn(Item::LawType, &part, name, data, warn);
+        return Some(ModifKinds::Country);
     }
 
     // country_$BuildingGroup$_require_subsidies_bool
     // country_$Building$_require_subsidies_bool
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
-        if let Some(part) = part.strip_suffix_unchecked("_require_subsidies_bool") {
-            if let Some(sev) = warn {
-                if !data.item_exists_lc(Item::BuildingGroup, &part)
-                    && !data.item_exists_lc(Item::BuildingType, &part)
-                {
-                    let msg = format!("{part} not found as building type or building group");
-                    let info = format!("so the modifier {name} will have no effect");
-                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-                }
-            }
-            return Some(ModifKinds::Country);
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_")
+        && let Some(part) = part.strip_suffix_unchecked("_require_subsidies_bool")
+    {
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::BuildingGroup, &part)
+            && !data.item_exists_lc(Item::BuildingType, &part)
+        {
+            let msg = format!("{part} not found as building type or building group");
+            let info = format!("so the modifier {name} will have no effect");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
+        return Some(ModifKinds::Country);
     }
 
     // country_$Goods$_export_tariffs_rate_add
@@ -490,19 +488,18 @@ pub fn lookup_engine_modif(
 
     // state_$Culture$_standard_of_living_add
     // state_$Religion$_standard_of_living_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_") {
-        if let Some(part) = part.strip_suffix_unchecked("_standard_of_living_add") {
-            if let Some(sev) = warn {
-                if !data.item_exists_lc(Item::Religion, &part)
-                    && !data.item_exists_lc(Item::Culture, &part)
-                {
-                    let msg = format!("{part} not found as culture or religion");
-                    let info = format!("so the modifier {name} will have no effect");
-                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-                }
-            }
-            return Some(ModifKinds::State);
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_")
+        && let Some(part) = part.strip_suffix_unchecked("_standard_of_living_add")
+    {
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::Religion, &part)
+            && !data.item_exists_lc(Item::Culture, &part)
+        {
+            let msg = format!("{part} not found as culture or religion");
+            let info = format!("so the modifier {name} will have no effect");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
+        return Some(ModifKinds::State);
     }
 
     // state_$PopType$_consumption_multiplier_add
@@ -548,41 +545,35 @@ pub fn lookup_engine_modif(
     }
 
     // state_sell_orders_$Goods$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_sell_orders_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::Goods, &part, name, data, warn);
-            return Some(ModifKinds::State);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_sell_orders_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::Goods, &part, name, data, warn);
+        return Some(ModifKinds::State);
     }
     // state_buy_orders_$Goods$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_buy_orders_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::Goods, &part, name, data, warn);
-            return Some(ModifKinds::State);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_buy_orders_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::Goods, &part, name, data, warn);
+        return Some(ModifKinds::State);
     }
 
     // state_$Building$_max_level_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_") {
-        if let Some(part) = part.strip_suffix_unchecked("_max_level_add") {
-            maybe_warn(Item::BuildingType, &part, name, data, warn);
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_")
+        && let Some(part) = part.strip_suffix_unchecked("_max_level_add")
+    {
+        maybe_warn(Item::BuildingType, &part, name, data, warn);
 
-            if let Some(sev) = warn {
-                if data.item_exists(Item::BuildingType, part.as_str())
-                    && !data.item_has_property(Item::BuildingType, part.as_str(), "max_level")
-                {
-                    let msg = format!("building {part} does not have `has_max_level = yes`");
-                    let info = format!("so the modifier {name} will have no effect");
-                    report(ErrorKey::MissingItem, sev)
-                        .strong()
-                        .msg(msg)
-                        .info(info)
-                        .loc(name)
-                        .push();
-                }
-            }
-            return Some(ModifKinds::State);
+        if let Some(sev) = warn
+            && data.item_exists(Item::BuildingType, part.as_str())
+            && !data.item_has_property(Item::BuildingType, part.as_str(), "max_level")
+        {
+            let msg = format!("building {part} does not have `has_max_level = yes`");
+            let info = format!("so the modifier {name} will have no effect");
+            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
+        return Some(ModifKinds::State);
     }
 
     // state_harvest_condition_$HarvestConditionType$_duration_mult
@@ -599,11 +590,11 @@ pub fn lookup_engine_modif(
     // state_loyalism_increases_$AcceptanceStatus$_mult
     // state_radicalism_increases_$AcceptanceStatus$_mult
     for &pfx in &["state_loyalism_increases_", "state_radicalism_increases_"] {
-        if let Some(part) = name_lc.strip_prefix_unchecked(pfx) {
-            if let Some(part) = part.strip_suffix_unchecked("_mult") {
-                maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
-                return Some(ModifKinds::State);
-            }
+        if let Some(part) = name_lc.strip_prefix_unchecked(pfx)
+            && let Some(part) = part.strip_suffix_unchecked("_mult")
+        {
+            maybe_warn(Item::AcceptanceStatus, &part, name, data, warn);
+            return Some(ModifKinds::State);
         }
     }
 
@@ -634,11 +625,11 @@ pub fn lookup_engine_modif(
     }
 
     // power_bloc_invite_acceptance_$CountryRank$_add
-    if let Some(part) = name_lc.strip_prefix_unchecked("power_bloc_invite_acceptance_") {
-        if let Some(part) = part.strip_suffix_unchecked("_add") {
-            maybe_warn(Item::CountryRank, &part, name, data, warn);
-            return Some(ModifKinds::PowerBloc);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("power_bloc_invite_acceptance_")
+        && let Some(part) = part.strip_suffix_unchecked("_add")
+    {
+        maybe_warn(Item::CountryRank, &part, name, data, warn);
+        return Some(ModifKinds::PowerBloc);
     }
 
     // power_bloc_mandate_progress_per_$CountryRank$_member_add
@@ -658,12 +649,12 @@ pub fn lookup_engine_modif(
 }
 
 fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn: Option<Severity>) {
-    if let Some(sev) = warn {
-        if !data.item_exists_lc(itype, s) {
-            let msg = format!("could not find {itype} {s}");
-            let info = format!("so the modifier {name} will have no effect");
-            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-        }
+    if let Some(sev) = warn
+        && !data.item_exists_lc(itype, s)
+    {
+        let msg = format!("could not find {itype} {s}");
+        let info = format!("so the modifier {name} will have no effect");
+        report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
     }
 }
 
@@ -687,43 +678,43 @@ pub fn modif_loc_vic3(name: &Token, data: &Everything) -> (Cow<'static, str>, Co
         return (name_lc.into_cow(), Cow::Owned(desc_loc));
     }
 
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_") {
-        if let Some(part) = part.strip_suffix_unchecked("_standard_of_living_add") {
-            if data.item_exists_lc(Item::Religion, &part) {
-                return (
-                    Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER"),
-                    Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER_DESC"),
-                );
-            } else if data.item_exists_lc(Item::Culture, &part) {
-                return (
-                    Cow::Borrowed("STATE_CULTURE_SOL_MODIFIER"),
-                    Cow::Borrowed("STATE_CULTURE_SOL_MODIFIER_DESC"),
-                );
-            }
-            // We need some kind of default for missing items, and cultures are more common.
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_")
+        && let Some(part) = part.strip_suffix_unchecked("_standard_of_living_add")
+    {
+        if data.item_exists_lc(Item::Religion, &part) {
             return (
                 Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER"),
                 Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER_DESC"),
             );
-        }
-    }
-
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_") {
-        if part.strip_suffix_unchecked("_add").is_some() {
+        } else if data.item_exists_lc(Item::Culture, &part) {
             return (
-                Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER"),
-                Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER_DESC"),
+                Cow::Borrowed("STATE_CULTURE_SOL_MODIFIER"),
+                Cow::Borrowed("STATE_CULTURE_SOL_MODIFIER_DESC"),
             );
         }
+        // We need some kind of default for missing items, and cultures are more common.
+        return (
+            Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER"),
+            Cow::Borrowed("STATE_RELIGION_SOL_MODIFIER_DESC"),
+        );
     }
 
-    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
-        if part.strip_suffix_unchecked("_cultural_acceptance_add").is_some() {
-            return (
-                Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER"),
-                Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER_DESC"),
-            );
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_fervor_target_")
+        && part.strip_suffix_unchecked("_add").is_some()
+    {
+        return (
+            Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER"),
+            Cow::Borrowed("COUNTRY_FERVOR_TARGET_CULTURE_MODIFIER_DESC"),
+        );
+    }
+
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_")
+        && part.strip_suffix_unchecked("_cultural_acceptance_add").is_some()
+    {
+        return (
+            Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER"),
+            Cow::Borrowed("COUNTRY_CULTURE_CULTURAL_ACCEPTANCE_MODIFIER_DESC"),
+        );
     }
 
     // TODO: should the loca key be lowercased?

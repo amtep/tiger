@@ -199,28 +199,27 @@ impl Characters {
         }
 
         for field in &["father", "mother"] {
-            if let Some(token) = ch.block.get_field_value(field) {
-                if let Some(parent) = self.characters.get(token.as_str()) {
-                    if let Some(mut cycle_vec) = self.check_ancestor_cycles(parent) {
-                        // unwrap is safe because the vec is always created with one element
-                        if &ch.key == cycle_vec.first().unwrap() {
-                            let msg = "character is their own ancestor";
-                            cycle_vec.reverse();
-                            cycle_vec.pop();
-                            let mut report = fatal(ErrorKey::Crash).msg(msg).loc(&ch.key);
-                            for token in cycle_vec {
-                                report = report.loc_msg(token, "from here");
-                            }
-                            report.push();
-                        } else {
-                            cycle_vec.push(token.clone());
-                            // Returning here means if the father is in a cycle we won't check the
-                            // mother, but that's ok because we're not promising to find all
-                            // cycles anyway.
-                            ch.ancestor_state.store(AncestorState::Checked, Ordering::Release);
-                            return Some(cycle_vec);
-                        }
+            if let Some(token) = ch.block.get_field_value(field)
+                && let Some(parent) = self.characters.get(token.as_str())
+                && let Some(mut cycle_vec) = self.check_ancestor_cycles(parent)
+            {
+                // unwrap is safe because the vec is always created with one element
+                if &ch.key == cycle_vec.first().unwrap() {
+                    let msg = "character is their own ancestor";
+                    cycle_vec.reverse();
+                    cycle_vec.pop();
+                    let mut report = fatal(ErrorKey::Crash).msg(msg).loc(&ch.key);
+                    for token in cycle_vec {
+                        report = report.loc_msg(token, "from here");
                     }
+                    report.push();
+                } else {
+                    cycle_vec.push(token.clone());
+                    // Returning here means if the father is in a cycle we won't check the
+                    // mother, but that's ok because we're not promising to find all
+                    // cycles anyway.
+                    ch.ancestor_state.store(AncestorState::Checked, Ordering::Release);
+                    return Some(cycle_vec);
                 }
             }
         }
@@ -239,12 +238,11 @@ impl Characters {
 
 impl FileHandler<Block> for Characters {
     fn config(&mut self, config: &Block) {
-        if let Some(block) = config.get_field_block("characters") {
-            if let Some(born) = block.get_field_value("only_born") {
-                if let Ok(date) = Date::try_from(born) {
-                    self.config_only_born = Some(date);
-                }
-            }
+        if let Some(block) = config.get_field_block("characters")
+            && let Some(born) = block.get_field_value("only_born")
+            && let Ok(date) = Date::try_from(born)
+        {
+            self.config_only_born = Some(date);
         }
     }
 
@@ -490,19 +488,15 @@ impl Character {
                 warn(ErrorKey::History).msg(msg).loc(loc).push();
             }
 
-            if let Some((death_date, death_loc)) = death {
-                if event != Posthumous {
-                    let msg = format!(
-                        "{character} was not alive on {date}, had already died on {death_date}"
-                    );
-                    let mut loc = token.loc;
-                    loc.column = 0;
-                    warn(ErrorKey::History)
-                        .msg(msg)
-                        .loc(loc)
-                        .loc_msg(death_loc, "from here")
-                        .push();
-                }
+            if let Some((death_date, death_loc)) = death
+                && event != Posthumous
+            {
+                let msg = format!(
+                    "{character} was not alive on {date}, had already died on {death_date}"
+                );
+                let mut loc = token.loc;
+                loc.column = 0;
+                warn(ErrorKey::History).msg(msg).loc(loc).loc_msg(death_loc, "from here").push();
             }
 
             match event {

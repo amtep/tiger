@@ -25,13 +25,13 @@ pub struct ScriptValues {
 
 impl ScriptValues {
     fn load_item(&mut self, key: &Token, bv: &BV) {
-        if let Some(other) = self.script_values.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                if other.bv.equivalent(bv) {
-                    exact_dup_error(key, &other.key, "script value");
-                } else {
-                    dup_error(key, &other.key, "script value");
-                }
+        if let Some(other) = self.script_values.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            if other.bv.equivalent(bv) {
+                exact_dup_error(key, &other.key, "script value");
+            } else {
+                dup_error(key, &other.key, "script value");
             }
         }
         if BANNED_NAMES.contains(&key.as_str()) {
@@ -175,10 +175,10 @@ impl ScriptValue {
 
     pub fn validate(&self, data: &Everything) {
         // For some reason, script values can be set to bools as well
-        if let Some(token) = self.bv.get_value() {
-            if token.is("yes") || token.is("no") {
-                return;
-            }
+        if let Some(token) = self.bv.get_value()
+            && (token.is("yes") || token.is("no"))
+        {
+            return;
         }
         let mut sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
         sc.set_strict_scopes(false);

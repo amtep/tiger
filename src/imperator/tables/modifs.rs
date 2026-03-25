@@ -70,11 +70,11 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     }
 
     // monthly_$Party$_conviction
-    if let Some(part) = name_lc.strip_prefix_unchecked("monthly_") {
-        if let Some(part) = part.strip_suffix_unchecked("_conviction") {
-            maybe_warn(Item::PartyType, &part, name, data, warn);
-            return Some(ModifKinds::Character);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("monthly_")
+        && let Some(part) = part.strip_suffix_unchecked("_conviction")
+    {
+        maybe_warn(Item::PartyType, &part, name, data, warn);
+        return Some(ModifKinds::Character);
     }
 
     // $Unit$_discipline
@@ -117,14 +117,13 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // $Unit$_cost
     // $Building$_cost
     if let Some(part) = name_lc.strip_suffix_unchecked("_cost") {
-        if let Some(sev) = warn {
-            if !data.item_exists(Item::Unit, part.as_str())
-                && !data.item_exists(Item::Building, part.as_str())
-            {
-                let msg = format!("{part} not found as unit or building");
-                let info = format!("so the modifier {name} does not exist");
-                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && !data.item_exists(Item::Unit, part.as_str())
+            && !data.item_exists(Item::Building, part.as_str())
+        {
+            let msg = format!("{part} not found as unit or building");
+            let info = format!("so the modifier {name} does not exist");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Country);
     }
@@ -139,12 +138,12 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 }
 
 fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn: Option<Severity>) {
-    if let Some(sev) = warn {
-        if !data.item_exists_lc(itype, s) {
-            let msg = format!("could not find {itype} {s}");
-            let info = format!("so the modifier {name} does not exist");
-            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-        }
+    if let Some(sev) = warn
+        && !data.item_exists_lc(itype, s)
+    {
+        let msg = format!("could not find {itype} {s}");
+        let info = format!("so the modifier {name} does not exist");
+        report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
     }
 }
 

@@ -28,14 +28,14 @@ pub struct Hoi4Events {
 impl Hoi4Events {
     fn load_event(&mut self, key: Token, block: Block) {
         if let Some(name) = block.get_field_value("id").cloned() {
-            if let Some((name_a, name_b)) = name.as_str().split_once('.') {
-                if let Ok(id) = u16::from_str(name_b) {
-                    if let Some(other) = self.get_event(name.as_str()) {
-                        dup_error(&key, &other.key, "event");
-                    }
-                    self.events.insert((name_a, id), Event::new(key, block, name));
-                    return;
+            if let Some((name_a, name_b)) = name.as_str().split_once('.')
+                && let Ok(id) = u16::from_str(name_b)
+            {
+                if let Some(other) = self.get_event(name.as_str()) {
+                    dup_error(&key, &other.key, "event");
                 }
+                self.events.insert((name_a, id), Event::new(key, block, name));
+                return;
             }
             let msg = "Event names should be in the form NAMESPACE.NUMBER";
             let info = "where NAMESPACE is the namespace declared at the top of the file, and NUMBER is a series of up to 4 digits.";
@@ -53,10 +53,10 @@ impl Hoi4Events {
     }
 
     fn get_event<'a>(&'a self, key: &'a str) -> Option<&'a Event> {
-        if let Some((namespace, id)) = key.split_once('.') {
-            if let Ok(id) = u16::from_str(id) {
-                return self.events.get(&(namespace, id));
-            }
+        if let Some((namespace, id)) = key.split_once('.')
+            && let Ok(id) = u16::from_str(id)
+        {
+            return self.events.get(&(namespace, id));
         }
         None
     }
@@ -80,12 +80,11 @@ impl Hoi4Events {
     }
 
     pub fn exists(&self, key: &str) -> bool {
-        if let Some((namespace, id)) = key.split_once('.') {
-            if let Ok(id) = u16::from_str(id) {
-                if self.events.contains_key(&(namespace, id)) {
-                    return true;
-                }
-            }
+        if let Some((namespace, id)) = key.split_once('.')
+            && let Ok(id) = u16::from_str(id)
+            && self.events.contains_key(&(namespace, id))
+        {
+            return true;
         }
         false
     }
@@ -163,12 +162,12 @@ impl Event {
     }
 
     pub fn validate(&self, data: &Everything) {
-        if let Some((namespace, _)) = self.id.as_str().split_once('.') {
-            if !data.item_exists_lc(Item::EventNamespace, &Lowercase::new(namespace)) {
-                let msg = format!("event file should start with `add_namespace = {namespace}`");
-                let info = "otherwise the event won't be found in-game";
-                err(ErrorKey::EventNamespace).msg(msg).info(info).loc(&self.key).push();
-            }
+        if let Some((namespace, _)) = self.id.as_str().split_once('.')
+            && !data.item_exists_lc(Item::EventNamespace, &Lowercase::new(namespace))
+        {
+            let msg = format!("event file should start with `add_namespace = {namespace}`");
+            let info = "otherwise the event won't be found in-game";
+            err(ErrorKey::EventNamespace).msg(msg).info(info).loc(&self.key).push();
         }
 
         let mut sc = ScopeContext::new(self.expects_scope, &self.expects_from_token);

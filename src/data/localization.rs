@@ -483,12 +483,11 @@ impl Localization {
     pub fn uses_macro(&self, key: &str, look_for: &str) -> bool {
         let look_for = format!("${look_for}$");
         for lang in self.iter_lang() {
-            if let Some(entry) = self.locas[lang].get(key) {
-                if let Some(orig) = &entry.orig {
-                    if orig.as_str().contains(&look_for) {
-                        return true;
-                    }
-                }
+            if let Some(entry) = self.locas[lang].get(key)
+                && let Some(orig) = &entry.orig
+                && orig.as_str().contains(&look_for)
+            {
+                return true;
             }
         }
         false
@@ -513,17 +512,15 @@ impl Localization {
             LocaValue::Code(chain, format) => {
                 // |E is the formatting used for game concepts in ck3
                 #[cfg(feature = "ck3")]
-                if Game::is_ck3() {
-                    if let Some(format) = format {
-                        if format.as_str().contains('E') || format.as_str().contains('e') {
-                            if let Some(name) = chain.as_gameconcept() {
-                                if !is_builtin_macro(name) {
-                                    data.verify_exists(Item::GameConcept, name);
-                                }
-                                return;
-                            }
-                        }
+                if Game::is_ck3()
+                    && let Some(format) = format
+                    && (format.as_str().contains('E') || format.as_str().contains('e'))
+                    && let Some(name) = chain.as_gameconcept()
+                {
+                    if !is_builtin_macro(name) {
+                        data.verify_exists(Item::GameConcept, name);
                     }
+                    return;
                 }
 
                 // TODO: datatype is not really Unknown here, it should be a CString or CFixedPoint or some kind of number.
@@ -731,14 +728,14 @@ impl Localization {
         for lang in self.iter_lang() {
             for key in data.database.iter_keys(Item::PerkTree) {
                 let loca = format!("{key}_name");
-                if let Some(entry) = self.locas[lang].get(loca.as_str()) {
-                    if let LocaValue::Text(token) = &entry.value {
-                        if token.as_str().ends_with("_visible") {
-                            data.verify_exists(Item::ScriptedGui, token);
-                            data.verify_exists(Item::Localization, token);
-                        }
-                        continue;
+                if let Some(entry) = self.locas[lang].get(loca.as_str())
+                    && let LocaValue::Text(token) = &entry.value
+                {
+                    if token.as_str().ends_with("_visible") {
+                        data.verify_exists(Item::ScriptedGui, token);
+                        data.verify_exists(Item::Localization, token);
                     }
+                    continue;
                 }
                 let msg = format!("missing loca `{key}_name: \"{key}_visible\"`");
                 let info = "this is needed for the `window_character_lifestyle.gui` code";
@@ -804,12 +801,12 @@ impl FileHandler<(Language, Vec<LocaEntry>)> for Localization {
             // Localization files don't have to be in a subdirectory corresponding to their language.
             // However, if there's one in a subdirectory for a *different* language than the one in its name,
             // then something is probably wrong.
-            if let Ok(lang) = Language::try_from(lang_str.as_ref()) {
-                if filelang != lang {
-                    let msg = "localization file with wrong name or in wrong directory";
-                    let info = "A localization file should be in a subdirectory corresponding to its language.";
-                    warn(ErrorKey::Filename).msg(msg).info(info).loc(entry).push();
-                }
+            if let Ok(lang) = Language::try_from(lang_str.as_ref())
+                && filelang != lang
+            {
+                let msg = "localization file with wrong name or in wrong directory";
+                let info = "A localization file should be in a subdirectory corresponding to its language.";
+                warn(ErrorKey::Filename).msg(msg).info(info).loc(entry).push();
             }
             match read_to_string(entry.fullpath()) {
                 Ok(content) => {

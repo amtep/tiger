@@ -54,10 +54,10 @@ impl DbKind for PortraitModifierGroup {
         vd.field_choice("selection_behavior", &["weighted_random", "max"]);
 
         let mut caller = key.as_str();
-        if let Some(token) = block.get_field_value("usage") {
-            if token.is("game") || token.is("none") {
-                caller = "";
-            }
+        if let Some(token) = block.get_field_value("usage")
+            && (token.is("game") || token.is("none"))
+        {
+            caller = "";
         }
 
         if !Game::is_imperator() && !caller.is_empty() {
@@ -65,11 +65,11 @@ impl DbKind for PortraitModifierGroup {
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
-        if let Some(token) = vd.field_value("fallback") {
-            if !block.has_key(token.as_str()) {
-                let msg = "portrait modifier not defined";
-                warn(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("fallback")
+            && !block.has_key(token.as_str())
+        {
+            let msg = "portrait modifier not defined";
+            warn(ErrorKey::MissingItem).msg(msg).loc(token).push();
         }
         vd.multi_field_validated_block("add_accessory_modifiers", |block, data| {
             validate_add_accessory_modifiers(block, data, caller, &mut sc);
@@ -86,22 +86,19 @@ impl DbKind for PortraitModifierGroup {
             true
         } else {
             for block in block.get_field_blocks("add_accessory_modifiers") {
-                if let Some(gene) = block.get_field_value("gene") {
-                    if let Some(template) = block.get_field_value("template") {
-                        if let Some((key, block)) =
-                            data.get_key_block(Item::GeneCategory, gene.as_str())
-                        {
-                            if AccessoryGene::has_template_setting(
-                                key,
-                                block,
-                                data,
-                                template.as_str(),
-                                property,
-                            ) {
-                                return true;
-                            }
-                        }
-                    }
+                if let Some(gene) = block.get_field_value("gene")
+                    && let Some(template) = block.get_field_value("template")
+                    && let Some((key, block)) =
+                        data.get_key_block(Item::GeneCategory, gene.as_str())
+                    && AccessoryGene::has_template_setting(
+                        key,
+                        block,
+                        data,
+                        template.as_str(),
+                        property,
+                    )
+                {
+                    return true;
                 }
             }
             false
@@ -118,10 +115,10 @@ fn validate_portrait_modifier(
 ) {
     let mut vd = Validator::new(block, data);
     vd.field_choice("usage", &["customization", "game", "both"]);
-    if let Some(token) = block.get_field_value("usage") {
-        if token.is("game") {
-            caller = "";
-        }
+    if let Some(token) = block.get_field_value("usage")
+        && token.is("game")
+    {
+        caller = "";
     }
     if !Game::is_imperator() && !caller.is_empty() {
         let loca = format!("PORTRAIT_MODIFIER_{caller}_{key}");
@@ -156,18 +153,18 @@ fn validate_add_accessory_modifiers(
 ) {
     let mut vd = Validator::new(block, data);
     vd.field_item("gene", Item::GeneCategory);
-    if let Some(category) = block.get_field_value("gene") {
-        if let Some(template) = vd.field_value("template") {
-            Gene::verify_has_template(category.as_str(), template, data);
-            if !caller.is_empty() {
-                data.database.validate_property_use(
-                    Item::GeneCategory,
-                    category,
-                    data,
-                    template,
-                    caller,
-                );
-            }
+    if let Some(category) = block.get_field_value("gene")
+        && let Some(template) = vd.field_value("template")
+    {
+        Gene::verify_has_template(category.as_str(), template, data);
+        if !caller.is_empty() {
+            data.database.validate_property_use(
+                Item::GeneCategory,
+                category,
+                data,
+                template,
+                caller,
+            );
         }
     }
     vd.field_trigger("is_valid_custom", Tooltipped::No, sc);
@@ -368,10 +365,10 @@ pub fn validate_dna_modifiers(block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         vd.field_choice("mode", modes);
         vd.field_item("gene", Item::GeneCategory);
-        if let Some(category) = block.get_field_value("gene") {
-            if let Some(template) = vd.field_value("template") {
-                Gene::verify_has_template(category.as_str(), template, data);
-            }
+        if let Some(category) = block.get_field_value("gene")
+            && let Some(template) = vd.field_value("template")
+        {
+            Gene::verify_has_template(category.as_str(), template, data);
         }
         vd.field_script_value_no_breakdown_rooted("value", Scopes::Character);
         vd.field_validated_block("range", |block, data| {
@@ -389,10 +386,10 @@ pub fn validate_dna_modifiers(block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         vd.field_choice("mode", modes);
         vd.field_item("gene", Item::GeneCategory);
-        if let Some(category) = block.get_field_value("gene") {
-            if let Some(template) = vd.field_value("template") {
-                Gene::verify_has_template(category.as_str(), template, data);
-            }
+        if let Some(category) = block.get_field_value("gene")
+            && let Some(template) = vd.field_value("template")
+        {
+            Gene::verify_has_template(category.as_str(), template, data);
         }
         vd.field_script_value_no_breakdown_rooted("value", Scopes::Character);
         vd.field_validated_block("range", |block, data| {

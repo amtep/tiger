@@ -135,10 +135,10 @@ pub fn validate_add_hook(
     vd.req_field("target");
     vd.field_item("type", Item::Hook);
     vd.field_target("target", sc, Scopes::Character);
-    if let Some(token) = vd.field_value("secret") {
-        if !data.item_exists(Item::Secret, token.as_str()) {
-            validate_target(token, data, sc, Scopes::Secret);
-        }
+    if let Some(token) = vd.field_value("secret")
+        && !data.item_exists(Item::Secret, token.as_str())
+    {
+        validate_target(token, data, sc, Scopes::Secret);
     }
     validate_optional_duration(&mut vd, sc);
 }
@@ -589,10 +589,11 @@ pub fn validate_create_character(
 
     vd.field_validated_sc("name", sc, validate_desc);
     vd.field_script_value("age", sc);
-    if let Some(token) = vd.field_value("gender") {
-        if !token.is("male") && !token.is("female") {
-            validate_target_ok_this(token, data, sc, Scopes::Character);
-        }
+    if let Some(token) = vd.field_value("gender")
+        && !token.is("male")
+        && !token.is("female")
+    {
+        validate_target_ok_this(token, data, sc, Scopes::Character);
     }
     vd.field_script_value("gender_female_chance", sc);
     vd.field_target_ok_this("opposite_gender", sc, Scopes::Character);
@@ -622,10 +623,12 @@ pub fn validate_create_character(
     // TODO: figure out what a culture group is, and whether this key still works at all
     vd.field_value("random_culture_in_group");
     vd.field_item_or_target("dynasty_house", sc, Item::House, Scopes::DynastyHouse);
-    if let Some(token) = vd.field_value("dynasty") {
-        if !token.is("generate") && !token.is("inherit") && !token.is("none") {
-            validate_target(token, data, sc, Scopes::Dynasty);
-        }
+    if let Some(token) = vd.field_value("dynasty")
+        && !token.is("generate")
+        && !token.is("inherit")
+        && !token.is("none")
+    {
+        validate_target(token, data, sc, Scopes::Dynasty);
     }
     vd.field_validated_value("ethnicity", |_, mut vd| {
         vd.maybe_is("culture");
@@ -664,12 +667,11 @@ pub fn validate_create_character_memory(
         let mut vd = Validator::new(b, data);
         let memtype = block.get_field_value("type");
         vd.unknown_value_fields(|key, token| {
-            if let Some(memtype) = memtype {
-                if !data.item_has_property(Item::MemoryType, memtype.as_str(), key.as_str()) {
-                    let msg =
-                        format!("memory type `{memtype}` does not define participant `{key}`");
-                    warn(ErrorKey::Validation).msg(msg).loc(key).push();
-                }
+            if let Some(memtype) = memtype
+                && !data.item_has_property(Item::MemoryType, memtype.as_str(), key.as_str())
+            {
+                let msg = format!("memory type `{memtype}` does not define participant `{key}`");
+                warn(ErrorKey::Validation).msg(msg).loc(key).push();
             }
             validate_target_ok_this(token, data, sc, Scopes::Character);
         });
@@ -1387,17 +1389,16 @@ pub fn validate_contract_set_obligation_level(
 ) {
     vd.req_field("type");
     vd.req_field("level");
-    if let Some(token) = vd.field_value("type") {
-        if !data.item_exists(Item::SubjectContract, token.as_str()) {
-            validate_target(token, data, sc, Scopes::VassalContract);
-        }
+    if let Some(token) = vd.field_value("type")
+        && !data.item_exists(Item::SubjectContract, token.as_str())
+    {
+        validate_target(token, data, sc, Scopes::VassalContract);
     }
-    if let Some(token) = vd.field_value("level") {
-        if !token.is_integer()
-            && !data.item_exists(Item::SubjectContractObligationLevel, token.as_str())
-        {
-            validate_target(token, data, sc, Scopes::VassalObligationLevel);
-        }
+    if let Some(token) = vd.field_value("level")
+        && !token.is_integer()
+        && !data.item_exists(Item::SubjectContractObligationLevel, token.as_str())
+    {
+        validate_target(token, data, sc, Scopes::VassalObligationLevel);
     }
 }
 

@@ -63,10 +63,10 @@ impl DbKind for SubjectContract {
         sc.define_name("tax_collector", Scopes::Character, key);
 
         vd.field_bool("uses_opinion_of_liege");
-        if let Some(token) = block.get_field_value("uses_opinion_of_liege") {
-            if token.is("yes") {
-                sc.define_name("opinion_of_liege", Scopes::Value, token);
-            }
+        if let Some(token) = block.get_field_value("uses_opinion_of_liege")
+            && token.is("yes")
+        {
+            sc.define_name("opinion_of_liege", Scopes::Value, token);
         }
 
         vd.field_trigger("is_shown", Tooltipped::No, &mut sc);

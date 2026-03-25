@@ -233,14 +233,13 @@ fn extract_new_iterators(
     let mut iterators: Vec<(String, Vec<String>)> = Vec::new();
 
     for (name, scopes) in triggers.iter() {
-        if let Some(iterator) = name.strip_prefix("any_") {
-            if effect_names.contains(&format!("every_{iterator}")[..])
-                && effect_names.contains(&format!("random_{iterator}")[..])
-                && effect_names.contains(&format!("ordered_{iterator}")[..])
-            {
-                iterators.push((iterator.to_owned(), scopes.to_owned()));
-                iterator_names.insert(iterator);
-            }
+        if let Some(iterator) = name.strip_prefix("any_")
+            && effect_names.contains(&format!("every_{iterator}")[..])
+            && effect_names.contains(&format!("random_{iterator}")[..])
+            && effect_names.contains(&format!("ordered_{iterator}")[..])
+        {
+            iterators.push((iterator.to_owned(), scopes.to_owned()));
+            iterator_names.insert(iterator);
         }
     }
 

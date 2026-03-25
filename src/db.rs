@@ -145,17 +145,17 @@ impl Db {
                 }
             }
         } else {
-            if let Some(other) = self.database[item as usize].get(key.as_str()) {
-                if other.key.loc.kind >= key.loc.kind {
-                    if other.block.equivalent(&block) {
-                        if exact_dup_ok {
-                            exact_dup_advice(&key, &other.key, &item.to_string());
-                        } else {
-                            exact_dup_error(&key, &other.key, &item.to_string());
-                        }
+            if let Some(other) = self.database[item as usize].get(key.as_str())
+                && other.key.loc.kind >= key.loc.kind
+            {
+                if other.block.equivalent(&block) {
+                    if exact_dup_ok {
+                        exact_dup_advice(&key, &other.key, &item.to_string());
                     } else {
-                        dup_error(&key, &other.key, &item.to_string());
+                        exact_dup_error(&key, &other.key, &item.to_string());
                     }
+                } else {
+                    dup_error(&key, &other.key, &item.to_string());
                 }
             }
             self.add_inner2(item, key, block, kind);
@@ -235,10 +235,10 @@ impl Db {
 
     #[allow(dead_code)]
     pub fn get_item<T: DbKind + Any>(&self, item: Item, key: &str) -> Option<(&Token, &Block, &T)> {
-        if let Some(entry) = self.database[item as usize].get(key) {
-            if let Some(kind) = (*entry.kind).as_any().downcast_ref::<T>() {
-                return Some((&entry.key, &entry.block, kind));
-            }
+        if let Some(entry) = self.database[item as usize].get(key)
+            && let Some(kind) = (*entry.kind).as_any().downcast_ref::<T>()
+        {
+            return Some((&entry.key, &entry.block, kind));
         }
         None
     }

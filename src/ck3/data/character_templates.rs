@@ -72,10 +72,11 @@ impl DbKind for CharacterTemplate {
             vd.field_value("gender");
             vd.field("gender_female_chance");
         } else {
-            if let Some(token) = vd.field_value("gender") {
-                if !token.is("male") && !token.is("female") {
-                    validate_target_ok_this(token, data, sc, Scopes::Character);
-                }
+            if let Some(token) = vd.field_value("gender")
+                && !token.is("male")
+                && !token.is("female")
+            {
+                validate_target_ok_this(token, data, sc, Scopes::Character);
             }
             if from_block.has_key("gender_female_chance") {
                 vd.field("gender_female_chance");

@@ -86,16 +86,15 @@ impl War {
             end_date_token = Some(vd.value().clone());
         });
 
-        if let Some(start_date) = start_date_token.as_ref().and_then(Token::get_date) {
-            if let Some(end_date) = end_date_token.as_ref().and_then(Token::get_date) {
-                if start_date > end_date {
-                    err(ErrorKey::Range)
-                        .msg("start date is after end date")
-                        .loc_msg(start_date_token.as_ref().unwrap(), "start date")
-                        .loc_msg(end_date_token.as_ref().unwrap(), "end date")
-                        .push();
-                }
-            }
+        if let Some(start_date) = start_date_token.as_ref().and_then(Token::get_date)
+            && let Some(end_date) = end_date_token.as_ref().and_then(Token::get_date)
+            && start_date > end_date
+        {
+            err(ErrorKey::Range)
+                .msg("start date is after end date")
+                .loc_msg(start_date_token.as_ref().unwrap(), "start date")
+                .loc_msg(end_date_token.as_ref().unwrap(), "end date")
+                .push();
         }
 
         vd.field_list_items("targeted_titles", Item::Title);
@@ -108,23 +107,23 @@ impl War {
             if data.item_exists(Item::Character, key.as_str()) {
                 let mut vd = Validator::new(block, data);
                 vd.validate_history_blocks(|date, key, block, data| {
-                    if let Some(start_date) = start_date_token.as_ref().and_then(Token::get_date) {
-                        if date < start_date {
-                            err(ErrorKey::Range)
-                                .msg("date is before start date")
-                                .loc(key)
-                                .loc_msg(start_date_token.as_ref().unwrap(), "start date")
-                                .push();
-                        }
+                    if let Some(start_date) = start_date_token.as_ref().and_then(Token::get_date)
+                        && date < start_date
+                    {
+                        err(ErrorKey::Range)
+                            .msg("date is before start date")
+                            .loc(key)
+                            .loc_msg(start_date_token.as_ref().unwrap(), "start date")
+                            .push();
                     }
-                    if let Some(end_date) = end_date_token.as_ref().and_then(Token::get_date) {
-                        if date > end_date {
-                            err(ErrorKey::Range)
-                                .msg("date is after end date")
-                                .loc(key)
-                                .loc_msg(end_date_token.as_ref().unwrap(), "end date")
-                                .push();
-                        }
+                    if let Some(end_date) = end_date_token.as_ref().and_then(Token::get_date)
+                        && date > end_date
+                    {
+                        err(ErrorKey::Range)
+                            .msg("date is after end date")
+                            .loc(key)
+                            .loc_msg(end_date_token.as_ref().unwrap(), "end date")
+                            .push();
                     }
                     let mut vd = Validator::new(block, data);
                     vd.req_field("location");

@@ -41,10 +41,10 @@ impl ScriptedLocalisation {
             }
             if let Some(block) = block.get_field_block("random_list") {
                 for (key, block) in block.iter_definitions() {
-                    if key.is_integer() {
-                        if let Some(key) = block.get_field_value("localization_key") {
-                            validate_localization_key(key, data, lang);
-                        }
+                    if key.is_integer()
+                        && let Some(key) = block.get_field_value("localization_key")
+                    {
+                        validate_localization_key(key, data, lang);
                     }
                 }
             }

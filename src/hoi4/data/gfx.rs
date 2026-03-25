@@ -24,13 +24,13 @@ pub struct Gfx {
 impl Gfx {
     pub fn load_sprite(&mut self, key: Token, block: Block) {
         if let Some(name) = block.get_field_value("name") {
-            if let Some(other) = self.sprites.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
-                    if other.block.equivalent(&block) {
-                        exact_dup_advice(name, &other.key, "sprite");
-                    } else {
-                        dup_error(name, &other.key, "sprite");
-                    }
+            if let Some(other) = self.sprites.get(name.as_str())
+                && other.key.loc.kind >= name.loc.kind
+            {
+                if other.block.equivalent(&block) {
+                    exact_dup_advice(name, &other.key, "sprite");
+                } else {
+                    dup_error(name, &other.key, "sprite");
                 }
             }
             self.sprites.insert(name.as_str(), Sprite::new(key, name.clone(), block));
@@ -39,10 +39,10 @@ impl Gfx {
 
     pub fn load_mesh(&mut self, key: Token, block: Block) {
         if let Some(name) = block.get_field_value("name") {
-            if let Some(other) = self.meshes.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
-                    dup_error(name, &other.key, "pdxmesh");
-                }
+            if let Some(other) = self.meshes.get(name.as_str())
+                && other.key.loc.kind >= name.loc.kind
+            {
+                dup_error(name, &other.key, "pdxmesh");
             }
             self.meshes.insert(name.as_str(), Mesh::new(key, name.clone(), block));
         }

@@ -38,10 +38,9 @@ impl BuildingType {
         for group in block.get_multi_field_list("production_method_groups") {
             if let Some((_, block, group_item)) =
                 data.get_item::<ProductionMethodGroup>(Item::ProductionMethodGroup, group.as_str())
+                && group_item.contains_production_method(pm, block, data)
             {
-                if group_item.contains_production_method(pm, block, data) {
-                    return;
-                }
+                return;
             }
         }
         let msg = format!("production method `{pm}` not valid for `{building}`");

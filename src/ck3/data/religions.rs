@@ -203,10 +203,10 @@ impl Faith {
     fn check_have_customs(&self, key: &Token, block: &Block, data: &Everything) {
         let locas = block.get_field_block("localization");
         for loca in CUSTOM_RELIGION_LOCAS {
-            if let Some(block) = locas {
-                if block.has_key(loca) {
-                    continue;
-                }
+            if let Some(block) = locas
+                && block.has_key(loca)
+            {
+                continue;
             }
             if data.item_has_property(Item::Religion, self.religion.as_str(), loca) {
                 continue;

@@ -19,20 +19,20 @@ pub enum Game {
 }
 
 fn remove_game_wrapper(sometype: &str) -> &str {
-    if let Some(sfx) = sometype.strip_prefix("Ck3(") {
-        if let Some(result) = sfx.strip_suffix(')') {
-            return result;
-        }
+    if let Some(sfx) = sometype.strip_prefix("Ck3(")
+        && let Some(result) = sfx.strip_suffix(')')
+    {
+        return result;
     }
-    if let Some(sfx) = sometype.strip_prefix("Vic3(") {
-        if let Some(result) = sfx.strip_suffix(')') {
-            return result;
-        }
+    if let Some(sfx) = sometype.strip_prefix("Vic3(")
+        && let Some(result) = sfx.strip_suffix(')')
+    {
+        return result;
     }
-    if let Some(sfx) = sometype.strip_prefix("Eu5(") {
-        if let Some(result) = sfx.strip_suffix(')') {
-            return result;
-        }
+    if let Some(sfx) = sometype.strip_prefix("Eu5(")
+        && let Some(result) = sfx.strip_suffix(')')
+    {
+        return result;
     }
     sometype
 }

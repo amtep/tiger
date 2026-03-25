@@ -62,10 +62,10 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     // subwidgets with names.
     vd.field_value("window");
 
-    if let Some(token) = vd.field_value("scope") {
-        if Scopes::from_snake_case(token.as_str()).is_none() {
-            warn(ErrorKey::Scopes).msg("unknown scope type").loc(token).push();
-        }
+    if let Some(token) = vd.field_value("scope")
+        && Scopes::from_snake_case(token.as_str()).is_none()
+    {
+        warn(ErrorKey::Scopes).msg("unknown scope type").loc(token).push();
     }
 
     // "dlc or mod this event comes from"

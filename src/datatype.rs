@@ -668,12 +668,13 @@ pub fn validate_datatypes(
         // See if it's a passed-in scope.
         // It may still be a passed-in scope even if this check doesn't pass, because sc might be a non-strict scope
         // where the scope names are not known. That's handled heuristically below.
-        if !found && is_first {
-            if let Some(scopes) = sc.is_name_defined(code.name.as_str(), data) {
-                found = true;
-                args = Args::Args(&[]);
-                rtype = datatype_from_scopes(scopes);
-            }
+        if !found
+            && is_first
+            && let Some(scopes) = sc.is_name_defined(code.name.as_str(), data)
+        {
+            found = true;
+            args = Args::Args(&[]);
+            rtype = datatype_from_scopes(scopes);
         }
 
         // If `code.name` is not found yet, then it can be some passed-in scope we don't know about.
@@ -750,17 +751,17 @@ pub fn validate_datatypes(
         }
 
         // This `if let` skips this check if args is `Args::Unknown`
-        if let Args::Args(a) = args {
-            if a.len() != code.arguments.len() {
-                let msg = format!(
-                    "{} takes {} arguments but was given {} here",
-                    code.name,
-                    a.len(),
-                    code.arguments.len()
-                );
-                warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
-                return Datatype::Unknown;
-            }
+        if let Args::Args(a) = args
+            && a.len() != code.arguments.len()
+        {
+            let msg = format!(
+                "{} takes {} arguments but was given {} here",
+                code.name,
+                a.len(),
+                code.arguments.len()
+            );
+            warn(ErrorKey::Datafunctions).msg(msg).loc(&code.name).push();
+            return Datatype::Unknown;
         }
 
         #[cfg(feature = "jomini")]
@@ -781,12 +782,11 @@ pub fn validate_datatypes(
             };
             if let Some(name) = name {
                 // Get the operation on the scriptedgui ScriptedGui.Execute(...) or similar.
-                if let Some(code) = codes.get(1) {
-                    if let Some((key, block, kind)) =
+                if let Some(code) = codes.get(1)
+                    && let Some((key, block, kind)) =
                         data.get_item::<ScriptedGui>(Item::ScriptedGui, name.as_str())
-                    {
-                        kind.validate_guicall(key, block, data, sc, dc, code);
-                    }
+                {
+                    kind.validate_guicall(key, block, data, sc, dc, code);
                 }
             }
         }
@@ -813,58 +813,63 @@ pub fn validate_datatypes(
         }
 
         #[cfg(feature = "vic3")]
-        if Game::is_vic3() && code.name.is("GetCustom") && code.arguments.len() == 1 {
-            if let CodeArg::Literal(ref token) = code.arguments[0] {
-                if let Some(scopes) = scope_from_datatype(curtype) {
-                    validate_custom(token, data, scopes, lang);
-                } else if curtype == Datatype::Unknown
-                    || curtype == Datatype::AnyScope
-                    || curtype == Datatype::TopScope
-                {
-                    // TODO: is a TopScope even valid to pass to .GetCustom? verify
-                    validate_custom(token, data, Scopes::all(), lang);
-                }
+        if Game::is_vic3()
+            && code.name.is("GetCustom")
+            && code.arguments.len() == 1
+            && let CodeArg::Literal(ref token) = code.arguments[0]
+        {
+            if let Some(scopes) = scope_from_datatype(curtype) {
+                validate_custom(token, data, scopes, lang);
+            } else if curtype == Datatype::Unknown
+                || curtype == Datatype::AnyScope
+                || curtype == Datatype::TopScope
+            {
+                // TODO: is a TopScope even valid to pass to .GetCustom? verify
+                validate_custom(token, data, Scopes::all(), lang);
             }
         }
 
         #[cfg(feature = "imperator")]
-        if Game::is_imperator() && code.name.is("Custom") && code.arguments.len() == 1 {
-            if let CodeArg::Literal(ref token) = code.arguments[0] {
-                if let Some(scopes) = scope_from_datatype(curtype) {
-                    validate_custom(token, data, scopes, lang);
-                } else if curtype == Datatype::Unknown
-                    || curtype == Datatype::AnyScope
-                    || curtype == Datatype::TopScope
-                {
-                    // TODO: is a TopScope even valid to pass to .Custom? verify
-                    validate_custom(token, data, Scopes::all(), lang);
-                }
+        if Game::is_imperator()
+            && code.name.is("Custom")
+            && code.arguments.len() == 1
+            && let CodeArg::Literal(ref token) = code.arguments[0]
+        {
+            if let Some(scopes) = scope_from_datatype(curtype) {
+                validate_custom(token, data, scopes, lang);
+            } else if curtype == Datatype::Unknown
+                || curtype == Datatype::AnyScope
+                || curtype == Datatype::TopScope
+            {
+                // TODO: is a TopScope even valid to pass to .Custom? verify
+                validate_custom(token, data, Scopes::all(), lang);
             }
         }
 
         // TODO: handle GetDefineAtIndex too. No examples in vanilla.
         #[cfg(feature = "jomini")]
-        if code.name.is("GetDefine") && code.arguments.len() == 2 {
-            if let CodeArg::Literal(ref token1) = code.arguments[0] {
-                if let CodeArg::Literal(ref token2) = code.arguments[1] {
-                    let key = format!("{token1}|{token2}");
-                    if data.defines.get_bv(&key).is_none() {
-                        let msg = format!("{key} not defined in common/defines/");
-                        err(ErrorKey::MissingItem).msg(msg).loc(token2).push();
-                    }
-                }
+        if code.name.is("GetDefine")
+            && code.arguments.len() == 2
+            && let CodeArg::Literal(ref token1) = code.arguments[0]
+            && let CodeArg::Literal(ref token2) = code.arguments[1]
+        {
+            let key = format!("{token1}|{token2}");
+            if data.defines.get_bv(&key).is_none() {
+                let msg = format!("{key} not defined in common/defines/");
+                err(ErrorKey::MissingItem).msg(msg).loc(token2).push();
             }
         }
 
         // TODO: vic3 docs say that `Localize` can take a `CustomLocalization` as well
-        if code.name.is("Localize") && code.arguments.len() == 1 {
-            if let CodeArg::Literal(ref token) = code.arguments[0] {
-                // The is_ascii check is to weed out some localizations (looking at you, Russian)
-                // that do a lot of Localize on already localized strings. There's no reason for
-                // it, but I guess it makes them happy.
-                if token.as_str().is_ascii() {
-                    data.localization.verify_exists_lang(token, lang);
-                }
+        if code.name.is("Localize")
+            && code.arguments.len() == 1
+            && let CodeArg::Literal(ref token) = code.arguments[0]
+        {
+            // The is_ascii check is to weed out some localizations (looking at you, Russian)
+            // that do a lot of Localize on already localized strings. There's no reason for
+            // it, but I guess it makes them happy.
+            if token.as_str().is_ascii() {
+                data.localization.verify_exists_lang(token, lang);
             }
         }
 
@@ -872,15 +877,15 @@ pub fn validate_datatypes(
         if let Args::Args(a) = args {
             for (i, arg) in a.iter().enumerate() {
                 // Handle |E that contain a SelectLocalization that chooses between two gameconcepts
-                if Game::is_jomini() && code.name.is("SelectLocalization") && i > 0 {
-                    if let CodeArg::Chain(chain) = &code.arguments[i] {
-                        if chain.codes.len() == 1
-                            && chain.codes[0].arguments.is_empty()
-                            && data.item_exists(Item::GameConcept, chain.codes[0].name.as_str())
-                        {
-                            continue;
-                        }
-                    }
+                if Game::is_jomini()
+                    && code.name.is("SelectLocalization")
+                    && i > 0
+                    && let CodeArg::Chain(chain) = &code.arguments[i]
+                    && chain.codes.len() == 1
+                    && chain.codes[0].arguments.is_empty()
+                    && data.item_exists(Item::GameConcept, chain.codes[0].name.as_str())
+                {
+                    continue;
                 }
                 validate_argument(&code.arguments[i], data, sc, dc, *arg, lang, format);
             }

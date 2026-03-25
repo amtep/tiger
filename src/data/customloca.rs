@@ -88,36 +88,32 @@ impl CustomLocalization {
         suffix_str: &str,
         suffix_token: Option<&Token>,
     ) {
-        if let Some(token) = block.get_field_value("type") {
-            if let Some(this_scopes) = Scopes::from_snake_case(token.as_str()) {
-                if !scopes.contains(this_scopes) {
-                    let msg = format!(
-                        "custom localization {key} is for {this_scopes} but context is {scopes}"
-                    );
-                    warn(ErrorKey::Scopes).msg(msg).loc(caller).push();
-                }
-            }
+        if let Some(token) = block.get_field_value("type")
+            && let Some(this_scopes) = Scopes::from_snake_case(token.as_str())
+            && !scopes.contains(this_scopes)
+        {
+            let msg =
+                format!("custom localization {key} is for {this_scopes} but context is {scopes}");
+            warn(ErrorKey::Scopes).msg(msg).loc(caller).push();
         }
 
         if let Some(parent) = block.get_field_value("parent") {
-            if let Some(suffix) = block.get_field_value("suffix") {
-                if let Some((key, block)) =
+            if let Some(suffix) = block.get_field_value("suffix")
+                && let Some((key, block)) =
                     data.get_key_block(Item::CustomLocalization, parent.as_str())
-                {
-                    let suffix_str = format!("{suffix_str}{suffix}");
-                    let suffix_token =
-                        if suffix_token.is_some() { suffix_token } else { Some(suffix) };
-                    Self::validate_custom_call(
-                        key,
-                        block,
-                        data,
-                        caller,
-                        scopes,
-                        lang,
-                        &suffix_str,
-                        suffix_token,
-                    );
-                }
+            {
+                let suffix_str = format!("{suffix_str}{suffix}");
+                let suffix_token = if suffix_token.is_some() { suffix_token } else { Some(suffix) };
+                Self::validate_custom_call(
+                    key,
+                    block,
+                    data,
+                    caller,
+                    scopes,
+                    lang,
+                    &suffix_str,
+                    suffix_token,
+                );
             }
         } else {
             for block in block.get_field_blocks("text") {

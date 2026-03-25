@@ -169,36 +169,36 @@ fn validate_inner(
                 }
             }
         } else {
-            if let Some((it_type, it_name)) = token.split_once('_') {
-                if let Ok(ltype) = ListType::try_from(it_type.as_str()) {
-                    if let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc) {
-                        if ltype.is_for_triggers() {
-                            let msg = "cannot use `any_` iterators in a script value";
-                            err(ErrorKey::Validation).msg(msg).loc(token).push();
-                        }
-                        sc.expect(inscopes, &Reason::Token(token.clone()), data);
-                        if let Some(block) = bv.expect_block() {
-                            precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
-                            sc.open_scope(outscope, token.clone());
-                            validate_iterator(ltype, &it_name, block, data, sc, check_desc);
-                            made_changes = true;
-                            sc.close();
-                            have_value = TriBool::Maybe;
-                        }
+            if let Some((it_type, it_name)) = token.split_once('_')
+                && let Ok(ltype) = ListType::try_from(it_type.as_str())
+            {
+                if let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc) {
+                    if ltype.is_for_triggers() {
+                        let msg = "cannot use `any_` iterators in a script value";
+                        err(ErrorKey::Validation).msg(msg).loc(token).push();
                     }
-                    return;
+                    sc.expect(inscopes, &Reason::Token(token.clone()), data);
+                    if let Some(block) = bv.expect_block() {
+                        precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
+                        sc.open_scope(outscope, token.clone());
+                        validate_iterator(ltype, &it_name, block, data, sc, check_desc);
+                        made_changes = true;
+                        sc.close();
+                        have_value = TriBool::Maybe;
+                    }
                 }
+                return;
             }
 
             // Check for target = { script_value }
             sc.open_builder();
-            if validate_scope_chain(token, data, sc, matches!(cmp, Comparator::Equals(Question))) {
-                if let Some(block) = bv.expect_block() {
-                    sc.finalize_builder();
-                    let vd = Validator::new(block, data);
-                    made_changes |= validate_inner(vd, block, data, sc, have_value, check_desc);
-                    have_value = TriBool::Maybe;
-                }
+            if validate_scope_chain(token, data, sc, matches!(cmp, Comparator::Equals(Question)))
+                && let Some(block) = bv.expect_block()
+            {
+                sc.finalize_builder();
+                let vd = Validator::new(block, data);
+                made_changes |= validate_inner(vd, block, data, sc, have_value, check_desc);
+                have_value = TriBool::Maybe;
             }
             sc.close();
         }

@@ -170,10 +170,10 @@ pub fn validate_add_war_goal(
     vd.field_target("target_state", sc, Scopes::State);
     vd.field_target("region", sc, Scopes::StateRegion);
     vd.field_bool("primary_demand");
-    if let Some(goal_type) = block.get_field_value("type") {
-        if goal_type.is("enforce_treaty_article") {
-            vd.multi_field_validated_block_sc("article", sc, validate_treaty_article);
-        }
+    if let Some(goal_type) = block.get_field_value("type")
+        && goal_type.is("enforce_treaty_article")
+    {
+        vd.multi_field_validated_block_sc("article", sc, validate_treaty_article);
     }
 }
 
@@ -291,21 +291,20 @@ pub fn validate_create_building(
     let building = block.get_field_value("building");
     vd.field_validated_list("activate_production_methods", |token, data| {
         data.verify_exists(Item::ProductionMethod, token);
-        if let Some(building) = building {
-            if let Some((_, block, building_item)) =
+        if let Some(building) = building
+            && let Some((_, block, building_item)) =
                 data.get_item::<BuildingType>(Item::BuildingType, building.as_str())
-            {
-                building_item.validate_production_method(token, building, block, data);
-            }
+        {
+            building_item.validate_production_method(token, building, block, data);
         }
     });
     vd.field_bool("subsidized");
     vd.field_numeric_range("reserves", 0.0..=1.0);
     vd.field_validated_sc("level", sc, |bv, data, sc| {
-        if let Some(token) = bv.get_value() {
-            if token.is("arable_land") {
-                return;
-            }
+        if let Some(token) = bv.get_value()
+            && token.is("arable_land")
+        {
+            return;
         }
         validate_script_value(bv, data, sc);
     });
@@ -517,10 +516,10 @@ fn validate_war_goal(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     vd.advice_field("region", "docs say `region` but it's `target_region`");
     vd.field_target("target_region", sc, Scopes::StrategicRegion);
     vd.field_bool("primary_demand");
-    if let Some(goal_type) = block.get_field_value("type") {
-        if goal_type.is("enforce_treaty_article") {
-            vd.multi_field_validated_block_sc("article", sc, validate_treaty_article);
-        }
+    if let Some(goal_type) = block.get_field_value("type")
+        && goal_type.is("enforce_treaty_article")
+    {
+        vd.multi_field_validated_block_sc("article", sc, validate_treaty_article);
     }
 }
 
@@ -554,11 +553,12 @@ pub fn validate_create_military_formation(
         let mut vd = Validator::new(block, data);
         vd.field_target("type", sc, Scopes::CombatUnitType);
         vd.field_choice("service_type", &["regular", "conscript"]);
-        if let Some(token) = vd.field_value("service_type") {
-            if is_fleet && token.is("conscript") {
-                let msg = "conscript is not applicable to fleets";
-                err(ErrorKey::Choice).msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("service_type")
+            && is_fleet
+            && token.is("conscript")
+        {
+            let msg = "conscript is not applicable to fleets";
+            err(ErrorKey::Choice).msg(msg).loc(token).push();
         }
         vd.field_target("state_region", sc, Scopes::StateRegion);
         vd.field_integer("count");

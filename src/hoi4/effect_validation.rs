@@ -332,11 +332,11 @@ pub fn validate_random_list(
     let mut has_tooltip = false;
     vd.unknown_block_fields(|key, block| {
         // TODO: validate variable expression in else branch
-        if let Some(n) = key.get_number() {
-            if n < 0.0 {
-                let msg = "negative weights make the whole `random_list` fail";
-                err(ErrorKey::Range).strong().msg(msg).loc(key).push();
-            }
+        if let Some(n) = key.get_number()
+            && n < 0.0
+        {
+            let msg = "negative weights make the whole `random_list` fail";
+            err(ErrorKey::Range).strong().msg(msg).loc(key).push();
         }
         has_tooltip |=
             validate_effect_control(&caller, block, data, sc, tooltipped, special_tokens);

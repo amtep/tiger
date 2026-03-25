@@ -20,10 +20,10 @@ pub struct CharacterInteractionCategories {
 
 impl CharacterInteractionCategories {
     pub fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.categories.get(key.as_str()) {
-            if other.key.loc.kind == key.loc.kind {
-                dup_error(&key, &other.key, "interaction category");
-            }
+        if let Some(other) = self.categories.get(key.as_str())
+            && other.key.loc.kind == key.loc.kind
+        {
+            dup_error(&key, &other.key, "interaction category");
         }
         self.categories.insert(key.as_str(), Category::new(key, block));
     }

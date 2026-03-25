@@ -32,25 +32,25 @@ pub struct Events {
 
 impl Events {
     fn load_event(&mut self, key: Token, block: Block) {
-        if let Some((key_a, key_b)) = key.as_str().split_once('.') {
-            if let Ok(id) = u16::from_str(key_b) {
-                if let Some(other) = self.get_event(key.as_str()) {
-                    #[allow(clippy::redundant_else)]
-                    if Game::is_vic3() {
-                        // Earlier events override later ones in vic3.
-                        // The game will complain but it does work, so don't warn unless warranted.
-                        if other.key.loc.kind <= key.loc.kind {
-                            dup_error(&other.key, &key, "event");
-                        }
-                        return;
-                    } else {
-                        // In the other games, overriding events is always an error.
-                        dup_error(&key, &other.key, "event");
+        if let Some((key_a, key_b)) = key.as_str().split_once('.')
+            && let Ok(id) = u16::from_str(key_b)
+        {
+            if let Some(other) = self.get_event(key.as_str()) {
+                #[allow(clippy::redundant_else)]
+                if Game::is_vic3() {
+                    // Earlier events override later ones in vic3.
+                    // The game will complain but it does work, so don't warn unless warranted.
+                    if other.key.loc.kind <= key.loc.kind {
+                        dup_error(&other.key, &key, "event");
                     }
+                    return;
+                } else {
+                    // In the other games, overriding events is always an error.
+                    dup_error(&key, &other.key, "event");
                 }
-                self.events.insert((key_a, id), Event::new(key, block));
-                return;
             }
+            self.events.insert((key_a, id), Event::new(key, block));
+            return;
         }
         let msg = "Event names should be in the form NAMESPACE.NUMBER";
         let info = "where NAMESPACE is the namespace declared at the top of the file, and NUMBER is a series of up to 4 digits.";
@@ -98,10 +98,10 @@ impl Events {
     }
 
     fn get_event<'a>(&'a self, key: &'a str) -> Option<&'a Event> {
-        if let Some((namespace, id)) = key.split_once('.') {
-            if let Ok(id) = u16::from_str(id) {
-                return self.events.get(&(namespace, id));
-            }
+        if let Some((namespace, id)) = key.split_once('.')
+            && let Ok(id) = u16::from_str(id)
+        {
+            return self.events.get(&(namespace, id));
         }
         None
     }
@@ -121,12 +121,11 @@ impl Events {
     }
 
     pub fn exists(&self, key: &str) -> bool {
-        if let Some((namespace, id)) = key.split_once('.') {
-            if let Ok(id) = u16::from_str(id) {
-                if self.events.contains_key(&(namespace, id)) {
-                    return true;
-                }
-            }
+        if let Some((namespace, id)) = key.split_once('.')
+            && let Ok(id) = u16::from_str(id)
+            && self.events.contains_key(&(namespace, id))
+        {
+            return true;
         }
         false
     }
@@ -259,12 +258,12 @@ impl Event {
     }
 
     pub fn validate(&self, data: &Everything) {
-        if let Some((namespace, _)) = self.key.as_str().split_once('.') {
-            if !data.item_exists(Item::EventNamespace, namespace) {
-                let msg = format!("event file should start with `namespace = {namespace}`");
-                let info = "otherwise the event won't be found in-game";
-                err(ErrorKey::EventNamespace).msg(msg).info(info).loc(&self.key).push();
-            }
+        if let Some((namespace, _)) = self.key.as_str().split_once('.')
+            && !data.item_exists(Item::EventNamespace, namespace)
+        {
+            let msg = format!("event file should start with `namespace = {namespace}`");
+            let info = "otherwise the event won't be found in-game";
+            err(ErrorKey::EventNamespace).msg(msg).info(info).loc(&self.key).push();
         }
 
         let mut sc = ScopeContext::new(self.expects_scope, &self.expects_from_token);

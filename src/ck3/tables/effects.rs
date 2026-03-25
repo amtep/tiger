@@ -19,17 +19,17 @@ pub fn scope_effect(name: &Token, data: &Everything) -> Option<(Scopes, Effect)>
         return result;
     }
 
-    if let Some(x) = name_lc.strip_suffix("_perk_points") {
-        if let Some(lifestyle) = x.strip_prefix("add_") {
-            data.verify_exists_implied(Item::Lifestyle, lifestyle, name);
-            return Some((Scopes::Character, Effect::ScriptValue));
-        }
+    if let Some(x) = name_lc.strip_suffix("_perk_points")
+        && let Some(lifestyle) = x.strip_prefix("add_")
+    {
+        data.verify_exists_implied(Item::Lifestyle, lifestyle, name);
+        return Some((Scopes::Character, Effect::ScriptValue));
     }
-    if let Some(x) = name_lc.strip_suffix("_xp") {
-        if let Some(lifestyle) = x.strip_prefix("add_") {
-            data.verify_exists_implied(Item::Lifestyle, lifestyle, name);
-            return Some((Scopes::Character, Effect::ScriptValue));
-        }
+    if let Some(x) = name_lc.strip_suffix("_xp")
+        && let Some(lifestyle) = x.strip_prefix("add_")
+    {
+        data.verify_exists_implied(Item::Lifestyle, lifestyle, name);
+        return Some((Scopes::Character, Effect::ScriptValue));
     }
     if let Some(relation) = name_lc.strip_prefix("set_relation_") {
         data.verify_exists_implied(Item::Relation, relation, name);

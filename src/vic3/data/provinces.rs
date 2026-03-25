@@ -38,14 +38,12 @@ impl Vic3Provinces {
         if key.len() != 7 {
             return false; // not a valid province id
         }
-        if let Some(hexid) = key.strip_prefix('x') {
-            if let Ok(r) = u8::from_str_radix(&hexid[0..2], 16) {
-                if let Ok(g) = u8::from_str_radix(&hexid[2..4], 16) {
-                    if let Ok(b) = u8::from_str_radix(&hexid[4..6], 16) {
-                        return self.colors.contains(&Rgb([r, g, b]));
-                    }
-                }
-            }
+        if let Some(hexid) = key.strip_prefix('x')
+            && let Ok(r) = u8::from_str_radix(&hexid[0..2], 16)
+            && let Ok(g) = u8::from_str_radix(&hexid[2..4], 16)
+            && let Ok(b) = u8::from_str_radix(&hexid[4..6], 16)
+        {
+            return self.colors.contains(&Rgb([r, g, b]));
         }
         false
     }

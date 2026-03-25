@@ -68,15 +68,15 @@ impl IgnoreSpec {
 
 impl IgnoreFilter {
     pub fn matches(&self, other_key: ErrorKey, other_text: &str) -> bool {
-        if let Some(key) = self.key {
-            if key != other_key {
-                return false;
-            }
+        if let Some(key) = self.key
+            && key != other_key
+        {
+            return false;
         }
-        if let Some(text) = &self.text {
-            if !other_text.contains(text) {
-                return false;
-            }
+        if let Some(text) = &self.text
+            && !other_text.contains(text)
+        {
+            return false;
         }
         true
     }

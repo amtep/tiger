@@ -222,28 +222,24 @@ impl DbKind for ActivityType {
         vd.field_choice("ai_province_filter", PROVINCE_FILTERS);
         let province_filter = block.get_field_value("province_filter");
         let ai_province_filter = block.get_field_value("ai_province_filter");
-        if province_filter.is_some_and(|t| t.is("landed_title"))
-            || ai_province_filter.is_some_and(|t| t.is("landed_title"))
+        if let Some(province_filter) = province_filter
+            && province_filter.is("landed_title")
+            && let Some(ai_province_filter) = ai_province_filter
+            && ai_province_filter.is("landed_title")
         {
-            if let Some(province_filter) = province_filter {
-                if let Some(ai_province_filter) = ai_province_filter {
-                    if province_filter != ai_province_filter {
-                        let msg = "for `landed_title`, `province_filter` and `ai_province_filter` must be the same";
-                        err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
-                    }
-                }
+            if province_filter != ai_province_filter {
+                let msg = "for `landed_title`, `province_filter` and `ai_province_filter` must be the same";
+                err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
             }
             vd.field_item("province_filter_target", Item::Title);
-        } else if province_filter.is_some_and(|t| t.is("geographical_region"))
-            || ai_province_filter.is_some_and(|t| t.is("geographical_region"))
+        } else if let Some(province_filter) = province_filter
+            && province_filter.is("geographical_region")
+            && let Some(ai_province_filter) = ai_province_filter
+            && ai_province_filter.is("geographical_region")
         {
-            if let Some(province_filter) = province_filter {
-                if let Some(ai_province_filter) = ai_province_filter {
-                    if province_filter != ai_province_filter {
-                        let msg = "for `geographical_region`, `province_filter` and `ai_province_filter` must be the same";
-                        err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
-                    }
-                }
+            if province_filter != ai_province_filter {
+                let msg = "for `geographical_region`, `province_filter` and `ai_province_filter` must be the same";
+                err(ErrorKey::Validation).msg(msg).loc(ai_province_filter).push();
             }
             vd.field_item("province_filter_target", Item::Region);
         } else {

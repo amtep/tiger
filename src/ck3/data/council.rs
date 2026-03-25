@@ -174,11 +174,11 @@ impl DbKind for CouncilTask {
                 "ai_county_target",
                 &["all", "realm", "domain", "neighbor_land", "neighbor_land_or_water"],
             );
-            if let Some(token) = block.get_field_value("county_target") {
-                if token.is("neighbor_land_or_water") {
-                    let msg = "`neighbor_land_or_water` is only for `ai_county_target`";
-                    warn(ErrorKey::Validation).msg(msg).loc(token).push();
-                }
+            if let Some(token) = block.get_field_value("county_target")
+                && token.is("neighbor_land_or_water")
+            {
+                let msg = "`neighbor_land_or_water` is only for `ai_county_target`";
+                warn(ErrorKey::Validation).msg(msg).loc(token).push();
             }
             vd.field_script_value("ai_target_score", &mut sc);
         } else {

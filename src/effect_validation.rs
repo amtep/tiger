@@ -53,13 +53,13 @@ pub fn validate_add_to_list(
             let mut vd = Validator::new(block, data);
             vd.req_field("name");
             vd.req_field("value");
-            if let Some(target) = vd.field_value("value").cloned() {
-                if let Some(name) = vd.field_value("name") {
-                    validate_identifier(name, "list name", Severity::Error);
-                    let target_scopes = sc.local_list_scopes(name.as_str(), data);
-                    let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
-                    sc.define_or_expect_list(name, outscopes, data, temp);
-                }
+            if let Some(target) = vd.field_value("value").cloned()
+                && let Some(name) = vd.field_value("name")
+            {
+                validate_identifier(name, "list name", Severity::Error);
+                let target_scopes = sc.local_list_scopes(name.as_str(), data);
+                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+                sc.define_or_expect_list(name, outscopes, data, temp);
             }
         }
     }
@@ -78,25 +78,25 @@ pub fn validate_add_to_variable_list(
 ) {
     vd.req_field("name");
     vd.req_field("target");
-    if let Some(target) = vd.field_value("target").cloned() {
-        if let Some(name) = vd.field_value("name") {
-            validate_identifier(name, "list name", Severity::Error);
-            // It would be better if the step from scopes() to expect() could be done atomically for
-            // the global and normal variables, but unfortunately that could lead to deadlocks if
-            // the target itself refers to other variables.
-            if key.as_str().contains("_local_") {
-                let target_scopes = sc.local_list_scopes(name.as_str(), data);
-                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
-                sc.define_or_expect_local_list(name, outscopes, data);
-            } else if key.as_str().contains("_global_") {
-                let target_scopes = data.global_list_scopes.scopes(name.as_str());
-                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
-                data.global_list_scopes.expect(name.as_str(), name, outscopes);
-            } else {
-                let target_scopes = data.variable_list_scopes.scopes(name.as_str());
-                let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
-                data.variable_list_scopes.expect(name.as_str(), name, outscopes);
-            }
+    if let Some(target) = vd.field_value("target").cloned()
+        && let Some(name) = vd.field_value("name")
+    {
+        validate_identifier(name, "list name", Severity::Error);
+        // It would be better if the step from scopes() to expect() could be done atomically for
+        // the global and normal variables, but unfortunately that could lead to deadlocks if
+        // the target itself refers to other variables.
+        if key.as_str().contains("_local_") {
+            let target_scopes = sc.local_list_scopes(name.as_str(), data);
+            let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+            sc.define_or_expect_local_list(name, outscopes, data);
+        } else if key.as_str().contains("_global_") {
+            let target_scopes = data.global_list_scopes.scopes(name.as_str());
+            let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+            data.global_list_scopes.expect(name.as_str(), name, outscopes);
+        } else {
+            let target_scopes = data.variable_list_scopes.scopes(name.as_str());
+            let outscopes = validate_target_ok_this(&target, data, sc, target_scopes);
+            data.variable_list_scopes.expect(name.as_str(), name, outscopes);
         }
     }
     if key.starts_with("add_") && (Game::is_ck3() || Game::is_vic3()) {

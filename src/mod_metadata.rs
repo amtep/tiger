@@ -38,10 +38,10 @@ impl ModMetadata {
 
     /// Return the paths that this mod fully replaces
     pub fn replace_paths(&self) -> Vec<PathBuf> {
-        if let Some(custom_data) = self.block.get_field_block("game_custom_data") {
-            if let Some(replace_paths) = custom_data.get_field_list("replace_paths") {
-                return replace_paths.iter().map(|t| PathBuf::from(t.as_str())).collect();
-            }
+        if let Some(custom_data) = self.block.get_field_block("game_custom_data")
+            && let Some(replace_paths) = custom_data.get_field_list("replace_paths")
+        {
+            return replace_paths.iter().map(|t| PathBuf::from(t.as_str())).collect();
         }
         Vec::new()
     }

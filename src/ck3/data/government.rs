@@ -112,10 +112,11 @@ impl DbKind for Government {
         vd.field_list_items("primary_cultures", Item::Culture);
 
         vd.field_bool("court_generate_spouses");
-        if let Some(token) = vd.field_value("court_generate_commanders") {
-            if !token.is("yes") && !token.is("no") {
-                token.expect_number();
-            }
+        if let Some(token) = vd.field_value("court_generate_commanders")
+            && !token.is("yes")
+            && !token.is("no")
+        {
+            token.expect_number();
         }
         vd.field_numeric("supply_limit_mult_for_others");
 

@@ -505,10 +505,10 @@ impl<'a> Validator<'a> {
     pub fn field_item_or_empty(&mut self, name: &str, itype: Item) -> bool {
         let sev = self.max_severity;
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !token.is("") {
-                    self.data.verify_exists_max_sev(itype, token, sev);
-                }
+            if let Some(token) = bv.expect_value()
+                && !token.is("")
+            {
+                self.data.verify_exists_max_sev(itype, token, sev);
             }
         })
     }
@@ -593,11 +593,11 @@ impl<'a> Validator<'a> {
         outscopes: Scopes,
     ) -> bool {
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !self.data.item_exists(itype, token.as_str()) {
-                    // TODO: pass max_severity here
-                    validate_target(token, self.data, sc, outscopes);
-                }
+            if let Some(token) = bv.expect_value()
+                && !self.data.item_exists(itype, token.as_str())
+            {
+                // TODO: pass max_severity here
+                validate_target(token, self.data, sc, outscopes);
             }
         })
     }
@@ -614,11 +614,11 @@ impl<'a> Validator<'a> {
         outscopes: Scopes,
     ) -> bool {
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !self.data.item_exists(itype, token.as_str()) {
-                    // TODO: pass max_severity here
-                    validate_target_ok_this(token, self.data, sc, outscopes);
-                }
+            if let Some(token) = bv.expect_value()
+                && !self.data.item_exists(itype, token.as_str())
+            {
+                // TODO: pass max_severity here
+                validate_target_ok_this(token, self.data, sc, outscopes);
             }
         })
     }
@@ -637,10 +637,13 @@ impl<'a> Validator<'a> {
     pub fn field_bool(&mut self, name: &str) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !token.is("yes") && !token.is("no") && !token.is("YES") && !token.is("NO") {
-                    report(ErrorKey::Validation, sev).msg("expected yes or no").loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && !token.is("yes")
+                && !token.is("no")
+                && !token.is("YES")
+                && !token.is("NO")
+            {
+                report(ErrorKey::Validation, sev).msg("expected yes or no").loc(token).push();
             }
         })
     }
@@ -665,30 +668,30 @@ impl<'a> Validator<'a> {
         self.field_check(name, AllowInject::Yes, |_, bv| {
             if let Some(token) = bv.expect_value() {
                 // TODO: pass max_severity here
-                if let Some(i) = token.expect_integer() {
-                    if !range.contains(&i) {
-                        let low = match range.start_bound() {
-                            Bound::Unbounded => None,
-                            Bound::Included(&n) => Some(n),
-                            Bound::Excluded(&n) => Some(n + 1),
-                        };
-                        let high = match range.end_bound() {
-                            Bound::Unbounded => None,
-                            Bound::Included(&n) => Some(n),
-                            Bound::Excluded(&n) => Some(n - 1),
-                        };
-                        let msg;
-                        if let (Some(low), Some(high)) = (low, high) {
-                            msg = format!("should be between {low} and {high} (inclusive)");
-                        } else if let Some(low) = low {
-                            msg = format!("should be at least {low}");
-                        } else if let Some(high) = high {
-                            msg = format!("should be at most {high}");
-                        } else {
-                            unreachable!(); // could not have failed the contains check
-                        }
-                        report(ErrorKey::Range, sev).msg(msg).loc(token).push();
+                if let Some(i) = token.expect_integer()
+                    && !range.contains(&i)
+                {
+                    let low = match range.start_bound() {
+                        Bound::Unbounded => None,
+                        Bound::Included(&n) => Some(n),
+                        Bound::Excluded(&n) => Some(n + 1),
+                    };
+                    let high = match range.end_bound() {
+                        Bound::Unbounded => None,
+                        Bound::Included(&n) => Some(n),
+                        Bound::Excluded(&n) => Some(n - 1),
+                    };
+                    let msg;
+                    if let (Some(low), Some(high)) = (low, high) {
+                        msg = format!("should be between {low} and {high} (inclusive)");
+                    } else if let Some(low) = low {
+                        msg = format!("should be at least {low}");
+                    } else if let Some(high) = high {
+                        msg = format!("should be at most {high}");
+                    } else {
+                        unreachable!(); // could not have failed the contains check
                     }
+                    report(ErrorKey::Range, sev).msg(msg).loc(token).push();
                 }
             }
         });
@@ -742,30 +745,30 @@ impl<'a> Validator<'a> {
             if let Some(token) = bv.expect_value() {
                 let numeric =
                     if precise { token.expect_precise_number() } else { token.expect_number() };
-                if let Some(f) = numeric {
-                    if !range.contains(&f) {
-                        let low = match range.start_bound() {
-                            Bound::Unbounded => None,
-                            Bound::Included(f) => Some(format!("{f} (inclusive)")),
-                            Bound::Excluded(f) => Some(format!("{f}")),
-                        };
-                        let high = match range.end_bound() {
-                            Bound::Unbounded => None,
-                            Bound::Included(f) => Some(format!("{f} (inclusive)")),
-                            Bound::Excluded(f) => Some(format!("{f}")),
-                        };
-                        let msg;
-                        if let (Some(low), Some(high)) = (low.as_ref(), high.as_ref()) {
-                            msg = format!("should be between {low} and {high}");
-                        } else if let Some(low) = low {
-                            msg = format!("should be at least {low}");
-                        } else if let Some(high) = high {
-                            msg = format!("should be at most {high}");
-                        } else {
-                            unreachable!(); // could not have failed the contains check
-                        }
-                        report(ErrorKey::Range, sev).msg(msg).loc(token).push();
+                if let Some(f) = numeric
+                    && !range.contains(&f)
+                {
+                    let low = match range.start_bound() {
+                        Bound::Unbounded => None,
+                        Bound::Included(f) => Some(format!("{f} (inclusive)")),
+                        Bound::Excluded(f) => Some(format!("{f}")),
+                    };
+                    let high = match range.end_bound() {
+                        Bound::Unbounded => None,
+                        Bound::Included(f) => Some(format!("{f} (inclusive)")),
+                        Bound::Excluded(f) => Some(format!("{f}")),
+                    };
+                    let msg;
+                    if let (Some(low), Some(high)) = (low.as_ref(), high.as_ref()) {
+                        msg = format!("should be between {low} and {high}");
+                    } else if let Some(low) = low {
+                        msg = format!("should be at least {low}");
+                    } else if let Some(high) = high {
+                        msg = format!("should be at most {high}");
+                    } else {
+                        unreachable!(); // could not have failed the contains check
                     }
+                    report(ErrorKey::Range, sev).msg(msg).loc(token).push();
                 }
             }
         });
@@ -794,11 +797,11 @@ impl<'a> Validator<'a> {
     pub fn field_date(&mut self, name: &str) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if Date::from_str(token.as_str()).is_err() {
-                    let msg = "expected date value";
-                    report(ErrorKey::Validation, sev).msg(msg).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && Date::from_str(token.as_str()).is_err()
+            {
+                let msg = "expected date value";
+                report(ErrorKey::Validation, sev).msg(msg).loc(token).push();
             }
         })
     }
@@ -1103,11 +1106,11 @@ impl<'a> Validator<'a> {
     pub fn field_choice(&mut self, name: &str, choices: &[&str]) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
         self.field_check(name, AllowInject::Yes, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !choices.contains(&token.as_str()) {
-                    let msg = format!("expected one of {}", choices.join(", "));
-                    report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && !choices.contains(&token.as_str())
+            {
+                let msg = format!("expected one of {}", choices.join(", "));
+                report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
             }
         })
     }
@@ -1117,11 +1120,11 @@ impl<'a> Validator<'a> {
     pub fn multi_field_choice(&mut self, name: &str, choices: &[&str]) -> bool {
         let sev = Severity::Error.at_most(self.max_severity);
         self.multi_field_check(name, |_, bv| {
-            if let Some(token) = bv.expect_value() {
-                if !choices.contains(&token.as_str()) {
-                    let msg = format!("expected one of {}", choices.join(", "));
-                    report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && !choices.contains(&token.as_str())
+            {
+                let msg = format!("expected one of {}", choices.join(", "));
+                report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
             }
         })
     }
@@ -1135,11 +1138,11 @@ impl<'a> Validator<'a> {
             if key.is(name) {
                 self.known_fields.push(key.as_str());
                 found = true;
-                if let Some(token) = bv.expect_value() {
-                    if !choices.contains(&token.as_str()) {
-                        let msg = format!("expected one of {}", choices.join(", "));
-                        report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !choices.contains(&token.as_str())
+                {
+                    let msg = format!("expected one of {}", choices.join(", "));
+                    report(ErrorKey::Choice, sev).msg(msg).loc(token).push();
                 }
             }
         }

@@ -85,20 +85,19 @@ impl Block {
     /// the block with that previous item.
     pub fn add_item_check_tag(&mut self, item: BlockItem) {
         if let BlockItem::Block(mut block) = item {
-            if let Some(BlockItem::Field(Field(key, cmp, BV::Value(value)))) = self.v.last() {
-                if value.is("hsv")
+            if let Some(BlockItem::Field(Field(key, cmp, BV::Value(value)))) = self.v.last()
+                && (value.is("hsv")
                     || value.is("rgb")
                     || value.is("hsv360")
                     || value.is("cylindrical")
-                    || value.is("cartesian")
-                {
-                    let key = key.clone();
-                    let cmp = *cmp;
-                    block.tag = Some(Box::new(value.clone()));
-                    self.v.pop();
-                    self.v.push(BlockItem::Field(Field(key, cmp, BV::Block(block))));
-                    return;
-                }
+                    || value.is("cartesian"))
+            {
+                let key = key.clone();
+                let cmp = *cmp;
+                block.tag = Some(Box::new(value.clone()));
+                self.v.pop();
+                self.v.push(BlockItem::Field(Field(key, cmp, BV::Block(block))));
+                return;
             }
             self.v.push(BlockItem::Block(block));
         } else {
@@ -116,12 +115,12 @@ impl Block {
     /// Get the value of a single `name = value` assignment.
     pub fn get_field_value(&self, name: &str) -> Option<&Token> {
         for item in self.v.iter().rev() {
-            if let BlockItem::Field(Field(key, _, bv)) = item {
-                if key.is(name) {
-                    match bv {
-                        BV::Value(t) => return Some(t),
-                        BV::Block(_) => (),
-                    }
+            if let BlockItem::Field(Field(key, _, bv)) = item
+                && key.is(name)
+            {
+                match bv {
+                    BV::Value(t) => return Some(t),
+                    BV::Block(_) => (),
                 }
             }
         }
@@ -166,12 +165,12 @@ impl Block {
     /// Get the block of a `name = { ... }` definition
     pub fn get_field_block(&self, name: &str) -> Option<&Block> {
         for item in self.v.iter().rev() {
-            if let BlockItem::Field(Field(key, _, bv)) = item {
-                if key.is(name) {
-                    match bv {
-                        BV::Value(_) => (),
-                        BV::Block(b) => return Some(b),
-                    }
+            if let BlockItem::Field(Field(key, _, bv)) = item
+                && key.is(name)
+            {
+                match bv {
+                    BV::Value(_) => (),
+                    BV::Block(b) => return Some(b),
                 }
             }
         }
@@ -192,13 +191,13 @@ impl Block {
     /// Get the values of a single `name = { value value ... }` list
     pub fn get_field_list(&self, name: &str) -> Option<Vec<Token>> {
         for item in self.v.iter().rev() {
-            if let BlockItem::Field(Field(key, _, bv)) = item {
-                if key.is(name) {
-                    match bv {
-                        BV::Value(_) => (),
-                        BV::Block(b) => {
-                            return Some(b.iter_values().cloned().collect());
-                        }
+            if let BlockItem::Field(Field(key, _, bv)) = item
+                && key.is(name)
+            {
+                match bv {
+                    BV::Value(_) => (),
+                    BV::Block(b) => {
+                        return Some(b.iter_values().cloned().collect());
                     }
                 }
             }
@@ -211,13 +210,13 @@ impl Block {
     pub fn get_multi_field_list(&self, name: &str) -> Vec<Token> {
         let mut vec = Vec::new();
         for item in &self.v {
-            if let BlockItem::Field(Field(key, _, bv)) = item {
-                if key.is(name) {
-                    match bv {
-                        BV::Value(_) => (),
-                        BV::Block(b) => {
-                            vec.extend(b.iter_values().cloned());
-                        }
+            if let BlockItem::Field(Field(key, _, bv)) = item
+                && key.is(name)
+            {
+                match bv {
+                    BV::Value(_) => (),
+                    BV::Block(b) => {
+                        vec.extend(b.iter_values().cloned());
                     }
                 }
             }
@@ -228,10 +227,10 @@ impl Block {
     /// Get the value or block on the right-hand side of a field `name`.
     pub fn get_field(&self, name: &str) -> Option<&BV> {
         for item in self.v.iter().rev() {
-            if let BlockItem::Field(Field(key, _, bv)) = item {
-                if key.is(name) {
-                    return Some(bv);
-                }
+            if let BlockItem::Field(Field(key, _, bv)) = item
+                && key.is(name)
+            {
+                return Some(bv);
             }
         }
         None
@@ -241,10 +240,10 @@ impl Block {
     /// `name`, but it can be useful to get this key as a `Token` with its location.
     pub fn get_key(&self, name: &str) -> Option<&Token> {
         for item in self.v.iter().rev() {
-            if let BlockItem::Field(Field(key, _, _)) = item {
-                if key.is(name) {
-                    return Some(key);
-                }
+            if let BlockItem::Field(Field(key, _, _)) = item
+                && key.is(name)
+            {
+                return Some(key);
             }
         }
         None
@@ -275,10 +274,10 @@ impl Block {
                     if key.is(name) {
                         return true;
                     }
-                    if let Some(block) = bv.get_block() {
-                        if block.has_key_recursive(name) {
-                            return true;
-                        }
+                    if let Some(block) = bv.get_block()
+                        && block.has_key_recursive(name)
+                    {
+                        return true;
                     }
                 }
                 BlockItem::Block(block) => {
@@ -418,13 +417,13 @@ impl Block {
         for Field(key, _, bv) in self.iter_fields() {
             if key.is(name) && found_date.is_none() {
                 found = Some(bv);
-            } else if let Ok(isdate) = Date::try_from(key) {
-                if isdate <= date && (found_date.is_none() || found_date.unwrap() < isdate) {
-                    if let Some(value) = bv.get_block().and_then(|b| b.get_field(name)) {
-                        found_date = Some(isdate);
-                        found = Some(value);
-                    }
-                }
+            } else if let Ok(isdate) = Date::try_from(key)
+                && isdate <= date
+                && (found_date.is_none() || found_date.unwrap() < isdate)
+                && let Some(value) = bv.get_block().and_then(|b| b.get_field(name))
+            {
+                found_date = Some(isdate);
+                found = Some(value);
             }
         }
         found

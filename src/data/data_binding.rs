@@ -32,10 +32,10 @@ impl DataBindings {
             warn(ErrorKey::ParseError).msg("missing field `definition`").loc(block).push();
             return;
         }
-        if let Some(other) = self.bindings.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "data binding");
-            }
+        if let Some(other) = self.bindings.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "data binding");
         }
         self.bindings.insert(key.as_str(), DataBinding::new(key, block));
     }
@@ -87,13 +87,12 @@ pub struct DataBinding {
 impl DataBinding {
     fn new(key: Token, block: Block) -> Self {
         let mut params = Vec::new();
-        if let Some(def) = block.get_field_value("definition") {
-            if let Some((_, paramsx)) = def.split_once('(') {
-                if let Some((arguments, _)) = paramsx.split_once(')') {
-                    for param in arguments.split(',') {
-                        params.push(param);
-                    }
-                }
+        if let Some(def) = block.get_field_value("definition")
+            && let Some((_, paramsx)) = def.split_once('(')
+            && let Some((arguments, _)) = paramsx.split_once(')')
+        {
+            for param in arguments.split(',') {
+                params.push(param);
             }
         }
         let mut body = None;

@@ -96,13 +96,14 @@ fn validate_bookmark_character(
         vd.field_value("name");
     } else {
         vd.field_item("name", Item::Localization);
-        if let Some(name) = block.get_field_value("name") {
-            if existing_ruler && !data.item_exists(Item::BookmarkPortrait, name.as_str()) {
-                let msg =
-                    format!("bookmark portrait for {name} not found in common/bookmark_portraits");
-                let info = "This causes a crash in CK3 1.13";
-                fatal(ErrorKey::Crash).msg(msg).info(info).loc(name).push();
-            }
+        if existing_ruler
+            && let Some(name) = block.get_field_value("name")
+            && !data.item_exists(Item::BookmarkPortrait, name.as_str())
+        {
+            let msg =
+                format!("bookmark portrait for {name} not found in common/bookmark_portraits");
+            let info = "This causes a crash in CK3 1.13";
+            fatal(ErrorKey::Crash).msg(msg).info(info).loc(name).push();
         }
     }
     if toplevel {
@@ -117,12 +118,11 @@ fn validate_bookmark_character(
     vd.field_item("dynasty_house", Item::House);
     if let Some(token) =
         block.get_field_value("dynasty_house").or_else(|| block.get_field_value("dynasty"))
+        && !data.item_exists(Item::Coa, token.as_str())
     {
-        if !data.item_exists(Item::Coa, token.as_str()) {
-            let msg = format!("{} {token} not defined in {}", Item::Coa, Item::Coa.path());
-            let info = "bookmark characters must have a defined coa or their shields will be blank";
-            warn(ErrorKey::MissingItem).msg(msg).info(info).loc(token).push();
-        }
+        let msg = format!("{} {token} not defined in {}", Item::Coa, Item::Coa.path());
+        let info = "bookmark characters must have a defined coa or their shields will be blank";
+        warn(ErrorKey::MissingItem).msg(msg).info(info).loc(token).push();
     }
     vd.field_integer("dynasty_splendor_level");
     vd.field_choice("type", &["male", "female", "boy", "girl"]);
@@ -147,39 +147,39 @@ fn validate_bookmark_character(
     // TODO: acceptable values?
     vd.field_value("character_design_type");
     vd.field_item("target_title", Item::Title);
-    if let Some(start_date) = start_date {
-        if let Some(id) = block.get_field_value("history_id") {
-            let name = block.get_field_value("name");
-            if data.item_exists(Item::Character, id.as_str()) {
-                validate_bookmark_against_history(
-                    block.get_field_value("dynasty"),
-                    "dynasty",
-                    start_date,
-                    data.characters.get_dynasty(id, start_date, data),
-                    name,
-                );
-                validate_bookmark_against_history(
-                    block.get_field_value("dynasty_house"),
-                    "house",
-                    start_date,
-                    data.characters.get_house(id, start_date),
-                    name,
-                );
-                validate_bookmark_against_history(
-                    block.get_field_value("culture"),
-                    "culture",
-                    start_date,
-                    data.characters.get_culture(id, start_date),
-                    name,
-                );
-                validate_bookmark_against_history(
-                    block.get_field_value("faith"),
-                    "faith",
-                    start_date,
-                    data.characters.get_faith(id, start_date),
-                    name,
-                );
-            }
+    if let Some(start_date) = start_date
+        && let Some(id) = block.get_field_value("history_id")
+    {
+        let name = block.get_field_value("name");
+        if data.item_exists(Item::Character, id.as_str()) {
+            validate_bookmark_against_history(
+                block.get_field_value("dynasty"),
+                "dynasty",
+                start_date,
+                data.characters.get_dynasty(id, start_date, data),
+                name,
+            );
+            validate_bookmark_against_history(
+                block.get_field_value("dynasty_house"),
+                "house",
+                start_date,
+                data.characters.get_house(id, start_date),
+                name,
+            );
+            validate_bookmark_against_history(
+                block.get_field_value("culture"),
+                "culture",
+                start_date,
+                data.characters.get_culture(id, start_date),
+                name,
+            );
+            validate_bookmark_against_history(
+                block.get_field_value("faith"),
+                "faith",
+                start_date,
+                data.characters.get_faith(id, start_date),
+                name,
+            );
         }
     }
     vd.multi_field_validated_block("character", |block, data| {

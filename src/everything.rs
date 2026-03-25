@@ -492,31 +492,31 @@ impl Everything {
         }
 
         #[cfg(feature = "jomini")]
-        if Game::is_jomini() {
-            if let Some(block) = config.get_field_block("scope_override") {
-                for (key, token) in block.iter_assignments() {
-                    let mut scopes = Scopes::empty();
-                    if token.lowercase_is("all") {
-                        scopes = Scopes::all();
-                    } else {
-                        for part in token.split('|') {
-                            if let Some(scope) = Scopes::from_snake_case(part.as_str()) {
-                                scopes |= scope;
-                            } else {
-                                let msg = format!("unknown scope type `{part}`");
-                                warn(ErrorKey::Config).msg(msg).loc(part).push();
-                            }
+        if Game::is_jomini()
+            && let Some(block) = config.get_field_block("scope_override")
+        {
+            for (key, token) in block.iter_assignments() {
+                let mut scopes = Scopes::empty();
+                if token.lowercase_is("all") {
+                    scopes = Scopes::all();
+                } else {
+                    for part in token.split('|') {
+                        if let Some(scope) = Scopes::from_snake_case(part.as_str()) {
+                            scopes |= scope;
+                        } else {
+                            let msg = format!("unknown scope type `{part}`");
+                            warn(ErrorKey::Config).msg(msg).loc(part).push();
                         }
                     }
-                    if let Some(name) = key.strip_prefix("var:") {
-                        variable_scopes.config_override(name.as_str(), scopes);
-                    } else if let Some(name) = key.strip_prefix("var_list:") {
-                        variable_list_scopes.config_override(name.as_str(), scopes);
-                    } else if let Some(name) = key.strip_prefix("global_var:") {
-                        global_scopes.config_override(name.as_str(), scopes);
-                    } else if let Some(name) = key.strip_prefix("global_list:") {
-                        global_list_scopes.config_override(name.as_str(), scopes);
-                    }
+                }
+                if let Some(name) = key.strip_prefix("var:") {
+                    variable_scopes.config_override(name.as_str(), scopes);
+                } else if let Some(name) = key.strip_prefix("var_list:") {
+                    variable_list_scopes.config_override(name.as_str(), scopes);
+                } else if let Some(name) = key.strip_prefix("global_var:") {
+                    global_scopes.config_override(name.as_str(), scopes);
+                } else if let Some(name) = key.strip_prefix("global_list:") {
+                    global_list_scopes.config_override(name.as_str(), scopes);
                 }
             }
         }
@@ -633,10 +633,9 @@ impl Everything {
         for severity in Severity::iter() {
             if let Some(error_block) =
                 block.get_field_block(format!("{severity}").to_ascii_lowercase().as_str())
+                && let Some(color) = error_block.get_field_value("color")
             {
-                if let Some(color) = error_block.get_field_value("color") {
-                    style.set(severity, color.as_str());
-                }
+                style.set(severity, color.as_str());
             }
         }
         style
@@ -810,24 +809,24 @@ impl Everything {
     fn validate_all_vic3<'a>(&'a self, s: &Scope<'a>) {
         if std::env::var("TIGER_CHECK_MODIFS").is_ok() {
             for line in std::io::stdin().lines().map_while(Result::ok) {
-                if !line.starts_with(' ') {
-                    if let Some(name) = line.strip_suffix(":") {
-                        eprintln!("checking modif {name}");
-                        let loc: Loc = FileEntry::new(
-                            "stdin".into(),
-                            FileStage::NoStage,
-                            FileKind::Vanilla,
-                            "stdin".into(),
-                        )
-                        .into();
-                        let name_token = Token::new(name, loc);
-                        crate::vic3::tables::modifs::lookup_engine_modif(
-                            &name_token,
-                            &Lowercase::new(name),
-                            self,
-                            Some(Severity::Error),
-                        );
-                    }
+                if !line.starts_with(' ')
+                    && let Some(name) = line.strip_suffix(":")
+                {
+                    eprintln!("checking modif {name}");
+                    let loc: Loc = FileEntry::new(
+                        "stdin".into(),
+                        FileStage::NoStage,
+                        FileKind::Vanilla,
+                        "stdin".into(),
+                    )
+                    .into();
+                    let name_token = Token::new(name, loc);
+                    crate::vic3::tables::modifs::lookup_engine_modif(
+                        &name_token,
+                        &Lowercase::new(name),
+                        self,
+                        Some(Severity::Error),
+                    );
                 }
             }
         }

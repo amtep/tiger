@@ -160,10 +160,10 @@ impl Gui {
     }
 
     pub fn load_layer(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.layers.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "gui layer");
-            }
+        if let Some(other) = self.layers.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "gui layer");
         }
         self.layers.insert(key.as_str(), GuiLayer::new(key, block));
     }
@@ -180,18 +180,18 @@ impl Gui {
     pub fn load_textformat(&mut self, key: Token, block: Block, color_blind_mode: Option<Token>) {
         if let Some(cbm) = color_blind_mode {
             let index = (cbm.as_str(), key.as_str());
-            if let Some(other) = self.textformats_colorblind.get(&index) {
-                if other.key.loc.kind >= key.loc.kind {
-                    let id = format!("textformat for {cbm}");
-                    dup_error(&key, &other.key, &id);
-                }
+            if let Some(other) = self.textformats_colorblind.get(&index)
+                && other.key.loc.kind >= key.loc.kind
+            {
+                let id = format!("textformat for {cbm}");
+                dup_error(&key, &other.key, &id);
             }
             self.textformats_colorblind.insert(index, TextFormat::new(key, block, Some(cbm)));
         } else {
-            if let Some(other) = self.textformats.get(key.as_str()) {
-                if other.key.loc.kind >= key.loc.kind {
-                    dup_error(&key, &other.key, "textformat");
-                }
+            if let Some(other) = self.textformats.get(key.as_str())
+                && other.key.loc.kind >= key.loc.kind
+            {
+                dup_error(&key, &other.key, "textformat");
             }
             self.textformats.insert(key.as_str(), TextFormat::new(key, block, None));
         }

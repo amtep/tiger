@@ -198,14 +198,14 @@ fn validate_position(
     vd.field_integer("y");
 
     // Check for duplicate positions
-    if let Some(x) = block.get_field_value("x") {
-        if let Some(y) = block.get_field_value("y") {
-            let index = (x.as_str(), y.as_str());
-            if let Some(other) = used.insert(index, key.clone()) {
-                let msg = format!("duplicate {what} position ({x}, {y})");
-                let msg_other = "the other one is here";
-                warn(ErrorKey::Validation).msg(msg).loc(key).loc_msg(other, msg_other).push();
-            }
+    if let Some(x) = block.get_field_value("x")
+        && let Some(y) = block.get_field_value("y")
+    {
+        let index = (x.as_str(), y.as_str());
+        if let Some(other) = used.insert(index, key.clone()) {
+            let msg = format!("duplicate {what} position ({x}, {y})");
+            let msg_other = "the other one is here";
+            warn(ErrorKey::Validation).msg(msg).loc(key).loc_msg(other, msg_other).push();
         }
     }
 }

@@ -567,11 +567,11 @@ impl ScopeContext {
             Self::break_chains_to(&mut self.named, idx);
             let entry = self.resolve_backrefs(THIS);
             // Guard against `scope:foo = { save_scope_as = foo }`
-            if let ScopeEntry::Named(i) = entry {
-                if *i == idx {
-                    // Leave the scope as its original value
-                    return;
-                }
+            if let ScopeEntry::Named(i) = entry
+                && *i == idx
+            {
+                // Leave the scope as its original value
+                return;
             }
             self.named[idx] = entry.clone();
         } else {
@@ -709,10 +709,10 @@ impl ScopeContext {
             if i == idx {
                 continue;
             }
-            if let ScopeEntry::Named(ni) = named[i] {
-                if ni == idx {
-                    named[i] = named[idx].clone();
-                }
+            if let ScopeEntry::Named(ni) = named[i]
+                && ni == idx
+            {
+                named[i] = named[idx].clone();
             }
         }
     }

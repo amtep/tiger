@@ -819,16 +819,16 @@ fn get_modfile(
             eprintln!("Could not find mod {label} at: {}", modfile_path.display());
         }
     }
-    if path.is_none() {
-        if let Some(workshop_id) = block.get_field_value("workshop_id") {
-            match paradox_dir {
-                Some(p) => {
-                    path = Some(fix_slashes_for_target_platform(
-                        p.join(format!("mod/ugc_{workshop_id}.mod")),
-                    ));
-                }
-                None => eprintln!("workshop_id defined, but could not find paradox directory"),
+    if path.is_none()
+        && let Some(workshop_id) = block.get_field_value("workshop_id")
+    {
+        match paradox_dir {
+            Some(p) => {
+                path = Some(fix_slashes_for_target_platform(
+                    p.join(format!("mod/ugc_{workshop_id}.mod")),
+                ));
             }
+            None => eprintln!("workshop_id defined, but could not find paradox directory"),
         }
     }
     path
@@ -855,14 +855,14 @@ fn get_mod(
             eprintln!("Could not find mod {label} at: {}", mod_path.display());
         }
     }
-    if path.is_none() {
-        if let Some(workshop_id) = block.get_field_value("workshop_id") {
-            match workshop_dir {
-                Some(w) => {
-                    path = Some(fix_slashes_for_target_platform(w.join(workshop_id.as_str())));
-                }
-                None => eprintln!("workshop_id defined, but could not find workshop"),
+    if path.is_none()
+        && let Some(workshop_id) = block.get_field_value("workshop_id")
+    {
+        match workshop_dir {
+            Some(w) => {
+                path = Some(fix_slashes_for_target_platform(w.join(workshop_id.as_str())));
             }
+            None => eprintln!("workshop_id defined, but could not find workshop"),
         }
     }
     path

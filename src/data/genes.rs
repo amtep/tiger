@@ -208,11 +208,12 @@ impl DbKind for MorphGene {
         vd.field_list("ugliness_feature_categories"); // TODO: options
         vd.field_bool("can_have_portrait_extremity_shift");
         // TODO value?
-        if let Some(token) = vd.field_value("group") {
-            if self.special_gene {
-                let msg = "adding a group to a gene under special_genes will make the ruler designer crash";
-                fatal(ErrorKey::Crash).msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("group")
+            && self.special_gene
+        {
+            let msg =
+                "adding a group to a gene under special_genes will make the ruler designer crash";
+            fatal(ErrorKey::Crash).msg(msg).loc(token).push();
         }
         vd.unknown_block_fields(|_, block| {
             validate_morph_gene(block, data);
@@ -256,10 +257,10 @@ impl DbKind for MorphGene {
                     let msg = format!("Gene template {token} not found in category {call_key}");
                     err(ErrorKey::MissingItem).msg(msg).loc(token).push();
                 }
-            } else if let Some(i) = token.expect_integer() {
-                if !(0..=256).contains(&i) {
-                    warn(ErrorKey::Range).msg("expected value from 0 to 256").loc(token).push();
-                }
+            } else if let Some(i) = token.expect_integer()
+                && !(0..=256).contains(&i)
+            {
+                warn(ErrorKey::Range).msg("expected value from 0 to 256").loc(token).push();
             }
             count += 1;
             if count > 4 {
@@ -435,10 +436,10 @@ impl DbKind for AccessoryGene {
                     let msg = format!("Gene template {token} not found in category {call_key}");
                     err(ErrorKey::MissingItem).msg(msg).loc(token).push();
                 }
-            } else if let Some(i) = token.expect_integer() {
-                if !(0..=256).contains(&i) {
-                    warn(ErrorKey::Range).msg("expected value from 0 to 256").loc(token).push();
-                }
+            } else if let Some(i) = token.expect_integer()
+                && !(0..=256).contains(&i)
+            {
+                warn(ErrorKey::Range).msg("expected value from 0 to 256").loc(token).push();
             }
             count += 1;
             if count > 4 {
@@ -528,32 +529,30 @@ fn validate_hsv_curve_range(block: &Block, data: &Everything) {
         if item.is_field() {
             warn(ErrorKey::Validation).msg("unexpected key").loc(item).push();
         } else if !found_first {
-            if let Some(token) = item.expect_value() {
+            if let Some(token) = item.expect_value()
+                && let Some(v) = token.expect_number()
+            {
+                found_first = true;
+                if !(0.0..=1.0).contains(&v) {
+                    let msg = "expected number from 0.0 to 1.0";
+                    err(ErrorKey::Range).msg(msg).loc(token).push();
+                }
+            }
+        } else if !found_second && let Some(block) = item.expect_block() {
+            found_second = true;
+            let mut count = 0;
+            let mut vd = Validator::new(block, data);
+            for token in vd.values() {
                 if let Some(v) = token.expect_number() {
-                    found_first = true;
-                    if !(0.0..=1.0).contains(&v) {
-                        let msg = "expected number from 0.0 to 1.0";
+                    count += 1;
+                    if !(-1.0..=1.0).contains(&v) {
+                        let msg = "expected number from -1.0 to 1.0";
                         err(ErrorKey::Range).msg(msg).loc(token).push();
                     }
                 }
             }
-        } else if !found_second {
-            if let Some(block) = item.expect_block() {
-                found_second = true;
-                let mut count = 0;
-                let mut vd = Validator::new(block, data);
-                for token in vd.values() {
-                    if let Some(v) = token.expect_number() {
-                        count += 1;
-                        if !(-1.0..=1.0).contains(&v) {
-                            let msg = "expected number from -1.0 to 1.0";
-                            err(ErrorKey::Range).msg(msg).loc(token).push();
-                        }
-                    }
-                }
-                if count != 3 {
-                    err(ErrorKey::Validation).msg("expected exactly 3 numbers").loc(block).push();
-                }
+            if count != 3 {
+                err(ErrorKey::Validation).msg("expected exactly 3 numbers").loc(block).push();
             }
         }
     }

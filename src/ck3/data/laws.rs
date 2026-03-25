@@ -47,11 +47,11 @@ impl DbKind for LawGroup {
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
-        if let Some(token) = vd.field_value("default") {
-            if block.get_field_block(token.as_str()).is_none() {
-                let msg = "law not defined in this group";
-                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("default")
+            && block.get_field_block(token.as_str()).is_none()
+        {
+            let msg = "law not defined in this group";
+            err(ErrorKey::MissingItem).msg(msg).loc(token).push();
         }
         vd.field_bool("cumulative");
 
@@ -157,13 +157,13 @@ impl DbKind for Law {
             // TODO: children may only be used if title_division == partition
             vd.field_choice("traversal_order", &["children", "dynasty_house", "dynasty"]);
             vd.field_choice("rank", &["oldest", "youngest"]);
-            if let Some(title_division) = block.get_field_value("title_division") {
-                if let Some(traversal_order) = block.get_field_value("traversal_order") {
-                    if title_division.is("partition") && !traversal_order.is("children") {
-                        let msg = "partition is only for `traversal_order = children`";
-                        err(ErrorKey::Validation).msg(msg).loc(title_division).push();
-                    }
-                }
+            if let Some(title_division) = block.get_field_value("title_division")
+                && let Some(traversal_order) = block.get_field_value("traversal_order")
+                && title_division.is("partition")
+                && !traversal_order.is("children")
+            {
+                let msg = "partition is only for `traversal_order = children`";
+                err(ErrorKey::Validation).msg(msg).loc(title_division).push();
             }
 
             if order_of_succession == "theocratic"

@@ -138,16 +138,12 @@ fn validate_names_group(_block: &Block, _data: &Everything, mut vd: Validator, w
             let mut vd = Validator::new(block, data);
             let mut seen = TigerHashSet::default();
             vd.unknown_block_fields(|key, block| {
-                if key.expect_integer().is_some() {
-                    if let Some(other) = seen.replace(key.clone()) {
-                        let msg = format!("duplicate index in ordered {what} names");
-                        let msg2 = "the other one is here";
-                        warn(ErrorKey::DuplicateField)
-                            .msg(msg)
-                            .loc(key)
-                            .loc_msg(other, msg2)
-                            .push();
-                    }
+                if key.expect_integer().is_some()
+                    && let Some(other) = seen.replace(key.clone())
+                {
+                    let msg = format!("duplicate index in ordered {what} names");
+                    let msg2 = "the other one is here";
+                    warn(ErrorKey::DuplicateField).msg(msg).loc(key).loc_msg(other, msg2).push();
                 }
                 let mut vd = Validator::new(block, data);
                 let values = vd.values();

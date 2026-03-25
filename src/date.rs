@@ -42,10 +42,10 @@ impl FromStr for Date {
         #[cfg(feature = "hoi4")]
         let mut hour = splits.next().unwrap_or("1");
         // Error if there is another field, but do allow a trailing dot
-        if let Some(next) = splits.next() {
-            if !next.is_empty() {
-                return Err(Error);
-            }
+        if let Some(next) = splits.next()
+            && !next.is_empty()
+        {
+            return Err(Error);
         }
         if day.is_empty() {
             day = "1";

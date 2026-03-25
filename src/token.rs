@@ -388,13 +388,12 @@ impl Token {
     }
 
     pub fn check_number(&self) {
-        if let Some(idx) = self.s.find('.') {
-            if self.s.len() - idx > 6 {
-                let msg = "only 5 decimals are supported";
-                let info =
-                    "if you give more decimals, you get an error and the number is read as 0";
-                err(ErrorKey::Validation).msg(msg).info(info).loc(self).push();
-            }
+        if let Some(idx) = self.s.find('.')
+            && self.s.len() - idx > 6
+        {
+            let msg = "only 5 decimals are supported";
+            let info = "if you give more decimals, you get an error and the number is read as 0";
+            err(ErrorKey::Validation).msg(msg).info(info).loc(self).push();
         }
     }
 

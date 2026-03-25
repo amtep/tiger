@@ -26,10 +26,10 @@ impl PowerBalance {
 impl DbKind for PowerBalance {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
         for (key, block) in block.iter_definitions() {
-            if key.is("side") {
-                if let Some(id) = block.get_field_value("id") {
-                    db.add_flag(Item::PowerBalanceSide, id.clone());
-                }
+            if key.is("side")
+                && let Some(id) = block.get_field_value("id")
+            {
+                db.add_flag(Item::PowerBalanceSide, id.clone());
             }
         }
         db.set_flag_validator(Item::PowerBalanceSide, |token, data| {

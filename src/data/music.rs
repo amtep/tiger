@@ -25,10 +25,10 @@ pub struct Musics {
 
 impl Musics {
     pub fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.musics.get(key.as_str()) {
-            if other.key.loc.kind == key.loc.kind {
-                dup_error(&key, &other.key, "music");
-            }
+        if let Some(other) = self.musics.get(key.as_str())
+            && other.key.loc.kind == key.loc.kind
+        {
+            dup_error(&key, &other.key, "music");
         }
         self.musics.insert(key.as_str(), Music { key, block });
     }

@@ -282,35 +282,34 @@ pub fn validate_trigger_internal(
             return;
         }
 
-        if let Some((it_type, it_name)) = key.split_once('_') {
-            if let Ok(ltype) = ListType::try_from(it_type.as_str()) {
-                if let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc) {
-                    if !ltype.is_for_triggers() {
-                        let msg = format!("cannot use `{it_type}_` list in a trigger");
-                        err(ErrorKey::Validation).msg(msg).loc(key).push();
-                        return;
-                    }
-                    sc.expect(inscopes, &Reason::Token(key.clone()), data);
-                    if let Some(block) = bv.expect_block() {
-                        precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
-                        sc.open_scope(outscope, key.clone());
-                        let mut vd = Validator::new(block, data);
-                        vd.set_max_severity(max_sev);
-                        side_effects |= validate_trigger_internal(
-                            &Lowercase::new(it_name.as_str()),
-                            ltype,
-                            block,
-                            data,
-                            sc,
-                            vd,
-                            tooltipped,
-                            negated,
-                        );
-                        sc.close();
-                    }
-                    return;
-                }
+        if let Some((it_type, it_name)) = key.split_once('_')
+            && let Ok(ltype) = ListType::try_from(it_type.as_str())
+            && let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc)
+        {
+            if !ltype.is_for_triggers() {
+                let msg = format!("cannot use `{it_type}_` list in a trigger");
+                err(ErrorKey::Validation).msg(msg).loc(key).push();
+                return;
             }
+            sc.expect(inscopes, &Reason::Token(key.clone()), data);
+            if let Some(block) = bv.expect_block() {
+                precheck_iterator_fields(ltype, it_name.as_str(), block, data, sc);
+                sc.open_scope(outscope, key.clone());
+                let mut vd = Validator::new(block, data);
+                vd.set_max_severity(max_sev);
+                side_effects |= validate_trigger_internal(
+                    &Lowercase::new(it_name.as_str()),
+                    ltype,
+                    block,
+                    data,
+                    sc,
+                    vd,
+                    tooltipped,
+                    negated,
+                );
+                sc.close();
+            }
+            return;
         }
 
         if caller == "weighted_calc_true_if" && data.get_trigger(key).is_some() {
@@ -763,20 +762,20 @@ fn match_trigger_bv(
         }
         Trigger::CompareDate => {
             must_be_eq = false;
-            if let Some(token) = bv.expect_value() {
-                if Date::from_str(token.as_str()).is_err() {
-                    let msg = format!("{name} expects a date value");
-                    warn(ErrorKey::Validation).msg(msg).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && Date::from_str(token.as_str()).is_err()
+            {
+                let msg = format!("{name} expects a date value");
+                warn(ErrorKey::Validation).msg(msg).loc(token).push();
             }
         }
         #[cfg(any(feature = "vic3", feature = "eu5"))]
         Trigger::ItemOrCompareValue(i) => {
-            if let Some(token) = bv.expect_value() {
-                if !data.item_exists(*i, token.as_str()) {
-                    must_be_eq = false;
-                    validate_target(token, data, sc, Scopes::Value);
-                }
+            if let Some(token) = bv.expect_value()
+                && !data.item_exists(*i, token.as_str())
+            {
+                must_be_eq = false;
+                validate_target(token, data, sc, Scopes::Value);
             }
         }
         Trigger::Scope(s) => {
@@ -809,38 +808,39 @@ fn match_trigger_bv(
             }
         }
         Trigger::ScopeOrItem(s, i) => {
-            if let Some(token) = bv.expect_value() {
-                if !data.item_exists(*i, token.as_str()) {
-                    validate_target(token, data, sc, *s);
-                }
+            if let Some(token) = bv.expect_value()
+                && !data.item_exists(*i, token.as_str())
+            {
+                validate_target(token, data, sc, *s);
             }
         }
         Trigger::Choice(choices) => {
-            if let Some(token) = bv.expect_value() {
-                if !choices.iter().any(|c| token.is(c)) {
-                    let msg = format!("unknown value {token} for {name}");
-                    let info = format!("valid values are: {}", stringify_choices(choices));
-                    warn(ErrorKey::Validation).msg(msg).info(info).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && !choices.iter().any(|c| token.is(c))
+            {
+                let msg = format!("unknown value {token} for {name}");
+                let info = format!("valid values are: {}", stringify_choices(choices));
+                warn(ErrorKey::Validation).msg(msg).info(info).loc(token).push();
             }
         }
         #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::CompareChoice(choices) => {
             must_be_eq = false;
-            if let Some(token) = bv.expect_value() {
-                if !choices.contains(&token.as_str()) {
-                    let msg = format!("{name} expects one of {}", stringify_choices(choices));
-                    warn(ErrorKey::Validation).msg(msg).loc(token).push();
-                }
+            if let Some(token) = bv.expect_value()
+                && !choices.contains(&token.as_str())
+            {
+                let msg = format!("{name} expects one of {}", stringify_choices(choices));
+                warn(ErrorKey::Validation).msg(msg).loc(token).push();
             }
         }
         #[cfg(any(feature = "vic3", feature = "eu5"))]
         Trigger::CompareChoiceOrNumber(choices) => {
             must_be_eq = false;
-            if let Some(token) = bv.expect_value() {
-                if !token.is_number() && !choices.contains(&token.as_str()) {
-                    validate_target(token, data, sc, Scopes::Value);
-                }
+            if let Some(token) = bv.expect_value()
+                && !token.is_number()
+                && !choices.contains(&token.as_str())
+            {
+                validate_target(token, data, sc, Scopes::Value);
             }
         }
         Trigger::Block(fields) => {
@@ -982,14 +982,14 @@ fn match_trigger_bv(
                     } else {
                         validate_target_ok_this(token, data, sc, Scopes::all_but_none());
 
-                        if tooltipped.is_tooltipped() {
-                            if let Some(firstpart) = token.as_str().strip_suffix(".holder") {
-                                let msg = format!(
-                                    "could rewrite this as `{firstpart} = {{ is_title_created = yes }}`"
-                                );
-                                let info = "it gives a nicer tooltip";
-                                tips(ErrorKey::Tooltip).msg(msg).info(info).loc(name).push();
-                            }
+                        if tooltipped.is_tooltipped()
+                            && let Some(firstpart) = token.as_str().strip_suffix(".holder")
+                        {
+                            let msg = format!(
+                                "could rewrite this as `{firstpart} = {{ is_title_created = yes }}`"
+                            );
+                            let info = "it gives a nicer tooltip";
+                            tips(ErrorKey::Tooltip).msg(msg).info(info).loc(name).push();
                         }
                     }
                 }
@@ -1092,10 +1092,10 @@ fn match_trigger_bv(
                     let mut vd = Validator::new(block, data);
                     vd.set_max_severity(max_sev);
                     vd.field_item("category", Item::GeneCategory);
-                    if let Some(category) = block.get_field_value("category") {
-                        if let Some(template) = vd.field_value("template") {
-                            Gene::verify_has_template(category.as_str(), template, data);
-                        }
+                    if let Some(category) = block.get_field_value("category")
+                        && let Some(template) = vd.field_value("template")
+                    {
+                        Gene::verify_has_template(category.as_str(), template, data);
                     }
                 }
             } else if name.is("save_temporary_opinion_value_as") {
@@ -1143,10 +1143,10 @@ fn match_trigger_bv(
                 if let Some(block) = bv.expect_block() {
                     let mut vd = Validator::new(block, data);
                     vd.set_max_severity(max_sev);
-                    if let Some(bv) = vd.field_any_cmp("amount") {
-                        if let Some(token) = bv.expect_value() {
-                            token.expect_number();
-                        }
+                    if let Some(bv) = vd.field_any_cmp("amount")
+                        && let Some(token) = bv.expect_value()
+                    {
+                        token.expect_number();
                     }
                     for (_, block) in vd.integer_blocks() {
                         let vd = Validator::new(block, data);
@@ -1210,10 +1210,10 @@ fn match_trigger_bv(
                 }
             } else if name.is("is_researching_technology") {
                 #[cfg(feature = "vic3")]
-                if let Some(value) = bv.expect_value() {
-                    if !value.is("any") {
-                        data.verify_exists(Item::Technology, value);
-                    }
+                if let Some(value) = bv.expect_value()
+                    && !value.is("any")
+                {
+                    data.verify_exists(Item::Technology, value);
                 }
             }
             // TODO: time_of_year
@@ -1434,10 +1434,10 @@ pub fn validate_target_ok_this(
                 } else {
                     // See if the user forgot a prefix like `faith:` or `culture:`
                     let mut opt_info = None;
-                    if part_flags.contains(PartFlags::First | PartFlags::Last) {
-                        if let Some(prefix) = needs_prefix(part.as_str(), data, outscopes) {
-                            opt_info = Some(format!("did you mean `{prefix}:{part}` ?"));
-                        }
+                    if part_flags.contains(PartFlags::First | PartFlags::Last)
+                        && let Some(prefix) = needs_prefix(part.as_str(), data, outscopes)
+                    {
+                        opt_info = Some(format!("did you mean `{prefix}:{part}` ?"));
                     }
 
                     // TODO: warn if trying to use iterator here

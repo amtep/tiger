@@ -86,10 +86,10 @@ impl Titles {
         parent: Option<&'static str>,
         is_county_capital: bool,
     ) {
-        if let Some(other) = self.titles.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "title");
-            }
+        if let Some(other) = self.titles.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "title");
         }
         let title = Arc::new(Title::new(key.clone(), block.clone(), parent, is_county_capital));
         self.titles.insert(key.as_str(), Arc::clone(&title));

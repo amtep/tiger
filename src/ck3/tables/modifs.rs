@@ -61,18 +61,17 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 
     // other opinions
     if let Some(s) = name_lc.strip_suffix_unchecked("_opinion") {
-        if let Some(sev) = warn {
-            if !data.item_exists_lc(Item::Culture, &s)
-                && !data.item_exists_lc(Item::Faith, &s)
-                && !data.item_exists_lc(Item::Religion, &s)
-                && !data.item_exists_lc(Item::ReligionFamily, &s)
-                && !data.item_exists_lc(Item::GovernmentType, &s)
-                && !data.item_exists_lc(Item::VassalStance, &s)
-            {
-                let msg = format!("could not find any {s}");
-                let info = "Could be a culture, faith, religion, religion family, government type, or vassal stance";
-                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::Culture, &s)
+            && !data.item_exists_lc(Item::Faith, &s)
+            && !data.item_exists_lc(Item::Religion, &s)
+            && !data.item_exists_lc(Item::ReligionFamily, &s)
+            && !data.item_exists_lc(Item::GovernmentType, &s)
+            && !data.item_exists_lc(Item::VassalStance, &s)
+        {
+            let msg = format!("could not find any {s}");
+            let info = "Could be a culture, faith, religion, religion family, government type, or vassal stance";
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Character);
     }
@@ -87,14 +86,13 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         "_prestige_contribution_mult",
     ] {
         if let Some(s) = name_lc.strip_suffix_unchecked(sfx) {
-            if let Some(sev) = warn {
-                if !data.item_exists_lc(Item::GovernmentType, &s)
-                    && !data.item_exists_lc(Item::VassalStance, &s)
-                {
-                    let msg = format!("could not find any {s}");
-                    let info = "Could be a government type or vassal stance";
-                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-                }
+            if let Some(sev) = warn
+                && !data.item_exists_lc(Item::GovernmentType, &s)
+                && !data.item_exists_lc(Item::VassalStance, &s)
+            {
+                let msg = format!("could not find any {s}");
+                let info = "Could be a government type or vassal stance";
+                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
             }
             return Some(ModifKinds::Character);
         }
@@ -233,10 +231,10 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     }
 
     // max_$SCHEME_TYPE$_schemes_add
-    if let Some(s) = name_lc.strip_prefix_unchecked("max_") {
-        if let Some(s) = s.strip_suffix_unchecked("_schemes_add") {
-            return modif_check(name, &s, Item::Scheme, ModifKinds::Character, data, warn);
-        }
+    if let Some(s) = name_lc.strip_prefix_unchecked("max_")
+        && let Some(s) = s.strip_suffix_unchecked("_schemes_add")
+    {
+        return modif_check(name, &s, Item::Scheme, ModifKinds::Character, data, warn);
     }
 
     // scheme power against scripted relation
@@ -252,10 +250,10 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         }
     }
     // scheme phase duration against scripted relation
-    if let Some(s) = name_lc.strip_prefix_unchecked("scheme_phase_duration_against_") {
-        if let Some(s) = s.strip_suffix_unchecked("_add") {
-            return modif_check(name, &s, Item::Relation, ModifKinds::Character, data, warn);
-        }
+    if let Some(s) = name_lc.strip_prefix_unchecked("scheme_phase_duration_against_")
+        && let Some(s) = s.strip_suffix_unchecked("_add")
+    {
+        return modif_check(name, &s, Item::Relation, ModifKinds::Character, data, warn);
     }
 
     // $SITUATION_TYPE$_supply_limit_add
@@ -266,13 +264,13 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // $SITUATION_TYPE$_supply_limit_mult
     // $TERRAIN_TYPE$_supply_limit_mult
     if let Some(s) = name_lc.strip_suffix_unchecked("_supply_limit_mult") {
-        if let Some(sev) = warn {
-            if !data.item_exists_lc(Item::Situation, &s) && !data.item_exists_lc(Item::Terrain, &s)
-            {
-                let msg = format!("`{s}` not found as situation or terrain");
-                let info = format!("so the modifier `{name}` does not exist");
-                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::Situation, &s)
+            && !data.item_exists_lc(Item::Terrain, &s)
+        {
+            let msg = format!("`{s}` not found as situation or terrain");
+            let info = format!("so the modifier `{name}` does not exist");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Character | ModifKinds::Province | ModifKinds::County);
     }
@@ -281,24 +279,24 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     for &sfx in &["_development_growth", "_development_growth_factor"] {
         if let Some(s) = name_lc.strip_suffix_unchecked(sfx) {
             if data.item_exists_lc(Item::Region, &s) {
-                if let Some(sev) = warn {
-                    if !data.item_lc_has_property(Item::Region, &s, "generates_modifiers") {
-                        let msg = format!("region {s} does not have `generates_modifiers = yes`");
-                        let info = format!("so the modifier {name} does not exist");
-                        report(ErrorKey::MissingItem, sev)
-                            .strong()
-                            .msg(msg)
-                            .info(info)
-                            .loc(name)
-                            .push();
-                    }
+                if let Some(sev) = warn
+                    && !data.item_lc_has_property(Item::Region, &s, "generates_modifiers")
+                {
+                    let msg = format!("region {s} does not have `generates_modifiers = yes`");
+                    let info = format!("so the modifier {name} does not exist");
+                    report(ErrorKey::MissingItem, sev)
+                        .strong()
+                        .msg(msg)
+                        .info(info)
+                        .loc(name)
+                        .push();
                 }
-            } else if let Some(sev) = warn {
-                if !data.item_exists_lc(Item::Terrain, &s) {
-                    let msg = format!("could not find any {s}");
-                    let info = "Could be a geographical region or terrain";
-                    report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-                }
+            } else if let Some(sev) = warn
+                && !data.item_exists_lc(Item::Terrain, &s)
+            {
+                let msg = format!("could not find any {s}");
+                let info = "Could be a geographical region or terrain";
+                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
             }
             return Some(ModifKinds::Character | ModifKinds::Province | ModifKinds::County);
         }
@@ -310,10 +308,10 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
             if data.item_exists_lc(Item::HoldingType, &s) {
                 return Some(ModifKinds::Character | ModifKinds::Province | ModifKinds::County);
             }
-            if let Some(s) = s.strip_suffix_unchecked("_holding") {
-                if data.item_exists_lc(Item::HoldingType, &s) {
-                    return Some(ModifKinds::Character | ModifKinds::Province | ModifKinds::County);
-                }
+            if let Some(s) = s.strip_suffix_unchecked("_holding")
+                && data.item_exists_lc(Item::HoldingType, &s)
+            {
+                return Some(ModifKinds::Character | ModifKinds::Province | ModifKinds::County);
             }
             if let Some(sev) = warn {
                 let msg = format!("could not find holding type {s}");
@@ -381,19 +379,18 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
         if let Some(s) = name_lc.strip_prefix_unchecked(pfx) {
             for &sfx in &["_add", "_mult"] {
                 if let Some(s) = s.strip_suffix_unchecked(sfx) {
-                    if let Some(sev) = warn {
-                        if !&["county", "duchy", "kingdom", "empire", "hegemony"]
+                    if let Some(sev) = warn
+                        && !&["county", "duchy", "kingdom", "empire", "hegemony"]
                             .contains(&s.as_str())
-                        {
-                            let msg = format!("could not find salary tier {s}");
-                            let info = format!("so the modifier {name} does not exist");
-                            report(ErrorKey::MissingItem, sev)
-                                .strong()
-                                .msg(msg)
-                                .info(info)
-                                .loc(name)
-                                .push();
-                        }
+                    {
+                        let msg = format!("could not find salary tier {s}");
+                        let info = format!("so the modifier {name} does not exist");
+                        report(ErrorKey::MissingItem, sev)
+                            .strong()
+                            .msg(msg)
+                            .info(info)
+                            .loc(name)
+                            .push();
                     }
                     return Some(ModifKinds::Character);
                 }
@@ -418,12 +415,12 @@ fn modif_check(
     data: &Everything,
     warn: Option<Severity>,
 ) -> Option<ModifKinds> {
-    if let Some(sev) = warn {
-        if !data.item_exists_lc(itype, s) {
-            let msg = format!("could not find {itype} {s}");
-            let info = format!("so the modifier {name} does not exist");
-            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-        }
+    if let Some(sev) = warn
+        && !data.item_exists_lc(itype, s)
+    {
+        let msg = format!("could not find {itype} {s}");
+        let info = format!("so the modifier {name} does not exist");
+        report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
     }
     Some(mk)
 }

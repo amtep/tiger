@@ -117,13 +117,12 @@ impl DbKind for Innovation {
 
         vd.multi_field_validated_block("maa_upgrade", |block, data| {
             let mut vd = Validator::new(block, data);
-            if let Some(token) = vd.field_value("type") {
-                if !data.item_exists(Item::MenAtArms, token.as_str())
-                    && !data.item_exists(Item::MenAtArmsBase, token.as_str())
-                {
-                    let msg = format!("{token} is not a men-at-arms type or base type");
-                    err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-                }
+            if let Some(token) = vd.field_value("type")
+                && !data.item_exists(Item::MenAtArms, token.as_str())
+                && !data.item_exists(Item::MenAtArmsBase, token.as_str())
+            {
+                let msg = format!("{token} is not a men-at-arms type or base type");
+                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
             }
             validate_maa_stats(&mut vd);
         });

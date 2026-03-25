@@ -31,11 +31,11 @@ impl DbKind for BuyPackage {
 
         // Check that this is one of the expected keys, wealth_1 through wealth_99.
         if let Some(wealth_nr) = key.strip_prefix("wealth_") {
-            if let Some(nr) = wealth_nr.expect_integer() {
-                if !(1..=99).contains(&nr) {
-                    let msg = "expected wealth between 1 and 99";
-                    err(ErrorKey::Range).msg(msg).loc(key).push();
-                }
+            if let Some(nr) = wealth_nr.expect_integer()
+                && !(1..=99).contains(&nr)
+            {
+                let msg = "expected wealth between 1 and 99";
+                err(ErrorKey::Range).msg(msg).loc(key).push();
             }
         } else {
             let msg = "expected wealth_NN format for buy_package keys";

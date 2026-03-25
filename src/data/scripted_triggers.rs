@@ -209,34 +209,34 @@ impl Trigger {
     ) {
         // Every invocation is treated as different even if the args are the same,
         // because we want to point to the correct one when reporting errors.
-        if !self.cached_compat(key, args, tooltipped, negated, sc, data) {
-            if let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile) {
-                let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
-                our_sc.set_strict_scopes(false);
-                if self.scope_override.is_some() {
-                    our_sc.set_no_warn(true);
-                }
-                // Insert the dummy sc before continuing. That way, if we recurse, we'll hit
-                // that dummy context instead of macro-expanding again.
-                self.cache.insert(key, args, tooltipped, negated, our_sc.clone());
-                let vd = Validator::new(&block, data);
-                validate_trigger_internal(
-                    Lowercase::empty(),
-                    ListType::None,
-                    &block,
-                    data,
-                    &mut our_sc,
-                    vd,
-                    tooltipped,
-                    negated,
-                );
-                if let Some(scopes) = self.scope_override {
-                    our_sc = ScopeContext::new_unrooted(scopes, key);
-                    our_sc.set_strict_scopes(false);
-                }
-                sc.expect_compatibility(&our_sc, key, data);
-                self.cache.insert(key, args, tooltipped, negated, our_sc);
+        if !self.cached_compat(key, args, tooltipped, negated, sc, data)
+            && let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile)
+        {
+            let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
+            our_sc.set_strict_scopes(false);
+            if self.scope_override.is_some() {
+                our_sc.set_no_warn(true);
             }
+            // Insert the dummy sc before continuing. That way, if we recurse, we'll hit
+            // that dummy context instead of macro-expanding again.
+            self.cache.insert(key, args, tooltipped, negated, our_sc.clone());
+            let vd = Validator::new(&block, data);
+            validate_trigger_internal(
+                Lowercase::empty(),
+                ListType::None,
+                &block,
+                data,
+                &mut our_sc,
+                vd,
+                tooltipped,
+                negated,
+            );
+            if let Some(scopes) = self.scope_override {
+                our_sc = ScopeContext::new_unrooted(scopes, key);
+                our_sc.set_strict_scopes(false);
+            }
+            sc.expect_compatibility(&our_sc, key, data);
+            self.cache.insert(key, args, tooltipped, negated, our_sc);
         }
     }
 }

@@ -155,11 +155,11 @@ impl<'a> ValueValidator<'a> {
     /// Return whether the item exists.
     #[cfg(feature = "vic3")] // silence dead code warning
     pub fn maybe_prefix_item(&mut self, pfx: &str, itype: Item) -> bool {
-        if let Some(value) = self.value.as_str().strip_prefix(pfx) {
-            if self.data.item_exists(itype, value) {
-                self.validated = true;
-                return true;
-            }
+        if let Some(value) = self.value.as_str().strip_prefix(pfx)
+            && self.data.item_exists(itype, value)
+        {
+            self.validated = true;
+            return true;
         }
         false
     }
@@ -279,30 +279,30 @@ impl<'a> ValueValidator<'a> {
         let sev = Severity::Error.at_most(self.max_severity);
         self.validated = true;
         // TODO: pass max_severity here
-        if let Some(i) = self.value.expect_integer() {
-            if !range.contains(&i) {
-                let low = match range.start_bound() {
-                    Bound::Unbounded => None,
-                    Bound::Included(&n) => Some(n),
-                    Bound::Excluded(&n) => Some(n + 1),
-                };
-                let high = match range.end_bound() {
-                    Bound::Unbounded => None,
-                    Bound::Included(&n) => Some(n),
-                    Bound::Excluded(&n) => Some(n - 1),
-                };
-                let msg;
-                if let (Some(low), Some(high)) = (low, high) {
-                    msg = format!("should be between {low} and {high} (inclusive)");
-                } else if let Some(low) = low {
-                    msg = format!("should be at least {low}");
-                } else if let Some(high) = high {
-                    msg = format!("should be at most {high}");
-                } else {
-                    unreachable!(); // could not have failed the contains check
-                }
-                report(ErrorKey::Range, sev).msg(msg).loc(self).push();
+        if let Some(i) = self.value.expect_integer()
+            && !range.contains(&i)
+        {
+            let low = match range.start_bound() {
+                Bound::Unbounded => None,
+                Bound::Included(&n) => Some(n),
+                Bound::Excluded(&n) => Some(n + 1),
+            };
+            let high = match range.end_bound() {
+                Bound::Unbounded => None,
+                Bound::Included(&n) => Some(n),
+                Bound::Excluded(&n) => Some(n - 1),
+            };
+            let msg;
+            if let (Some(low), Some(high)) = (low, high) {
+                msg = format!("should be between {low} and {high} (inclusive)");
+            } else if let Some(low) = low {
+                msg = format!("should be at least {low}");
+            } else if let Some(high) = high {
+                msg = format!("should be at most {high}");
+            } else {
+                unreachable!(); // could not have failed the contains check
             }
+            report(ErrorKey::Range, sev).msg(msg).loc(self).push();
         }
     }
 
@@ -328,30 +328,30 @@ impl<'a> ValueValidator<'a> {
         let sev = Severity::Error.at_most(self.max_severity);
         self.validated = true;
         // TODO: pass max_severity here
-        if let Some(f) = self.value.expect_number() {
-            if !range.contains(&f) {
-                let low = match range.start_bound() {
-                    Bound::Unbounded => None,
-                    Bound::Included(&f) => Some(format!("{f} (inclusive)")),
-                    Bound::Excluded(&f) => Some(format!("{f}")),
-                };
-                let high = match range.end_bound() {
-                    Bound::Unbounded => None,
-                    Bound::Included(&f) => Some(format!("{f} (inclusive)")),
-                    Bound::Excluded(&f) => Some(format!("{f}")),
-                };
-                let msg;
-                if let (Some(low), Some(high)) = (low.as_ref(), high.as_ref()) {
-                    msg = format!("should be between {low} and {high}");
-                } else if let Some(low) = low {
-                    msg = format!("should be at least {low}");
-                } else if let Some(high) = high {
-                    msg = format!("should be at most {high}");
-                } else {
-                    unreachable!(); // could not have failed the contains check
-                }
-                report(ErrorKey::Range, sev).msg(msg).loc(self).push();
+        if let Some(f) = self.value.expect_number()
+            && !range.contains(&f)
+        {
+            let low = match range.start_bound() {
+                Bound::Unbounded => None,
+                Bound::Included(&f) => Some(format!("{f} (inclusive)")),
+                Bound::Excluded(&f) => Some(format!("{f}")),
+            };
+            let high = match range.end_bound() {
+                Bound::Unbounded => None,
+                Bound::Included(&f) => Some(format!("{f} (inclusive)")),
+                Bound::Excluded(&f) => Some(format!("{f}")),
+            };
+            let msg;
+            if let (Some(low), Some(high)) = (low.as_ref(), high.as_ref()) {
+                msg = format!("should be between {low} and {high}");
+            } else if let Some(low) = low {
+                msg = format!("should be at least {low}");
+            } else if let Some(high) = high {
+                msg = format!("should be at most {high}");
+            } else {
+                unreachable!(); // could not have failed the contains check
             }
+            report(ErrorKey::Range, sev).msg(msg).loc(self).push();
         }
     }
 

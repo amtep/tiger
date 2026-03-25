@@ -69,10 +69,10 @@ impl DbKind for AccoladeName {
 
         vd.field_item("key", Item::Localization);
         vd.field_integer("num_options");
-        if let Some(key) = block.get_field_value("key") {
-            if let Some(n) = block.get_field_integer("num_options") {
-                data.localization.verify_key_has_options(key.as_str(), key, n, "OPTION_");
-            }
+        if let Some(key) = block.get_field_value("key")
+            && let Some(n) = block.get_field_integer("num_options")
+        {
+            data.localization.verify_key_has_options(key.as_str(), key, n, "OPTION_");
         }
 
         let mut count = 0;
@@ -81,11 +81,11 @@ impl DbKind for AccoladeName {
             validate_desc(bv, data, &mut sc);
         });
 
-        if let Some(n) = block.get_field_integer("num_options") {
-            if count != n {
-                let msg = format!("expected {n} `option` blocks, found {count}");
-                err(ErrorKey::Validation).msg(msg).loc(block).push();
-            }
+        if let Some(n) = block.get_field_integer("num_options")
+            && count != n
+        {
+            let msg = format!("expected {n} `option` blocks, found {count}");
+            err(ErrorKey::Validation).msg(msg).loc(block).push();
         }
 
         vd.field_trigger("potential", Tooltipped::No, &mut sc);
@@ -116,11 +116,11 @@ impl DbKind for AccoladeType {
         }
         if let Some(block) = block.get_field_block("ranks") {
             for (key, block) in block.iter_definitions() {
-                if key.is_integer() {
-                    if let Some(vec) = block.get_field_list("accolade_parameters") {
-                        for token in vec {
-                            db.add_flag(Item::AccoladeParameter, token);
-                        }
+                if key.is_integer()
+                    && let Some(vec) = block.get_field_list("accolade_parameters")
+                {
+                    for token in vec {
+                        db.add_flag(Item::AccoladeParameter, token);
                     }
                 }
             }

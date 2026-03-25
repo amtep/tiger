@@ -284,13 +284,13 @@ pub fn precheck_iterator_fields(
         ListType::Any => {
             #[cfg(feature = "jomini")]
             if let Some(bv) = block.get_field("percent") {
-                if let Some(token) = bv.get_value() {
-                    if let Some(num) = token.get_number() {
-                        token.check_number();
-                        if num > 1.0 {
-                            let msg = "'percent' here needs to be between 0 and 1";
-                            warn(ErrorKey::Range).msg(msg).loc(token).push();
-                        }
+                if let Some(token) = bv.get_value()
+                    && let Some(num) = token.get_number()
+                {
+                    token.check_number();
+                    if num > 1.0 {
+                        let msg = "'percent' here needs to be between 0 and 1";
+                        warn(ErrorKey::Range).msg(msg).loc(token).push();
                     }
                 }
                 validate_script_value(bv, data, sc);
@@ -344,10 +344,11 @@ pub fn precheck_iterator_fields(
     }
 
     #[cfg(feature = "hoi4")]
-    if Game::is_hoi4() && name == "country_with_original_tag" {
-        if let Some(tag) = block.get_field_value("original_tag_to_check") {
-            validate_target_ok_this(tag, data, sc, Scopes::Country);
-        }
+    if Game::is_hoi4()
+        && name == "country_with_original_tag"
+        && let Some(tag) = block.get_field_value("original_tag_to_check")
+    {
+        validate_target_ok_this(tag, data, sc, Scopes::Country);
     }
 }
 

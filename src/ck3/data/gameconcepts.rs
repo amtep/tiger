@@ -19,10 +19,10 @@ pub struct GameConcepts {
 
 impl GameConcepts {
     pub fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.concepts.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "game concept");
-            }
+        if let Some(other) = self.concepts.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "game concept");
         }
         self.concepts.insert(key.as_str(), Concept::new(key, block));
     }
@@ -112,18 +112,17 @@ impl Concept {
                 let msg = "`framesize` and `frame` should be specified together";
                 warn(ErrorKey::Validation).msg(msg).loc(&self.key).push();
             }
-            if let Some(frame) = self.block.get_field_integer("frame") {
-                if let Some(b) = self.block.get_field_block("framesize") {
-                    let tokens: Vec<&Token> = b.iter_values().collect();
-                    if tokens.len() == 2 {
-                        if let Ok(width) = tokens[0].as_str().parse::<u32>() {
-                            if let Ok(height) = tokens[1].as_str().parse::<u32>() {
-                                #[allow(clippy::cast_possible_truncation)] // TODO
-                                #[allow(clippy::cast_sign_loss)]
-                                data.dds.validate_frame(texture, width, height, frame as u32);
-                            }
-                        }
-                    }
+            if let Some(frame) = self.block.get_field_integer("frame")
+                && let Some(b) = self.block.get_field_block("framesize")
+            {
+                let tokens: Vec<&Token> = b.iter_values().collect();
+                if tokens.len() == 2
+                    && let Ok(width) = tokens[0].as_str().parse::<u32>()
+                    && let Ok(height) = tokens[1].as_str().parse::<u32>()
+                {
+                    #[allow(clippy::cast_possible_truncation)] // TODO
+                    #[allow(clippy::cast_sign_loss)]
+                    data.dds.validate_frame(texture, width, height, frame as u32);
                 }
             }
         } else {

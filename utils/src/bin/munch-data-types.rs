@@ -29,10 +29,11 @@ fn merge_globals(globals: &mut HashMap<String, Global>, mut new_globals: HashMap
     globals.retain(|k, _| new_globals.contains_key(k));
 
     for (k, v) in new_globals.drain() {
-        if let Some(old) = globals.get(&k) {
-            if old.args.len() == v.args.len() && (v.rtype == "Unknown" || old.rtype == v.rtype) {
-                continue;
-            }
+        if let Some(old) = globals.get(&k)
+            && old.args.len() == v.args.len()
+            && (v.rtype == "Unknown" || old.rtype == v.rtype)
+        {
+            continue;
         }
         globals.insert(k, v);
     }
@@ -45,10 +46,11 @@ fn merge_nonglobals(
     nonglobals.retain(|k, _| new_nonglobals.contains_key(k));
 
     for (k, v) in new_nonglobals.drain() {
-        if let Some(old) = nonglobals.get(&k) {
-            if old.args.len() == v.args.len() && (v.rtype == "Unknown" || old.rtype == v.rtype) {
-                continue;
-            }
+        if let Some(old) = nonglobals.get(&k)
+            && old.args.len() == v.args.len()
+            && (v.rtype == "Unknown" || old.rtype == v.rtype)
+        {
+            continue;
         }
         nonglobals.insert(k, v);
     }
@@ -149,13 +151,12 @@ fn fill_in_functions(
     functions: &mut HashMap<String, NonGlobal>,
 ) {
     for (name, function) in functions.iter_mut() {
-        if let Some(promote) = promotes.get(name) {
-            if function.rtype == "Unknown"
-                && promote.rtype != "Unknown"
-                && function.args == promote.args
-            {
-                function.rtype.clone_from(&promote.rtype);
-            }
+        if let Some(promote) = promotes.get(name)
+            && function.rtype == "Unknown"
+            && promote.rtype != "Unknown"
+            && function.args == promote.args
+        {
+            function.rtype.clone_from(&promote.rtype);
         }
     }
 }
@@ -165,13 +166,12 @@ fn fill_in_global_functions(
     functions: &mut HashMap<String, Global>,
 ) {
     for (name, function) in functions.iter_mut() {
-        if let Some(promote) = promotes.get(name) {
-            if function.rtype == "Unknown"
-                && promote.rtype != "Unknown"
-                && function.args == promote.args
-            {
-                function.rtype.clone_from(&promote.rtype);
-            }
+        if let Some(promote) = promotes.get(name)
+            && function.rtype == "Unknown"
+            && promote.rtype != "Unknown"
+            && function.args == promote.args
+        {
+            function.rtype.clone_from(&promote.rtype);
         }
     }
 }

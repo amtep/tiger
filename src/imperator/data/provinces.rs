@@ -82,10 +82,10 @@ fn is_map_key(key: &Token) -> bool {
 
 impl ImperatorProvinces {
     fn expected_map_filename(&self, key: &str) -> Option<String> {
-        if let Some(block) = &self.default_map {
-            if let Some(value) = map_filename(block.get_field_value(key)) {
-                return Some(value);
-            }
+        if let Some(block) = &self.default_map
+            && let Some(value) = map_filename(block.get_field_value(key))
+        {
+            return Some(value);
         }
 
         match key {
@@ -544,15 +544,15 @@ impl Adjacency {
             let Some(expected_start) = provinces.province_color(self.from) else {
                 return;
             };
-            if let Some(actual) = provinces.provinces_png_pixel(self.start) {
-                if actual != expected_start {
-                    let Rgb([er, eg, eb]) = expected_start;
-                    let Rgb([ar, ag, ab]) = actual;
-                    let msg = format!(
-                        "start coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
-                    );
-                    err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
-                }
+            if let Some(actual) = provinces.provinces_png_pixel(self.start)
+                && actual != expected_start
+            {
+                let Rgb([er, eg, eb]) = expected_start;
+                let Rgb([ar, ag, ab]) = actual;
+                let msg = format!(
+                    "start coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
+                );
+                err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
             }
         }
 
@@ -560,15 +560,15 @@ impl Adjacency {
             let Some(expected_stop) = provinces.province_color(self.to) else {
                 return;
             };
-            if let Some(actual) = provinces.provinces_png_pixel(self.stop) {
-                if actual != expected_stop {
-                    let Rgb([er, eg, eb]) = expected_stop;
-                    let Rgb([ar, ag, ab]) = actual;
-                    let msg = format!(
-                        "stop coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
-                    );
-                    err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
-                }
+            if let Some(actual) = provinces.provinces_png_pixel(self.stop)
+                && actual != expected_stop
+            {
+                let Rgb([er, eg, eb]) = expected_stop;
+                let Rgb([ar, ag, ab]) = actual;
+                let msg = format!(
+                    "stop coordinate is in the wrong province color: expected ({er}, {eg}, {eb}), got ({ar}, {ag}, {ab})"
+                );
+                err(ErrorKey::Validation).msg(msg).loc(&self.comment).push();
             }
         }
     }

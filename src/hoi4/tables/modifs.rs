@@ -50,11 +50,11 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     }
 
     // state_resources_$Resource$_factor
-    if let Some(part) = name_lc.strip_prefix_unchecked("state_resources_") {
-        if let Some(part) = part.strip_suffix_unchecked("_factor") {
-            maybe_warn(Item::Resource, &part, name, data, warn);
-            return Some(ModifKinds::State);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("state_resources_")
+        && let Some(part) = part.strip_suffix_unchecked("_factor")
+    {
+        maybe_warn(Item::Resource, &part, name, data, warn);
+        return Some(ModifKinds::State);
     }
 
     // state_production_speed_$Building$_factor
@@ -91,12 +91,14 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // $IdeaCategory$_category_type_cost_factor
     // Despite the "IdeaCategory" doc, this modifier only takes 3 specific values.
     if let Some(part) = name_lc.strip_suffix_unchecked("_category_type_cost_factor") {
-        if let Some(sev) = warn {
-            if part != "air_spirit" && part != "navy_spirit" && part != "army_spirit" {
-                let msg = format!("{part} is not air_spirit, navy_spirit, or army_spirit");
-                let info = format!("so the modifier {name} does not exist");
-                report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && part != "air_spirit"
+            && part != "navy_spirit"
+            && part != "army_spirit"
+        {
+            let msg = format!("{part} is not air_spirit, navy_spirit, or army_spirit");
+            let info = format!("so the modifier {name} does not exist");
+            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Country);
     }
@@ -121,18 +123,16 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // $Technology$_cost_factor
     // undocumented: $TechnologyCategory$_cost_factor
     if let Some(part) = name_lc.strip_suffix_unchecked("_cost_factor") {
-        if let Some(sev) = warn {
-            if !data.item_exists_lc(Item::IdeaCategory, &part)
-                && !data.item_exists_lc(Item::AdvisorSlot, &part)
-                && !data.item_exists_lc(Item::Technology, &part)
-                && !data.item_exists_lc(Item::TechnologyCategory, &part)
-            {
-                let msg = format!(
-                    "{part} not found as idea category, technology, or technology category"
-                );
-                let info = format!("so the modifier {name} does not exist");
-                report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::IdeaCategory, &part)
+            && !data.item_exists_lc(Item::AdvisorSlot, &part)
+            && !data.item_exists_lc(Item::Technology, &part)
+            && !data.item_exists_lc(Item::TechnologyCategory, &part)
+        {
+            let msg =
+                format!("{part} not found as idea category, technology, or technology category");
+            let info = format!("so the modifier {name} does not exist");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Country);
     }
@@ -173,11 +173,11 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     }
 
     // unit_$Unit$_design_cost_factor
-    if let Some(part) = name_lc.strip_prefix_unchecked("unit_") {
-        if let Some(part) = part.strip_suffix_unchecked("_design_cost_factor") {
-            maybe_warn(Item::SubUnit, &part, name, data, warn);
-            return Some(ModifKinds::Naval | ModifKinds::Country | ModifKinds::Army);
-        }
+    if let Some(part) = name_lc.strip_prefix_unchecked("unit_")
+        && let Some(part) = part.strip_suffix_unchecked("_design_cost_factor")
+    {
+        maybe_warn(Item::SubUnit, &part, name, data, warn);
+        return Some(ModifKinds::Naval | ModifKinds::Country | ModifKinds::Army);
     }
 
     // trait_$Trait$_xp_gain_factor
@@ -185,34 +185,25 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     if let Some(part) = name_lc.strip_suffix_unchecked("_xp_gain_factor") {
         if !data.item_exists(Item::CountryLeaderTrait, part.as_str())
             && !data.item_exists(Item::UnitLeaderTrait, part.as_str())
+            && let Some(part) = part.strip_prefix_unchecked("trait_")
         {
-            if let Some(part) = part.strip_prefix_unchecked("trait_") {
-                if let Some(sev) = warn {
-                    if !data.item_exists(Item::CountryLeaderTrait, part.as_str())
-                        && !data.item_exists(Item::UnitLeaderTrait, part.as_str())
-                    {
-                        let msg =
-                            format!("could not find {part} as country leader or unit leader trait");
-                        let info = format!("so the modifier {name} does not exist");
-                        report(ErrorKey::MissingItem, sev)
-                            .strong()
-                            .msg(msg)
-                            .info(info)
-                            .loc(name)
-                            .push();
-                    }
-                }
-                return Some(ModifKinds::Naval | ModifKinds::Country | ModifKinds::Army);
-            }
-        }
-        if let Some(sev) = warn {
-            if !data.item_exists(Item::CountryLeaderTrait, part.as_str())
+            if let Some(sev) = warn
+                && !data.item_exists(Item::CountryLeaderTrait, part.as_str())
                 && !data.item_exists(Item::UnitLeaderTrait, part.as_str())
             {
                 let msg = format!("could not find {part} as country leader or unit leader trait");
                 let info = format!("so the modifier {name} does not exist");
                 report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
             }
+            return Some(ModifKinds::Naval | ModifKinds::Country | ModifKinds::Army);
+        }
+        if let Some(sev) = warn
+            && !data.item_exists(Item::CountryLeaderTrait, part.as_str())
+            && !data.item_exists(Item::UnitLeaderTrait, part.as_str())
+        {
+            let msg = format!("could not find {part} as country leader or unit leader trait");
+            let info = format!("so the modifier {name} does not exist");
+            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Naval | ModifKinds::Country | ModifKinds::Army);
     }
@@ -221,17 +212,16 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
     // undocumented: $SpecialProjectTag$_speed_factor
     // undocumented: $Specialization$_speed_factor
     if let Some(part) = name_lc.strip_suffix_unchecked("_speed_factor") {
-        if let Some(sev) = warn {
-            if !data.item_exists(Item::SpecialProject, part.as_str())
-                && !data.item_exists(Item::SpecialProjectTag, part.as_str())
-                && !data.item_exists(Item::Specialization, part.as_str())
-            {
-                let msg = format!(
-                    "could not find {part} as special project, special project tag or specialization"
-                );
-                let info = format!("so the modifier {name} does not exist");
-                report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-            }
+        if let Some(sev) = warn
+            && !data.item_exists(Item::SpecialProject, part.as_str())
+            && !data.item_exists(Item::SpecialProjectTag, part.as_str())
+            && !data.item_exists(Item::Specialization, part.as_str())
+        {
+            let msg = format!(
+                "could not find {part} as special project, special project tag or specialization"
+            );
+            let info = format!("so the modifier {name} does not exist");
+            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
         }
         return Some(ModifKinds::Country | ModifKinds::State);
     }
@@ -250,12 +240,12 @@ pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> 
 }
 
 fn maybe_warn(itype: Item, s: &Lowercase, name: &Token, data: &Everything, warn: Option<Severity>) {
-    if let Some(sev) = warn {
-        if !data.item_exists_lc(itype, s) {
-            let msg = format!("could not find {itype} {s}");
-            let info = format!("so the modifier {name} does not exist");
-            report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
-        }
+    if let Some(sev) = warn
+        && !data.item_exists_lc(itype, s)
+    {
+        let msg = format!("could not find {itype} {s}");
+        let info = format!("so the modifier {name} does not exist");
+        report(ErrorKey::MissingItem, sev).strong().msg(msg).info(info).loc(name).push();
     }
 }
 

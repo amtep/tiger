@@ -23,10 +23,10 @@ pub struct ScriptedLists {
 
 impl ScriptedLists {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.lists.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "scripted list");
-            }
+        if let Some(other) = self.lists.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "scripted list");
         }
         self.lists.insert(key.as_str(), List::new(key, block));
     }
@@ -123,14 +123,13 @@ impl List {
     }
 
     fn validate_conditions(block: &Block, data: &Everything, sc: &mut ScopeContext) {
-        if let Some(token) = block.get_field_value("base") {
-            if let Some((_, outscope)) = scope_iterator(token, data, sc) {
-                if let Some(block) = block.get_field_block("conditions") {
-                    sc.open_scope(outscope, token.clone());
-                    validate_trigger(block, data, sc, Tooltipped::No);
-                    sc.close();
-                }
-            }
+        if let Some(token) = block.get_field_value("base")
+            && let Some((_, outscope)) = scope_iterator(token, data, sc)
+            && let Some(block) = block.get_field_block("conditions")
+        {
+            sc.open_scope(outscope, token.clone());
+            validate_trigger(block, data, sc, Tooltipped::No);
+            sc.close();
         }
     }
 

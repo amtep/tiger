@@ -18,10 +18,10 @@ struct Cli {
 }
 
 fn remove_game_wrapper(sometype: &str) -> &str {
-    if let Some(sfx) = sometype.strip_prefix("Hoi4(") {
-        if let Some(result) = sfx.strip_suffix(')') {
-            return result;
-        }
+    if let Some(sfx) = sometype.strip_prefix("Hoi4(")
+        && let Some(result) = sfx.strip_suffix(')')
+    {
+        return result;
     }
     sometype
 }
@@ -101,39 +101,39 @@ impl NonGlobal {
 fn load_nonglobals(fname: &Path) -> Result<HashMap<String, NonGlobal>> {
     let mut nonglobals = HashMap::new();
     let nonglobal = read_to_string(fname)?;
-    if let Some((_, middle)) = nonglobal.split_once("[\n") {
-        if let Some((middle, _)) = middle.rsplit_once(']') {
-            for line in middle.lines() {
-                let line = line.strip_prefix("    (\"").context("parse error1")?;
-                let (name, line) = line.split_once("\", ").context("parse error2")?;
-                let (dtype, line) = line.split_once(", Args::Args(&[").context("parse error2b")?;
-                let line = line.strip_suffix("),").context("parse error3")?;
-                let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
-                let mut dtype = remove_game_wrapper(dtype);
-                let mut rtype = remove_game_wrapper(rtype);
-                let store;
-                if !GENERIC_TYPES.contains(&rtype) {
-                    store = format!("Hoi4({rtype})");
-                    rtype = &store;
-                }
-                let args: Vec<_> = if line.is_empty() {
-                    Vec::new()
-                } else {
-                    line.split(", ").map(ToOwned::to_owned).collect()
-                };
-                let idx = format!("{dtype}.{name}");
-                let store2;
-                if !GENERIC_TYPES.contains(&dtype) {
-                    store2 = format!("Hoi4({dtype})");
-                    dtype = &store2;
-                }
-                nonglobals.insert(
-                    idx,
-                    NonGlobal::new(name.to_owned(), dtype.to_owned(), args, rtype.to_owned()),
-                );
+    if let Some((_, middle)) = nonglobal.split_once("[\n")
+        && let Some((middle, _)) = middle.rsplit_once(']')
+    {
+        for line in middle.lines() {
+            let line = line.strip_prefix("    (\"").context("parse error1")?;
+            let (name, line) = line.split_once("\", ").context("parse error2")?;
+            let (dtype, line) = line.split_once(", Args::Args(&[").context("parse error2b")?;
+            let line = line.strip_suffix("),").context("parse error3")?;
+            let (line, rtype) = line.rsplit_once("]), ").context("parse error4")?;
+            let mut dtype = remove_game_wrapper(dtype);
+            let mut rtype = remove_game_wrapper(rtype);
+            let store;
+            if !GENERIC_TYPES.contains(&rtype) {
+                store = format!("Hoi4({rtype})");
+                rtype = &store;
             }
-            return Ok(nonglobals);
+            let args: Vec<_> = if line.is_empty() {
+                Vec::new()
+            } else {
+                line.split(", ").map(ToOwned::to_owned).collect()
+            };
+            let idx = format!("{dtype}.{name}");
+            let store2;
+            if !GENERIC_TYPES.contains(&dtype) {
+                store2 = format!("Hoi4({dtype})");
+                dtype = &store2;
+            }
+            nonglobals.insert(
+                idx,
+                NonGlobal::new(name.to_owned(), dtype.to_owned(), args, rtype.to_owned()),
+            );
         }
+        return Ok(nonglobals);
     }
     bail!("could not parse nonglobals from {}", fname.display());
 }
@@ -145,10 +145,11 @@ fn merge_nonglobals(
     nonglobals.retain(|k, _| new_nonglobals.contains_key(k));
 
     for (k, v) in new_nonglobals.drain() {
-        if let Some(old) = nonglobals.get(&k) {
-            if old.args.len() == v.args.len() && (v.rtype == "Unknown" || old.rtype == v.rtype) {
-                continue;
-            }
+        if let Some(old) = nonglobals.get(&k)
+            && old.args.len() == v.args.len()
+            && (v.rtype == "Unknown" || old.rtype == v.rtype)
+        {
+            continue;
         }
         nonglobals.insert(k, v);
     }
@@ -201,36 +202,36 @@ fn main() -> Result<()> {
             continue;
         }
 
-        if let Some(sfx) = line.strip_prefix("**") {
-            if let Some(name) = sfx.strip_suffix("**") {
-                let mut dtype = parent;
-                let store;
-                if !GENERIC_TYPES.contains(&dtype) {
-                    store = format!("Hoi4({parent})");
-                    dtype = &store;
-                }
-                let key = format!("{dtype}.{name}");
-                if is_promotion {
-                    new_promotes.insert(
-                        key,
-                        NonGlobal::new(
-                            name.to_owned(),
-                            dtype.to_owned(),
-                            Vec::new(),
-                            "Unknown".to_owned(),
-                        ),
-                    );
-                } else {
-                    new_functions.insert(
-                        key,
-                        NonGlobal::new(
-                            name.to_owned(),
-                            dtype.to_owned(),
-                            Vec::new(),
-                            "Unknown".to_owned(),
-                        ),
-                    );
-                }
+        if let Some(sfx) = line.strip_prefix("**")
+            && let Some(name) = sfx.strip_suffix("**")
+        {
+            let mut dtype = parent;
+            let store;
+            if !GENERIC_TYPES.contains(&dtype) {
+                store = format!("Hoi4({parent})");
+                dtype = &store;
+            }
+            let key = format!("{dtype}.{name}");
+            if is_promotion {
+                new_promotes.insert(
+                    key,
+                    NonGlobal::new(
+                        name.to_owned(),
+                        dtype.to_owned(),
+                        Vec::new(),
+                        "Unknown".to_owned(),
+                    ),
+                );
+            } else {
+                new_functions.insert(
+                    key,
+                    NonGlobal::new(
+                        name.to_owned(),
+                        dtype.to_owned(),
+                        Vec::new(),
+                        "Unknown".to_owned(),
+                    ),
+                );
             }
         }
     }

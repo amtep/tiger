@@ -19,7 +19,7 @@ description = "Library used by the tools ck3-tiger, vic3-tiger, and imperator-ti
 homepage = "https://github.com/amtep/tiger"
 repository = "https://github.com/amtep/tiger"
 readme = "README.md"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [features]
 default = ["ck3"]

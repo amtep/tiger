@@ -64,10 +64,11 @@ fn scan_nonglobal(
 
 fn apply_global(globals: &mut HashMap<String, Global>, scan: HashMap<(String, usize), String>) {
     for ((name, argnr), dtype) in scan {
-        if let Some(entry) = globals.get_mut(&name) {
-            if entry.args[argnr] == "DType(Unknown)" && !dtype.is_empty() {
-                entry.args[argnr] = dtype;
-            }
+        if let Some(entry) = globals.get_mut(&name)
+            && entry.args[argnr] == "DType(Unknown)"
+            && !dtype.is_empty()
+        {
+            entry.args[argnr] = dtype;
         }
     }
 }
@@ -78,10 +79,11 @@ fn apply_nonglobal(
 ) {
     for ((name, parent_dtype, argnr), dtype) in scan {
         let index = format!("{parent_dtype}.{name}");
-        if let Some(entry) = nonglobals.get_mut(&index) {
-            if entry.args[argnr] == "DType(Unknown)" && !dtype.is_empty() {
-                entry.args[argnr] = dtype;
-            }
+        if let Some(entry) = nonglobals.get_mut(&index)
+            && entry.args[argnr] == "DType(Unknown)"
+            && !dtype.is_empty()
+        {
+            entry.args[argnr] = dtype;
         }
     }
 }

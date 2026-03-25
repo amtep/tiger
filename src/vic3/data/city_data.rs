@@ -122,11 +122,11 @@ impl DbKind for CityCenterpiece {
                     vvd.integer_range(0..=m);
                     count += 1;
                 });
-                if let Some(levels) = block.get_key("levels") {
-                    if count != n {
-                        let msg = "length of `levels` list should be the same as `building_types`";
-                        warn(ErrorKey::Validation).msg(msg).loc(levels).push();
-                    }
+                if let Some(levels) = block.get_key("levels")
+                    && count != n
+                {
+                    let msg = "length of `levels` list should be the same as `building_types`";
+                    warn(ErrorKey::Validation).msg(msg).loc(levels).push();
                 }
 
                 let mut count = 0;
@@ -134,11 +134,11 @@ impl DbKind for CityCenterpiece {
                     token.expect_integer();
                     count += 1;
                 });
-                if let Some(ratios) = block.get_key("ratios") {
-                    if count != n {
-                        let msg = "length of `ratios` list should be the same as `building_types`";
-                        warn(ErrorKey::Validation).msg(msg).loc(ratios).push();
-                    }
+                if let Some(ratios) = block.get_key("ratios")
+                    && count != n
+                {
+                    let msg = "length of `ratios` list should be the same as `building_types`";
+                    warn(ErrorKey::Validation).msg(msg).loc(ratios).push();
                 }
             });
         });

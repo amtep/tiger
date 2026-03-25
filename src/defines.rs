@@ -58,11 +58,12 @@ impl DefineType {
     pub fn validate(self, bv: &BV, data: &Everything) {
         match self {
             DefineType::Boolean => {
-                if let Some(token) = bv.expect_value() {
-                    if !token.is("yes") && !token.is("no") {
-                        let msg = "expected `yes` or `no`";
-                        err(ErrorKey::Validation).msg(msg).loc(token).push();
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !token.is("yes")
+                    && !token.is("no")
+                {
+                    let msg = "expected `yes` or `no`";
+                    err(ErrorKey::Validation).msg(msg).loc(token).push();
                 }
             }
             DefineType::Integer => {
@@ -78,27 +79,26 @@ impl DefineType {
                 bv.expect_value();
             }
             DefineType::Item(itype) => {
-                if let Some(token) = bv.expect_value() {
-                    if !(itype == Item::Sound && token.as_str().is_empty()) {
-                        data.verify_exists(itype, token);
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !(itype == Item::Sound && token.as_str().is_empty())
+                {
+                    data.verify_exists(itype, token);
                 }
             }
             DefineType::SingleQuotedItem(itype) => {
-                if let Some(token) = bv.expect_value() {
-                    if let Some(sfx) = token.strip_prefix("'") {
-                        if let Some(bare) = sfx.strip_suffix("'") {
-                            data.verify_exists(itype, &bare);
-                        }
-                    }
+                if let Some(token) = bv.expect_value()
+                    && let Some(sfx) = token.strip_prefix("'")
+                    && let Some(bare) = sfx.strip_suffix("'")
+                {
+                    data.verify_exists(itype, &bare);
                 }
             }
             DefineType::Choice(choices) => {
-                if let Some(token) = bv.expect_value() {
-                    if !choices.contains(&token.as_str()) {
-                        let msg = format!("expected one of {}", choices.join(", "));
-                        err(ErrorKey::Choice).msg(msg).loc(token).push();
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !choices.contains(&token.as_str())
+                {
+                    let msg = format!("expected one of {}", choices.join(", "));
+                    err(ErrorKey::Choice).msg(msg).loc(token).push();
                 }
             }
             DefineType::UnknownList | DefineType::StringList => {

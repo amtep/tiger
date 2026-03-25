@@ -118,10 +118,11 @@ impl ProvinceHistory {
         vd.field_item("culture", Item::Culture);
         vd.field_item("religion", Item::Faith);
         vd.field_item("faith", Item::Faith);
-        if let Some(token) = vd.field_value("holding") {
-            if !token.is("auto") && !token.is("none") {
-                data.verify_exists(Item::HoldingType, token);
-            }
+        if let Some(token) = vd.field_value("holding")
+            && !token.is("auto")
+            && !token.is("none")
+        {
+            data.verify_exists(Item::HoldingType, token);
         }
         vd.field_list_items("buildings", Item::Building);
         vd.multi_field_item("special_building_slot", Item::SpecialBuilding);

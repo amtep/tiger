@@ -90,14 +90,14 @@ pub struct Hoi4Provinces {
 
 impl Hoi4Provinces {
     fn parse_definition(&mut self, csv: &[Token]) {
-        if let Some(province) = Province::parse(csv) {
-            if let Some(old_province) = self.provinces.replace(province) {
-                err(ErrorKey::DuplicateItem)
-                    .msg("duplicate entry for this province id")
-                    .loc(&csv[0])
-                    .loc_msg(&old_province.key, "previously defined here")
-                    .push();
-            }
+        if let Some(province) = Province::parse(csv)
+            && let Some(old_province) = self.provinces.replace(province)
+        {
+            err(ErrorKey::DuplicateItem)
+                .msg("duplicate entry for this province id")
+                .loc(&csv[0])
+                .loc_msg(&old_province.key, "previously defined here")
+                .push();
         }
     }
 

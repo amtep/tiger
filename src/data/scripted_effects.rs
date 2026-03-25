@@ -226,43 +226,43 @@ impl Effect {
         let mut has_tooltip = false;
         // Every invocation is treated as different even if the args are the same,
         // because we want to point to the correct one when reporting errors.
-        if !self.cached_compat(key, args, tooltipped, sc, data, special_tokens, &mut has_tooltip) {
-            if let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile) {
-                let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
-                our_sc.set_strict_scopes(false);
-                if self.scope_override.is_some() {
-                    our_sc.set_no_warn(true);
-                }
-                // Insert the dummy sc before continuing. That way, if we recurse, we'll hit
-                // that dummy context instead of macro-expanding again.
-                self.cache.insert(
-                    key,
-                    args,
-                    tooltipped,
-                    false,
-                    (our_sc.clone(), SpecialTokens::none(), false),
-                );
-                let mut our_st = SpecialTokens::empty();
-                let mut vd = Validator::new(&block, data);
-                has_tooltip |= validate_effect_internal(
-                    Lowercase::empty(),
-                    ListType::None,
-                    &block,
-                    data,
-                    &mut our_sc,
-                    &mut vd,
-                    tooltipped,
-                    &mut our_st,
-                );
-                if let Some(scopes) = self.scope_override {
-                    our_sc = ScopeContext::new_unrooted(scopes, key);
-                    our_sc.set_strict_scopes(false);
-                }
-
-                sc.expect_compatibility(&our_sc, key, data);
-                special_tokens.merge(&our_st);
-                self.cache.insert(key, args, tooltipped, false, (our_sc, our_st, has_tooltip));
+        if !self.cached_compat(key, args, tooltipped, sc, data, special_tokens, &mut has_tooltip)
+            && let Some(block) = self.block.expand_macro(args, key.loc, &data.parser.pdxfile)
+        {
+            let mut our_sc = ScopeContext::new_unrooted(Scopes::all(), &self.key);
+            our_sc.set_strict_scopes(false);
+            if self.scope_override.is_some() {
+                our_sc.set_no_warn(true);
             }
+            // Insert the dummy sc before continuing. That way, if we recurse, we'll hit
+            // that dummy context instead of macro-expanding again.
+            self.cache.insert(
+                key,
+                args,
+                tooltipped,
+                false,
+                (our_sc.clone(), SpecialTokens::none(), false),
+            );
+            let mut our_st = SpecialTokens::empty();
+            let mut vd = Validator::new(&block, data);
+            has_tooltip |= validate_effect_internal(
+                Lowercase::empty(),
+                ListType::None,
+                &block,
+                data,
+                &mut our_sc,
+                &mut vd,
+                tooltipped,
+                &mut our_st,
+            );
+            if let Some(scopes) = self.scope_override {
+                our_sc = ScopeContext::new_unrooted(scopes, key);
+                our_sc.set_strict_scopes(false);
+            }
+
+            sc.expect_compatibility(&our_sc, key, data);
+            special_tokens.merge(&our_st);
+            self.cache.insert(key, args, tooltipped, false, (our_sc, our_st, has_tooltip));
         }
         has_tooltip && tooltipped.is_tooltipped()
     }

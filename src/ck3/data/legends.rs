@@ -92,10 +92,10 @@ impl DbKind for LegendType {
     ) {
         if let Some(block) = block.get_field_block("quality") {
             for (_, block) in block.iter_definitions() {
-                if let Some(block) = block.get_field_block("impact") {
-                    if let Some(block) = block.get_field_block("on_complete") {
-                        validate_effect(block, data, sc, Tooltipped::Yes); // TODO verify tooltip
-                    }
+                if let Some(block) = block.get_field_block("impact")
+                    && let Some(block) = block.get_field_block("on_complete")
+                {
+                    validate_effect(block, data, sc, Tooltipped::Yes); // TODO verify tooltip
                 }
             }
         }

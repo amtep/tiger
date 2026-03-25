@@ -213,10 +213,10 @@ fn validate_character(block: &Block, data: &Everything, cameras: &[&'static str]
     vd.field_precise_numeric("direction");
     vd.field_value("locator"); // TODO
     vd.field_value("description");
-    if let Some(token) = vd.field_value("camera") {
-        if !cameras.contains(&token.as_str()) {
-            warn(ErrorKey::MissingItem).msg("unknown camera").loc(token).push();
-        }
+    if let Some(token) = vd.field_value("camera")
+        && !cameras.contains(&token.as_str())
+    {
+        warn(ErrorKey::MissingItem).msg("unknown camera").loc(token).push();
     }
     vd.field_list_items("roles", Item::CourtSceneRole);
 }

@@ -201,11 +201,11 @@ impl DbKind for UnitLeaderSkill {
                 let vd = Validator::new(block, data);
                 validate_modifs(block, data, mk, vd);
             });
-            if let Some(skill_type) = block.get_field_value("type") {
-                if !seen.insert((key.as_str(), skill_type.as_str())) {
-                    let msg = format!("duplicate skill entry for {skill_type} {key}");
-                    warn(ErrorKey::DuplicateItem).msg(msg).loc(key).push();
-                }
+            if let Some(skill_type) = block.get_field_value("type")
+                && !seen.insert((key.as_str(), skill_type.as_str()))
+            {
+                let msg = format!("duplicate skill entry for {skill_type} {key}");
+                warn(ErrorKey::DuplicateItem).msg(msg).loc(key).push();
             }
         }
 

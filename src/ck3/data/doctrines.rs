@@ -29,10 +29,10 @@ pub struct Doctrines {
 
 impl Doctrines {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.categories.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "doctrine category");
-            }
+        if let Some(other) = self.categories.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "doctrine category");
         }
         self.categories.insert(key.as_str(), DoctrineCategory::new(key, block));
     }
@@ -127,10 +127,10 @@ impl FileHandler<Block> for Doctrines {
                     continue;
                 }
 
-                if let Some(other) = self.doctrines.get(doctrine.as_str()) {
-                    if other.key.loc.kind >= doctrine.loc.kind {
-                        dup_error(doctrine, &other.key, "doctrine");
-                    }
+                if let Some(other) = self.doctrines.get(doctrine.as_str())
+                    && other.key.loc.kind >= doctrine.loc.kind
+                {
+                    dup_error(doctrine, &other.key, "doctrine");
                 }
 
                 if let Some(b) = block.get_field_block("parameters") {
@@ -164,10 +164,10 @@ impl DoctrineCategory {
     }
 
     pub fn needs_icon(&self, data: &Everything) -> bool {
-        if let Some(group) = self.block.get_field_value("group") {
-            if group.is("special") || group.is("not_creatable") {
-                return false;
-            }
+        if let Some(group) = self.block.get_field_value("group")
+            && (group.is("special") || group.is("not_creatable"))
+        {
+            return false;
         }
 
         if let Some(icon_path) =

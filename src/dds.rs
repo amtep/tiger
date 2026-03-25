@@ -126,7 +126,7 @@ impl DdsInfo {
     }
 
     fn validate(&self) {
-        if self.compressed && !(self.width % 4 == 0 || self.height % 4 == 0) {
+        if self.compressed && !(self.width.is_multiple_of(4) || self.height.is_multiple_of(4)) {
             let msg = "compressed DDS must have width and height divisible by 4";
             let info = format!(
                 "DDS file is {}x{}, which can cause scaling problems and graphical artifacts",

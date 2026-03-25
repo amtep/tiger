@@ -74,10 +74,10 @@ pub fn validate_property(
             }
         }
         GuiValidation::Yes => {
-            if let Some(value) = bv.expect_value() {
-                if !value.is("yes") {
-                    warn(ErrorKey::Validation).msg("expected only yes").loc(value).push();
-                }
+            if let Some(value) = bv.expect_value()
+                && !value.is("yes")
+            {
+                warn(ErrorKey::Validation).msg("expected only yes").loc(value).push();
             }
         }
         GuiValidation::Align => {
@@ -104,11 +104,11 @@ pub fn validate_property(
             if let Some(value) = bv.expect_value() {
                 if value.starts_with("[") {
                     validate_datatype_field(Datatype::uint32, key, bv, data, dc, false);
-                } else if let Some(i) = value.expect_integer() {
-                    if i < 0 {
-                        let msg = format!("{key} needs an unsigned integer");
-                        warn(ErrorKey::Range).msg(msg).loc(value).push();
-                    }
+                } else if let Some(i) = value.expect_integer()
+                    && i < 0
+                {
+                    let msg = format!("{key} needs an unsigned integer");
+                    warn(ErrorKey::Range).msg(msg).loc(value).push();
                 }
             }
         }
@@ -391,14 +391,14 @@ pub fn validate_datatype_field(
             match loca_value {
                 // TODO: validate format
                 LocaValue::Code(chain, format) => {
-                    if key.is("datacontext") && chain.codes.len() == 1 {
-                        if let Some(code) = chain.codes.first() {
-                            if code.name.is("GetScriptedGui") {
-                                // Get the name from GetScriptedGui('name')
-                                if let Some(CodeArg::Literal(name)) = code.arguments.first() {
-                                    dc.set_sgui_name(name.clone());
-                                }
-                            }
+                    if key.is("datacontext")
+                        && chain.codes.len() == 1
+                        && let Some(code) = chain.codes.first()
+                        && code.name.is("GetScriptedGui")
+                    {
+                        // Get the name from GetScriptedGui('name')
+                        if let Some(CodeArg::Literal(name)) = code.arguments.first() {
+                            dc.set_sgui_name(name.clone());
                         }
                     }
                     validate_datatypes(
@@ -436,15 +436,13 @@ fn validate_gui_loca(key: &Token, loca_value: LocaValue, data: &Everything) {
         LocaValue::Code(chain, format) => {
             // |E is the formatting used for game concepts in ck3
             #[cfg(feature = "ck3")]
-            if Game::is_ck3() {
-                if let Some(ref format) = format {
-                    if format.as_str().contains('E') || format.as_str().contains('e') {
-                        if let Some(concept) = chain.as_gameconcept() {
-                            data.verify_exists(Item::GameConcept, concept);
-                            return;
-                        }
-                    }
-                }
+            if Game::is_ck3()
+                && let Some(ref format) = format
+                && (format.as_str().contains('E') || format.as_str().contains('e'))
+                && let Some(concept) = chain.as_gameconcept()
+            {
+                data.verify_exists(Item::GameConcept, concept);
+                return;
             }
 
             let mut sc = ScopeContext::new(Scopes::None, key);

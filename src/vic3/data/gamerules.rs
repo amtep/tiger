@@ -65,11 +65,11 @@ impl DbKind for GameRule {
         data.verify_exists_implied(Item::Localization, &loca, key);
 
         vd.req_field("default");
-        if let Some(token) = vd.field_value("default") {
-            if block.get_field_block(token.as_str()).is_none() {
-                let msg = "default value not found among the settings";
-                warn(ErrorKey::MissingItem).strong().msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("default")
+            && block.get_field_block(token.as_str()).is_none()
+        {
+            let msg = "default value not found among the settings";
+            warn(ErrorKey::MissingItem).strong().msg(msg).loc(token).push();
         }
 
         vd.unknown_block_fields(|key, block| {

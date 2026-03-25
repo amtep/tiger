@@ -128,45 +128,45 @@ impl TitleHistory {
     pub fn validate_history(&self, date: Date, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         vd.field_numeric("change_development_level");
-        if let Some(token) = vd.field_value("holder") {
-            if !token.is("0") {
-                data.verify_exists(Item::Character, token);
-                if data.item_exists(Item::Character, token.as_str()) {
-                    data.characters.verify_alive(token, date);
-                }
+        if let Some(token) = vd.field_value("holder")
+            && !token.is("0")
+        {
+            data.verify_exists(Item::Character, token);
+            if data.item_exists(Item::Character, token.as_str()) {
+                data.characters.verify_alive(token, date);
             }
         }
-        if let Some(token) = vd.field_value("holder_ignore_head_of_faith_requirement") {
-            if !token.is("0") {
-                data.verify_exists(Item::Character, token);
-                if data.item_exists(Item::Character, token.as_str()) {
-                    data.characters.verify_alive(token, date);
-                }
-            }
-        }
-
-        if let Some(token) = vd.field_value("liege") {
-            if !token.is("0") {
-                data.verify_exists(Item::Title, token);
-                if let Some(title) = data.titles.get(token.as_str()) {
-                    if title.tier <= self.tier {
-                        let msg = format!("liege must be higher tier than {}", self.key);
-                        err(ErrorKey::TitleTier).msg(msg).loc(token).push();
-                    }
-                    data.title_history.verify_has_holder(token, date, data, "liege");
-                }
+        if let Some(token) = vd.field_value("holder_ignore_head_of_faith_requirement")
+            && !token.is("0")
+        {
+            data.verify_exists(Item::Character, token);
+            if data.item_exists(Item::Character, token.as_str()) {
+                data.characters.verify_alive(token, date);
             }
         }
 
-        if let Some(token) = vd.field_value("de_jure_liege") {
-            if !token.is("0") {
-                data.verify_exists(Item::Title, token);
-                if let Some(title) = data.titles.get(token.as_str()) {
-                    if title.tier <= self.tier {
-                        let msg = format!("liege must be higher tier than {}", self.key);
-                        err(ErrorKey::TitleTier).msg(msg).loc(token).push();
-                    }
+        if let Some(token) = vd.field_value("liege")
+            && !token.is("0")
+        {
+            data.verify_exists(Item::Title, token);
+            if let Some(title) = data.titles.get(token.as_str()) {
+                if title.tier <= self.tier {
+                    let msg = format!("liege must be higher tier than {}", self.key);
+                    err(ErrorKey::TitleTier).msg(msg).loc(token).push();
                 }
+                data.title_history.verify_has_holder(token, date, data, "liege");
+            }
+        }
+
+        if let Some(token) = vd.field_value("de_jure_liege")
+            && !token.is("0")
+        {
+            data.verify_exists(Item::Title, token);
+            if let Some(title) = data.titles.get(token.as_str())
+                && title.tier <= self.tier
+            {
+                let msg = format!("liege must be higher tier than {}", self.key);
+                err(ErrorKey::TitleTier).msg(msg).loc(token).push();
             }
         }
 

@@ -43,11 +43,11 @@ impl DbKind for GameRule {
             }
         });
 
-        if let Some(token) = vd.field_value("default") {
-            if token.is("categories") || block.get_field_block(token.as_str()).is_none() {
-                let msg = "this rule does not have that setting";
-                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            }
+        if let Some(token) = vd.field_value("default")
+            && (token.is("categories") || block.get_field_block(token.as_str()).is_none())
+        {
+            let msg = "this rule does not have that setting";
+            err(ErrorKey::MissingItem).msg(msg).loc(token).push();
         }
 
         vd.unknown_block_fields(|setting, block| {

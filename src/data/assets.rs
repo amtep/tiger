@@ -30,10 +30,10 @@ pub struct Assets {
 impl Assets {
     pub fn load_item(&mut self, key: &Token, block: &Block) {
         if let Some(name) = block.get_field_value("name") {
-            if let Some(other) = self.assets.get(name.as_str()) {
-                if other.key.loc.kind >= name.loc.kind {
-                    dup_error(name, &other.key, "asset");
-                }
+            if let Some(other) = self.assets.get(name.as_str())
+                && other.key.loc.kind >= name.loc.kind
+            {
+                dup_error(name, &other.key, "asset");
             }
             self.assets.insert(name.as_str(), Asset::new(key.clone(), name.clone(), block.clone()));
         }
@@ -133,14 +133,14 @@ impl FileHandler<Option<Block>> for Assets {
     fn handle_file(&mut self, entry: &FileEntry, loaded: Option<Block>) {
         let name = entry.filename().to_string_lossy();
         if name.ends_with(".dds") {
-            if let Some((other, _)) = self.textures.get(&*name) {
-                if other.kind() >= entry.kind() {
-                    warn(ErrorKey::DuplicateItem)
-                        .msg("texture file is redefined by another file")
-                        .loc(other)
-                        .loc_msg(entry, "the other file is here")
-                        .push();
-                }
+            if let Some((other, _)) = self.textures.get(&*name)
+                && other.kind() >= entry.kind()
+            {
+                warn(ErrorKey::DuplicateItem)
+                    .msg("texture file is redefined by another file")
+                    .loc(other)
+                    .loc_msg(entry, "the other file is here")
+                    .push();
             }
             let entry_token = Token::new(&entry.filename().to_string_lossy(), entry.into());
             self.textures.insert(name.to_string(), (entry.clone(), entry_token));
@@ -157,18 +157,18 @@ impl FileHandler<Option<Block>> for Assets {
         for asset in self.assets.values() {
             if asset.key.is("pdxmesh") {
                 for (key, block) in asset.block.iter_definitions() {
-                    if key.is("blend_shape") {
-                        if let Some(id) = block.get_field_value("id") {
-                            self.blend_shapes.insert(id.clone());
-                        }
+                    if key.is("blend_shape")
+                        && let Some(id) = block.get_field_value("id")
+                    {
+                        self.blend_shapes.insert(id.clone());
                     }
                 }
             } else if asset.key.is("entity") {
                 for (key, block) in asset.block.iter_definitions() {
-                    if key.is("attribute") {
-                        if let Some(name) = block.get_field_value("name") {
-                            self.attributes.insert(name.clone());
-                        }
+                    if key.is("attribute")
+                        && let Some(name) = block.get_field_value("name")
+                    {
+                        self.attributes.insert(name.clone());
                     }
                 }
             } else if asset.key.is("music") {
@@ -459,16 +459,16 @@ fn validate_event(block: &Block, data: &Everything) {
     });
     vd.multi_field_validated_block("sound", |block, data| {
         let mut vd = Validator::new(block, data);
-        if let Some(token) = vd.field_value("soundeffect") {
-            if !token.is("") {
-                if Game::is_hoi4() {
-                    #[cfg(feature = "hoi4")]
-                    data.verify_exists(Item::SoundEffect, token);
-                } else if Game::is_eu5() {
-                    // TODO: EU5 sound system is wwise and not documented
-                } else {
-                    data.verify_exists(Item::Sound, token);
-                }
+        if let Some(token) = vd.field_value("soundeffect")
+            && !token.is("")
+        {
+            if Game::is_hoi4() {
+                #[cfg(feature = "hoi4")]
+                data.verify_exists(Item::SoundEffect, token);
+            } else if Game::is_eu5() {
+                // TODO: EU5 sound system is wwise and not documented
+            } else {
+                data.verify_exists(Item::Sound, token);
             }
         }
         vd.field_bool("stop_on_state_change");

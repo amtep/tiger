@@ -26,10 +26,10 @@ pub struct MenAtArmsTypes {
 
 impl MenAtArmsTypes {
     pub fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.menatarmstypes.get(key.as_str()) {
-            if other.key.loc.kind == key.loc.kind {
-                dup_error(&key, &other.key, "men-at-arms type");
-            }
+        if let Some(other) = self.menatarmstypes.get(key.as_str())
+            && other.key.loc.kind == key.loc.kind
+        {
+            dup_error(&key, &other.key, "men-at-arms type");
         }
 
         self.menatarmstypes.insert(key.as_str(), MenAtArmsType::new(key, block));

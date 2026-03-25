@@ -207,16 +207,16 @@ pub fn validate_effect_field(
     }
 
     #[cfg(feature = "jomini")]
-    if Game::is_jomini() {
-        if let Some(modifier) = data.scripted_modifiers.get(key.as_str()) {
-            if caller != "random" && caller != "random_list" && caller != "duel" {
-                let msg = "cannot use scripted modifier here";
-                err(ErrorKey::Validation).msg(msg).loc(key).push();
-                return false;
-            }
-            validate_scripted_modifier_call(key, bv, modifier, data, sc);
+    if Game::is_jomini()
+        && let Some(modifier) = data.scripted_modifiers.get(key.as_str())
+    {
+        if caller != "random" && caller != "random_list" && caller != "duel" {
+            let msg = "cannot use scripted modifier here";
+            err(ErrorKey::Validation).msg(msg).loc(key).push();
             return false;
         }
+        validate_scripted_modifier_call(key, bv, modifier, data, sc);
+        return false;
     }
 
     if let Some((inscopes, effect)) = scope_effect(key, data) {
@@ -227,11 +227,11 @@ pub fn validate_effect_field(
         }
         match effect {
             Effect::Yes => {
-                if let Some(token) = bv.expect_value() {
-                    if !token.is("yes") {
-                        let msg = format!("expected just `{key} = yes`");
-                        warn(ErrorKey::Validation).msg(msg).loc(token).push();
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !token.is("yes")
+                {
+                    let msg = format!("expected just `{key} = yes`");
+                    warn(ErrorKey::Validation).msg(msg).loc(token).push();
                 }
             }
             Effect::Boolean => {
@@ -245,18 +245,18 @@ pub fn validate_effect_field(
                 }
             }
             Effect::ScriptValue | Effect::NonNegativeValue => {
-                if let Some(token) = bv.get_value() {
-                    if let Some(number) = token.get_number() {
-                        if matches!(effect, Effect::NonNegativeValue) && number < 0.0 {
-                            if key.is("add_gold") {
-                                let msg = "add_gold does not take negative numbers";
-                                let info = "try remove_short_term_gold instead";
-                                warn(ErrorKey::Range).msg(msg).info(info).loc(token).push();
-                            } else {
-                                let msg = format!("{key} does not take negative numbers");
-                                warn(ErrorKey::Range).msg(msg).loc(token).push();
-                            }
-                        }
+                if let Some(token) = bv.get_value()
+                    && let Some(number) = token.get_number()
+                    && matches!(effect, Effect::NonNegativeValue)
+                    && number < 0.0
+                {
+                    if key.is("add_gold") {
+                        let msg = "add_gold does not take negative numbers";
+                        let info = "try remove_short_term_gold instead";
+                        warn(ErrorKey::Range).msg(msg).info(info).loc(token).push();
+                    } else {
+                        let msg = format!("{key} does not take negative numbers");
+                        warn(ErrorKey::Range).msg(msg).loc(token).push();
                     }
                 }
                 #[cfg(feature = "jomini")]
@@ -288,10 +288,10 @@ pub fn validate_effect_field(
                 }
             }
             Effect::ScopeOrItem(outscopes, itype) => {
-                if let Some(token) = bv.expect_value() {
-                    if !data.item_exists(itype, token.as_str()) {
-                        validate_target(token, data, sc, outscopes);
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !data.item_exists(itype, token.as_str())
+                {
+                    validate_target(token, data, sc, outscopes);
                 }
             }
             #[cfg(feature = "ck3")]
@@ -335,11 +335,11 @@ pub fn validate_effect_field(
                 }
             }
             Effect::Choice(choices) => {
-                if let Some(token) = bv.expect_value() {
-                    if !choices.contains(&token.as_str()) {
-                        let msg = format!("expected one of {}", choices.join(", "));
-                        err(ErrorKey::Choice).msg(msg).loc(token).push();
-                    }
+                if let Some(token) = bv.expect_value()
+                    && !choices.contains(&token.as_str())
+                {
+                    let msg = format!("expected one of {}", choices.join(", "));
+                    err(ErrorKey::Choice).msg(msg).loc(token).push();
                 }
             }
             #[cfg(feature = "ck3")]
@@ -451,34 +451,33 @@ pub fn validate_effect_field(
         return has_tooltip && tooltipped.is_tooltipped();
     }
 
-    if let Some((it_type, it_name)) = key.split_once('_') {
-        if let Ok(ltype) = ListType::try_from(it_type.as_str()) {
-            if let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc) {
-                if ltype.is_for_triggers() {
-                    let msg = format!("cannot use `{it_type}_` lists in an effect");
-                    err(ErrorKey::Validation).msg(msg).loc(key).push();
-                    return false;
-                }
-                sc.expect(inscopes, &Reason::Token(key.clone()), data);
-                if let Some(b) = bv.expect_block() {
-                    precheck_iterator_fields(ltype, it_name.as_str(), b, data, sc);
-                    sc.open_scope(outscope, key.clone());
-                    let mut vd = Validator::new(b, data);
-                    has_tooltip |= validate_effect_internal(
-                        &Lowercase::new(it_name.as_str()),
-                        ltype,
-                        b,
-                        data,
-                        sc,
-                        &mut vd,
-                        tooltipped,
-                        special_tokens,
-                    );
-                }
-                sc.close();
-                return has_tooltip && tooltipped.is_tooltipped();
-            }
+    if let Some((it_type, it_name)) = key.split_once('_')
+        && let Ok(ltype) = ListType::try_from(it_type.as_str())
+        && let Some((inscopes, outscope)) = scope_iterator(&it_name, data, sc)
+    {
+        if ltype.is_for_triggers() {
+            let msg = format!("cannot use `{it_type}_` lists in an effect");
+            err(ErrorKey::Validation).msg(msg).loc(key).push();
+            return false;
         }
+        sc.expect(inscopes, &Reason::Token(key.clone()), data);
+        if let Some(b) = bv.expect_block() {
+            precheck_iterator_fields(ltype, it_name.as_str(), b, data, sc);
+            sc.open_scope(outscope, key.clone());
+            let mut vd = Validator::new(b, data);
+            has_tooltip |= validate_effect_internal(
+                &Lowercase::new(it_name.as_str()),
+                ltype,
+                b,
+                data,
+                sc,
+                &mut vd,
+                tooltipped,
+                special_tokens,
+            );
+        }
+        sc.close();
+        return has_tooltip && tooltipped.is_tooltipped();
     }
 
     #[cfg(feature = "hoi4")]

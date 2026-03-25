@@ -156,10 +156,10 @@ impl ActionOrEvent {
     }
 
     pub(crate) fn new_event(key: Token) -> Self {
-        if let Some((namespace, nr)) = key.as_str().split_once('.') {
-            if let Ok(nr) = usize::from_str(nr) {
-                return Self::Event(key, namespace, nr);
-            }
+        if let Some((namespace, nr)) = key.as_str().split_once('.')
+            && let Ok(nr) = usize::from_str(nr)
+        {
+            return Self::Event(key, namespace, nr);
         }
         let namespace = key.as_str();
         Self::Event(key, namespace, 0)
@@ -299,10 +299,10 @@ where
             }
         }
     } else {
-        if let Some(other) = get_other(key.as_str()) {
-            if other.loc.kind >= key.loc.kind {
-                dup_error(&key, other, &itype.to_string());
-            }
+        if let Some(other) = get_other(key.as_str())
+            && other.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, other, &itype.to_string());
         }
         return Some(key);
     }
@@ -375,10 +375,10 @@ where
             }
         }
     } else {
-        if let Some(other) = get_other(key.as_str()) {
-            if other.loc.kind >= key.loc.kind {
-                dup_error(key, other, &itype.to_string());
-            }
+        if let Some(other) = get_other(key.as_str())
+            && other.loc.kind >= key.loc.kind
+        {
+            dup_error(key, other, &itype.to_string());
         }
         return PrefixShould::Insert(key.clone());
     }

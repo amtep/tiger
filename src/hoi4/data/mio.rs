@@ -306,11 +306,11 @@ fn validate_mio_trait(mio: &Token, block: &Block, data: &Everything) {
 }
 
 fn validate_mio_initial_trait(mio: &Token, block: &Block, data: &Everything, vd: &mut Validator) {
-    if !vd.field_item("name", Item::Localization) {
-        if let Some(token) = block.get_field_value("token") {
-            let loca = format!("{mio}_{token}");
-            data.verify_exists_implied(Item::Localization, &loca, token);
-        }
+    if !vd.field_item("name", Item::Localization)
+        && let Some(token) = block.get_field_value("token")
+    {
+        let loca = format!("{mio}_{token}");
+        data.verify_exists_implied(Item::Localization, &loca, token);
     }
 
     vd.field_validated_list("limit_to_equipment_type", |value, data| {

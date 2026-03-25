@@ -37,10 +37,10 @@ pub struct Traits {
 
 impl Traits {
     fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.traits.get(key.as_str()) {
-            if other.key.loc.kind >= key.loc.kind {
-                dup_error(&key, &other.key, "trait");
-            }
+        if let Some(other) = self.traits.get(key.as_str())
+            && other.key.loc.kind >= key.loc.kind
+        {
+            dup_error(&key, &other.key, "trait");
         }
         self.traits_lc.insert(Lowercase::new(key.as_str()), key.as_str());
         self.traits.insert(key.as_str(), Trait::new(key, block));

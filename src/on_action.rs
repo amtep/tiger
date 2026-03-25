@@ -64,22 +64,22 @@ pub fn on_action_scopecontext(key: &Token, data: &Everything) -> Option<ScopeCon
             }
         } else {
             for pfx in &["on_set_relation_", "on_remove_relation_", "on_death_relation_"] {
-                if let Some(relation) = key.as_str().strip_prefix(pfx) {
-                    if data.item_exists(Item::Relation, relation) {
-                        let mut sc = ScopeContext::new(Scopes::Character, key);
-                        sc.define_name("target", Scopes::Character, key); // undocumented
-                        return Some(sc);
-                    }
+                if let Some(relation) = key.as_str().strip_prefix(pfx)
+                    && data.item_exists(Item::Relation, relation)
+                {
+                    let mut sc = ScopeContext::new(Scopes::Character, key);
+                    sc.define_name("target", Scopes::Character, key); // undocumented
+                    return Some(sc);
                 }
             }
         }
     }
 
     #[cfg(feature = "hoi4")]
-    if Game::is_hoi4() {
-        if let Some(sc) = on_action_scopecontext_hoi4(key, data) {
-            return Some(sc);
-        }
+    if Game::is_hoi4()
+        && let Some(sc) = on_action_scopecontext_hoi4(key, data)
+    {
+        return Some(sc);
     }
     None
 }

@@ -124,16 +124,15 @@ impl ScriptedGui {
                 return;
             };
             // Compare it to the declared root scope of the scripted gui
-            if let Some(token) = block.get_field_value("scope") {
-                if let Some(declared_scope) = Scopes::from_snake_case(token.as_str()) {
-                    if !scope.intersects(declared_scope) {
-                        warn(ErrorKey::Scopes)
-                            .msg("SetRoot scope does not match scripted gui scope")
-                            .loc(&chain.codes[1].name)
-                            .loc_msg(token, "scripted gui scope here")
-                            .push();
-                    }
-                }
+            if let Some(token) = block.get_field_value("scope")
+                && let Some(declared_scope) = Scopes::from_snake_case(token.as_str())
+                && !scope.intersects(declared_scope)
+            {
+                warn(ErrorKey::Scopes)
+                    .msg("SetRoot scope does not match scripted gui scope")
+                    .loc(&chain.codes[1].name)
+                    .loc_msg(token, "scripted gui scope here")
+                    .push();
             }
             let mut sc = ScopeContext::new(scope, &code.name);
             if ghw {
