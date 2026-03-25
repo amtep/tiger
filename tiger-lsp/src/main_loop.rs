@@ -36,6 +36,12 @@ pub fn main_loop() -> Result<()> {
                     info!("exiting in response to notification");
                     return Ok(());
                 }
+                "textDocument/didOpen" => {
+                    server.did_open(&notification.params);
+                }
+                "textDocument/didChange" => {
+                    server.did_change(&notification.params);
+                }
                 _ => {
                     info!("ignoring {} notification", notification.method);
                 }

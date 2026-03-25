@@ -25,6 +25,10 @@ need_stdout = false
 command = ["cargo", "build", "--color", "always", "-p", "hoi4-tiger"]
 need_stdout = false
 
+[jobs.build_lsp]
+command = ["cargo", "build", "--color", "always", "-p", "tiger-lsp"]
+need_stdout = false
+
 [jobs.clippy_lib]
 command = ["cargo", "clippy", "--color", "always", "-p", "tiger-lib"]
 need_stdout = false
@@ -49,6 +53,10 @@ need_stdout = false
 command = ["cargo", "clippy", "--color", "always", "-p", "hoi4-tiger"]
 need_stdout = false
 
+[jobs.clippy_lsp]
+command = ["cargo", "clippy", "--color", "always", "-p", "tiger-lsp"]
+need_stdout = false
+
 [jobs.test]
 command = ["cargo", "test", "--color", "always"]
 need_stdout = true
@@ -64,10 +72,12 @@ need_stdout = false
 3 = "job:build_imperator"
 4 = "job:build_eu5"
 5 = "job:build_hoi4"
+"l" = "job:build_lsp"
 "~" = "job:clippy_lib"
 "!" = "job:clippy_ck3"
 "@" = "job:clippy_vic3"
 "#" = "job:clippy_imperator"
 "$" = "job:clippy_eu5"
 "%" = "job:clippy_hoi4"
+"L" = "job:clippy_lsp"
 "d" = "job:docs"
