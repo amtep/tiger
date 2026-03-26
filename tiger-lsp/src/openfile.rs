@@ -74,3 +74,110 @@ impl OpenFile {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::lsp_types::Position;
+
+    fn open_file(text: Vec<&str>) -> OpenFile {
+        OpenFile {
+            version: 1,
+            language_id: "pdx-locale".to_string(),
+            text: text.into_iter().map(str::to_string).collect(),
+        }
+    }
+
+    fn assert_result(open: &OpenFile, text: Vec<&str>) {
+        let text: Vec<String> = text.into_iter().map(str::to_string).collect();
+        assert_eq!(open.text, text);
+    }
+
+    // single line tests
+
+    #[test]
+    fn single_line_delete_char() {
+        let mut open = open_file(vec!["single"]);
+
+        // delete middle
+        let start = Position { line: 0, character: 2 };
+        let end = Position { line: 0, character: 3 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec!["sigle"]);
+
+        // delete first
+        let start = Position { line: 0, character: 0 };
+        let end = Position { line: 0, character: 1 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec!["igle"]);
+
+        // delete last
+        let start = Position { line: 0, character: 3 };
+        let end = Position { line: 0, character: 4 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec!["igl"]);
+    }
+
+    #[test]
+    fn single_line_delete_text() {
+        let mut open = open_file(vec!["single"]);
+        let start = Position { line: 0, character: 0 };
+        let end = Position { line: 0, character: 6 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec![""]);
+    }
+
+    #[test]
+    fn single_line_delete_all() {
+        let mut open = open_file(vec!["single"]);
+        let start = Position { line: 0, character: 0 };
+        let end = Position { line: 1, character: 0 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec![]);
+    }
+
+    #[test]
+    fn split_line_with_insert() {
+        let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
+        let start = Position { line: 2, character: 2 };
+        let end = Position { line: 2, character: 2 };
+        open.apply_change(&Range { start, end }, "ooga\nbooga");
+        assert_result(&open, vec!["first", "second", "thooga", "boogaird", "fourth", "fifth"]);
+    }
+
+    #[test]
+    fn join_two_lines() {
+        let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
+        let start = Position { line: 1, character: 6 };
+        let end = Position { line: 2, character: 0 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec!["first", "secondthird", "fourth", "fifth"]);
+    }
+
+    #[test]
+    fn delete_last_line() {
+        let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
+        let start = Position { line: 4, character: 0 };
+        let end = Position { line: 5, character: 0 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec!["first", "second", "third", "fourth"]);
+    }
+
+    #[test]
+    fn multiline_replace_with_more_lines() {
+        let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
+        let start = Position { line: 1, character: 2 };
+        let end = Position { line: 3, character: 3 };
+        open.apply_change(&Range { start, end }, "foo\nbar\ngnu\nxyzzy\n");
+        assert_result(&open, vec!["first", "sefoo", "bar", "gnu", "xyzzy", "rth", "fifth"]);
+    }
+
+    #[test]
+    fn multiline_replace_with_fewer_lines() {
+        let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
+        let start = Position { line: 1, character: 2 };
+        let end = Position { line: 3, character: 3 };
+        open.apply_change(&Range { start, end }, "foo\nbar");
+        assert_result(&open, vec!["first", "sefoo", "barrth", "fifth"]);
+    }
+}
