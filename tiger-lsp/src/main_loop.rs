@@ -42,6 +42,9 @@ pub fn main_loop() -> Result<()> {
                 "textDocument/didChange" => {
                     server.did_change(&notification.params);
                 }
+                "workspace/didChangeConfiguration" => {
+                    server.change_config(&notification.params);
+                }
                 _ => {
                     info!("ignoring {} notification", notification.method);
                 }

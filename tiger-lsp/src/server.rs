@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
 use log::{info, trace};
+use partially::Partial;
+use serde::Deserialize;
 use serde_json::{Map, Value, json};
 
+use crate::config::{Config, PartialConfig};
 use crate::error_codes::ErrorCode;
 use crate::lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams};
 use crate::openfile::OpenFile;
@@ -13,11 +16,17 @@ pub struct Server {
     initialized: bool,
     shutdown: bool,
     open: HashMap<String, OpenFile>,
+    config: Config,
 }
 
 impl Server {
     pub fn new() -> Self {
-        Self { initialized: false, shutdown: false, open: HashMap::default() }
+        Self {
+            initialized: false,
+            shutdown: false,
+            open: HashMap::default(),
+            config: Config::default(),
+        }
     }
 
     pub fn initialize(&mut self, id: Value, params: &Map<String, Value>) -> Response {
@@ -36,7 +45,7 @@ impl Server {
 
         if let Some(capabilities) = params.get("capabilities")
             && let Some(general) = capabilities.get("general")
-            && let Some(position_encoding) = general.get("positionEncoding")
+            && let Some(position_encoding) = general.get("positionEncodings")
             && let Some(position_encoding) = position_encoding.as_array()
             && position_encoding.contains(&Value::String("utf-8".to_string()))
         {
@@ -51,6 +60,13 @@ impl Server {
                 "only utf-8 position encoding is supported",
                 Some(data),
             );
+        }
+
+        if let Some(init_options) = params.get("initializationOptions")
+            && let Ok(partial_config) = PartialConfig::deserialize(init_options)
+            && self.config.apply_some(partial_config)
+        {
+            trace!("initial config: {:?}", self.config);
         }
 
         self.initialized = true;
@@ -98,6 +114,19 @@ impl Server {
             }
         } else {
             trace!("could not parse didChange");
+        }
+    }
+
+    pub fn change_config(&mut self, params: &Map<String, Value>) {
+        let Some(settings) = params.get("settings") else {
+            info!("settings not found");
+            return;
+        };
+
+        if let Ok(partial_config) = PartialConfig::deserialize(settings)
+            && self.config.apply_some(partial_config)
+        {
+            trace!("applied new config: {:?}", self.config);
         }
     }
 }

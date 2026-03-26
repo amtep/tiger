@@ -1,5 +1,4 @@
 use std::io::{Read, Write, stdin, stdout};
-use std::str::from_utf8; // TODO: once msrv is 1.87, we can use the builtin str::from_utf8
 
 use anyhow::{Result, bail};
 use log::trace;
@@ -47,8 +46,8 @@ impl Connection {
         if let Some(size) = size {
             self.byte_buffer.resize(size, 0);
             stdin().read_exact(&mut self.byte_buffer)?;
-            let body = from_utf8(&self.byte_buffer)?;
-            trace!("received {body}");
+            let body = str::from_utf8(&self.byte_buffer)?;
+            trace!("received\n{body}");
             let request = serde_json::from_str(body)
                 .map(Message::Request)
                 .or_else(|_| serde_json::from_str(body).map(Message::Notification))?;
@@ -63,8 +62,8 @@ impl Connection {
     pub fn response(&mut self, response: &Response) -> Result<()> {
         let body = serde_json::to_string(response)?;
         let response = format!("Content-Length: {}\r\n\r\n{body}", body.len());
-        trace!("responding {response}");
-        write!(stdout(), "{response}")?;
+        trace!("respond\n{body}");
+        stdout().write_all(response.as_bytes())?;
         stdout().flush()?;
         Ok(())
     }
