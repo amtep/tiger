@@ -268,6 +268,9 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "barter_troops",
     "high_medieval_warfare_attire",
     "holy_buildings",
+    "north_pacific_attire",
+    "east_asian_wonders",
+    "celestial_court_attire",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
