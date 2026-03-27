@@ -1,41 +1,31 @@
 use std::sync::LazyLock;
 
-use crate::ck3::tables::misc::CUSTOM_RELIGION_LOCAS;
-use crate::datatype::{Arg, Args, CaseInsensitiveStr, Ck3Datatype, Datatype};
+use tiger_tables::datatype::*;
+
+use crate::datatype::CaseInsensitiveStr;
 use crate::helpers::{BiTigerHashMap, TigerHashMap, TigerHashSet};
-use crate::item::Item;
 use crate::scopes::Scopes;
 
-use Arg::*;
 use Ck3Datatype::*;
-use Datatype::*;
-
-const PORTRAITS: &[&str] = &[
-    "left_portrait",
-    "center_portrait",
-    "right_portrait",
-    "lower_left_portrait",
-    "lower_right_portrait",
-];
-const XYZ: &[&str] = &["x", "y", "z"];
+use Datatype::Ck3;
 
 pub static LOWERCASE_DATATYPE_SET: LazyLock<TigerHashSet<CaseInsensitiveStr>> =
     LazyLock::new(|| {
         let mut set = TigerHashSet::default();
 
-        for (name, _, _) in GLOBAL_PROMOTES.iter().copied() {
+        for (name, _, _) in GLOBAL_PROMOTES_CK3.iter().copied() {
             set.insert(CaseInsensitiveStr(name));
         }
 
-        for (name, _, _) in GLOBAL_FUNCTIONS.iter().copied() {
+        for (name, _, _) in GLOBAL_FUNCTIONS_CK3.iter().copied() {
             set.insert(CaseInsensitiveStr(name));
         }
 
-        for (name, _, _, _) in PROMOTES.iter().copied() {
+        for (name, _, _, _) in PROMOTES_CK3.iter().copied() {
             set.insert(CaseInsensitiveStr(name));
         }
 
-        for (name, _, _, _) in FUNCTIONS.iter().copied() {
+        for (name, _, _, _) in FUNCTIONS_CK3.iter().copied() {
             set.insert(CaseInsensitiveStr(name));
         }
         set
@@ -53,7 +43,7 @@ pub static DATATYPE_AND_SCOPE_MAP: LazyLock<BiTigerHashMap<Datatype, Scopes>> =
 pub static GLOBAL_PROMOTES_MAP: LazyLock<TigerHashMap<&'static str, (Args, Datatype)>> =
     LazyLock::new(|| {
         let mut map = TigerHashMap::default();
-        for (name, args, datatype) in GLOBAL_PROMOTES.iter().copied() {
+        for (name, args, datatype) in GLOBAL_PROMOTES_CK3.iter().copied() {
             map.insert(name, (args, datatype));
         }
         map
@@ -62,7 +52,7 @@ pub static GLOBAL_PROMOTES_MAP: LazyLock<TigerHashMap<&'static str, (Args, Datat
 pub static GLOBAL_FUNCTIONS_MAP: LazyLock<TigerHashMap<&'static str, (Args, Datatype)>> =
     LazyLock::new(|| {
         let mut map = TigerHashMap::default();
-        for (name, args, datatype) in GLOBAL_FUNCTIONS.iter().copied() {
+        for (name, args, datatype) in GLOBAL_FUNCTIONS_CK3.iter().copied() {
             map.insert(name, (args, datatype));
         }
         map
@@ -72,7 +62,7 @@ pub static GLOBAL_FUNCTIONS_MAP: LazyLock<TigerHashMap<&'static str, (Args, Data
 pub static PROMOTES_MAP: LazyLock<TigerHashMap<&'static str, Vec<(Datatype, Args, Datatype)>>> =
     LazyLock::new(|| {
         let mut map = TigerHashMap::<&'static str, Vec<(Datatype, Args, Datatype)>>::default();
-        for (name, from, args, to) in PROMOTES.iter().copied() {
+        for (name, from, args, to) in PROMOTES_CK3.iter().copied() {
             map.entry(name).or_default().push((from, args, to));
         }
         map
@@ -82,7 +72,7 @@ pub static PROMOTES_MAP: LazyLock<TigerHashMap<&'static str, Vec<(Datatype, Args
 pub static FUNCTIONS_MAP: LazyLock<TigerHashMap<&'static str, Vec<(Datatype, Args, Datatype)>>> =
     LazyLock::new(|| {
         let mut map = TigerHashMap::<&'static str, Vec<(Datatype, Args, Datatype)>>::default();
-        for (name, from, args, to) in FUNCTIONS.iter().copied() {
+        for (name, from, args, to) in FUNCTIONS_CK3.iter().copied() {
             map.entry(name).or_default().push((from, args, to));
         }
         map
@@ -132,11 +122,3 @@ const DATATYPE_AND_SCOPE: &[(Datatype, Scopes)] = &[
     (Ck3(SubjectContract), Scopes::VassalContract),
     (Ck3(ObligationLevel), Scopes::VassalObligationLevel),
 ];
-
-const GLOBAL_PROMOTES: &[(&str, Args, Datatype)] = include!("include/data_global_promotes.rs");
-
-const GLOBAL_FUNCTIONS: &[(&str, Args, Datatype)] = include!("include/data_global_functions.rs");
-
-const PROMOTES: &[(&str, Datatype, Args, Datatype)] = include!("include/data_promotes.rs");
-
-const FUNCTIONS: &[(&str, Datatype, Args, Datatype)] = include!("include/data_functions.rs");

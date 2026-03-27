@@ -6,7 +6,7 @@ use itertools::Itertools;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::TigerHashSet;
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 use crate::parse::ParserMemory;
 use crate::report::{ErrorKey, Severity, err, report};
 use crate::token::Token;

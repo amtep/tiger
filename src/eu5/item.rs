@@ -2,10 +2,8 @@
 
 use crate::item::Item;
 
-impl Item {
-    /// Returns whether an item type uses the REPLACE/INJECT/CREATE prefixes.
-    pub fn injectable(self) -> bool {
-        // TODO: EU5 fill in injectable item types
-        matches!(self, Item::ScriptValue | Item::ScriptedEffect | Item::ScriptedTrigger)
-    }
+/// Returns whether an item type uses the REPLACE/INJECT/CREATE prefixes.
+pub fn injectable_eu5(itype: Item) -> bool {
+    // TODO: EU5 fill in injectable item types
+    matches!(itype, Item::ScriptValue | Item::ScriptedEffect | Item::ScriptedTrigger)
 }

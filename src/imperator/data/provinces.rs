@@ -10,7 +10,7 @@ use crate::everything::Everything;
 use crate::fileset::FileStage;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 use crate::parse::ParserMemory;
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::pdxfile::PdxFile;

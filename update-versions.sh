@@ -8,7 +8,7 @@ if [ -z "$VERSION" ]; then
     exit 2
 fi
 
-for toml in Cargo.toml */Cargo.toml; do
+for toml in Cargo.toml {*-tiger,tiger-bin-shared,utils}/Cargo.toml; do
     sed -i -e "s/^version = .*/version = \"$VERSION\"/" \
            -e 's/^\(tiger-.*, version = \)"[.0-9]*"/\1'"\"$VERSION\"/" \
            "$toml"

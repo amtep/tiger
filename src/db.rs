@@ -17,6 +17,8 @@ use crate::everything::Everything;
 use crate::game::Game;
 use crate::helpers::{TigerHashMap, TigerHashSet, dup_error, exact_dup_advice, exact_dup_error};
 use crate::item::Item;
+#[cfg(any(feature = "vic3", feature = "eu5"))]
+use crate::item::ItemExt;
 use crate::lowercase::Lowercase;
 #[cfg(any(feature = "vic3", feature = "eu5"))]
 use crate::report::{ErrorKey, err};

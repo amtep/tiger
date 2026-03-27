@@ -73,7 +73,7 @@ use crate::hoi4::tables::misc::*;
 use crate::imperator::data::{decisions::Decisions, provinces::ImperatorProvinces};
 #[cfg(feature = "imperator")]
 use crate::imperator::tables::misc::*;
-use crate::item::{Item, ItemLoader};
+use crate::item::{Item, ItemExt, ItemLoader};
 use crate::lowercase::Lowercase;
 use crate::macros::MACRO_MAP;
 use crate::parse::ParserMemory;

@@ -7,7 +7,7 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::game::{Game, GameFlags};
 use crate::helpers::{TigerHashMap, dup_error};
-use crate::item::{Item, ItemLoader};
+use crate::item::{Item, ItemExt, ItemLoader};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{ErrorKey, Severity, report, warn};

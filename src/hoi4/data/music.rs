@@ -5,7 +5,7 @@ use crate::context::ScopeContext;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, dup_error};
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
 use crate::report::{ErrorKey, Severity, report, warn};

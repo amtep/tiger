@@ -15,7 +15,7 @@ use strum_macros::EnumString;
 use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::helpers::{TigerHashMap, TigerHashSet};
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 use crate::parse::ParserMemory;
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::report::{ErrorKey, Severity, err, report, untidy, warn};

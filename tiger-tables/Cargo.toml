@@ -1,0 +1,27 @@
+[package]
+name = "tiger-tables"
+version = "1.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Library used by Tiger Validator. It holds tables that may be useful for other projects, so that they can be imported without pulling in all of Tiger."
+homepage = "https://github.com/amtep/tiger"
+repository = "https://github.com/amtep/tiger"
+rust-version = "1.88"
+
+[features]
+default = ["ck3"]
+ck3 = ["jomini"]
+vic3 = ["jomini"]
+imperator = ["jomini"]
+eu5 = ["jomini"]
+jomini = []
+hoi4 = []
+
+[dependencies]
+anyhow = "1.0.102"
+phf = "0.13.1"
+strum = { version = "0.28.0", features = ["phf"] }
+strum_macros = "0.28.0"
+
+[lints]
+workspace = true

@@ -2,12 +2,11 @@
 
 use crate::item::Item;
 
-impl Item {
-    /// Returns whether an item type uses the REPLACE/INJECT/CREATE prefixes.
-    pub fn injectable(self) -> bool {
-        matches!(
-            self,
-            Item::AcceptanceStatus
+/// Returns whether an item type uses the REPLACE/INJECT/CREATE prefixes.
+pub fn injectable_vic3(itype: Item) -> bool {
+    matches!(
+        itype,
+        Item::AcceptanceStatus
                 | Item::Achievement
                 | Item::AiStrategy
                 | Item::AlertGroup
@@ -125,6 +124,5 @@ impl Item {
                 // undocumented
                 | Item::Modifier
                 | Item::PortraitAnimation
-        )
-    }
+    )
 }

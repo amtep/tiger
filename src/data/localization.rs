@@ -39,7 +39,7 @@ use crate::helpers::{TigerHashMap, dup_error, stringify_list};
 use crate::hoi4::tables::localization::BUILTIN_MACROS_HOI4;
 #[cfg(feature = "imperator")]
 use crate::imperator::tables::localization::BUILTIN_MACROS_IMPERATOR;
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 use crate::macros::{MACRO_MAP, MacroMapIndex};
 use crate::parse::ParserMemory;
 use crate::parse::localization::{ValueParser, parse_loca};

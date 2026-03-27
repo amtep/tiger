@@ -10,7 +10,7 @@ use clap::Parser;
 use serde_json::{Value, json, to_string_pretty};
 use strum::IntoEnumIterator;
 
-use tiger_lib::{Everything, FileKind, Game, Item, ModFile};
+use tiger_lib::{Everything, FileKind, Item, ModFile};
 
 #[derive(Parser)]
 struct Cli {
@@ -28,8 +28,6 @@ fn main() -> Result<()> {
     eprintln!("This scanner was made for Crusader Kings version 1.15 (Crown).");
     eprintln!("If you are using a newer version of Crusader Kings, it may be inaccurate.");
     eprintln!("The scanner does not find 100% of types of items in the mod.");
-
-    Game::set(Game::Ck3)?;
 
     if args.modpath.is_dir() {
         args.modpath.push("descriptor.mod");

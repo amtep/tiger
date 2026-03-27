@@ -6,6 +6,7 @@ members = [
     "eu5-tiger",
     "hoi4-tiger",
     "tiger-bin-shared",
+    "tiger-tables",
     "utils",
     ".",
 ]
@@ -23,12 +24,12 @@ rust-version = "1.88"
 
 [features]
 default = ["ck3"]
-ck3 = ["jomini"]
-vic3 = ["jomini"]
-imperator = ["jomini"]
-eu5 = ["jomini"]
+ck3 = ["jomini", "tiger-tables/ck3"]
+vic3 = ["jomini", "tiger-tables/vic3"]
+imperator = ["jomini", "tiger-tables/imperator"]
+eu5 = ["jomini", "tiger-tables/eu5"]
 jomini = ["image/png", "dep:png"]
-hoi4 = ["image/bmp", "dep:tinybmp"]
+hoi4 = ["image/bmp", "dep:tinybmp", "tiger-tables/hoi4"]
 internal_benches = ["dep:divan", "dep:toml"]
 
 [build-dependencies]
@@ -60,8 +61,8 @@ png = { version = "0.18", optional = true }
 rayon = "1.7.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-strum = { version = "0.27", features = ["phf"] }
-strum_macros = "0.27"
+strum = { version = "0.28", features = ["phf"] }
+strum_macros = "0.28"
 thiserror = "2"
 tinybmp = { version = "0.6", optional = true }
 unicode-width = "0.2"
@@ -71,6 +72,8 @@ murmur3 = "0.5.2"
 glob = "0.3.2"
 itertools = "0.14.0"
 scc = "3.6.8"
+
+tiger-tables = { path = "tiger-tables", version = "1.0.0", default-features = false }
 
 [[bench]]
 name = "internals"

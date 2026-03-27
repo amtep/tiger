@@ -12,7 +12,7 @@ use crate::everything::Everything;
 use crate::fileset::{FileEntry, FileHandler};
 use crate::game::GameFlags;
 use crate::helpers::{TigerHashMap, TigerHashSet};
-use crate::item::{Item, ItemLoader, LoadAsFile, Recursive};
+use crate::item::{Item, ItemExt, ItemLoader, LoadAsFile, Recursive};
 use crate::parse::ParserMemory;
 use crate::parse::csv::{parse_csv, read_csv};
 use crate::pdxfile::{PdxEncoding, PdxFile};

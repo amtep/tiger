@@ -16,7 +16,7 @@ use crate::block::Block;
 use crate::everything::{Everything, FilesError};
 use crate::game::Game;
 use crate::helpers::TigerHashSet;
-use crate::item::Item;
+use crate::item::{Item, ItemExt};
 #[cfg(any(feature = "vic3", feature = "eu5"))]
 use crate::mod_metadata::ModMetadata;
 #[cfg(any(feature = "ck3", feature = "imperator", feature = "hoi4"))]
