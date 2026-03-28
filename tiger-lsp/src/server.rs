@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use log::{error, info, trace};
-use lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams, Uri};
+use lsp_types::{
+    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, Uri,
+};
 use partially::Partial;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
@@ -118,6 +120,17 @@ impl Server {
             }
         } else {
             error!("could not parse didChange");
+        }
+    }
+
+    pub fn did_close(&mut self, params: &Map<String, Value>) {
+        if let Ok(did_close) =
+            serde_json::from_value::<DidCloseTextDocumentParams>(Value::Object(params.clone()))
+        {
+            info!("close {}", &did_close.text_document.uri.to_string());
+            self.open.remove(&did_close.text_document.uri);
+        } else {
+            error!("could not parse didClose");
         }
     }
 

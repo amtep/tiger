@@ -39,6 +39,9 @@ pub fn main_loop() -> Result<()> {
                 "textDocument/didChange" => {
                     server.did_change(&notification.params);
                 }
+                "textDocument/didClose" => {
+                    server.did_close(&notification.params);
+                }
                 "workspace/didChangeConfiguration" => {
                     server.change_config(&notification.params);
                 }
