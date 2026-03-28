@@ -92,6 +92,10 @@ impl DbKind for Building {
         vd.field_validated("construction_time", validate_non_dynamic_script_value);
         vd.field_choice("type", &["regular", "special", "duchy_capital", "great_building"]);
 
+        vd.multi_field_validated_block("assets", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.multi_field_validated_block("asset", validate_asset);
+        });
         vd.multi_field_validated_block("asset", validate_asset);
 
         vd.field_trigger_builder(
@@ -133,6 +137,7 @@ impl DbKind for Building {
 
         let is_duchy_capital = block.get_field_value("type").is_some_and(|t| t.is("duchy_capital"));
         validate_modifiers(&mut vd, is_duchy_capital);
+        // TODO: fallback requires an `is_enabled` trigger to be configured as well
         vd.field_validated_block("fallback", |block, data| {
             let mut vd = Validator::new(block, data);
             validate_modifiers(&mut vd, is_duchy_capital);
@@ -172,6 +177,12 @@ impl DbKind for Building {
         // TODO: only for Great Buildings
         vd.field_validated_block_rooted("rebuild_cost", Scopes::Character, validate_cost);
         vd.field_bool("is_mandala_capital");
+
+        vd.field_validated_block("override_modifiers", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_item("requires_dlc_flag", Item::DlcFeature);
+            validate_modifiers(&mut vd, is_duchy_capital);
+        });
     }
 
     fn set_property(&mut self, _key: &Token, _block: &Block, property: &str) {

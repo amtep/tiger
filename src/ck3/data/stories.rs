@@ -36,6 +36,53 @@ impl DbKind for Story {
         vd.field_effect_builder("on_end", Tooltipped::No, sc_builder);
         vd.field_effect_builder("on_owner_death", Tooltipped::No, sc_builder);
 
+        vd.field_bool("visible");
+        // TODO: if visible and no icon, look for icon in STORY_CYCLE_TYPE_ICON_PATH define
+        vd.multi_field_validated_block("icon", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_builder("trigger", Tooltipped::No, sc_builder);
+            vd.field_item("reference", Item::File);
+        });
+
+        // TODO: if visible and no background, look for STORY_CYCLE_TYPE_FALLBACK_BACKGROUND define
+        vd.multi_field_validated_block("background", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_trigger_builder("trigger", Tooltipped::No, sc_builder);
+            vd.field_item("reference", Item::File);
+        });
+
+        vd.field_validated_block("visualization", |block, data| {
+            let mut vd = Validator::new(block, data);
+            for field in
+                &["character", "character_list", "title", "title_list", "artifact", "artifact_list"]
+            {
+                vd.multi_field_validated_block(field, |block, data| {
+                    let mut vd = Validator::new(block, data);
+                    // TODO: register these variable types?
+                    vd.field_value("variable_name");
+                    vd.field_item("label", Item::Localization);
+                });
+            }
+            // TODO: "has STORY as an available scope"
+            vd.field_item("custom_string_key", Item::Localization);
+            for field in &["basic_counter", "tug_of_war_counter"] {
+                vd.multi_field_validated_block(field, |block, data| {
+                    let mut vd = Validator::new(block, data);
+                    // TODO: register these variable types?
+                    vd.field_value("variable_name");
+                    vd.field_numeric("min");
+                    vd.field_numeric("max");
+                    vd.field_item("label", Item::Localization);
+                    vd.field_item("tooltip", Item::Localization);
+                    vd.field_item("min_label", Item::Localization);
+                    vd.field_item("max_label", Item::Localization);
+                });
+            }
+            vd.field_list_items("decisions", Item::Decision);
+            vd.field_list_items("modifiers", Item::Modifier);
+            vd.field_list_items("traits", Item::Trait);
+        });
+
         vd.multi_field_validated_key_block("effect_group", |key, block, data| {
             let mut sc = ScopeContext::new(Scopes::StoryCycle, key);
             sc.define_name("story", Scopes::StoryCycle, key);

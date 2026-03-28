@@ -240,4 +240,5 @@ fn validate_artifact(block: &Block, data: &Everything) {
     vd.field_precise_numeric("direction");
     vd.field_value("locator"); // TODO
     vd.field_item("slot", Item::ArtifactSlot);
+    vd.field_value("description"); // TODO
 }

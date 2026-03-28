@@ -262,8 +262,8 @@ pub enum Item {
     #[cfg(feature = "ck3")] Bookmark,
     #[cfg(feature = "ck3")] BookmarkGroup,
     #[cfg(feature = "ck3")] BookmarkPortrait,
+    #[cfg(feature = "ck3")] BooleanHouseAspirationParameter,
     #[cfg(feature = "ck3")] BooleanHouseHeadParameter,
-    #[cfg(feature = "ck3")] BooleanHousePowerParameter,
     #[cfg(feature = "ck3")] BooleanHouseRelationParameter,
     #[cfg(feature = "ck3")] BuildingFlag,
     #[cfg(feature = "ck3")] BuildingGfx,
@@ -309,7 +309,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] DiarchyType,
     #[cfg(feature = "ck3")] Doctrine,
     #[cfg(feature = "ck3")] DoctrineBooleanParameter,
-    #[cfg(feature = "ck3")] DoctrineCategory,
+    #[cfg(feature = "ck3")] DoctrineGroup,
     #[cfg(feature = "ck3")] DoctrineParameter,
     #[cfg(feature = "ck3")] DomicileBuilding,
     #[cfg(feature = "ck3")] DomicileParameter,
@@ -340,7 +340,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] HeadDetermination,
     #[cfg(feature = "ck3")] HoldingParameter,
     #[cfg(feature = "ck3")] HoldingType,
-    #[cfg(feature = "ck3")] HolySiteFlag,
+    #[cfg(feature = "ck3")] HolySiteParameter,
     #[cfg(feature = "ck3")] Hook,
     #[cfg(feature = "ck3")] House,
     #[cfg(feature = "ck3")] HouseAspiration,
@@ -943,7 +943,7 @@ impl Item {
             #[cfg(feature = "jomini")]
             Item::Religion => match Game::game() {
                 #[cfg(feature = "ck3")]
-                Game::Ck3 => "common/religion/religions/",
+                Game::Ck3 => "common/religion/religion_types/",
                 #[cfg(feature = "vic3")]
                 Game::Vic3 => "common/religions/",
                 #[cfg(feature = "imperator")]
@@ -1116,7 +1116,7 @@ impl Item {
             #[cfg(any(feature = "ck3", feature = "eu5"))]
             Item::HolySite => match Game::game() {
                 #[cfg(feature = "ck3")]
-                Game::Ck3 => "common/religion/holy_sites/",
+                Game::Ck3 => "common/religion/holy_site_types/",
                 #[cfg(feature = "eu5")]
                 Game::Eu5 => "common/holy_sites/",
                 #[allow(unreachable_patterns)]
@@ -1292,9 +1292,9 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::BookmarkPortrait => "common/bookmark_portraits/",
             #[cfg(feature = "ck3")]
-            Item::BooleanHouseHeadParameter => "common/house_aspirations/",
+            Item::BooleanHouseAspirationParameter => "common/house_aspirations/",
             #[cfg(feature = "ck3")]
-            Item::BooleanHousePowerParameter => "common/house_aspirations/",
+            Item::BooleanHouseHeadParameter => "common/house_aspirations/",
             #[cfg(feature = "ck3")]
             Item::BooleanHouseRelationParameter => "common/house_relation_types/",
             #[cfg(feature = "ck3")]
@@ -1383,13 +1383,13 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::DiarchyType => "common/diarchies/diarchy_types/",
             #[cfg(feature = "ck3")]
-            Item::Doctrine => "common/religion/doctrines/",
+            Item::Doctrine => "common/religion/doctrine_types/",
             #[cfg(feature = "ck3")]
-            Item::DoctrineBooleanParameter => "common/religion/doctrines/",
+            Item::DoctrineBooleanParameter => "common/religion/doctrine_types/",
             #[cfg(feature = "ck3")]
-            Item::DoctrineCategory => "common/religion/doctrines/",
+            Item::DoctrineGroup => "common/religion/doctrine_group_types/",
             #[cfg(feature = "ck3")]
-            Item::DoctrineParameter => "common/religion/doctrines/",
+            Item::DoctrineParameter => "common/religion/doctrine_types/",
             #[cfg(feature = "ck3")]
             Item::DomicileBuilding => "common/domiciles/buildings/",
             #[cfg(feature = "ck3")]
@@ -1449,7 +1449,7 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::HoldingType => "common/holdings/",
             #[cfg(feature = "ck3")]
-            Item::HolySiteFlag => "common/religion/holy_sites/",
+            Item::HolySiteParameter => "common/religion/holy_sites/",
             #[cfg(feature = "ck3")]
             Item::Hook => "common/hook_types/",
             #[cfg(feature = "ck3")]
@@ -1553,7 +1553,7 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::RelationFlag => "common/scripted_relations/",
             #[cfg(feature = "ck3")]
-            Item::ReligionFamily => "common/religion/religion_families/",
+            Item::ReligionFamily => "common/religion/religion_family_types/",
             #[cfg(feature = "ck3")]
             Item::RewardItem => "",
             #[cfg(feature = "ck3")]

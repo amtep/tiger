@@ -21,7 +21,6 @@ use crate::block::Block;
 use crate::ck3::data::{
     characters::Characters,
     climate::Climate,
-    doctrines::Doctrines,
     gameconcepts::GameConcepts,
     interaction_cats::CharacterInteractionCategories,
     maa::MenAtArmsTypes,
@@ -206,9 +205,6 @@ pub struct Everything {
     pub(crate) title_history: TitleHistories,
 
     #[cfg(feature = "ck3")]
-    pub(crate) doctrines: Doctrines,
-
-    #[cfg(feature = "ck3")]
     pub(crate) menatarmstypes: MenAtArmsTypes,
 
     pub(crate) gui: Gui,
@@ -269,7 +265,6 @@ macro_rules! load_all_ck3 {
         $s.spawn(|_| $t.fileset.handle(&mut $t.characters, &$t.parser));
         $s.spawn(|_| $t.fileset.handle(&mut $t.traits, &$t.parser));
         $s.spawn(|_| $t.fileset.handle(&mut $t.title_history, &$t.parser));
-        $s.spawn(|_| $t.fileset.handle(&mut $t.doctrines, &$t.parser));
         $s.spawn(|_| $t.fileset.handle(&mut $t.menatarmstypes, &$t.parser));
         $s.spawn(|_| $t.fileset.handle(&mut $t.music, &$t.parser));
         $s.spawn(|_| $t.fileset.handle(&mut $t.data_bindings, &$t.parser));
@@ -361,7 +356,6 @@ macro_rules! scan_all_ck3 {
         $s.characters.scan_variables(&mut $s.variables);
         $s.traits.scan_variables(&mut $s.variables);
         $s.title_history.scan_variables(&mut $s.variables);
-        $s.doctrines.scan_variables(&mut $s.variables);
         $s.menatarmstypes.scan_variables(&mut $s.variables);
         $s.music.scan_variables(&mut $s.variables);
         $s.scripted_lists.scan_variables(&mut $s.variables);
@@ -574,8 +568,6 @@ impl Everything {
             traits: Traits::default(),
             #[cfg(feature = "ck3")]
             title_history: TitleHistories::default(),
-            #[cfg(feature = "ck3")]
-            doctrines: Doctrines::default(),
             #[cfg(feature = "ck3")]
             menatarmstypes: MenAtArmsTypes::default(),
             gui: Gui::default(),
@@ -792,7 +784,6 @@ impl Everything {
         s.spawn(|_| self.characters.validate(self));
         s.spawn(|_| self.traits.validate(self));
         s.spawn(|_| self.title_history.validate(self));
-        s.spawn(|_| self.doctrines.validate(self));
         s.spawn(|_| self.menatarmstypes.validate(self));
         s.spawn(|_| self.data_bindings.validate(self));
         s.spawn(|_| self.provinces_ck3.validate(self));
@@ -940,10 +931,6 @@ impl Everything {
             Item::Currency => CURRENCIES_CK3.contains(&key),
             Item::DangerType => DANGER_TYPES.contains(&key),
             Item::DlcFeature => DLC_FEATURES_CK3.contains(&key),
-            Item::Doctrine => self.doctrines.exists(key),
-            Item::DoctrineBooleanParameter => self.doctrines.boolean_parameter_exists(key),
-            Item::DoctrineCategory => self.doctrines.category_exists(key),
-            Item::DoctrineParameter => self.doctrines.parameter_exists(key),
             Item::Event => self.events.exists(key),
             Item::EventNamespace => self.events.namespace_exists(key),
             Item::GameConcept => self.gameconcepts.exists(key),
@@ -1414,12 +1401,6 @@ impl Everything {
             Item::CoaTemplate => Box::new(self.coas.iter_template_keys()),
             Item::Character => Box::new(self.characters.iter_keys()),
             Item::CharacterInteractionCategory => Box::new(self.interaction_cats.iter_keys()),
-            Item::Doctrine => Box::new(self.doctrines.iter_keys()),
-            Item::DoctrineBooleanParameter => {
-                Box::new(self.doctrines.iter_boolean_parameter_keys())
-            }
-            Item::DoctrineCategory => Box::new(self.doctrines.iter_category_keys()),
-            Item::DoctrineParameter => Box::new(self.doctrines.iter_parameter_keys()),
             Item::Event => Box::new(self.events.iter_keys()),
             Item::EventNamespace => Box::new(self.events.iter_namespace_keys()),
             Item::GameConcept => Box::new(self.gameconcepts.iter_keys()),

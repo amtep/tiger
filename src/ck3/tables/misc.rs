@@ -226,7 +226,7 @@ pub const CUSTOM_RELIGION_LOCAS: &[&str] = &[
     "WitchGodSheHe",
 ];
 
-/// LAST UPDATED CK3 VERSION 1.18.3
+/// LAST UPDATED CK3 VERSION 1.19.0
 /// Taken from `has_dlc_feature` in triggers.log
 pub const DLC_FEATURES_CK3: &[&str] = &[
     "garments_of_the_hre",
@@ -271,6 +271,8 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "north_pacific_attire",
     "east_asian_wonders",
     "celestial_court_attire",
+    "symbols_of_authority",
+    "songs_of_the_realm",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
@@ -435,6 +437,8 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "regiments_use_barter_goods_as_gold",
     "government_ignores_rightful_liege_penalties",
     "dynasty_named_non_independent_landed_rulers",
+    "allow_accolades",
+    "allow_as_base_for_baronies",
 ];
 
 // LAST UPDATED CK3 VERSION 1.12.1
@@ -549,7 +553,7 @@ pub const ARTIFACT_RARITIES: &[&str] = &["common", "masterwork", "famed", "illus
 // LAST UPDATED CK3 VERSION 1.12.1
 pub const OUTBREAK_INTENSITIES: &[&str] = &["minor", "major", "apocalyptic"];
 
-// LAST UPDATED CK3 VERSION 1.17.0
+// LAST UPDATED CK3 VERSION 1.19.0
 pub const COMMON_DIRS: &[&str] = &[
     "common/accolade_icons",
     "common/accolade_names",
@@ -671,11 +675,11 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/portrait_types",
     "common/province_terrain",
     "common/raids/intents",
-    "common/religion/doctrines",
-    "common/religion/fervor_modifiers",
-    "common/religion/holy_sites",
-    "common/religion/religion_families",
-    "common/religion/religions",
+    "common/religion/doctrine_group_types",
+    "common/religion/doctrine_types",
+    "common/religion/holy_site_types",
+    "common/religion/religion_family_types",
+    "common/religion/religion_types",
     "common/ruler_objective_advice_types",
     "common/schemes/agent_types",
     "common/schemes/pulse_actions",

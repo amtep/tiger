@@ -519,10 +519,9 @@ pub fn validate_create_accolade(
 ) {
     vd.req_field("knight");
     vd.req_field("primary");
-    vd.req_field("secondary");
     vd.field_target("knight", sc, Scopes::Character);
     vd.field_item("primary", Item::AccoladeType);
-    vd.field_item("secondary", Item::AccoladeType);
+    vd.advice_field("secondary", "removed in 1.19");
     vd.field_item("name", Item::Localization);
 }
 
@@ -2471,4 +2470,42 @@ pub fn validate_send_interface(
         validate_target_ok_this(token, data, sc, icon_scopes);
     }
     false
+}
+
+pub fn validate_impact_house_relation(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_target("target", sc, Scopes::DynastyHouse);
+    vd.field_item("type", Item::HouseRelationType);
+    vd.field_script_value("steps", sc);
+    vd.field_validated_sc("description", sc, validate_desc);
+    vd.field_bool("notification");
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::HouseRelation, name, Temporary::No);
+    }
+}
+
+pub fn validate_set_regnal_name(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(value) => {
+            data.validate_localization_sc(value.as_str(), sc);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("character");
+            vd.field_target("character", sc, Scopes::Character);
+        }
+    }
 }

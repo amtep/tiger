@@ -11,31 +11,28 @@ pub const ON_ACTION_SCOPES: &str = "
 	on_accolade_created = {
 		root = accolade
 	}
-	on_active_accolade_succession = {
-		root = accolade
-		new_owner = character
-	}
-	on_inactive_accolade_succession = on_active_accolade_succession
 	on_accolade_acclaimed_death = {
 		root = accolade
 		old_acclaimed_knight = character
 		new_accolade_type = bool
 	}
 	on_accolade_acclaimed_removal = on_accolade_acclaimed_death
-	on_accolade_successor_death = {
-		root = accolade
-	}
-	on_accolade_successor_removal = on_accolade_successor_death
-	on_accolade_deactivated = {
-		root = accolade
-		owner = character
-	}
 	on_accolade_new_acclaimed_knight = {
 		root = accolade
 		glory = value
 		new_accolade_type = bool
 		new_acclaimed_knight = character
 	}
+        on_accolade_create_squire = {
+		root = accolade
+		old_acclaimed_knight = character
+		new_accolade_type = bool
+                new_owner = character
+        }
+        on_accolade_succession = {
+		root = accolade
+                new_owner = character
+        }
 
 	on_alliance_added = {
 		root = none

@@ -66,7 +66,7 @@ impl DbKind for HouseAspiration {
             if let Some(block) = block.get_field_block("parameters") {
                 for (key, value) in block.iter_assignments() {
                     if value.lowercase_is("yes") || value.lowercase_is("no") {
-                        db.add_flag(Item::BooleanHousePowerParameter, key.clone());
+                        db.add_flag(Item::BooleanHouseAspirationParameter, key.clone());
                     }
                 }
             }
@@ -188,6 +188,20 @@ impl DbKind for HouseRelationType {
         let mut vd = Validator::new(block, data);
         // TODO: check that the level is part of this relation type
         vd.field_item("neutral_level", Item::HouseRelationLevel);
+
+        vd.field_trigger_builder("is_valid_to_start", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::None, key);
+            sc.define_name("house_1", Scopes::DynastyHouse, key);
+            sc.define_name("house_2", Scopes::DynastyHouse, key);
+            sc
+        });
+
+        vd.field_trigger_builder("is_valid_to_keep", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::HouseRelation, key);
+            sc.define_name("house_1", Scopes::DynastyHouse, key);
+            sc.define_name("house_2", Scopes::DynastyHouse, key);
+            sc
+        });
 
         vd.req_field("levels");
         vd.field_validated_block("levels", |block, data| {

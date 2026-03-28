@@ -116,13 +116,23 @@ impl DbKind for Religion {
 }
 
 fn validate_doctrines(iname: &str, data: &Everything, vd: &mut Validator) {
-    let mut categories: TigerHashMap<&str, Vec<Token>> = TigerHashMap::default();
+    // TODO: maybe cache doctrine_types and number_of_picks,
+    // though the cache might only make sense if done globally instead of per religion/faith.
+    let mut groups: TigerHashMap<&str, Vec<Token>> = TigerHashMap::default();
     vd.multi_field_validated_value("doctrine", |_, mut vd| {
         vd.item(Item::Doctrine);
-        if let Some(category) = data.doctrines.category(vd.value().as_str()) {
-            let doctrine = vd.value();
-            if let Some(seen) = categories.get_mut(category.as_str()) {
-                let picks_token = data.doctrines.number_of_picks(category.as_str());
+        let doctrine = vd.value();
+        for (group, block) in data.database.iter_key_block(Item::DoctrineGroup) {
+            if let Some(doctrines) = block.get_field_block("doctrine_types") {
+                if !doctrines.iter_values().any(|t| t == doctrine) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            if let Some(seen) = groups.get_mut(group.as_str()) {
+                let picks_token = block.get_field_value("number_of_picks");
                 let picks = picks_token.and_then(Token::get_integer).unwrap_or(1);
                 #[allow(clippy::cast_possible_wrap)]
                 if let Some(other_doctrine) = seen.iter().find(|&d| d == doctrine) {
@@ -135,8 +145,8 @@ fn validate_doctrines(iname: &str, data: &Everything, vd: &mut Validator) {
                 } else if picks == 1 {
                     // SAFETY: we never push empty vecs into this hash
                     let other_doctrine = &seen[0];
-                    let msg = format!("{doctrine} and {other_doctrine} are both from {category}");
-                    let info = format!("{category} only allows 1 pick");
+                    let msg = format!("{doctrine} and {other_doctrine} are both from {group}");
+                    let info = format!("{group} only allows 1 pick");
                     err(ErrorKey::Conflict)
                         .msg(msg)
                         .info(info)
@@ -144,7 +154,7 @@ fn validate_doctrines(iname: &str, data: &Everything, vd: &mut Validator) {
                         .loc_msg(other_doctrine, "earlier doctrine")
                         .push();
                 } else if picks == (seen.len() as i64) {
-                    let msg = format!("{iname} has more than {picks} doctrines from {category}");
+                    let msg = format!("{iname} has more than {picks} doctrines from {group}");
                     // SAFETY: picks_token can be unwrapped because Some(Token) is the only
                     // way to get picks > 1
                     err(ErrorKey::Conflict)
@@ -155,7 +165,7 @@ fn validate_doctrines(iname: &str, data: &Everything, vd: &mut Validator) {
                 }
                 seen.push(doctrine.clone());
             } else {
-                categories.insert(category.as_str(), vec![doctrine.clone()]);
+                groups.insert(group.as_str(), vec![doctrine.clone()]);
             }
         }
     });
@@ -232,7 +242,7 @@ impl DbKind for Faith {
         let pagan = block
             .get_field_values("doctrine")
             .iter()
-            .any(|value| data.doctrines.unreformed(value.as_str()));
+            .any(|value| data.item_has_property(Item::Doctrine, value.as_str(), "unreformed"));
         if pagan {
             let loca = format!("{key}_old");
             data.verify_exists_implied(Item::Localization, &loca, key);
