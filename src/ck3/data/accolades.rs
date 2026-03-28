@@ -135,11 +135,15 @@ impl DbKind for AccoladeType {
         let loca = format!("{key}_modifier");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
+        vd.field_item("portrait_pose", Item::PortraitAnimation);
+
         vd.field_item("adjective", Item::Localization);
         vd.field_item("noun", Item::Localization);
+        vd.field_trigger("squire_perfect_fit", Tooltipped::No, &mut sc);
+        vd.field_trigger("squire_acceptable_fit", Tooltipped::No, &mut sc);
         vd.field_list("accolade_categories");
 
-        vd.field_trigger("potential", Tooltipped::Yes, &mut sc);
+        vd.advice_field("potential", "removed in 1.19");
 
         sc.define_name("owner", Scopes::Character, key);
         vd.field_script_value("weight", &mut sc);
@@ -185,5 +189,9 @@ impl DbKind for AccoladeType {
                 vd.field_list_items("accolade_parameters", Item::Localization);
             }
         });
+
+        // undocumented
+
+        vd.field_item("icon", Item::File);
     }
 }

@@ -363,6 +363,10 @@ impl DbKind for CharacterInteraction {
         vd.field_validated_block_rerooted("cost", &sc, Scopes::None, validate_cost);
 
         vd.field_list("filter_tags");
+
+        // undocumented
+
+        vd.field_bool("shows_military_strength");
     }
 }
 

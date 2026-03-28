@@ -1,237 +1,106 @@
-use std::path::PathBuf;
-
 use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
 use crate::ck3::validate::validate_traits;
 use crate::context::ScopeContext;
+use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
-use crate::fileset::{FileEntry, FileHandler};
-use crate::helpers::{TigerHashMap, TigerHashSet, dup_error};
-use crate::item::Item;
+use crate::game::GameFlags;
+use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::parse::ParserMemory;
-use crate::pdxfile::PdxFile;
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
-use crate::variables::Variables;
 
-#[derive(Clone, Debug, Default)]
-#[allow(clippy::struct_field_names)]
-pub struct Doctrines {
-    categories: TigerHashMap<&'static str, DoctrineCategory>,
-    doctrines: TigerHashMap<&'static str, Doctrine>,
-    parameters: TigerHashSet<Token>, // all parameters, including boolean
-    boolean_parameters: TigerHashSet<Token>, // only the boolean parameters
+#[derive(Clone, Debug)]
+pub struct DoctrineGroup {}
+#[derive(Clone, Debug)]
+pub struct Doctrine {}
+
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Ck3, Item::DoctrineGroup, DoctrineGroup::add)
+}
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Ck3, Item::Doctrine, Doctrine::add)
 }
 
-impl Doctrines {
-    fn load_item(&mut self, key: Token, block: Block) {
-        if let Some(other) = self.categories.get(key.as_str())
-            && other.key.loc.kind >= key.loc.kind
+impl DoctrineGroup {
+    pub fn add(db: &mut Db, key: Token, block: Block) {
+        db.add(Item::DoctrineGroup, key, block, Box::new(Self {}));
+    }
+}
+impl Doctrine {
+    pub fn add(db: &mut Db, key: Token, block: Block) {
+        db.add(Item::Doctrine, key, block, Box::new(Self {}));
+    }
+}
+
+impl DbKind for DoctrineGroup {
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+
+        let loca = format!("{key}_name");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+
+        data.verify_icon("NGameIcons|DOCTRINE_GROUP_TYPE_ICON_PATH", key, ".dds");
+
+        vd.field_value("category");
+
+        vd.field_integer("number_of_picks");
+        vd.field_trigger_rooted("is_available_on_create", Tooltipped::No, Scopes::Faith);
+
+        vd.field_list_items("doctrine_types", Item::Doctrine);
+    }
+}
+
+impl DbKind for Doctrine {
+    fn has_property(
+        &self,
+        _key: &Token,
+        block: &Block,
+        property: &str,
+        _data: &Everything,
+    ) -> bool {
+        if property == "unreformed"
+            && let Some(parameters) = block.get_field_block("parameters")
         {
-            dup_error(&key, &other.key, "doctrine category");
-        }
-        self.categories.insert(key.as_str(), DoctrineCategory::new(key, block));
-    }
-
-    pub fn scan_variables(&self, registry: &mut Variables) {
-        for item in self.categories.values() {
-            registry.scan(&item.block);
-        }
-        for item in self.doctrines.values() {
-            registry.scan(&item.block);
-        }
-    }
-
-    pub fn validate(&self, data: &Everything) {
-        for category in self.categories.values() {
-            category.validate(data);
-        }
-        for doctrine in self.doctrines.values() {
-            doctrine.validate(data);
-        }
-    }
-
-    pub fn exists(&self, key: &str) -> bool {
-        self.doctrines.contains_key(key)
-    }
-
-    pub fn iter_keys(&self) -> impl Iterator<Item = &Token> {
-        self.doctrines.values().map(|item| &item.key)
-    }
-
-    pub fn category_exists(&self, key: &str) -> bool {
-        self.categories.contains_key(key)
-    }
-
-    pub fn category(&self, key: &str) -> Option<&Token> {
-        self.doctrines.get(key).map(|d| &d.category)
-    }
-
-    pub fn number_of_picks(&self, category: &str) -> Option<&Token> {
-        self.categories.get(category).and_then(|c| c.picks.as_ref())
-    }
-
-    pub fn iter_category_keys(&self) -> impl Iterator<Item = &Token> {
-        self.categories.values().map(|item| &item.key)
-    }
-
-    pub fn parameter_exists(&self, key: &str) -> bool {
-        self.parameters.contains(key)
-    }
-
-    pub fn boolean_parameter_exists(&self, key: &str) -> bool {
-        self.boolean_parameters.contains(key)
-    }
-
-    pub fn iter_parameter_keys(&self) -> impl Iterator<Item = &Token> {
-        self.parameters.iter()
-    }
-
-    pub fn iter_boolean_parameter_keys(&self) -> impl Iterator<Item = &Token> {
-        self.boolean_parameters.iter()
-    }
-
-    pub fn unreformed(&self, key: &str) -> bool {
-        self.doctrines.get(key).is_some_and(Doctrine::unreformed)
-    }
-}
-
-impl FileHandler<Block> for Doctrines {
-    fn subpath(&self) -> PathBuf {
-        PathBuf::from("common/religion/doctrines")
-    }
-
-    fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
-        if !entry.filename().to_string_lossy().ends_with(".txt") {
-            return None;
-        }
-
-        PdxFile::read(entry, parser)
-    }
-
-    fn handle_file(&mut self, _entry: &FileEntry, mut block: Block) {
-        for (key, block) in block.drain_definitions_warn() {
-            self.load_item(key, block);
-        }
-    }
-
-    fn finalize(&mut self) {
-        for category in self.categories.values() {
-            for (doctrine, block) in category.block.iter_definitions() {
-                // skip definitions that are not doctrines
-                if doctrine.is("is_available_on_create") || doctrine.is("name") {
-                    continue;
+            for (key, _) in parameters.iter_assignments() {
+                if key.is("unreformed") {
+                    return true;
                 }
+            }
+        }
+        false
+    }
 
-                if let Some(other) = self.doctrines.get(doctrine.as_str())
-                    && other.key.loc.kind >= doctrine.loc.kind
-                {
-                    dup_error(doctrine, &other.key, "doctrine");
+    fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
+        if let Some(block) = block.get_field_block("parameters") {
+            for (key, value) in block.iter_assignments() {
+                if value.is("yes") || value.is("no") {
+                    db.add_flag(Item::DoctrineBooleanParameter, key.clone());
                 }
-
-                if let Some(b) = block.get_field_block("parameters") {
-                    for (k, v) in b.iter_assignments() {
-                        self.parameters.insert(k.clone());
-                        if v.is("yes") || v.is("no") {
-                            self.boolean_parameters.insert(k.clone());
-                        }
-                    }
-                }
-                self.doctrines.insert(
-                    doctrine.as_str(),
-                    Doctrine::new(doctrine.clone(), block.clone(), category.key.clone()),
-                );
+                db.add_flag(Item::DoctrineParameter, key.clone());
             }
         }
     }
-}
 
-#[derive(Clone, Debug)]
-pub struct DoctrineCategory {
-    key: Token,
-    block: Block,
-    picks: Option<Token>,
-}
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+        let mut sc = ScopeContext::new(Scopes::Faith, key);
+        sc.define_list("selected_doctrines", Scopes::Doctrine, key);
 
-impl DoctrineCategory {
-    pub fn new(key: Token, block: Block) -> Self {
-        let picks = block.get_field_value("number_of_picks").cloned();
-        Self { key, block, picks }
-    }
-
-    pub fn needs_icon(&self, data: &Everything) -> bool {
-        if let Some(group) = self.block.get_field_value("group")
-            && (group.is("special") || group.is("not_creatable"))
-        {
-            return false;
-        }
-
-        if let Some(icon_path) =
-            data.get_defined_string_warn(&self.key, "NGameIcons|FAITH_DOCTRINE_GROUP_ICON_PATH")
-        {
-            let path = format!("{icon_path}/{}.dds", &self.key);
-            data.mark_used(Item::File, &path);
-            return !data.fileset.exists(&path);
-        }
-        true
-    }
-
-    pub fn validate(&self, data: &Everything) {
-        let mut vd = Validator::new(&self.block, data);
-        let mut sc = ScopeContext::new(Scopes::Faith, &self.key);
+        let icon = vd.field_value("icon").unwrap_or(key);
+        data.verify_icon("NGameIcons|DOCTRINE_TYPE_ICON_PATH", icon, ".dds");
 
         if !vd.field_validated_sc("name", &mut sc, validate_desc) {
-            let loca = format!("{}_name", self.key);
-            data.verify_exists_implied(Item::Localization, &loca, &self.key);
-        }
-
-        // doc says "grouping" but that's wrong
-        vd.field_value("group");
-
-        vd.field_integer("number_of_picks");
-        vd.field_trigger("is_available_on_create", Tooltipped::No, &mut sc);
-
-        // Any remaining definitions are doctrines, so accept them all.
-        // They are validated separately.
-        vd.unknown_block_fields(|_, _| ());
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct Doctrine {
-    key: Token,
-    block: Block,
-    category: Token,
-}
-
-impl Doctrine {
-    pub fn new(key: Token, block: Block, category: Token) -> Self {
-        Self { key, block, category }
-    }
-
-    pub fn validate(&self, data: &Everything) {
-        let mut vd = Validator::new(&self.block, data);
-        let mut sc = ScopeContext::new(Scopes::Faith, &self.key);
-        sc.define_list("selected_doctrines", Scopes::Doctrine, &self.key);
-
-        if let Some(icon) = vd.field_value("icon") {
-            data.verify_icon("NGameIcons|FAITH_DOCTRINE_ICON_PATH", icon, ".dds");
-        } else if data.doctrines.categories[self.category.as_str()].needs_icon(data) {
-            data.verify_icon("NGameIcons|FAITH_DOCTRINE_ICON_PATH", &self.key, ".dds");
-        }
-
-        if !vd.field_validated_sc("name", &mut sc, validate_desc) {
-            let loca = format!("{}_name", self.key);
-            data.verify_exists_implied(Item::Localization, &loca, &self.key);
+            let loca = format!("{key}_name");
+            data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
         if !vd.field_validated_sc("desc", &mut sc, validate_desc) {
-            let loca = format!("{}_desc", self.key);
-            data.verify_exists_implied(Item::Localization, &loca, &self.key);
+            let loca = format!("{key}_desc");
+            data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
         vd.field_bool("visible");
@@ -260,13 +129,6 @@ impl Doctrine {
         });
 
         vd.field_validated_block("traits", validate_traits);
-    }
-
-    fn unreformed(&self) -> bool {
-        if let Some(block) = self.block.get_field_block("parameters") {
-            return block.field_value_is("unreformed", "yes");
-        }
-        false
     }
 }
 

@@ -159,13 +159,10 @@ impl DbKind for CasusBelli {
             "neighbor_land_or_water",
             "neighbor_land_tributary",
             "neighbor_land_or_water_tributary",
-            "de_jure_claim",
-            "title_claim",
-            "all",
-            // undocumented after here
-            "claim",
             "de_jure",
+            "claim",
             "independence_domain",
+            "all",
         ];
         vd.field_choice("target_titles", choices);
         let choices = &["all", "barony", "county", "duchy", "kingdom", "empire", "hegemony"];

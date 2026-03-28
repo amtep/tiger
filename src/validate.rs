@@ -617,6 +617,19 @@ pub fn validate_inside_iterator(
             }
             vd.multi_field_item("type", Item::Relation);
         }
+
+        if name == "active_dynasty" {
+            vd.field_bool("include_inactive");
+        }
+
+        if name == "ruler" {
+            // TODO: if an iterator has a limit checking one of these, suggest using the filter.
+            vd.field_target("government_type", sc, Scopes::GovernmentType);
+            vd.field_bool("only_independent");
+            vd.field_choice("tier", &["county", "duchy", "kingdom", "empire", "hegemony"]);
+            vd.field_target("faith", sc, Scopes::Faith);
+            vd.field_target("culture", sc, Scopes::Culture);
+        }
     }
 
     #[cfg(feature = "ck3")]

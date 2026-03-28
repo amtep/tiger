@@ -143,6 +143,7 @@ impl DbKind for AccessoryVariationTextures {
         vd.field_item("normal", Item::File);
         vd.req_field("properties");
         vd.field_item("properties", Item::File);
+        vd.field_bool("use_opacity");
     }
 }
 

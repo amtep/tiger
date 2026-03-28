@@ -25,8 +25,10 @@ impl HolySite {
 
 impl DbKind for HolySite {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
-        for token in block.get_field_values("flag") {
-            db.add_flag(Item::HolySiteFlag, token.clone());
+        if let Some(block) = block.get_field_block("parameters") {
+            for token in block.iter_values() {
+                db.add_flag(Item::HolySiteParameter, token.clone());
+            }
         }
     }
 
@@ -35,6 +37,8 @@ impl DbKind for HolySite {
 
         let loca = format!("holy_site_{key}_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
+        let loca = format!("holy_site_{key}_effects");
+        data.mark_used(Item::Localization, &loca);
 
         vd.req_field("county");
         vd.field_item("county", Item::Title);
@@ -57,7 +61,7 @@ impl DbKind for HolySite {
             }
         }
 
-        vd.multi_field_value("flag");
+        vd.field_list("parameters");
 
         vd.multi_field_validated_block("character_modifier", |block, data| {
             let mut vd = Validator::new(block, data);

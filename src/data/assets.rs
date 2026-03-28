@@ -308,6 +308,13 @@ impl Asset {
                     vd.field_value("body_part"); // TODO
                 });
                 vd.field_item("coa_mask", Item::File);
+                vd.field_validated_block("coa_pattern", |block, data| {
+                    let mut vd = Validator::new(block, data);
+                    vd.field_precise_numeric("coa_pattern_tile");
+                    vd.field_precise_numeric("coa_pattern_scale");
+                    vd.field_list_numeric_exactly("coa_staggered_offset", 2);
+                    vd.field_choice("coa_shape_mask_channel", &["red", "green", "blue", "alpha"]);
+                });
             });
             vd.multi_field_validated_block("throne_entity_user_data", |block, data| {
                 let mut vd = Validator::new(block, data);

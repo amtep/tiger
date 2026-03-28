@@ -768,7 +768,20 @@ impl Fileset {
                 let msg = "file should be in common/static_modifiers since 1.7";
                 err(ErrorKey::Filename).msg(msg).loc(entry).push();
             } else if Game::is_ck3() && entry.path.starts_with("common/vassal_contracts") {
-                let msg = "common/vassal_contracts was replaced with common/subject_contracts/contracts/ in 1.16";
+                let msg = "common/vassal_contracts was replaced with common/subject_contracts/contracts in 1.16";
+                err(ErrorKey::Filename).msg(msg).loc(entry).push();
+            } else if Game::is_ck3() && entry.path.starts_with("common/religion/holy_sites") {
+                let msg = "common/religion/holy_sites was renamed to common/religion/holy_site_types in 1.19";
+                err(ErrorKey::Filename).msg(msg).loc(entry).push();
+            } else if Game::is_ck3() && entry.path.starts_with("common/religion/religion_families")
+            {
+                let msg = "common/religion/religion_families was renamed to common/religion/religion_family_types in 1.19";
+                err(ErrorKey::Filename).msg(msg).loc(entry).push();
+            } else if Game::is_ck3() && entry.path.starts_with("common/religion/religions") {
+                let msg = "common/religion/religions was renamed to common/religion/religion_types in 1.19";
+                err(ErrorKey::Filename).msg(msg).loc(entry).push();
+            } else if Game::is_ck3() && entry.path.starts_with("common/religion/doctrines") {
+                let msg = "common/religion/doctrines was split to common/religion/doctrine_types and doctrine_group_types in 1.19";
                 err(ErrorKey::Filename).msg(msg).loc(entry).push();
             } else {
                 let msg = format!("file in unexpected directory `{}`", dirname.display());
