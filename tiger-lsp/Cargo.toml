@@ -8,6 +8,7 @@ rust-version = "1.88"
 anyhow = "1.0.102"
 crop = "0.4.3"
 log = "0.4.29"
+lsp-types = "0.97.0"
 partially = { version = "0.2.1", features = ["derive"] }
 serde = "1.0.228"
 serde_derive = "1.0.228"

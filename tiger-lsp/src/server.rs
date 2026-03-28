@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use log::{info, trace};
+use lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams, Uri};
 use partially::Partial;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 
 use crate::config::{Config, PartialConfig};
 use crate::error_codes::ErrorCode;
-use crate::lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams};
 use crate::openfile::OpenFile;
 use crate::response::Response;
 
@@ -15,7 +15,7 @@ use crate::response::Response;
 pub struct Server {
     initialized: bool,
     shutdown: bool,
-    open: HashMap<String, OpenFile>,
+    open: HashMap<Uri, OpenFile>,
     config: Config,
 }
 
@@ -95,8 +95,8 @@ impl Server {
         if let Ok(did_open) =
             serde_json::from_value::<DidOpenTextDocumentParams>(Value::Object(params.clone()))
         {
-            info!("open {}", &did_open.textDocument.uri);
-            self.open.insert(did_open.textDocument.uri.clone(), did_open.textDocument.into());
+            info!("open {}", &did_open.text_document.uri.to_string());
+            self.open.insert(did_open.text_document.uri.clone(), did_open.text_document.into());
         } else {
             trace!("could not parse didOpen");
         }
@@ -106,11 +106,15 @@ impl Server {
         if let Ok(change) =
             serde_json::from_value::<DidChangeTextDocumentParams>(Value::Object(params.clone()))
         {
-            if let Some(open_file) = self.open.get_mut(&change.textDocument.uri) {
-                for change in &change.contentChanges {
-                    open_file.apply_change(&change.range, &change.text);
+            if let Some(open_file) = self.open.get_mut(&change.text_document.uri) {
+                for change in &change.content_changes {
+                    if let Some(range) = change.range {
+                        open_file.apply_change(range, &change.text);
+                    } else {
+                        open_file.new_text(&change.text);
+                    }
                 }
-                open_file.version = change.textDocument.version;
+                open_file.version = change.text_document.version;
             }
         } else {
             trace!("could not parse didChange");

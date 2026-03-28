@@ -1,7 +1,6 @@
 use crop::Rope;
 use log::error;
-
-use crate::lsp_types::{Range, TextDocumentItem};
+use lsp_types::{Range, TextDocumentItem};
 
 #[derive(Debug)]
 pub struct OpenFile {
@@ -13,16 +12,21 @@ pub struct OpenFile {
 
 impl From<TextDocumentItem> for OpenFile {
     fn from(tdi: TextDocumentItem) -> Self {
-        Self { version: tdi.version, language_id: tdi.languageId, text: Rope::from(tdi.text) }
+        Self { version: tdi.version, language_id: tdi.language_id, text: Rope::from(tdi.text) }
     }
 }
 
 impl OpenFile {
+    #[cfg(test)]
     pub fn get_lines(&self) -> impl Iterator<Item = String> {
         self.text.lines().map(|l| l.chunks().collect::<String>())
     }
 
-    pub fn apply_change(&mut self, range: &Range, new_text: &str) {
+    pub fn new_text(&mut self, new_text: &str) {
+        self.text = Rope::from(new_text);
+    }
+
+    pub fn apply_change(&mut self, range: Range, new_text: &str) {
         let start_line = range.start.line as usize;
         let end_line = range.end.line as usize;
         let start_char = range.start.character as usize;
@@ -30,14 +34,14 @@ impl OpenFile {
 
         // some checks to avoid panics
         if range.end < range.start {
-            error!("  negative range {range}");
+            error!("  negative range {}", display_range(range));
             return;
         }
 
         let line_len = self.text.line_len();
 
         if start_line > line_len || end_line > line_len {
-            error!("  range {range} line beyond end of document");
+            error!("  range {} line beyond end of document", display_range(range));
             return;
         }
 
@@ -45,10 +49,10 @@ impl OpenFile {
         let end_byte = self.text.byte_of_line(end_line) + end_char;
 
         if start_byte > self.text.byte_len() || end_byte > self.text.byte_len() {
-            error!("  range {range} byte offset beyond end of document");
+            error!("  range {} byte offset beyond end of document", display_range(range));
             return;
         } else if !self.text.is_char_boundary(start_byte) || !self.text.is_char_boundary(end_byte) {
-            error!("  range {range} not at character boundary");
+            error!("  range {} not at character boundary", display_range(range));
             return;
         }
 
@@ -56,14 +60,21 @@ impl OpenFile {
     }
 }
 
+fn display_range(range: Range) -> String {
+    format!(
+        "{}:{}-{}:{}",
+        range.start.line, range.start.character, range.end.line, range.end.character
+    )
+}
+
 #[cfg(test)]
 mod test {
     use line_index::{LineIndex, TextSize};
+    use lsp_types::Position;
     use quickcheck::TestResult;
     use quickcheck_macros::quickcheck;
 
     use super::*;
-    use crate::lsp_types::Position;
 
     #[allow(clippy::needless_pass_by_value)]
     fn open_file(text: Vec<&str>) -> OpenFile {
@@ -86,19 +97,19 @@ mod test {
         // delete middle
         let start = Position { line: 0, character: 2 };
         let end = Position { line: 0, character: 3 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec!["sigle"]);
 
         // delete first
         let start = Position { line: 0, character: 0 };
         let end = Position { line: 0, character: 1 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec!["igle"]);
 
         // delete last
         let start = Position { line: 0, character: 3 };
         let end = Position { line: 0, character: 4 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec!["igl"]);
     }
 
@@ -107,7 +118,7 @@ mod test {
         let mut open = open_file(vec!["single"]);
         let start = Position { line: 0, character: 0 };
         let end = Position { line: 0, character: 6 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec![""]);
     }
 
@@ -116,7 +127,7 @@ mod test {
         let mut open = open_file(vec!["single"]);
         let start = Position { line: 0, character: 0 };
         let end = Position { line: 1, character: 0 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec![]);
     }
 
@@ -125,7 +136,7 @@ mod test {
         let mut open = open_file(vec!["single"]);
         let start = Position { line: 0, character: 1 };
         let end = Position { line: 0, character: 6 };
-        open.apply_change(&Range { start, end }, "implex");
+        open.apply_change(Range { start, end }, "implex");
         assert_result(&open, vec!["simplex"]);
     }
 
@@ -134,7 +145,7 @@ mod test {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 2, character: 2 };
         let end = Position { line: 2, character: 2 };
-        open.apply_change(&Range { start, end }, "ooga\nbooga");
+        open.apply_change(Range { start, end }, "ooga\nbooga");
         assert_result(&open, vec!["first", "second", "thooga", "boogaird", "fourth", "fifth"]);
     }
 
@@ -143,7 +154,7 @@ mod test {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 1, character: 6 };
         let end = Position { line: 2, character: 0 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec!["first", "secondthird", "fourth", "fifth"]);
     }
 
@@ -152,7 +163,7 @@ mod test {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 4, character: 0 };
         let end = Position { line: 5, character: 0 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec!["first", "second", "third", "fourth"]);
     }
 
@@ -161,7 +172,7 @@ mod test {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 1, character: 2 };
         let end = Position { line: 3, character: 3 };
-        open.apply_change(&Range { start, end }, "foo\nbar\ngnu\nxyzzy\n");
+        open.apply_change(Range { start, end }, "foo\nbar\ngnu\nxyzzy\n");
         assert_result(&open, vec!["first", "sefoo", "bar", "gnu", "xyzzy", "rth", "fifth"]);
     }
 
@@ -170,7 +181,7 @@ mod test {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 1, character: 2 };
         let end = Position { line: 3, character: 3 };
-        open.apply_change(&Range { start, end }, "foo\nbar");
+        open.apply_change(Range { start, end }, "foo\nbar");
         assert_result(&open, vec!["first", "sefoo", "barrth", "fifth"]);
     }
 
@@ -179,7 +190,7 @@ mod test {
         let mut open = open_file(vec![""]);
         let start = Position { line: 0, character: 0 };
         let end = Position { line: 0, character: 0 };
-        open.apply_change(&Range { start, end }, "");
+        open.apply_change(Range { start, end }, "");
         assert_result(&open, vec![""]);
     }
 
@@ -214,7 +225,7 @@ mod test {
         let end_pos = Position { line: end_lc.line, character: end_lc.col };
 
         let mut open_file = open_file(&input);
-        open_file.apply_change(&Range { start: start_pos, end: end_pos }, &new_text);
+        open_file.apply_change(Range { start: start_pos, end: end_pos }, &new_text);
         let open_file_result = open_file.get_lines().collect::<Vec<_>>();
 
         input.replace_range(start..end, &new_text);
