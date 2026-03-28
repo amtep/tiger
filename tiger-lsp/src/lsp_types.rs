@@ -18,7 +18,7 @@ pub struct DidOpenTextDocumentParams {
     pub textDocument: TextDocumentItem,
 }
 
-#[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialOrd, Ord, PartialEq, Eq, Deserialize)]
 pub struct Position {
     pub line: u32,
     pub character: u32,
@@ -30,7 +30,7 @@ impl Display for Position {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Range {
     pub start: Position,
     pub end: Position,

@@ -2,6 +2,7 @@ use std::io::{Read, Write, stdin, stdout};
 
 use anyhow::{Result, bail};
 use log::trace;
+use serde::Deserialize;
 
 use crate::notification::Notification;
 use crate::request::Request;
@@ -43,16 +44,19 @@ impl Connection {
                 bail!("malformed header");
             }
         }
+
         if let Some(size) = size {
             self.byte_buffer.resize(size, 0);
             stdin().read_exact(&mut self.byte_buffer)?;
             let body = str::from_utf8(&self.byte_buffer)?;
             trace!("received\n{body}");
-            let request = serde_json::from_str(body)
-                .map(Message::Request)
-                .or_else(|_| serde_json::from_str(body).map(Message::Notification))?;
-            self.byte_buffer.clear();
-            Ok(request)
+            let body: serde_json::Map<String, serde_json::Value> = serde_json::from_str(body)?;
+            let message = if body.contains_key("id") {
+                Message::Request(Request::deserialize(&body)?)
+            } else {
+                Message::Notification(Notification::deserialize(&body)?)
+            };
+            Ok(message)
         } else {
             bail!("message with no content length");
         }

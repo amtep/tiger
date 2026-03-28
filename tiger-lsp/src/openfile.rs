@@ -1,29 +1,28 @@
+use crop::Rope;
 use log::error;
-use serde_derive::Deserialize;
 
 use crate::lsp_types::{Range, TextDocumentItem};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct OpenFile {
     pub version: i32,
     language_id: String,
     /// A vector of lines, with each line including its line ending characters
-    text: Vec<String>,
+    text: Rope,
 }
 
 impl From<TextDocumentItem> for OpenFile {
     fn from(tdi: TextDocumentItem) -> Self {
-        Self {
-            version: tdi.version,
-            language_id: tdi.languageId,
-            text: tdi.text.split_inclusive('\n').map(str::to_string).collect(),
-        }
+        Self { version: tdi.version, language_id: tdi.languageId, text: Rope::from(tdi.text) }
     }
 }
 
 impl OpenFile {
-    // TODO: need a lot of tests for this.
-    pub fn apply_change(&mut self, range: &Range, text: &str) {
+    pub fn get_lines(&self) -> impl Iterator<Item = String> {
+        self.text.lines().map(|l| l.chunks().collect::<String>())
+    }
+
+    pub fn apply_change(&mut self, range: &Range, new_text: &str) {
         let start_line = range.start.line as usize;
         let end_line = range.end.line as usize;
         let start_char = range.start.character as usize;
@@ -34,63 +33,48 @@ impl OpenFile {
             error!("  negative range {range}");
             return;
         }
-        if let Some(line) = self.text.get(start_line) {
-            if !line.is_char_boundary(start_char) {
-                error!("  range {range} does not start at a character boundary");
-            }
-        } else {
-            error!("  range {range} starts beyond end of document");
-        }
-        if let Some(line) = self.text.get(end_line) {
-            if !line.is_char_boundary(end_char) {
-                error!("  range {range} does not end at a character boundary");
-            }
-        } else {
-            error!("  range {range} ends beyond end of document");
+
+        let line_len = self.text.line_len();
+
+        if start_line > line_len || end_line > line_len {
+            error!("  range {range} line beyond end of document");
+            return;
         }
 
-        if start_line == end_line {
-            self.text[start_line].replace_range(start_char..end_char, text);
-        } else {
-            self.text[start_line].replace_range(start_char.., text);
-            self.text[end_line].replace_range(..end_char, "");
-            // TODO: it would be more efficient to replace these lines with the newly inserted lines,
-            // instead of removing and then inserting.
-            self.text.splice(start_line + 1..end_line, []);
+        let start_byte = self.text.byte_of_line(start_line) + start_char;
+        let end_byte = self.text.byte_of_line(end_line) + end_char;
+
+        if start_byte > self.text.byte_len() || end_byte > self.text.byte_len() {
+            error!("  range {range} byte offset beyond end of document");
+            return;
+        } else if !self.text.is_char_boundary(start_byte) || !self.text.is_char_boundary(end_byte) {
+            error!("  range {range} not at character boundary");
+            return;
         }
-        // possibly glue the next line to this one
-        if !self.text[start_line].ends_with('\n') && start_line + 1 < self.text.len() {
-            let next = self.text.remove(start_line);
-            self.text[start_line].push_str(&next);
-        }
-        // now split any lines in the new content
-        // gather the line break indices first to avoid fights with the borrow checker
-        let indices: Vec<_> = self.text[start_line].rmatch_indices('\n').map(|(i, _)| i).collect();
-        for i in indices {
-            if i + 1 < self.text[start_line].len() {
-                self.text.insert(start_line + 1, self.text[start_line][i + 1..].to_string());
-                self.text[start_line].truncate(i + 1);
-            }
-        }
+
+        self.text.replace(start_byte..end_byte, new_text);
     }
 }
 
 #[cfg(test)]
 mod test {
+    use line_index::{LineIndex, TextSize};
+    use quickcheck::TestResult;
+    use quickcheck_macros::quickcheck;
+
     use super::*;
     use crate::lsp_types::Position;
 
+    #[allow(clippy::needless_pass_by_value)]
     fn open_file(text: Vec<&str>) -> OpenFile {
-        OpenFile {
-            version: 1,
-            language_id: "pdx-locale".to_string(),
-            text: text.into_iter().map(str::to_string).collect(),
-        }
+        let mut text = text.join("\n");
+        text.push('\n');
+        OpenFile { version: 1, language_id: "pdx-locale".to_string(), text: Rope::from(text) }
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn assert_result(open: &OpenFile, text: Vec<&str>) {
-        let text: Vec<String> = text.into_iter().map(str::to_string).collect();
-        assert_eq!(open.text, text);
+        assert_eq!(open.get_lines().collect::<Vec<_>>(), text);
     }
 
     // single line tests
@@ -137,6 +121,15 @@ mod test {
     }
 
     #[test]
+    fn single_line_replace_text() {
+        let mut open = open_file(vec!["single"]);
+        let start = Position { line: 0, character: 1 };
+        let end = Position { line: 0, character: 6 };
+        open.apply_change(&Range { start, end }, "implex");
+        assert_result(&open, vec!["simplex"]);
+    }
+
+    #[test]
     fn split_line_with_insert() {
         let mut open = open_file(vec!["first", "second", "third", "fourth", "fifth"]);
         let start = Position { line: 2, character: 2 };
@@ -179,5 +172,54 @@ mod test {
         let end = Position { line: 3, character: 3 };
         open.apply_change(&Range { start, end }, "foo\nbar");
         assert_result(&open, vec!["first", "sefoo", "barrth", "fifth"]);
+    }
+
+    #[test]
+    fn empty() {
+        let mut open = open_file(vec![""]);
+        let start = Position { line: 0, character: 0 };
+        let end = Position { line: 0, character: 0 };
+        open.apply_change(&Range { start, end }, "");
+        assert_result(&open, vec![""]);
+    }
+
+    #[quickcheck]
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::needless_pass_by_value)]
+    fn prop_apply_change(
+        mut input: String,
+        new_text: String,
+        start: usize,
+        end: usize,
+    ) -> TestResult {
+        fn open_file(text: &str) -> OpenFile {
+            OpenFile { version: 1, language_id: "pdx-locale".to_string(), text: Rope::from(text) }
+        }
+
+        if start > input.len()
+            || end > input.len()
+            || start > end
+            || !input.is_char_boundary(start)
+            || !input.is_char_boundary(end)
+        {
+            return TestResult::discard();
+        }
+
+        let line_index = LineIndex::new(&input);
+
+        let start_lc = line_index.line_col(TextSize::new(start as u32));
+        let start_pos = Position { line: start_lc.line, character: start_lc.col };
+
+        let end_lc = line_index.line_col(TextSize::new(end as u32));
+        let end_pos = Position { line: end_lc.line, character: end_lc.col };
+
+        let mut open_file = open_file(&input);
+        open_file.apply_change(&Range { start: start_pos, end: end_pos }, &new_text);
+        let open_file_result = open_file.get_lines().collect::<Vec<_>>();
+
+        input.replace_range(start..end, &new_text);
+        let result: Vec<String> = input.lines().map(String::from).collect();
+
+        TestResult::from_bool(open_file_result == result)
     }
 }
