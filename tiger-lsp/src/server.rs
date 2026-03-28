@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::{info, trace};
+use log::{error, info, trace};
 use lsp_types::{DidChangeTextDocumentParams, DidOpenTextDocumentParams, Uri};
 use partially::Partial;
 use serde::Deserialize;
@@ -98,7 +98,7 @@ impl Server {
             info!("open {}", &did_open.text_document.uri.to_string());
             self.open.insert(did_open.text_document.uri.clone(), did_open.text_document.into());
         } else {
-            trace!("could not parse didOpen");
+            error!("could not parse didOpen");
         }
     }
 
@@ -117,7 +117,7 @@ impl Server {
                 open_file.version = change.text_document.version;
             }
         } else {
-            trace!("could not parse didChange");
+            error!("could not parse didChange");
         }
     }
 
