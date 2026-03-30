@@ -6,7 +6,6 @@ use lsp_types::{Range, TextDocumentItem};
 pub struct OpenFile {
     pub version: i32,
     language_id: String,
-    /// A vector of lines, with each line including its line ending characters
     text: Rope,
 }
 
@@ -26,6 +25,7 @@ impl OpenFile {
         self.text = Rope::from(new_text);
     }
 
+    // does not treat lone '\r' as newline.
     pub fn apply_change(&mut self, range: Range, new_text: &str) {
         let start_line = range.start.line as usize;
         let end_line = range.end.line as usize;

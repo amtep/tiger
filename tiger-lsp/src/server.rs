@@ -136,7 +136,7 @@ impl Server {
 
     pub fn change_config(&mut self, params: &Map<String, Value>) {
         let Some(settings) = params.get("settings") else {
-            info!("settings not found");
+            error!("could not parse didChangeConfiguration");
             return;
         };
 

@@ -13,14 +13,14 @@ pub fn main_loop() -> Result<()> {
         match connection.message()? {
             Message::Request(request) => match &*request.method {
                 "initialize" => {
-                    connection.response(&server.initialize(request.id, &request.params))?;
+                    connection.send_response(&server.initialize(request.id, &request.params))?;
                 }
                 "shutdown" => {
-                    connection.response(&server.shutdown(request.id))?;
+                    connection.send_response(&server.shutdown(request.id))?;
                 }
                 _ => {
                     info!("rejecting {} request", request.method);
-                    connection.response(&Response::error(
+                    connection.send_response(&Response::error(
                         request.id,
                         ErrorCode::MethodNotFound,
                         "method not found",

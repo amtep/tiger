@@ -61,8 +61,17 @@ impl Connection {
     }
 
     #[allow(clippy::unused_self)] // self might be needed in the API in the future
-    pub fn response(&mut self, response: &Response) -> Result<()> {
+    pub fn send_response(&self, response: &Response) -> Result<()> {
         let body = serde_json::to_string(response)?;
+        let response = format!("Content-Length: {}\r\n\r\n{body}", body.len());
+        stdout().write_all(response.as_bytes())?;
+        stdout().flush()?;
+        Ok(())
+    }
+
+    #[allow(clippy::unused_self)] // self might be needed in the API in the future
+    pub fn send_notification(&self, notification: &Notification) -> Result<()> {
+        let body = serde_json::to_string(notification)?;
         let response = format!("Content-Length: {}\r\n\r\n{body}", body.len());
         stdout().write_all(response.as_bytes())?;
         stdout().flush()?;
