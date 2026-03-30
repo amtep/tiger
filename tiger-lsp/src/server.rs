@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::{error, info, trace};
+use log::{error, info, trace, warn};
 use lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, Uri,
 };
@@ -64,11 +64,17 @@ impl Server {
             );
         }
 
-        if let Some(init_options) = params.get("initializationOptions")
-            && let Ok(partial_config) = PartialConfig::deserialize(init_options)
-            && self.config.apply_some(partial_config)
-        {
-            trace!("initial config: {:?}", self.config);
+        if let Some(init_options) = params.get("initializationOptions") {
+            match PartialConfig::deserialize(init_options) {
+                Ok(partial_config) => {
+                    if self.config.apply_some(partial_config) {
+                        trace!("initial config: {:?}", self.config);
+                    }
+                }
+                Err(err) => {
+                    warn!("failed to parse init options: {err}");
+                }
+            }
         }
 
         self.initialized = true;
@@ -94,9 +100,7 @@ impl Server {
     }
 
     pub fn did_open(&mut self, params: &Map<String, Value>) {
-        if let Ok(did_open) =
-            serde_json::from_value::<DidOpenTextDocumentParams>(Value::Object(params.clone()))
-        {
+        if let Ok(did_open) = DidOpenTextDocumentParams::deserialize(params) {
             info!("open {}", &did_open.text_document.uri.to_string());
             self.open.insert(did_open.text_document.uri.clone(), did_open.text_document.into());
         } else {
@@ -105,9 +109,7 @@ impl Server {
     }
 
     pub fn did_change(&mut self, params: &Map<String, Value>) {
-        if let Ok(change) =
-            serde_json::from_value::<DidChangeTextDocumentParams>(Value::Object(params.clone()))
-        {
+        if let Ok(change) = DidChangeTextDocumentParams::deserialize(params) {
             if let Some(open_file) = self.open.get_mut(&change.text_document.uri) {
                 for change in &change.content_changes {
                     if let Some(range) = change.range {
@@ -124,9 +126,7 @@ impl Server {
     }
 
     pub fn did_close(&mut self, params: &Map<String, Value>) {
-        if let Ok(did_close) =
-            serde_json::from_value::<DidCloseTextDocumentParams>(Value::Object(params.clone()))
-        {
+        if let Ok(did_close) = DidCloseTextDocumentParams::deserialize(params) {
             info!("close {}", &did_close.text_document.uri.to_string());
             self.open.remove(&did_close.text_document.uri);
         } else {
@@ -140,10 +140,15 @@ impl Server {
             return;
         };
 
-        if let Ok(partial_config) = PartialConfig::deserialize(settings)
-            && self.config.apply_some(partial_config)
-        {
-            trace!("applied new config: {:?}", self.config);
+        match PartialConfig::deserialize(settings) {
+            Ok(partial_config) => {
+                if self.config.apply_some(partial_config) {
+                    trace!("new config: {:?}", self.config);
+                }
+            }
+            Err(err) => {
+                warn!("failed to parse init options: {err}");
+            }
         }
     }
 }

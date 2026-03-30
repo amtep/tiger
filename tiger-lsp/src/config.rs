@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use partially::Partial;
 use serde_derive::Deserialize;
 
@@ -14,10 +16,11 @@ enum Game {
 #[partially(derive(Deserialize))]
 pub struct Config {
     game: Game,
+    game_dir: Option<PathBuf>,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Self { game: Game::Ck3 }
+        Self { game: Game::Ck3, game_dir: None }
     }
 }
