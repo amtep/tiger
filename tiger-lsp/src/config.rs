@@ -3,24 +3,23 @@ use std::path::PathBuf;
 use partially::Partial;
 use serde_derive::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 enum Game {
+    #[default]
     Ck3,
     Vic3,
     Imperator,
     Eu5,
 }
 
-#[derive(Debug, Partial)]
+#[derive(Debug, Partial, Default)]
 #[partially(derive(Deserialize))]
+#[partially(attribute(serde(deny_unknown_fields)))]
 pub struct Config {
     game: Game,
-    game_dir: Option<PathBuf>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self { game: Game::Ck3, game_dir: None }
-    }
+    ck3_dir: Option<PathBuf>,
+    vic3_dir: Option<PathBuf>,
+    imperator_dir: Option<PathBuf>,
+    eu5_dir: Option<PathBuf>,
 }

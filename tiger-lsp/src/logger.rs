@@ -1,5 +1,5 @@
 use log::{LevelFilter, Log};
-use lsp_types::{LogMessageParams, MessageType};
+use lsp_types::{LogMessageParams, MessageType, ShowMessageParams};
 use simplelog::SharedLogger;
 
 use crate::{connection::Connection, notification::NotificationToClient};
@@ -37,8 +37,17 @@ impl Log for ConnectionLogger {
 
         let _ = Connection::send_notification(&NotificationToClient::new(
             "window/logMessage",
-            Some(serde_json::to_value(params).unwrap()),
+            Some(serde_json::to_value(&params).unwrap()),
         ));
+
+        if record.level() <= log::Level::Warn {
+            let _ = Connection::send_notification(&NotificationToClient::new(
+                "window/showMessage",
+                // # logMessageParams is reused instead of the proper showMessageParams
+                // # which are identical
+                Some(serde_json::to_value(&params).unwrap()),
+            ));
+        }
     }
 
     fn flush(&self) {}
