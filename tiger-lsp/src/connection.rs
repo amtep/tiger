@@ -3,7 +3,7 @@ use std::io::{Read, Write, stdin, stdout};
 use anyhow::{Result, bail};
 use serde::Deserialize;
 
-use crate::notification::Notification;
+use crate::notification::{Notification, NotificationToClient};
 use crate::request::Request;
 use crate::response::Response;
 
@@ -60,8 +60,7 @@ impl Connection {
         }
     }
 
-    #[allow(clippy::unused_self)] // self might be needed in the API in the future
-    pub fn send_response(&self, response: &Response) -> Result<()> {
+    pub fn send_response(response: &Response) -> Result<()> {
         let body = serde_json::to_string(response)?;
         let response = format!("Content-Length: {}\r\n\r\n{body}", body.len());
         stdout().write_all(response.as_bytes())?;
@@ -69,8 +68,7 @@ impl Connection {
         Ok(())
     }
 
-    #[allow(clippy::unused_self)] // self might be needed in the API in the future
-    pub fn send_notification(&self, notification: &Notification) -> Result<()> {
+    pub fn send_notification(notification: &NotificationToClient) -> Result<()> {
         let body = serde_json::to_string(notification)?;
         let response = format!("Content-Length: {}\r\n\r\n{body}", body.len());
         stdout().write_all(response.as_bytes())?;

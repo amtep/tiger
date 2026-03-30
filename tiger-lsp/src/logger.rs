@@ -2,17 +2,16 @@ use log::{LevelFilter, Log};
 use lsp_types::{LogMessageParams, MessageType};
 use simplelog::SharedLogger;
 
-use crate::{connection::Connection, notification::Notification};
+use crate::{connection::Connection, notification::NotificationToClient};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConnectionLogger {
     level: LevelFilter,
-    connection: Connection,
 }
 
 impl ConnectionLogger {
     pub fn new(level: LevelFilter) -> Box<Self> {
-        Box::new(Self { level, connection: Connection::new() })
+        Box::new(Self { level })
     }
 }
 
@@ -34,15 +33,12 @@ impl Log for ConnectionLogger {
         };
 
         let message = format!("{}: {}", record.target(), record.args());
-
         let params = LogMessageParams { typ, message };
 
-        log::trace!("{}", serde_json::to_string(&params).unwrap());
-
-        let _ = self.connection.send_notification(&Notification {
-            method: "window/logMessage".into(),
-            params: std::mem::take(serde_json::to_value(params).unwrap().as_object_mut().unwrap()),
-        });
+        let _ = Connection::send_notification(&NotificationToClient::new(
+            "window/logMessage",
+            Some(serde_json::to_value(params).unwrap()),
+        ));
     }
 
     fn flush(&self) {}
