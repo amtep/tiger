@@ -1,5 +1,5 @@
 use log::{LevelFilter, Log};
-use lsp_types::{LogMessageParams, MessageType, ShowMessageParams};
+use lsp_types::{LogMessageParams, MessageType};
 use simplelog::SharedLogger;
 
 use crate::{connection::Connection, notification::NotificationToClient};

@@ -1,6 +1,6 @@
 use crop::Rope;
 use log::error;
-use lsp_types::{Range, TextDocumentItem};
+use lsp_types::{Position, Range, TextDocumentItem};
 
 #[derive(Debug)]
 pub struct OpenFile {
@@ -23,6 +23,14 @@ impl OpenFile {
 
     pub fn new_text(&mut self, new_text: &str) {
         self.text = Rope::from(new_text);
+    }
+
+    pub fn get_line_around(&self, position: Position) -> Option<String> {
+        if position.line as usize > self.text.line_len() {
+            return None;
+        }
+        let line = self.text.line(position.line as usize).chunks().collect::<String>();
+        if position.character as usize > line.len() { None } else { Some(line) }
     }
 
     // does not treat lone '\r' as newline.
@@ -57,6 +65,10 @@ impl OpenFile {
         }
 
         self.text.replace(start_byte..end_byte, new_text);
+    }
+
+    pub fn language_id(&self) -> &str {
+        &self.language_id
     }
 }
 

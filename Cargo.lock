@@ -2929,6 +2929,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "crop",
+ "lalrpop",
+ "lalrpop-util",
  "line-index",
  "log",
  "lsp-types",
@@ -2939,6 +2941,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "simplelog",
+ "tiger-tables",
 ]
 
 [[package]]

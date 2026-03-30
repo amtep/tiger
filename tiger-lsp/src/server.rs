@@ -2,14 +2,17 @@ use std::collections::HashMap;
 
 use log::{error, info, trace, warn};
 use lsp_types::{
-    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, Uri,
+    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
+    HoverParams, Uri,
 };
 use partially::Partial;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 
 use crate::config::{Config, PartialConfig};
+use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
+use crate::hover_handler::HoverHandler;
 use crate::openfile::OpenFile;
 use crate::response::Response;
 
@@ -19,6 +22,8 @@ pub struct Server {
     shutdown: bool,
     open: HashMap<Uri, OpenFile>,
     config: Config,
+    datatype_tables: DatatypeTables,
+    hover_handler: HoverHandler,
 }
 
 impl Server {
@@ -28,6 +33,8 @@ impl Server {
             shutdown: false,
             open: HashMap::default(),
             config: Config::default(),
+            datatype_tables: DatatypeTables::new(),
+            hover_handler: HoverHandler::new(),
         }
     }
 
@@ -85,10 +92,11 @@ impl Server {
             },
             "capabilities": {
                 "positionEncoding": "utf-8",
-            },
+            "hoverProvider": true,
             "textDocumentSync": {
                 "openClose": true,
                 "change": 2,
+            },
             },
         });
         Response::result(id, result)
@@ -97,6 +105,52 @@ impl Server {
     pub fn shutdown(&mut self, id: Value) -> Response {
         self.shutdown = true;
         Response::result(id, Value::Null)
+    }
+
+    pub fn hover(&mut self, id: Value, params: &Map<String, Value>) -> Response {
+        if let Ok(hover) = serde_json::from_value::<HoverParams>(Value::Object(params.clone())) {
+            if let Some(open) =
+                self.open.get(&hover.text_document_position_params.text_document.uri)
+            {
+                if open.language_id() != "pdx-localization" {
+                    return Response::result(id, Value::Null);
+                }
+                if let Some(line) =
+                    open.get_line_around(hover.text_document_position_params.position)
+                {
+                    let cursor = hover.text_document_position_params.position.character;
+                    let line_nr = hover.text_document_position_params.position.line;
+                    if let Some((contents, span)) = self.hover_handler.hover_description(
+                        self.config.game,
+                        &self.datatype_tables,
+                        &line,
+                        cursor as usize,
+                    ) {
+                        Response::result(
+                            id,
+                            json!({
+                                "contents": {
+                                    "kind": "markdown",
+                                    "value": contents,
+                                },
+                                "range": span.into_range(line_nr),
+                            }),
+                        )
+                    } else {
+                        return Response::result(id, Value::Null);
+                    }
+                } else {
+                    error!("hover request for invalid position");
+                    Response::error(id, ErrorCode::InvalidRequest, "invalid position", None)
+                }
+            } else {
+                error!("hover request for non open file");
+                Response::error(id, ErrorCode::InvalidRequest, "file not open", None)
+            }
+        } else {
+            error!("could not parse hover request");
+            Response::error(id, ErrorCode::InvalidParams, "could not parse params", None)
+        }
     }
 
     pub fn did_open(&mut self, params: &Map<String, Value>) {

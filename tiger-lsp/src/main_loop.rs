@@ -18,6 +18,9 @@ pub fn main_loop() -> Result<()> {
                 "shutdown" => {
                     Connection::send_response(&server.shutdown(request.id))?;
                 }
+                "textDocument/hover" => {
+                    Connection::send_response(&server.hover(request.id, &request.params))?;
+                }
                 _ => {
                     info!("rejecting {} request", request.method);
                     Connection::send_response(&Response::error(
