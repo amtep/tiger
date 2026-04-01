@@ -14,10 +14,10 @@ struct GameDatatypeTables {
 
 #[derive(Debug)]
 pub struct DatatypeTables {
-    ck3_tables: GameDatatypeTables,
-    vic3_tables: GameDatatypeTables,
-    imperator_tables: GameDatatypeTables,
-    eu5_tables: GameDatatypeTables,
+    ck3: GameDatatypeTables,
+    vic3: GameDatatypeTables,
+    imperator: GameDatatypeTables,
+    eu5: GameDatatypeTables,
 }
 
 impl GameDatatypeTables {
@@ -74,19 +74,19 @@ impl GameDatatypeTables {
 impl DatatypeTables {
     pub fn new() -> Self {
         Self {
-            ck3_tables: GameDatatypeTables::new(Game::Ck3),
-            vic3_tables: GameDatatypeTables::new(Game::Vic3),
-            imperator_tables: GameDatatypeTables::new(Game::Imperator),
-            eu5_tables: GameDatatypeTables::new(Game::Eu5),
+            ck3: GameDatatypeTables::new(Game::Ck3),
+            vic3: GameDatatypeTables::new(Game::Vic3),
+            imperator: GameDatatypeTables::new(Game::Imperator),
+            eu5: GameDatatypeTables::new(Game::Eu5),
         }
     }
 
     fn get_tables(&self, game: Game) -> &GameDatatypeTables {
         match game {
-            Game::Ck3 => &self.ck3_tables,
-            Game::Vic3 => &self.vic3_tables,
-            Game::Imperator => &self.imperator_tables,
-            Game::Eu5 => &self.eu5_tables,
+            Game::Ck3 => &self.ck3,
+            Game::Vic3 => &self.vic3,
+            Game::Imperator => &self.imperator,
+            Game::Eu5 => &self.eu5,
         }
     }
 
@@ -107,7 +107,7 @@ impl DatatypeTables {
         self.get_tables(game)
             .functions
             .get(name)
-            .and_then(|hash| self.lookup_function_or_promote(hash, dtype))
+            .and_then(|hash| Self::lookup_function_or_promote(hash, dtype))
     }
 
     pub fn lookup_promote(
@@ -119,11 +119,10 @@ impl DatatypeTables {
         self.get_tables(game)
             .promotes
             .get(name)
-            .and_then(|hash| self.lookup_function_or_promote(hash, dtype))
+            .and_then(|hash| Self::lookup_function_or_promote(hash, dtype))
     }
 
     fn lookup_function_or_promote(
-        &self,
         table: &HashMap<Datatype, (Args, Datatype)>,
         dtype: Datatype,
     ) -> Option<(Args, Datatype)> {

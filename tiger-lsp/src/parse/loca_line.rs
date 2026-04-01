@@ -1,6 +1,6 @@
 use crate::parse::util::Span;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LocaTokenKind {
     Key,
     VersionNumber,
@@ -38,13 +38,13 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
         Macro,
         /// $macro|q$ the q part
         MacroFormat,
-        /// [GetPlayer] where there may be spaces before or after an id
+        /// `[GetPlayer]` where there may be spaces before or after an id
         DatatypeSpace,
-        /// [GetPlayer] inside the id
+        /// `[GetPlayer]` inside the id
         DatatypeId,
-        /// [GetMaA('nomadic_riders')] inside the literal
+        /// `[GetMaA('nomadic_riders')]` inside the literal
         DatatypeLiteral,
-        /// [concept|E] the |E part
+        /// `[concept|E]` the `|E` part
         DatatypeFormat,
     }
 
@@ -54,8 +54,8 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
     let mut span_start = 0;
     let mut error = false;
     let mut interrupted_icon = false;
-    let mut expr_nr = 0;
-    let mut expr_depth = 0;
+    let mut expr_nr: usize = 0;
+    let mut expr_depth: usize = 0;
 
     for (i, c) in line.char_indices() {
         match state {
@@ -255,9 +255,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     expr_depth += 1;
                 }
                 ')' => {
-                    if expr_depth > 0 {
-                        expr_depth -= 1;
-                    }
+                    expr_depth = expr_depth.saturating_sub(1);
                 }
                 '.' => {
                     state = Expecting::DatatypeId;
@@ -312,9 +310,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                         }
                         ')' => {
                             state = Expecting::DatatypeSpace;
-                            if expr_depth > 0 {
-                                expr_depth -= 1;
-                            }
+                            expr_depth = expr_depth.saturating_sub(1);
                         }
                         ',' | ' ' => {
                             state = Expecting::DatatypeSpace;

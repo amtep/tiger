@@ -12,7 +12,7 @@ use serde_json::{Map, Value, json};
 use crate::config::{Config, PartialConfig};
 use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
-use crate::hover_handler::HoverHandler;
+use crate::hover_handler::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
 
@@ -23,7 +23,6 @@ pub struct Server {
     open: HashMap<Uri, OpenFile>,
     config: Config,
     datatype_tables: DatatypeTables,
-    hover_handler: HoverHandler,
 }
 
 impl Server {
@@ -34,7 +33,6 @@ impl Server {
             open: HashMap::default(),
             config: Config::default(),
             datatype_tables: DatatypeTables::new(),
-            hover_handler: HoverHandler::new(),
         }
     }
 
@@ -108,7 +106,7 @@ impl Server {
     }
 
     pub fn hover(&mut self, id: Value, params: &Map<String, Value>) -> Response {
-        if let Ok(hover) = serde_json::from_value::<HoverParams>(Value::Object(params.clone())) {
+        if let Ok(hover) = HoverParams::deserialize(params) {
             if let Some(open) =
                 self.open.get(&hover.text_document_position_params.text_document.uri)
             {
@@ -120,7 +118,7 @@ impl Server {
                 {
                     let cursor = hover.text_document_position_params.position.character;
                     let line_nr = hover.text_document_position_params.position.line;
-                    if let Some((contents, span)) = self.hover_handler.hover_description(
+                    if let Some((contents, span)) = hover_description(
                         self.config.game,
                         &self.datatype_tables,
                         &line,
@@ -137,7 +135,7 @@ impl Server {
                             }),
                         )
                     } else {
-                        return Response::result(id, Value::Null);
+                        Response::result(id, Value::Null)
                     }
                 } else {
                     error!("hover request for invalid position");
