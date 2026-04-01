@@ -44,39 +44,27 @@ pub fn hover_description(
                 let mut dtype = Datatype::Unknown;
                 let mut desc = "unknown";
                 for (i, (name, is_cursor)) in chain.iter().enumerate() {
-                    if i == 0 {
+                    (desc, args, dtype) = if i == 0 {
                         if let Some((a, d)) = tables.lookup_global_promote(game, name) {
-                            desc = "global promote";
-                            args = a;
-                            dtype = d;
+                            ("global promote", a, d)
                         } else if let Ok(d) = name.parse::<Datatype>() {
-                            desc = "data context";
-                            args = Args::Args(&[]);
-                            dtype = d;
+                            ("data context", Args::Args(&[]), d)
                         } else {
-                            desc = "unknown";
-                            args = Args::Unknown;
-                            dtype = Datatype::Unknown;
+                            ("unknown", Args::Unknown, Datatype::Unknown)
                         }
                     } else if i + 1 == chain.len() {
                         if let Some((a, d)) = tables.lookup_function(game, dtype, name) {
-                            desc = "function";
-                            args = a;
-                            dtype = d;
+                            ("function", a, d)
                         } else if let Some((a, d)) = tables.lookup_promote(game, dtype, name) {
-                            desc = "promote";
-                            args = a;
-                            dtype = d;
+                            ("promote", a, d)
                         } else {
-                            desc = "unknown function";
-                            args = Args::Unknown;
-                            dtype = Datatype::Unknown;
+                            ("unknown function", Args::Unknown, Datatype::Unknown)
                         }
                     } else if let Some((a, d)) = tables.lookup_promote(game, dtype, name) {
-                        desc = "promote";
-                        args = a;
-                        dtype = d;
-                    }
+                        ("promote", a, d)
+                    } else {
+                        ("unknown", Args::Unknown, Datatype::Unknown)
+                    };
                     if *is_cursor {
                         break;
                     }
