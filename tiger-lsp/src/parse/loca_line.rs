@@ -57,6 +57,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
     let mut expr_nr: usize = 0;
     let mut expr_depth: usize = 0;
 
+    #[allow(clippy::single_match)]
     for (i, c) in line.char_indices() {
         match state {
             Expecting::LeadingSpace => match c {

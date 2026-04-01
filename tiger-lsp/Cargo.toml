@@ -5,6 +5,7 @@ edition = "2024"
 rust-version = "1.88"
 
 [dependencies]
+ahash = "0.8.12"
 anyhow = "1.0.102"
 crop = "0.4.3"
 log = "0.4.29"

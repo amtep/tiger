@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-
 use tiger_tables::datatype::*;
 use tiger_tables::game::Game;
+
+use crate::util::HashMap;
 
 #[derive(Debug)]
 struct GameDatatypeTables {
@@ -52,11 +52,7 @@ impl GameDatatypeTables {
     fn load_global(
         table: &[(&'static str, Args, Datatype)],
     ) -> HashMap<&'static str, (Args, Datatype)> {
-        let mut map = HashMap::default();
-        for (name, args, dtype) in table.iter().copied() {
-            map.insert(name, (args, dtype));
-        }
-        map
+        table.iter().copied().map(|(name, args, dtype)| (name, (args, dtype))).collect()
     }
 
     fn load(

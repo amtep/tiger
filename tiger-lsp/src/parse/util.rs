@@ -21,8 +21,8 @@ impl Span {
 
     pub fn into_range(self, line_nr: u32) -> Range {
         Range {
-            start: Position { line: line_nr, character: self.start as u32 },
-            end: Position { line: line_nr, character: self.end as u32 },
+            start: Position { line: line_nr, character: u32::try_from(self.start).unwrap() },
+            end: Position { line: line_nr, character: u32::try_from(self.end).unwrap() },
         }
     }
 

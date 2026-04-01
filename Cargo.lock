@@ -2927,6 +2927,7 @@ dependencies = [
 name = "tiger-lsp"
 version = "0.1.0"
 dependencies = [
+ "ahash",
  "anyhow",
  "crop",
  "line-index",

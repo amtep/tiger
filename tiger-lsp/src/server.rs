@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use log::{error, info, trace, warn};
 use lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
@@ -15,6 +13,7 @@ use crate::error_codes::ErrorCode;
 use crate::hover_handler::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
+use crate::util::HashMap;
 
 #[derive(Debug)]
 pub struct Server {

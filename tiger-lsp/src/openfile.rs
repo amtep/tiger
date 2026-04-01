@@ -26,11 +26,17 @@ impl OpenFile {
     }
 
     pub fn get_line_around(&self, position: Position) -> Option<String> {
-        if position.line as usize > self.text.line_len() {
+        let line = position.line as usize;
+        if line >= self.text.line_len() {
             return None;
         }
-        let line = self.text.line(position.line as usize).chunks().collect::<String>();
-        if position.character as usize > line.len() { None } else { Some(line) }
+
+        let line = self.text.line(line);
+        if position.character as usize > line.byte_len() {
+            return None;
+        }
+
+        Some(line.chunks().collect::<String>())
     }
 
     // does not treat lone '\r' as newline.
