@@ -2,7 +2,6 @@
 //! The main entry points are the [`validate_datatypes`] function and the [`Datatype`] enum.
 
 use std::borrow::Cow;
-use std::str::FromStr;
 use std::sync::LazyLock;
 
 #[cfg(feature = "ck3")]
@@ -162,7 +161,7 @@ fn validate_argument(
                                 let msg = format!("expected {expect_type}, got {dtype}");
                                 warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
                             }
-                        } else if let Ok(dtype) = Datatype::from_str(dtype) {
+                        } else if let Ok(dtype) = Datatype::from_str(Game::game(), dtype) {
                             if expect_type != Datatype::Unknown && expect_type != dtype {
                                 let msg = format!("expected {expect_type}, got {dtype}");
                                 warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
@@ -740,7 +739,7 @@ fn lookup_global_promote(lookup_name: &str) -> Option<(Args, Datatype)> {
     }
 
     // Datatypes can be used directly as global promotes, taking their value from the gui context.
-    if let Ok(dtype) = Datatype::from_str(lookup_name) {
+    if let Ok(dtype) = Datatype::from_str(Game::game(), lookup_name) {
         return Some((Args::Args(&[]), dtype));
     }
 

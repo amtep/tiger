@@ -113,12 +113,11 @@ static STR_DATATYPE_MAP: phf::Map<&'static str, Datatype> = phf_map! {
     "void" => Datatype::void,
 };
 
-impl FromStr for Datatype {
-    type Err = strum::ParseError;
+impl Datatype {
     /// Read a Datatype from a string, without requiring the string to use the game-specific wrappers.
-    fn from_str(s: &str) -> Result<Self, strum::ParseError> {
+    pub fn from_str(game: Game, s: &str) -> Result<Self, strum::ParseError> {
         STR_DATATYPE_MAP.get(s).copied().ok_or(strum::ParseError::VariantNotFound).or_else(|_| {
-            match Game::game() {
+            match game {
                 #[cfg(feature = "ck3")]
                 Game::Ck3 => Ck3Datatype::from_str(s).map(Datatype::Ck3),
                 #[cfg(feature = "vic3")]

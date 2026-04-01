@@ -2,13 +2,16 @@
 
 use std::sync::OnceLock;
 
+use serde_derive::Deserialize;
+
 /// Records at runtime which game we are validating, in case there are multiple feature flags set.
 static GAME: OnceLock<Game> = OnceLock::new();
 
 /// Enum specifying which game we are validating.
 ///
 /// This enum is meant to be optimized away entirely when there is only one feature flag set.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Game {
     #[cfg(feature = "ck3")]
     Ck3,

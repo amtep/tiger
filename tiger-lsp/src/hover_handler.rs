@@ -1,6 +1,6 @@
 use tiger_tables::datatype::{Arg, Args, Datatype};
+use tiger_tables::game::Game;
 
-use crate::config::Game;
 use crate::datatype_tables::DatatypeTables;
 use crate::parse::loca_line::{LocaTokenKind, parse_line};
 use crate::parse::util::Span;
@@ -47,7 +47,7 @@ pub fn hover_description(
                     (desc, args, dtype) = if i == 0 {
                         if let Some((a, d)) = tables.lookup_global_promote(game, name) {
                             ("global promote", a, d)
-                        } else if let Ok(d) = name.parse::<Datatype>() {
+                        } else if let Ok(d) = Datatype::from_str(game, name) {
                             ("data context", Args::Args(&[]), d)
                         } else {
                             ("unknown", Args::Unknown, Datatype::Unknown)

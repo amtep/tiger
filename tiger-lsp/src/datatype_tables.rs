@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use tiger_tables::datatype::*;
-
-use crate::config::Game;
+use tiger_tables::game::Game;
 
 #[derive(Debug)]
 struct GameDatatypeTables {

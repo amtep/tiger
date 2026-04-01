@@ -20,6 +20,8 @@ hoi4 = []
 [dependencies]
 anyhow = "1.0.102"
 phf = "0.13.1"
+serde = "1.0.228"
+serde_derive = "1.0.228"
 strum = { version = "0.28.0", features = ["phf"] }
 strum_macros = "0.28.0"
 

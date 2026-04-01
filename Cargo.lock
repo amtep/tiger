@@ -2948,6 +2948,8 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "phf",
+ "serde",
+ "serde_derive",
  "strum",
  "strum_macros 0.28.0",
 ]
