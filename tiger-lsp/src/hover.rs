@@ -30,55 +30,106 @@ pub fn hover_description(
                 .collect();
             // When checking functions, check promotes too because the user may be intending to add
             // a function after the current id.
-            let (desc, args, dtype) = if chain.len() == 1 {
+            let (desc, args_vec, dtypes) = if chain.len() == 1 {
                 if let Some((a, d)) = tables.lookup_global_function(game, chain[0].0) {
-                    ("global function", a, d)
+                    ("global function", vec![(a, vec![d])], vec![])
                 } else if let Some((a, d)) = tables.lookup_global_promote(game, chain[0].0) {
-                    ("global promote", a, d)
+                    ("global promote", vec![(a, vec![d])], vec![])
                 } else {
-                    ("unknown", Args::Unknown, Datatype::Unknown)
+                    ("unknown", vec![(Args::Unknown, vec![Datatype::Unknown])], vec![])
                 }
             } else {
-                let mut args = Args::Unknown;
-                let mut dtype = Datatype::Unknown;
+                let mut args_vec = vec![(Args::Unknown, vec![])];
+                let mut dtypes = vec![];
                 let mut desc = "unknown";
                 for (i, (name, is_cursor)) in chain.iter().enumerate() {
-                    (desc, args, dtype) = if i == 0 {
+                    let mut temp = Vec::new();
+                    for (_, v) in &args_vec {
+                        for dtype in v {
+                            if !temp.contains(dtype) {
+                                temp.push(*dtype);
+                            }
+                        }
+                    }
+                    dtypes = temp;
+
+                    (desc, args_vec) = if i == 0 {
                         if let Some((a, d)) = tables.lookup_global_promote(game, name) {
-                            ("global promote", a, d)
+                            ("global promote", vec![(a, vec![d])])
                         } else if let Ok(d) = Datatype::from_str(game, name) {
-                            ("data context", Args::Args(&[]), d)
+                            ("data context", vec![(Args::Args(&[]), vec![d])])
                         } else {
-                            ("unknown", Args::Unknown, Datatype::Unknown)
+                            ("unknown", vec![(Args::Unknown, vec![Datatype::Unknown])])
                         }
                     } else if i + 1 == chain.len() {
-                        if let Some((a, d)) = tables.lookup_function(game, dtype, name) {
-                            ("function", a, d)
-                        } else if let Some((a, d)) = tables.lookup_promote(game, dtype, name) {
-                            ("promote", a, d)
+                        if let Some(a) = tables.lookup_function(game, &mut dtypes, name) {
+                            ("function", a)
+                        } else if let Some(a) = tables.lookup_promote(game, &mut dtypes, name) {
+                            ("promote", a)
                         } else {
-                            ("unknown function", Args::Unknown, Datatype::Unknown)
+                            ("unknown function", vec![(Args::Unknown, vec![Datatype::Unknown])])
                         }
-                    } else if let Some((a, d)) = tables.lookup_promote(game, dtype, name) {
-                        ("promote", a, d)
+                    } else if let Some(a) = tables.lookup_promote(game, &mut dtypes, name) {
+                        ("promote", a)
                     } else {
-                        ("unknown", Args::Unknown, Datatype::Unknown)
+                        ("unknown", vec![(Args::Unknown, vec![Datatype::Unknown])])
                     };
+
                     if *is_cursor {
                         break;
                     }
                 }
-                (desc, args, dtype)
+                (desc, args_vec, dtypes)
             };
-            Some((
-                format!("{desc} {}{}: {dtype}", v[cursor_i].1.extract(line), display_args(args)),
-                v[cursor_i].1,
-            ))
+
+            #[allow(clippy::comparison_chain)]
+            let mut message = args_vec
+                .into_iter()
+                .enumerate()
+                .map_while(|(i, (args, dtypes))| {
+                    if i < 5 {
+                        Some(format!(
+                            "{desc} {}{}: {}",
+                            v[cursor_i].1.extract(line),
+                            display_args(args),
+                            display_dtypes(&dtypes)
+                        ))
+                    } else if i == 5 {
+                        Some("...".into())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+            if !dtypes.is_empty() {
+                message = format!("{}\n{message}", display_dtypes(&dtypes));
+            }
+
+            Some((message, v[cursor_i].1))
         }
         LocaTokenKind::Icon => Some(("Icon".to_string(), v[cursor_i].1)),
         LocaTokenKind::Macro => Some(("Macro".to_string(), v[cursor_i].1)),
         _ => None,
     }
+}
+
+fn display_dtypes(dtypes: &[Datatype]) -> String {
+    #[allow(clippy::comparison_chain)]
+    dtypes
+        .iter()
+        .enumerate()
+        .map_while(|(i, d)| {
+            if i < 5 {
+                Some(d.to_string())
+            } else if i == 5 {
+                Some("...".into())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" | ")
 }
 
 fn display_args(args: Args) -> String {
@@ -98,18 +149,23 @@ fn display_args(args: Args) -> String {
 }
 
 fn display_arg(arg: Arg) -> String {
+    #[allow(clippy::comparison_chain)]
     match arg {
         Arg::DType(dtype) => dtype.to_string(),
         Arg::IType(itype) => format!("{itype} CString"),
-        Arg::Choice(choices) => {
-            if choices.len() <= 5 {
-                choices.iter().map(|c| format!("'{c}'")).collect::<Vec<_>>().join(" | ")
-            } else {
-                format!(
-                    "{} | ...",
-                    choices[..5].iter().map(|c| format!("'{c}'")).collect::<Vec<_>>().join(" | ")
-                )
-            }
-        }
+        Arg::Choice(choices) => choices
+            .iter()
+            .enumerate()
+            .map_while(|(i, c)| {
+                if i < 5 {
+                    Some(c.to_string())
+                } else if i == 5 {
+                    Some("...".into())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" | "),
     }
 }

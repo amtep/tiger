@@ -96,57 +96,76 @@ impl DatatypeTables {
     pub fn lookup_function(
         &self,
         game: Game,
-        dtype: Datatype,
+        dtypes: &mut Vec<Datatype>,
         name: &str,
-    ) -> Option<(Args, Datatype)> {
+    ) -> Option<Vec<(Args, Vec<Datatype>)>> {
         self.get_tables(game)
             .functions
             .get(name)
-            .and_then(|hash| Self::lookup_function_or_promote(hash, dtype))
+            .map(|hash| Self::lookup_function_or_promote(hash, dtypes))
     }
 
     pub fn lookup_promote(
         &self,
         game: Game,
-        dtype: Datatype,
+        dtypes: &mut Vec<Datatype>,
         name: &str,
-    ) -> Option<(Args, Datatype)> {
+    ) -> Option<Vec<(Args, Vec<Datatype>)>> {
         self.get_tables(game)
             .promotes
             .get(name)
-            .and_then(|hash| Self::lookup_function_or_promote(hash, dtype))
+            .map(|hash| Self::lookup_function_or_promote(hash, dtypes))
     }
 
     fn lookup_function_or_promote(
         table: &HashMap<Datatype, (Args, Datatype)>,
-        dtype: Datatype,
-    ) -> Option<(Args, Datatype)> {
+        dtypes: &mut Vec<Datatype>,
+    ) -> Vec<(Args, Vec<Datatype>)> {
         // TODO: use a table of scope datatypes.
-        if dtype == Datatype::Unknown || dtype == Datatype::AnyScope {
-            let mut args = None;
-            let mut outtype = None;
-            for (a, o) in table.values() {
-                if args.is_none() {
-                    args = Some(*a);
-                    outtype = Some(*o);
-                } else {
-                    if args != Some(*a) {
-                        args = Some(Args::Unknown);
-                    }
-                    if outtype != Some(*o) {
-                        outtype = Some(Datatype::Unknown);
-                    }
+        let mut args_outtypes: Vec<(Args, Vec<Datatype>)> = Vec::new();
+        let mut removed = vec![];
+
+        if dtypes.contains(&Datatype::Unknown) || dtypes.contains(&Datatype::AnyScope) {
+            for (index, dtype) in dtypes
+                .iter()
+                .enumerate()
+                .filter(|(_, dtype)| !matches!(dtype, Datatype::Unknown | Datatype::AnyScope))
+            {
+                if !table.contains_key(dtype) {
+                    removed.push(index);
                 }
             }
-            if let Some(args) = args
-                && let Some(outtype) = outtype
-            {
-                Some((args, outtype))
-            } else {
-                None
+
+            for (args, outtype) in table.values().copied() {
+                if let Some((_, outtypes)) = args_outtypes.iter_mut().find(|(a, _)| a == &args) {
+                    if !outtypes.contains(&outtype) {
+                        outtypes.push(outtype);
+                    }
+                } else {
+                    args_outtypes.push((args, vec![outtype]));
+                }
             }
         } else {
-            table.get(&dtype).copied()
+            for (index, dtype) in dtypes.iter().enumerate() {
+                if let Some((args, outtype)) = table.get(dtype).copied() {
+                    if let Some((_, outtypes)) = args_outtypes.iter_mut().find(|(a, _)| a == &args)
+                    {
+                        if !outtypes.contains(&outtype) {
+                            outtypes.push(outtype);
+                        }
+                    } else {
+                        args_outtypes.push((args, vec![outtype]));
+                    }
+                } else {
+                    removed.push(index);
+                }
+            }
         }
+
+        for r in removed {
+            // * remove all incompatible datatypes from possible input
+            dtypes.remove(r);
+        }
+        args_outtypes
     }
 }
