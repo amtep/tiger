@@ -10,7 +10,7 @@ use serde_json::{Map, Value, json};
 use crate::config::{Config, PartialConfig};
 use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
-use crate::hover_handler::hover_description;
+use crate::hover::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
 use crate::util::HashMap;

@@ -1,6 +1,9 @@
 use lsp_types::{Position, Range};
 
-use std::fmt::{Display, Formatter, Result};
+use std::{
+    cmp::Ordering,
+    fmt::{Display, Formatter, Result},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Span {
@@ -23,6 +26,16 @@ impl Span {
         Range {
             start: Position { line: line_nr, character: u32::try_from(self.start).unwrap() },
             end: Position { line: line_nr, character: u32::try_from(self.end).unwrap() },
+        }
+    }
+
+    pub fn compare_inclusive(&self, pos: usize) -> Ordering {
+        if pos < self.start {
+            Ordering::Greater
+        } else if pos > self.end {
+            Ordering::Less
+        } else {
+            Ordering::Equal
         }
     }
 

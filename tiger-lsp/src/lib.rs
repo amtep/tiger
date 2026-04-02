@@ -6,7 +6,7 @@ mod config;
 mod connection;
 mod datatype_tables;
 mod error_codes;
-mod hover_handler;
+mod hover;
 mod logger;
 mod notification;
 mod openfile;

@@ -12,7 +12,7 @@ pub fn hover_description(
     cursor: usize,
 ) -> Option<(String, Span)> {
     let v = parse_line(line);
-    let cursor_i = v.iter().position(|(_, span)| span.contains_inclusive(cursor))?;
+    let cursor_i = v.binary_search_by(|(_, span)| span.compare_inclusive(cursor)).ok()?;
     match v[cursor_i].0 {
         LocaTokenKind::DatatypeLiteral => Some(("CString literal".to_string(), v[cursor_i].1)),
         LocaTokenKind::DatatypeId(expr_id, expr_depth) => {
@@ -76,6 +76,8 @@ pub fn hover_description(
                 v[cursor_i].1,
             ))
         }
+        LocaTokenKind::Icon => Some(("Icon".to_string(), v[cursor_i].1)),
+        LocaTokenKind::Macro => Some(("Macro".to_string(), v[cursor_i].1)),
         _ => None,
     }
 }
