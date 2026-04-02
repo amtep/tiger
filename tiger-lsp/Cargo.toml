@@ -2,6 +2,13 @@
 name = "tiger-lsp"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Language server for mods of Paradox games. Currently only provides the `hover` feature for datatype expressions in locale files. Supports Crusader Kings 3, Victoria 3, and Imperator: Rome"
+homepage = "https://github.com/amtep/tiger/wiki/LSP"
+repository = "https://github.com/amtep/tiger"
+readme = "../README.md"
+keywords = [ "ck3", "vic3", "imperator", "paradox", "lsp", "language-server", "mods"]
+categories = [ "development-tools", "game-development"]
 rust-version = "1.88"
 
 [dependencies]
