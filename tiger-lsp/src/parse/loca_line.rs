@@ -56,6 +56,9 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
     let mut interrupted_icon = false;
     let mut expr_nr: usize = 0;
     let mut expr_depth: usize = 0;
+    // INVARIANT: len is equal to expr_depth + 1 if within a datatype expression
+    let mut chain_ids: Vec<usize> = Vec::new();
+    let mut next_chain_id: usize = 0;
 
     #[allow(clippy::single_match)]
     for (i, c) in line.char_indices() {
@@ -177,6 +180,8 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     }
                     state = Expecting::DatatypeSpace;
                     span_start = i + 1;
+                    chain_ids.push(next_chain_id);
+                    next_chain_id += 1;
                 }
                 '$' => {
                     if i > span_start {
@@ -196,6 +201,8 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     }
                     state = Expecting::DatatypeSpace;
                     interrupted_icon = true;
+                    chain_ids.push(next_chain_id);
+                    next_chain_id += 1;
                 }
                 '!' => {
                     let ltk = if error {
@@ -251,12 +258,19 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     state = if interrupted_icon { Expecting::Icon } else { Expecting::Freetext };
                     span_start = i + 1;
                     expr_nr += 1;
+                    expr_depth = 0;
+                    chain_ids.clear();
                 }
                 '(' => {
                     expr_depth += 1;
+                    chain_ids.push(next_chain_id);
+                    next_chain_id += 1;
                 }
                 ')' => {
-                    expr_depth = expr_depth.saturating_sub(1);
+                    if expr_depth > 0 {
+                        expr_depth -= 1;
+                        chain_ids.pop();
+                    }
                 }
                 '.' => {
                     state = Expecting::DatatypeId;
@@ -283,7 +297,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     let ltk = if error {
                         LocaTokenKind::Error
                     } else {
-                        LocaTokenKind::DatatypeId(expr_nr, expr_depth)
+                        LocaTokenKind::DatatypeId(expr_nr, chain_ids[expr_depth])
                     };
                     error = false;
                     result.push((ltk, Span::new(span_start, i)));
@@ -297,6 +311,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                             span_start = i + 1;
                             expr_nr += 1;
                             expr_depth = 0;
+                            chain_ids.clear();
                         }
                         '|' => {
                             state = Expecting::DatatypeFormat;
@@ -308,10 +323,15 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                         '(' => {
                             state = Expecting::DatatypeSpace;
                             expr_depth += 1;
+                            chain_ids.push(next_chain_id);
+                            next_chain_id += 1;
                         }
                         ')' => {
                             state = Expecting::DatatypeSpace;
-                            expr_depth = expr_depth.saturating_sub(1);
+                            if expr_depth > 0 {
+                                expr_depth -= 1;
+                                chain_ids.pop();
+                            }
                         }
                         ',' | ' ' => {
                             state = Expecting::DatatypeSpace;
@@ -334,6 +354,8 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                     state = if interrupted_icon { Expecting::Icon } else { Expecting::Freetext };
                     span_start = i + 1;
                     expr_nr += 1;
+                    expr_depth = 0;
+                    chain_ids.clear();
                 }
                 _ => {
                     if !c.is_alphanumeric() {
@@ -393,7 +415,7 @@ pub fn parse_line(line: &str) -> Vec<(LocaTokenKind, Span)> {
                 let ltk = if error {
                     LocaTokenKind::Error
                 } else {
-                    LocaTokenKind::DatatypeId(expr_nr, expr_depth)
+                    LocaTokenKind::DatatypeId(expr_nr, chain_ids[expr_depth])
                 };
                 result.push((ltk, Span::new(span_start, line.len())));
             }

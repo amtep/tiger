@@ -15,13 +15,12 @@ pub fn hover_description(
     let cursor_i = v.binary_search_by(|(_, span)| span.compare_inclusive(cursor)).ok()?;
     match v[cursor_i].0 {
         LocaTokenKind::DatatypeLiteral => Some(("CString literal".to_string(), v[cursor_i].1)),
-        LocaTokenKind::DatatypeId(expr_id, expr_depth) => {
+        LocaTokenKind::DatatypeId(_, cursor_chain_id) => {
             let chain: Vec<_> = v
                 .iter()
                 .filter_map(|(token, span)| {
-                    if let LocaTokenKind::DatatypeId(id, depth) = token
-                        && *id == expr_id
-                        && *depth == expr_depth
+                    if let LocaTokenKind::DatatypeId(_, chain_id) = token
+                        && *chain_id == cursor_chain_id
                     {
                         Some((span.extract(line), span.contains_inclusive(cursor)))
                     } else {
