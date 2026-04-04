@@ -10,6 +10,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
         state: Expecting,
         span_start: usize,
         error: bool,
+        inside: Kind,
     }
     impl ParseContext {
         fn push_simple(&mut self, kind: Kind, i: usize) {
@@ -23,7 +24,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
             self.result.push(Node { kind, content, span: Span::new(self.span_start, i) });
         }
     }
-    #[derive(Debug, Default)]
+    #[derive(Debug, Default, Clone, Copy)]
     enum Expecting {
         /// Space at the start of the line
         #[default]
@@ -60,6 +61,15 @@ pub fn parse_line(line: &str) -> Vec<Node> {
 
     let mut stack: Vec<ParseContext> = Vec::new();
     let mut context = ParseContext::default();
+
+    macro_rules! pop_stack {
+        ($end: expr) => {
+            let result = take(&mut context.result);
+            let inside = context.inside;
+            context = stack.pop().expect("internal loca line parser error");
+            context.push(inside, result, $end);
+        };
+    }
 
     #[allow(clippy::single_match)]
     for (i, c) in line.char_indices() {
@@ -167,6 +177,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     }
                     context.error = false;
                     context.state = Expecting::TrailingSpace;
+                    context.span_start = i + 1;
                 }
                 '@' => {
                     if i > context.span_start {
@@ -176,6 +187,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     context.span_start = i;
                     stack.push(take(&mut context));
                     context.state = Expecting::Icon;
+                    context.inside = Kind::Icon;
                     context.span_start = i + 1;
                 }
                 '[' => {
@@ -186,6 +198,13 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     context.span_start = i;
                     stack.push(take(&mut context));
                     context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeExpr;
+
+                    context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeCall;
+
                     context.span_start = i + 1;
                 }
                 '$' => {
@@ -196,6 +215,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     context.span_start = i;
                     stack.push(take(&mut context));
                     context.state = Expecting::Macro;
+                    context.inside = Kind::Macro;
                     context.span_start = i + 1;
                 }
                 _ => {}
@@ -209,6 +229,13 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     context.span_start = i;
                     stack.push(take(&mut context));
                     context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeExpr;
+
+                    context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeCall;
+
                     context.span_start = i + 1;
                 }
                 '!' => {
@@ -216,9 +243,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                         context.push_simple(Kind::IconText, i);
                     }
                     context.error = false;
-                    let result = take(&mut context.result);
-                    context = stack.pop().expect("internal loca line parser error");
-                    context.push(Kind::Icon, result, i + 1);
+                    pop_stack!(i + 1);
                     context.span_start = i + 1;
                 }
                 _ if c.is_alphanumeric() || c == '_' => {}
@@ -234,9 +259,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                 }
                 '$' => {
                     context.push_simple(Kind::MacroText, i);
-                    let result = take(&mut context.result);
-                    context = stack.pop().expect("internal loca line parser error");
-                    context.push(Kind::Macro, result, i + 1);
+                    pop_stack!(i + 1);
                     context.span_start = i + 1;
                 }
                 _ if c.is_alphanumeric() || c == '_' || c == '.' => {}
@@ -247,9 +270,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
             Expecting::MacroFormat => match c {
                 '$' => {
                     context.push_simple(Kind::Format, i);
-                    let result = take(&mut context.result);
-                    context = stack.pop().expect("internal loca line parser error");
-                    context.push(Kind::Macro, result, i + 1);
+                    pop_stack!(i + 1);
                     context.span_start = i + 1;
                 }
                 _ if c.is_alphanumeric() => {}
@@ -261,38 +282,70 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                 ' ' => {}
                 ']' => {
                     // Be forgiving about missing close parens, because the game engine is too.
-                    while stack.len() > 1 {
-                        let result = take(&mut context.result);
-                        context = stack.pop().unwrap();
-                        context.push(Kind::DatatypeCall, result, i);
+                    while matches!(context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                        && stack.last().is_some_and(|c| {
+                            matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                        })
+                    {
+                        pop_stack!(i);
                     }
-                    let result = take(&mut context.result);
-                    context = stack.pop().expect("internal loca line parser error");
-                    context.push(Kind::DatatypeExpr, result, i + 1);
+                    pop_stack!(i + 1);
                     context.span_start = i + 1;
                 }
                 '(' => {
                     context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeExpr;
+                    context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeCall;
+                    context.span_start = i + 1;
                 }
                 ')' => {
                     // Be forgiving about extra close parens, because the game engine is too.
-                    if let Some(mut old_context) = stack.pop() {
-                        let result = take(&mut old_context.result);
-                        context = old_context;
-                        context.push(Kind::DatatypeCall, result, i + 1);
+                    if stack.last().is_some_and(|c| c.inside == Kind::DatatypeCall) {
+                        assert!(context.inside == Kind::DatatypeExpr);
+                        pop_stack!(i); // pop the Expr
+                        pop_stack!(i); // pop the Call
                     }
                     context.span_start = i + 1;
                 }
                 '.' => {
+                    // Close the previous Call and open a new one.
+                    if context.inside == Kind::DatatypeCall {
+                        pop_stack!(i);
+                    }
+                    stack.push(take(&mut context));
+                    // Spaces are not allowed after `.`
                     context.state = Expecting::DatatypeId;
+                    context.inside = Kind::DatatypeCall;
+                    context.span_start = i + 1;
+                }
+                ',' => {
+                    // Close the previous Expr and open a new one.
+                    if context.inside == Kind::DatatypeExpr {
+                        pop_stack!(i);
+                    }
+                    context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeExpr;
+                    context.span_start = i + 1;
+                    stack.push(take(&mut context));
+                    context.state = Expecting::DatatypeSpace;
+                    context.inside = Kind::DatatypeCall;
                     context.span_start = i + 1;
                 }
                 '|' => {
                     // Be forgiving about missing close parens, because the game engine is too.
-                    while stack.len() > 1 {
-                        let result = take(&mut context.result);
-                        context = stack.pop().unwrap();
-                        context.push(Kind::DatatypeCall, result, i);
+                    while matches!(context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                        && stack.last().is_some_and(|c| {
+                            matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                        })
+                    {
+                        pop_stack!(i);
                     }
                     context.state = Expecting::DatatypeFormat;
                     context.span_start = i;
@@ -315,47 +368,74 @@ pub fn parse_line(line: &str) -> Vec<Node> {
                     match c {
                         ']' => {
                             // Be forgiving about missing close parens, because the game engine is too.
-                            while stack.len() > 1 {
-                                let result = take(&mut context.result);
-                                context = stack.pop().unwrap();
-                                context.push(Kind::DatatypeCall, result, i);
+                            while matches!(context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                                && stack.last().is_some_and(|c| {
+                                    matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                                })
+                            {
+                                pop_stack!(i);
                             }
-                            let result = take(&mut context.result);
-                            context = stack.pop().expect("internal loca line parser error");
-                            context.push(Kind::DatatypeExpr, result, i + 1);
+                            pop_stack!(i + 1);
                             context.span_start = i + 1;
                         }
                         '|' => {
                             // Be forgiving about missing close parens, because the game engine is too.
-                            while stack.len() > 1 {
-                                let result = take(&mut context.result);
-                                context = stack.pop().unwrap();
-                                context.push(Kind::DatatypeCall, result, i);
+                            while matches!(context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                                && stack.last().is_some_and(|c| {
+                                    matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
+                                })
+                            {
+                                pop_stack!(i);
                             }
                             context.state = Expecting::DatatypeFormat;
                             context.span_start = i;
                         }
                         '.' => {
-                            let result = take(&mut context.result);
-                            context = stack.pop().unwrap();
-                            context.push(Kind::DatatypeCall, result, i);
-
-                            context.span_start = i + 1;
+                            // Close the previous Call and open a new one.
+                            if context.inside == Kind::DatatypeCall {
+                                pop_stack!(i);
+                            }
                             stack.push(take(&mut context));
-                            context.state = Expecting::DatatypeSpace;
+                            // Spaces are not allowed after `.`
+                            context.state = Expecting::DatatypeId;
+                            context.inside = Kind::DatatypeCall;
                             context.span_start = i + 1;
                         }
                         ')' => {
                             // Be forgiving about extra close parens, because the game engine is too.
-                            if let Some(mut old_context) = stack.pop() {
-                                let result = take(&mut old_context.result);
-                                context = old_context;
-                                context.push(Kind::DatatypeCall, result, i + 1);
+                            if stack.last().is_some_and(|c| c.inside == Kind::DatatypeCall) {
+                                assert!(context.inside == Kind::DatatypeExpr);
+                                pop_stack!(i); // pop the Expr
+                                pop_stack!(i); // pop the Call
                             }
-                            context.state = Expecting::DatatypeSpace;
                             context.span_start = i + 1;
                         }
-                        '(' | ',' | ' ' => {
+                        '(' => {
+                            context.span_start = i + 1;
+                            stack.push(take(&mut context));
+                            context.state = Expecting::DatatypeSpace;
+                            context.inside = Kind::DatatypeExpr;
+                            context.span_start = i + 1;
+                            stack.push(take(&mut context));
+                            context.state = Expecting::DatatypeSpace;
+                            context.inside = Kind::DatatypeCall;
+                            context.span_start = i + 1;
+                        }
+                        ',' => {
+                            // Close the previous Expr and open a new one.
+                            if context.inside == Kind::DatatypeExpr {
+                                pop_stack!(i);
+                            }
+                            stack.push(take(&mut context));
+                            context.state = Expecting::DatatypeSpace;
+                            context.inside = Kind::DatatypeExpr;
+                            context.span_start = i + 1;
+                            stack.push(take(&mut context));
+                            context.state = Expecting::DatatypeSpace;
+                            context.inside = Kind::DatatypeCall;
+                            context.span_start = i + 1;
+                        }
+                        ' ' => {
                             context.state = Expecting::DatatypeSpace;
                         }
                         _ => unreachable!(),
@@ -370,9 +450,7 @@ pub fn parse_line(line: &str) -> Vec<Node> {
             Expecting::DatatypeFormat => match c {
                 ']' => {
                     context.push_simple(Kind::Format, i);
-                    let result = take(&mut context.result);
-                    context = stack.pop().expect("internal loca line parser error");
-                    context.push(Kind::DatatypeExpr, result, i + 1);
+                    pop_stack!(i + 1);
                     context.span_start = i + 1;
                 }
                 _ => {
@@ -393,75 +471,8 @@ pub fn parse_line(line: &str) -> Vec<Node> {
     // If something is left unterminated at the end of the line, clean it up here.
     // In most cases be forgiving, because the user may still be typing the line.
     while !stack.is_empty() {
-        match context.state {
-            Expecting::DatatypeSpace => {
-                while stack.len() > 1 {
-                    let result = take(&mut context.result);
-                    context = stack.pop().unwrap();
-                    context.push(Kind::DatatypeCall, result, line.len());
-                }
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::DatatypeExpr, result, line.len());
-                context.state = Expecting::Freetext;
-            }
-            Expecting::DatatypeId => {
-                context.push_simple(Kind::DatatypeId, line.len());
-                while stack.len() > 1 {
-                    let result = take(&mut context.result);
-                    context = stack.pop().unwrap();
-                    context.push(Kind::DatatypeCall, result, line.len());
-                }
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::DatatypeExpr, result, line.len());
-                context.state = Expecting::Freetext;
-            }
-            Expecting::DatatypeLiteral => {
-                context.push_simple(Kind::DatatypeLiteral, line.len());
-                while stack.len() > 1 {
-                    let result = take(&mut context.result);
-                    context = stack.pop().unwrap();
-                    context.push(Kind::DatatypeCall, result, line.len());
-                }
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::DatatypeExpr, result, line.len());
-                context.state = Expecting::Freetext;
-            }
-            Expecting::DatatypeFormat => {
-                context.push_simple(Kind::Format, line.len());
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::DatatypeExpr, result, line.len());
-                context.state = Expecting::Freetext;
-            }
-            Expecting::Icon => {
-                context.push_simple(Kind::IconText, line.len());
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::Icon, result, line.len());
-            }
-            Expecting::Macro => {
-                context.push_simple(Kind::MacroText, line.len());
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::Macro, result, line.len());
-            }
-            Expecting::MacroFormat => {
-                context.push_simple(Kind::Format, line.len());
-                let result = take(&mut context.result);
-                context = stack.pop().expect("internal loca line parser error");
-                context.push(Kind::Macro, result, line.len());
-            }
-            Expecting::LeadingSpace
-            | Expecting::Key
-            | Expecting::Num
-            | Expecting::OpenQuote
-            | Expecting::TrailingSpace
-            | Expecting::Comment
-            | Expecting::Freetext => unreachable!(),
-        }
+        pop_stack!(line.len());
+        context.span_start = line.len();
     }
     if line.len() > context.span_start {
         match context.state {
@@ -493,4 +504,47 @@ pub fn parse_line(line: &str) -> Vec<Node> {
         }
     }
     context.result
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn empty() {
+        let v = parse_line("");
+        assert_eq!(v, vec![]);
+    }
+
+    #[test]
+    fn whitespace() {
+        let v = parse_line("  ");
+        assert_eq!(v, vec![])
+    }
+
+    #[test]
+    fn just_comment() {
+        let v = parse_line("#comment");
+        assert_eq!(v, vec![Node { kind: Kind::Comment, content: vec![], span: Span::new(0, 8) }]);
+    }
+
+    #[test]
+    fn unfinished() {
+        let v = parse_line("test: \"[GetSomething(GetSomething(");
+        let keynode = Node { kind: Kind::Key, content: vec![], span: Span::new(0, 4) };
+        let id1 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(8, 20) };
+        let id2 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(21, 33) };
+        // An empty call at the end
+        let call3 = Node { kind: Kind::DatatypeCall, content: vec![], span: Span::new(34, 34) };
+        let expr3 =
+            Node { kind: Kind::DatatypeExpr, content: vec![call3], span: Span::new(34, 34) };
+        let call2 =
+            Node { kind: Kind::DatatypeCall, content: vec![id2, expr3], span: Span::new(21, 34) };
+        let expr2 =
+            Node { kind: Kind::DatatypeExpr, content: vec![call2], span: Span::new(21, 34) };
+        let call1 =
+            Node { kind: Kind::DatatypeCall, content: vec![id1, expr2], span: Span::new(8, 34) };
+        let expr = Node { kind: Kind::DatatypeExpr, content: vec![call1], span: Span::new(7, 34) };
+        assert_eq!(v, vec![keynode, expr]);
+    }
 }

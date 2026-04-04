@@ -1,6 +1,6 @@
 use crate::parse::util::Span;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
     pub kind: Kind,
     /// Will be empty for most kinds.
@@ -10,7 +10,7 @@ pub struct Node {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     /// The key for the whole line. There should be only one of these in the parse result.
     Key,
@@ -18,6 +18,7 @@ pub enum Kind {
     VersionNumber,
     /// Free text in the localization value.
     /// Also used for the content of `Icon`, `Macro`, `DatatypeCall`.
+    #[default]
     Text,
     /// The optional comment, either on its own or after a value.
     Comment,
