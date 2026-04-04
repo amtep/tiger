@@ -1,8 +1,11 @@
+use std::mem::take;
+
 use tiger_tables::datatype::{Arg, Args, Datatype};
 use tiger_tables::game::Game;
 
 use crate::datatype_tables::DatatypeTables;
-use crate::parse::loca_line::{LocaTokenKind, parse_line};
+use crate::loca::Kind;
+use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
 
 pub fn hover_description(
@@ -11,22 +14,19 @@ pub fn hover_description(
     line: &str,
     cursor: usize,
 ) -> Option<(String, Span)> {
-    let v = parse_line(line);
-    let cursor_i = v.binary_search_by(|(_, span)| span.compare_inclusive(cursor)).ok()?;
-    match v[cursor_i].0 {
-        LocaTokenKind::DatatypeLiteral => Some(("CString literal".to_string(), v[cursor_i].1)),
-        LocaTokenKind::DatatypeId(_, cursor_chain_id) => {
+    let mut v = parse_line(line);
+    let mut cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
+    while !v[cursor_i].content.is_empty() {
+        v = take(&mut v[cursor_i].content);
+        cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
+    }
+    match v[cursor_i].kind {
+        // TODO: parse leading type cast from the string literal, if any
+        Kind::DatatypeLiteral => Some(("literal: CString".to_string(), v[cursor_i].span)),
+        Kind::DatatypeId => {
             let chain: Vec<_> = v
                 .iter()
-                .filter_map(|(token, span)| {
-                    if let LocaTokenKind::DatatypeId(_, chain_id) = token
-                        && *chain_id == cursor_chain_id
-                    {
-                        Some((span.extract(line), span.contains_inclusive(cursor)))
-                    } else {
-                        None
-                    }
-                })
+                .map(|node| (node.span.extract(line), node.span.contains_inclusive(cursor)))
                 .collect();
             // When checking functions, check promotes too because the user may be intending to add
             // a function after the current id.
@@ -90,7 +90,7 @@ pub fn hover_description(
                     if i < 5 {
                         Some(format!(
                             "{desc} {}{}: {}",
-                            v[cursor_i].1.extract(line),
+                            v[cursor_i].span.extract(line),
                             display_args(args),
                             display_dtypes(&dtypes)
                         ))
@@ -106,10 +106,10 @@ pub fn hover_description(
                 message = format!("{}\n{message}", display_dtypes(&dtypes));
             }
 
-            Some((message, v[cursor_i].1))
+            Some((message, v[cursor_i].span))
         }
-        LocaTokenKind::Icon => Some(("Icon".to_string(), v[cursor_i].1)),
-        LocaTokenKind::Macro => Some(("Macro".to_string(), v[cursor_i].1)),
+        Kind::IconText => Some(("Icon".to_string(), v[cursor_i].span)),
+        Kind::MacroText => Some(("Macro".to_string(), v[cursor_i].span)),
         _ => None,
     }
 }

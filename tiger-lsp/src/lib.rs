@@ -7,6 +7,7 @@ mod connection;
 mod datatype_tables;
 mod error_codes;
 mod hover;
+mod loca;
 mod logger;
 mod notification;
 mod openfile;
