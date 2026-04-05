@@ -2,6 +2,7 @@ use std::io::{Read, Write, stdin, stdout};
 
 use anyhow::{Result, bail};
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::notification::{Notification, NotificationToClient};
 use crate::request::Request;
@@ -48,7 +49,12 @@ impl Connection {
             self.byte_buffer.resize(size, 0);
             stdin().read_exact(&mut self.byte_buffer)?;
             let body = str::from_utf8(&self.byte_buffer)?;
-            let body: serde_json::Map<String, serde_json::Value> = serde_json::from_str(body)?;
+            let mut body: serde_json::Map<String, Value> = serde_json::from_str(body)?;
+            // Handle special case of params: null, which is different from params: {} when
+            // deserializing but we don't care about the difference.
+            if body.get("params") == Some(&Value::Null) {
+                body.remove("params");
+            }
             let message = if body.contains_key("id") {
                 Message::Request(Request::deserialize(&body)?)
             } else {
