@@ -398,7 +398,6 @@ impl Parser {
     }
 
     fn handle_char(&mut self, i: usize, c: char) {
-        eprintln!("{}", self.context.state);
         match self.context.state {
             Expecting::LeadingSpace => self.handle_leadingspace(i, c),
             Expecting::Key => self.handle_key(i, c),
