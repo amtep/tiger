@@ -1,5 +1,7 @@
 use std::mem::take;
 
+use strum_macros::Display;
+
 use crate::loca::{Kind, Node};
 use crate::parse::util::Span;
 
@@ -19,7 +21,7 @@ struct ParseContext {
     inside: Kind,
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Display)]
 enum Expecting {
     /// Space at the start of the line
     #[default]
@@ -89,12 +91,6 @@ impl Parser {
         self.stack.push(take(&mut self.context));
         self.context.state = Expecting::DatatypeSpace;
         self.context.inside = Kind::DatatypeExpr;
-
-        self.context.span_start = i + 1;
-        self.stack.push(take(&mut self.context));
-        self.context.state = Expecting::DatatypeSpace;
-        self.context.inside = Kind::DatatypeCall;
-
         self.context.span_start = i + 1;
     }
 
@@ -104,12 +100,6 @@ impl Parser {
         self.stack.push(take(&mut self.context));
         self.context.state = Expecting::DatatypeSpace;
         self.context.inside = Kind::DatatypeExpr;
-
-        self.context.span_start = i + 1;
-        self.stack.push(take(&mut self.context));
-        self.context.state = Expecting::DatatypeSpace;
-        self.context.inside = Kind::DatatypeCall;
-
         self.context.span_start = i + 1;
     }
 
@@ -311,10 +301,8 @@ impl Parser {
             ' ' => {}
             ']' => {
                 // Be forgiving about missing close parens, because the game engine is too.
-                while matches!(self.context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
-                    && self.stack.last().is_some_and(|c| {
-                        matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
-                    })
+                while self.context.inside == Kind::DatatypeExpr
+                    && self.stack.last().is_some_and(|c| c.inside == Kind::DatatypeExpr)
                 {
                     self.pop_stack(i);
                 }
@@ -326,22 +314,15 @@ impl Parser {
             }
             ')' => {
                 // Be forgiving about extra close parens, because the game engine is too.
-                if self.stack.last().is_some_and(|c| c.inside == Kind::DatatypeCall) {
+                if self.stack.last().is_some_and(|c| c.inside == Kind::DatatypeExpr) {
                     assert!(self.context.inside == Kind::DatatypeExpr);
-                    self.pop_stack(i); // pop the Expr
-                    self.pop_stack(i); // pop the Call
+                    self.pop_stack(i);
                 }
                 self.context.span_start = i + 1;
             }
             '.' => {
-                // Close the previous Call and open a new one.
-                if self.context.inside == Kind::DatatypeCall {
-                    self.pop_stack(i);
-                }
-                self.stack.push(take(&mut self.context));
                 // Spaces are not allowed after `.`
                 self.context.state = Expecting::DatatypeId;
-                self.context.inside = Kind::DatatypeCall;
                 self.context.span_start = i + 1;
             }
             ',' => {
@@ -353,10 +334,8 @@ impl Parser {
             }
             '|' => {
                 // Be forgiving about missing close parens, because the game engine is too.
-                while matches!(self.context.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
-                    && self.stack.last().is_some_and(|c| {
-                        matches!(c.inside, Kind::DatatypeExpr | Kind::DatatypeCall)
-                    })
+                while self.context.inside == Kind::DatatypeExpr
+                    && self.stack.last().is_some_and(|c| c.inside == Kind::DatatypeExpr)
                 {
                     self.pop_stack(i);
                 }
@@ -419,6 +398,7 @@ impl Parser {
     }
 
     fn handle_char(&mut self, i: usize, c: char) {
+        eprintln!("{}", self.context.state);
         match self.context.state {
             Expecting::LeadingSpace => self.handle_leadingspace(i, c),
             Expecting::Key => self.handle_key(i, c),
@@ -520,17 +500,39 @@ mod test {
         let keynode = Node { kind: Kind::Key, content: vec![], span: Span::new(0, 4) };
         let id1 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(8, 20) };
         let id2 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(21, 33) };
-        // An empty call at the end
-        let call3 = Node { kind: Kind::DatatypeCall, content: vec![], span: Span::new(34, 34) };
-        let expr3 =
-            Node { kind: Kind::DatatypeExpr, content: vec![call3], span: Span::new(34, 34) };
-        let call2 =
-            Node { kind: Kind::DatatypeCall, content: vec![id2, expr3], span: Span::new(21, 34) };
+        // empty expr at the end
+        let expr3 = Node { kind: Kind::DatatypeExpr, content: vec![], span: Span::new(34, 34) };
         let expr2 =
-            Node { kind: Kind::DatatypeExpr, content: vec![call2], span: Span::new(21, 34) };
-        let call1 =
-            Node { kind: Kind::DatatypeCall, content: vec![id1, expr2], span: Span::new(8, 34) };
-        let expr = Node { kind: Kind::DatatypeExpr, content: vec![call1], span: Span::new(7, 34) };
+            Node { kind: Kind::DatatypeExpr, content: vec![id2, expr3], span: Span::new(21, 34) };
+        let expr =
+            Node { kind: Kind::DatatypeExpr, content: vec![id1, expr2], span: Span::new(7, 34) };
         assert_eq!(v, vec![keynode, expr]);
+    }
+
+    #[test]
+    fn gameconcept() {
+        let v = parse_line("test: \"[concept|E]\"");
+        let key = Node { kind: Kind::Key, content: vec![], span: Span::new(0, 4) };
+        let id = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(8, 15) };
+        let format = Node { kind: Kind::Format, content: vec![], span: Span::new(15, 17) };
+        let expr =
+            Node { kind: Kind::DatatypeExpr, content: vec![id, format], span: Span::new(7, 18) };
+        assert_eq!(v, vec![key, expr])
+    }
+
+    #[test]
+    fn interrupted_icon() {
+        let line = "test: \"@[MEN_AT_ARMS_TYPE.GetIconKey]_icon!";
+        let v = parse_line(line);
+        let key = Node { kind: Kind::Key, content: vec![], span: Span::new(0, 4) };
+        let id1 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(9, 25) };
+        let id2 = Node { kind: Kind::DatatypeId, content: vec![], span: Span::new(26, 36) };
+        let expr =
+            Node { kind: Kind::DatatypeExpr, content: vec![id1, id2], span: Span::new(8, 37) };
+        let text =
+            Node { kind: Kind::IconText, content: vec![], span: Span::new(37, line.len() - 1) };
+        let icon =
+            Node { kind: Kind::Icon, content: vec![expr, text], span: Span::new(7, line.len()) };
+        assert_eq!(v, vec![key, icon])
     }
 }

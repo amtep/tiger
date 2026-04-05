@@ -17,7 +17,6 @@ pub enum Kind {
     /// The optional number after the key. It does nothing.
     VersionNumber,
     /// Free text in the localization value.
-    /// Also used for the content of `Icon`, `Macro`, `DatatypeCall`.
     #[default]
     Text,
     /// The optional comment, either on its own or after a value.
@@ -31,14 +30,12 @@ pub enum Kind {
     Macro,
     MacroText,
     /// A datatype expression like `[GetPlayer.GetName]`.
-    /// The corresponding [`Node`] content contains `DatatypeCall` nodes and possibly a `Format` node.
+    /// The corresponding [`Node`] content contains `DatatypeId`, `DatatypeLiteral`, and `DatatypeExpr` nodes
+    /// and possibly a `Format` node.
+    /// An expression like `[GetTrait('presence')]` will have a `DatatypeId` followed by a `DatatypeExpr` for
+    /// the argument that contains a `DatatypeLiteral`.
     /// Macro nodes are also possible.
     DatatypeExpr,
-    /// Part of a datatype expression, like `GetPlayer` in `[GetPlayer.GetName]`.
-    /// If the part has arguments, as in `GetTrait('presence')`, it includes the arguments.
-    /// The corresponding [`Node`] content contains a `DatatypeId` node, and `DatatypeCall` or `DatatypeLiteral` nodes
-    /// for the arguments. `Macro` nodes are also possible.
-    DatatypeCall,
     DatatypeId,
     /// A string literal in a datatype expression. It includes the surrounding quote marks.
     DatatypeLiteral,
