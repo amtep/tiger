@@ -6,7 +6,7 @@ use lsp_types::{Position, Range, TextDocumentItem};
 pub struct OpenFile {
     pub version: i32,
     language_id: String,
-    text: Rope,
+    pub text: Rope,
 }
 
 impl From<TextDocumentItem> for OpenFile {

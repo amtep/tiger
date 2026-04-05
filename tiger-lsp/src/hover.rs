@@ -26,13 +26,8 @@ pub fn hover_description(
         Kind::DatatypeId => {
             let chain: Vec<_> = v
                 .iter()
-                .filter_map(|node| {
-                    if node.kind == Kind::DatatypeId {
-                        Some((node.span.extract(line), node.span.contains_inclusive(cursor)))
-                    } else {
-                        None
-                    }
-                })
+                .filter(|&node| node.kind == Kind::DatatypeId)
+                .map(|node| (node.span.extract(line), node.span.contains_inclusive(cursor)))
                 .collect();
             // When checking functions, check promotes too because the user may be intending to add
             // a function after the current id.

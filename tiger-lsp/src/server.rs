@@ -13,12 +13,13 @@ use crate::error_codes::ErrorCode;
 use crate::hover::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
-use crate::util::HashMap;
+use crate::util::{ClientToServer, HashMap, ServerToClient};
 
 #[derive(Debug)]
 pub struct Server {
     initialized: bool,
     shutdown: bool,
+    utf16: bool,
     open: HashMap<Uri, OpenFile>,
     config: Config,
     datatype_tables: DatatypeTables,
@@ -29,6 +30,7 @@ impl Server {
         Self {
             initialized: false,
             shutdown: false,
+            utf16: true,
             open: HashMap::default(),
             config: Config::default(),
             datatype_tables: DatatypeTables::new(),
@@ -49,23 +51,25 @@ impl Server {
             info!("initializing");
         }
 
+        self.utf16 = true; // the default
         if let Some(capabilities) = params.get("capabilities")
             && let Some(general) = capabilities.get("general")
             && let Some(position_encoding) = general.get("positionEncodings")
             && let Some(position_encoding) = position_encoding.as_array()
-            && position_encoding.contains(&Value::String("utf-8".to_string()))
         {
-            // do nothing, it's ok
-        } else {
-            let data = json!({
-                "retry": false,
-            });
-            return Response::error(
-                id,
-                ErrorCode::InvalidParams,
-                "only utf-8 position encoding is supported",
-                Some(data),
-            );
+            if position_encoding.contains(&json!("utf-8")) {
+                self.utf16 = false;
+            } else if !position_encoding.contains(&json!("utf-16")) {
+                let data = json!({
+                    "retry": false,
+                });
+                return Response::error(
+                    id,
+                    ErrorCode::InvalidParams,
+                    "only utf-8 or utf-16 position encodings are supported",
+                    Some(data),
+                );
+            }
         }
 
         if let Some(init_options) = params.get("initializationOptions") {
@@ -88,7 +92,7 @@ impl Server {
                 "version": env!("CARGO_PKG_VERSION"),
             },
             "capabilities": {
-                "positionEncoding": "utf-8",
+                "positionEncoding": if self.utf16 { "utf-16" } else { "utf-8" },
             "hoverProvider": true,
             "textDocumentSync": {
                 "openClose": true,
@@ -112,11 +116,13 @@ impl Server {
                 if open.language_id() != "pdx-localization" {
                     return Response::result(id, Value::Null);
                 }
-                if let Some(line) =
-                    open.get_line_around(hover.text_document_position_params.position)
-                {
-                    let cursor = hover.text_document_position_params.position.character;
-                    let line_nr = hover.text_document_position_params.position.line;
+                let position = hover
+                    .text_document_position_params
+                    .position
+                    .into_server(self.utf16, &open.text);
+                if let Some(line) = open.get_line_around(position) {
+                    let cursor = position.character;
+                    let line_nr = position.line;
                     if let Some((contents, span)) = hover_description(
                         self.config.game,
                         &self.datatype_tables,
@@ -130,7 +136,7 @@ impl Server {
                                     "kind": "markdown",
                                     "value": contents,
                                 },
-                                "range": span.into_range(line_nr),
+                                "range": span.into_range(line_nr).into_client(self.utf16, &open.text),
                             }),
                         )
                     } else {
@@ -164,6 +170,7 @@ impl Server {
             if let Some(open_file) = self.open.get_mut(&change.text_document.uri) {
                 for change in &change.content_changes {
                     if let Some(range) = change.range {
+                        let range = range.into_server(self.utf16, &open_file.text);
                         open_file.apply_change(range, &change.text);
                     } else {
                         open_file.new_text(&change.text);
