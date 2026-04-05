@@ -90,7 +90,7 @@ pub fn hover_description(
                 .map_while(|(i, (args, dtypes))| {
                     if i < 5 {
                         Some(format!(
-                            "{desc} {}{}: {}",
+                            "{desc} {}{}: {}  ",
                             v[cursor_i].span.extract(line),
                             display_args(args),
                             display_dtypes(&dtypes)
@@ -104,7 +104,7 @@ pub fn hover_description(
                 .collect::<Vec<_>>()
                 .join("\n");
             if !dtypes.is_empty() {
-                message = format!("{}\n{message}", display_dtypes(&dtypes));
+                message = format!("{}  \n{message}", display_dtypes(&dtypes));
             }
 
             Some((message, v[cursor_i].span))
