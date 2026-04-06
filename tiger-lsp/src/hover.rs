@@ -21,8 +21,9 @@ pub fn hover_description(
         cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
     }
     match v[cursor_i].kind {
-        // TODO: parse leading type cast from the string literal, if any
-        Kind::DatatypeLiteral => Some(("literal: CString".to_string(), v[cursor_i].span)),
+        Kind::DatatypeLiteral => {
+            Some((display_dtype_literal(v[cursor_i].span.extract(line)).into(), v[cursor_i].span))
+        }
         Kind::DatatypeId => {
             let chain: Vec<_> = v
                 .iter()
@@ -88,14 +89,14 @@ pub fn hover_description(
                 .into_iter()
                 .enumerate()
                 .map_while(|(i, (args, dtypes))| {
-                    if i < 5 {
+                    if i < 6 {
                         Some(format!(
                             "{desc} {}{}: {}  ",
                             v[cursor_i].span.extract(line),
                             display_args(args),
                             display_dtypes(&dtypes)
                         ))
-                    } else if i == 5 {
+                    } else if i == 6 {
                         Some("...".into())
                     } else {
                         None
@@ -115,15 +116,32 @@ pub fn hover_description(
     }
 }
 
+fn display_dtype_literal(literal: &str) -> &'static str {
+    let inner = &literal[1..literal.len() - 1];
+
+    for (prefix, literal) in [
+        ("(int32)", "literal: int32"),
+        ("(int64)", "literal: int64"),
+        ("(bool)", "literal: bool"),
+        ("(float)", "literal: float"),
+    ] {
+        if inner.strip_prefix(prefix).is_some() {
+            return literal;
+        }
+    }
+
+    "literal: CString"
+}
+
 fn display_dtypes(dtypes: &[Datatype]) -> String {
     #[allow(clippy::comparison_chain)]
     dtypes
         .iter()
         .enumerate()
         .map_while(|(i, d)| {
-            if i < 5 {
+            if i < 6 {
                 Some(d.to_string())
-            } else if i == 5 {
+            } else if i == 6 {
                 Some("...".into())
             } else {
                 None
@@ -158,9 +176,9 @@ fn display_arg(arg: Arg) -> String {
             .iter()
             .enumerate()
             .map_while(|(i, c)| {
-                if i < 5 {
+                if i < 6 {
                     Some(c.to_string())
-                } else if i == 5 {
+                } else if i == 6 {
                     Some("...".into())
                 } else {
                     None
