@@ -1,7 +1,9 @@
 use log::{error, info, trace, warn};
 use lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    HoverParams, Uri,
+    HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, PositionEncodingKind,
+    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
+    TextDocumentSyncOptions, Uri,
 };
 use partially::Partial;
 use serde::Deserialize;
@@ -38,69 +40,87 @@ impl Server {
     }
 
     pub fn initialize(&mut self, id: Value, params: &Map<String, Value>) -> Response {
-        if let Some(info) = params.get("clientInfo") {
-            let mut client_name = "UNKNOWN".to_owned();
-            if let Some(name) = info.get("name") {
-                client_name = name.to_string();
-            }
-            if let Some(version) = info.get("version") {
-                client_name = format!("{client_name} {version}");
-            }
-            info!("initializing for {client_name}");
-        } else {
-            info!("initializing");
-        }
+        let mut result = InitializeResult {
+            server_info: Some(ServerInfo {
+                name: env!("CARGO_PKG_NAME").to_string(),
+                version: Some(env!("CARGO_PKG_VERSION").to_string()),
+            }),
+            capabilities: ServerCapabilities {
+                text_document_sync: Some(TextDocumentSyncCapability::Options(
+                    TextDocumentSyncOptions {
+                        open_close: Some(true),
+                        change: Some(TextDocumentSyncKind::INCREMENTAL),
+                        ..Default::default()
+                    },
+                )),
+                hover_provider: Some(HoverProviderCapability::Simple(true)),
+                ..Default::default()
+            },
+        };
 
-        self.utf16 = true; // the default
-        if let Some(capabilities) = params.get("capabilities")
-            && let Some(general) = capabilities.get("general")
-            && let Some(position_encoding) = general.get("positionEncodings")
-            && let Some(position_encoding) = position_encoding.as_array()
-        {
-            if position_encoding.contains(&json!("utf-8")) {
-                self.utf16 = false;
-            } else if !position_encoding.contains(&json!("utf-16")) {
-                let data = json!({
-                    "retry": false,
-                });
-                return Response::error(
-                    id,
-                    ErrorCode::InvalidParams,
-                    "only utf-8 or utf-16 position encodings are supported",
-                    Some(data),
-                );
+        if let Ok(client) = InitializeParams::deserialize(params) {
+            if let Some(info) = client.client_info {
+                let client_info = if let Some(version) = info.version {
+                    format!("{} {version}", info.name)
+                } else {
+                    info.name.clone()
+                };
+                info!("initializing for {client_info}");
+            } else {
+                info!("initializing");
             }
-        }
 
-        if let Some(init_options) = params.get("initializationOptions") {
-            match PartialConfig::deserialize(init_options) {
-                Ok(partial_config) => {
-                    if self.config.apply_some(partial_config) {
-                        trace!("initial config: {:?}", self.config);
+            self.utf16 = true; // the default
+            if let Some(general) = client.capabilities.general
+                && let Some(position_encodings) = general.position_encodings
+            {
+                if position_encodings.contains(&PositionEncodingKind::UTF8) {
+                    self.utf16 = false;
+                } else if !position_encodings.contains(&PositionEncodingKind::UTF16) {
+                    let data = json!({
+                        "retry": false,
+                    });
+                    return Response::error(
+                        id,
+                        ErrorCode::InvalidParams,
+                        "only utf-8 or utf-16 position encodings are supported",
+                        Some(data),
+                    );
+                }
+            }
+            result.capabilities.position_encoding = Some(if self.utf16 {
+                PositionEncodingKind::UTF16
+            } else {
+                PositionEncodingKind::UTF8
+            });
+
+            if let Some(init_options) = client.initialization_options {
+                match PartialConfig::deserialize(init_options) {
+                    Ok(partial_config) => {
+                        if self.config.apply_some(partial_config) {
+                            trace!("initial config: {:?}", self.config);
+                        }
+                    }
+                    Err(err) => {
+                        warn!("failed to parse init options: {err}");
                     }
                 }
-                Err(err) => {
-                    warn!("failed to parse init options: {err}");
-                }
             }
-        }
 
-        self.initialized = true;
-        let result = json!({
-            "serverInfo": {
-                "name": env!("CARGO_PKG_NAME"),
-                "version": env!("CARGO_PKG_VERSION"),
-            },
-            "capabilities": {
-                "positionEncoding": if self.utf16 { "utf-16" } else { "utf-8" },
-            "hoverProvider": true,
-            "textDocumentSync": {
-                "openClose": true,
-                "change": 2,
-            },
-            },
-        });
-        Response::result(id, result)
+            self.initialized = true;
+            // SAFETY: the type system enforces that we built a valid result
+            Response::result(id, serde_json::to_value(&result).expect("server initialize result"))
+        } else {
+            let data = json!({
+                "retry": false,
+            });
+            Response::error(
+                id,
+                ErrorCode::InvalidParams,
+                "could not parse initialize params",
+                Some(data),
+            )
+        }
     }
 
     pub fn shutdown(&mut self, id: Value) -> Response {
