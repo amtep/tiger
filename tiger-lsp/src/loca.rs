@@ -10,7 +10,7 @@ pub struct Node {
     pub span: Span,
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, strum_macros::Display)]
 pub enum Kind {
     /// The key for the whole line. There should be only one of these in the parse result.
     Key,

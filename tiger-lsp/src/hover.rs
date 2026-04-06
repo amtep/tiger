@@ -7,6 +7,7 @@ use crate::datatype_tables::DatatypeTables;
 use crate::loca::Kind;
 use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
+use crate::util::tree;
 
 pub fn hover_description(
     game: Game,
@@ -16,10 +17,13 @@ pub fn hover_description(
 ) -> Option<(String, Span)> {
     let mut v = parse_line(line);
     let mut cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
+    log::trace!("\n{}", tree(&v[cursor_i], line));
+
     while !v[cursor_i].content.is_empty() {
         v = take(&mut v[cursor_i].content);
         cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
     }
+
     match v[cursor_i].kind {
         Kind::DatatypeLiteral => {
             Some((display_dtype_literal(v[cursor_i].span.extract(line)).into(), v[cursor_i].span))
@@ -120,10 +124,18 @@ fn display_dtype_literal(literal: &str) -> &'static str {
     let inner = &literal[1..literal.len() - 1];
 
     for (prefix, literal) in [
+        ("(int8)", "literal: int8"),
+        ("(int16)", "literal: int16"),
         ("(int32)", "literal: int32"),
         ("(int64)", "literal: int64"),
+        ("(uint8)", "literal: uint8"),
+        ("(uint16)", "literal: uint16"),
+        ("(uint32)", "literal: uint32"),
+        ("(uint64)", "literal: uint64"),
+        ("(CFixedPoint)", "literal: CFixedPoint"),
         ("(bool)", "literal: bool"),
         ("(float)", "literal: float"),
+        ("(double)", "literal: double"),
     ] {
         if inner.strip_prefix(prefix).is_some() {
             return literal;

@@ -2,9 +2,12 @@ use crop::Rope;
 use lsp_types::{Position, Range};
 
 pub use ahash::AHashMap as HashMap;
+use termtree::Tree;
+
+use crate::loca::Node;
 
 pub trait ClientToServer: Sized {
-    fn to_server(&mut self, _utf16: bool, _text: &Rope) {}
+    fn to_server(&mut self, _utf16: bool, _text: &Rope);
 
     fn into_server(mut self, utf16: bool, text: &Rope) -> Self {
         self.to_server(utf16, text);
@@ -59,4 +62,9 @@ impl ServerToClient for Range {
         self.start.to_client(utf16, text);
         self.end.to_client(utf16, text);
     }
+}
+
+pub fn tree(node: &Node, line: &str) -> Tree<String> {
+    Tree::new(format!("{}: {}  ({})", node.span.extract(line), node.kind, node.span))
+        .with_leaves(node.content.iter().map(|n| tree(n, line)))
 }

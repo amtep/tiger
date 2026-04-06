@@ -15,6 +15,7 @@ rust-version = "1.88"
 ahash = "0.8.12"
 anyhow = "1.0.102"
 crop = { version = "0.4.3", features = ["utf16-metric"] }
+directories = "6.0.0"
 log = "0.4.29"
 lsp-types = "0.97.0"
 partially = { version = "0.2.1", features = ["derive"] }
@@ -23,6 +24,7 @@ serde_derive = "1.0.228"
 serde_json = "1.0.149"
 simplelog = "0.12.2"
 strum_macros = "0.28.0"
+termtree = "1.0.0"
 
 tiger-tables = { path = "../tiger-tables", version = "1.0.0", features = ["ck3", "vic3", "imperator", "eu5"] }
 
