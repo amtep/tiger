@@ -48,4 +48,12 @@ impl Span {
     pub fn extract<'a>(&self, line: &'a str) -> &'a str {
         &line[self.start..self.end]
     }
+
+    pub fn start(&self) -> usize {
+        self.start
+    }
+
+    pub fn length(&self) -> usize {
+        self.end - self.start
+    }
 }

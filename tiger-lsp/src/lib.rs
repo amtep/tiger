@@ -14,5 +14,6 @@ mod openfile;
 mod parse;
 mod request;
 mod response;
+mod semantic;
 mod server;
 mod util;

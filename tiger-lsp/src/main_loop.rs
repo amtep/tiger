@@ -21,6 +21,16 @@ pub fn main_loop() -> Result<()> {
                 "textDocument/hover" => {
                     Connection::send_response(&server.hover(request.id, &request.params))?;
                 }
+                "textDocument/semanticTokens/full" => {
+                    Connection::send_response(
+                        &server.semantic_tokens_full(request.id, &request.params),
+                    )?;
+                }
+                "textDocument/semanticTokens/range" => {
+                    Connection::send_response(
+                        &server.semantic_tokens_range(request.id, &request.params),
+                    )?;
+                }
                 _ => {
                     info!("rejecting {} request", request.method);
                     Connection::send_response(&Response::error(

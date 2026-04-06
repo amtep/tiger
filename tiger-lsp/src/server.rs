@@ -1,7 +1,7 @@
 use log::{error, info, trace, warn};
 use lsp_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    HoverParams, Uri,
+    HoverParams, Position, Range, SemanticTokensParams, SemanticTokensRangeParams, Uri,
 };
 use partially::Partial;
 use serde::Deserialize;
@@ -13,6 +13,7 @@ use crate::error_codes::ErrorCode;
 use crate::hover::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
+use crate::semantic::SemanticTokens;
 use crate::util::{ClientToServer, HashMap, ServerToClient};
 
 #[derive(Debug)]
@@ -23,6 +24,7 @@ pub struct Server {
     open: HashMap<Uri, OpenFile>,
     config: Config,
     datatype_tables: DatatypeTables,
+    semantic: SemanticTokens,
 }
 
 impl Server {
@@ -34,6 +36,7 @@ impl Server {
             open: HashMap::default(),
             config: Config::default(),
             datatype_tables: DatatypeTables::new(),
+            semantic: SemanticTokens::default(),
         }
     }
 
@@ -52,23 +55,51 @@ impl Server {
         }
 
         self.utf16 = true; // the default
-        if let Some(capabilities) = params.get("capabilities")
-            && let Some(general) = capabilities.get("general")
-            && let Some(position_encoding) = general.get("positionEncodings")
-            && let Some(position_encoding) = position_encoding.as_array()
-        {
-            if position_encoding.contains(&json!("utf-8")) {
-                self.utf16 = false;
-            } else if !position_encoding.contains(&json!("utf-16")) {
-                let data = json!({
-                    "retry": false,
-                });
-                return Response::error(
-                    id,
-                    ErrorCode::InvalidParams,
-                    "only utf-8 or utf-16 position encodings are supported",
-                    Some(data),
-                );
+        // If client types and modifiers are not in the initialization message,
+        // then the client does not support semantic tokens so it's ok to have
+        // an empty vector.
+        let mut token_types = Vec::new();
+        let mut token_modifiers = Vec::new();
+        let mut client_types = Vec::new();
+        let mut client_modifiers = Vec::new();
+
+        if let Some(capabilities) = params.get("capabilities") {
+            if let Some(general) = capabilities.get("general")
+                && let Some(position_encoding) = general.get("positionEncodings")
+                && let Some(position_encoding) = position_encoding.as_array()
+            {
+                if position_encoding.contains(&json!("utf-8")) {
+                    self.utf16 = false;
+                } else if !position_encoding.contains(&json!("utf-16")) {
+                    let data = json!({
+                        "retry": false,
+                    });
+                    return Response::error(
+                        id,
+                        ErrorCode::InvalidParams,
+                        "only utf-8 or utf-16 position encodings are supported",
+                        Some(data),
+                    );
+                }
+            }
+
+            if let Some(text_document) = capabilities.get("textDocument")
+                && let Some(semantic_tokens) = text_document.get("semanticTokens")
+            {
+                if let Some(types) = semantic_tokens.get("tokenTypes")
+                    && let Ok(types) = Vec::<&str>::deserialize(types)
+                {
+                    client_types = types;
+                }
+
+                if let Some(modifiers) = semantic_tokens.get("tokenModifiers")
+                    && let Ok(modifiers) = Vec::<&str>::deserialize(modifiers)
+                {
+                    client_modifiers = modifiers;
+                }
+
+                (token_types, token_modifiers) =
+                    self.semantic.initialize(&client_types, &client_modifiers);
             }
         }
 
@@ -93,14 +124,89 @@ impl Server {
             },
             "capabilities": {
                 "positionEncoding": if self.utf16 { "utf-16" } else { "utf-8" },
-            "hoverProvider": true,
-            "textDocumentSync": {
-                "openClose": true,
-                "change": 2,
-            },
+                "hoverProvider": true,
+                "semanticTokensProvider": {
+                    "legend": {
+                        "tokenTypes": token_types,
+                        "tokenModifiers": token_modifiers,
+                    },
+                    "range": true,
+                    "full": {
+                        "delta": false,
+                    },
+                },
+                "textDocumentSync": {
+                    "openClose": true,
+                    "change": 2,
+                },
             },
         });
         Response::result(id, result)
+    }
+
+    pub fn semantic_tokens_full(&mut self, id: Value, params: &Map<String, Value>) -> Response {
+        if let Ok(params) = SemanticTokensParams::deserialize(params) {
+            if let Some(open) = self.open.get(&params.text_document.uri) {
+                if open.language_id() != "pdx-localization" {
+                    return Response::result(id, Value::Null);
+                }
+                let lines = open.get_lines();
+                let range = Range {
+                    start: Position { line: 0, character: 0 },
+                    end: Position {
+                        line: u32::try_from(open.num_lines()).expect("2^32 lines"),
+                        character: 0,
+                    },
+                };
+                let v = self.semantic.semantic_tokens_loca(self.utf16, &open.text, range, lines);
+                Response::result(
+                    id,
+                    json!({
+                        "data": v,
+                    }),
+                )
+            } else {
+                error!("semantic tokens request for non open file");
+                Response::error(id, ErrorCode::InvalidRequest, "file not open", None)
+            }
+        } else {
+            error!("could not parse semantic tokens request");
+            Response::error(id, ErrorCode::InvalidParams, "could not parse params", None)
+        }
+    }
+
+    pub fn semantic_tokens_range(&mut self, id: Value, params: &Map<String, Value>) -> Response {
+        if let Ok(params) = SemanticTokensRangeParams::deserialize(params) {
+            if let Some(open) = self.open.get(&params.text_document.uri) {
+                if open.language_id() != "pdx-localization" {
+                    return Response::result(id, Value::Null);
+                }
+                let start = params.range.start.line as usize;
+                let end = if params.range.end.character > 0 {
+                    params.range.end.line + 1
+                } else {
+                    params.range.end.line
+                } as usize;
+                if start > open.num_lines() || end > open.num_lines() {
+                    return Response::result(id, Value::Null);
+                }
+                let lines = open.get_line_range(start..end);
+                let v =
+                    self.semantic.semantic_tokens_loca(self.utf16, &open.text, params.range, lines);
+                Response::result(
+                    id,
+                    json!({
+                        "data": v,
+                    }),
+                )
+            } else {
+                error!("semantic tokens request for non open file");
+                Response::error(id, ErrorCode::InvalidRequest, "file not open", None)
+            }
+        } else {
+            error!("could not parse semantic tokens request");
+            Response::error(id, ErrorCode::InvalidParams, "could not parse params", None)
+        }
     }
 
     pub fn shutdown(&mut self, id: Value) -> Response {

@@ -2940,6 +2940,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "simplelog",
+ "strum",
  "strum_macros 0.28.0",
  "tiger-tables",
 ]

@@ -1,3 +1,5 @@
+use std::ops::RangeBounds;
+
 use crop::Rope;
 use log::error;
 use lsp_types::{Position, Range, TextDocumentItem};
@@ -16,9 +18,16 @@ impl From<TextDocumentItem> for OpenFile {
 }
 
 impl OpenFile {
-    #[cfg(test)]
     pub fn get_lines(&self) -> impl Iterator<Item = String> {
         self.text.lines().map(|l| l.chunks().collect::<String>())
+    }
+
+    pub fn get_line_range<R: RangeBounds<usize>>(&self, range: R) -> impl Iterator<Item = String> {
+        self.text.line_slice(range).lines().map(|l| l.chunks().collect::<String>())
+    }
+
+    pub fn num_lines(&self) -> usize {
+        self.text.line_len()
     }
 
     pub fn new_text(&mut self, new_text: &str) {
