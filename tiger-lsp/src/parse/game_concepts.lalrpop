@@ -1,0 +1,29 @@
+grammar;
+
+match {
+    r"\s*" => { },
+    r"#.*" => { },
+} else {
+    _,
+} else {
+    r"[^\{\}=\s]*" => TEXT,
+
+}
+
+pub Concepts: Vec<String> = {
+    <Concept*> => <>.into_iter().flatten().collect()
+}
+
+Concept: Vec<String> = {
+    <key: TEXT> "=" "{" <fields: Field*> "}" => {
+        let mut fields: Vec<String> = fields.into_iter().flatten().collect();
+        fields.push(key.to_string());
+        fields
+    },
+};
+
+Field: Vec<String> = {
+   "alias" "=" "{" <TEXT*> "}" => <>.into_iter().map(String::from).collect(),
+   TEXT "=" "{" <TEXT*> "}" => vec![],
+   TEXT "=" TEXT => vec![],
+};

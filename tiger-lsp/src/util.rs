@@ -2,6 +2,8 @@ use crop::Rope;
 use lsp_types::{Position, Range};
 
 pub use ahash::AHashMap as HashMap;
+pub use ahash::AHashSet as HashSet;
+
 use termtree::Tree;
 
 use crate::loca::Node;

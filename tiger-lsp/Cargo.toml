@@ -25,8 +25,12 @@ serde_json = "1.0.149"
 simplelog = "0.12.2"
 strum_macros = "0.28.0"
 termtree = "1.0.0"
+lalrpop-util = "0.23.1"
 
 tiger-tables = { path = "../tiger-tables", version = "1.0.0", features = ["ck3", "vic3", "imperator", "eu5"] }
+
+[build-dependencies]
+lalrpop = "0.23.1"
 
 [dev-dependencies]
 line-index = "0.1.2"

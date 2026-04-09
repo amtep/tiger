@@ -12,6 +12,7 @@ use serde_json::{Map, Value, json};
 use crate::config::{Config, PartialConfig};
 use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
+use crate::game_concepts::GameConcepts;
 use crate::hover::hover_description;
 use crate::openfile::OpenFile;
 use crate::response::Response;
@@ -25,6 +26,7 @@ pub struct Server {
     open: HashMap<Uri, OpenFile>,
     config: Config,
     datatype_tables: DatatypeTables,
+    game_concepts: GameConcepts,
 }
 
 impl Server {
@@ -36,6 +38,7 @@ impl Server {
             open: HashMap::default(),
             config: Config::default(),
             datatype_tables: DatatypeTables::new(),
+            game_concepts: GameConcepts::new(),
         }
     }
 
@@ -103,6 +106,17 @@ impl Server {
                     }
                     Err(err) => {
                         warn!("failed to parse init options: {err}");
+                    }
+                }
+            }
+
+            if let Some(game_dir) = self.config.game_dir() {
+                match GameConcepts::load(game_dir) {
+                    Ok(game_concepts) => {
+                        self.game_concepts = game_concepts;
+                    }
+                    Err(err) => {
+                        warn!("failed to load game concepts: {err}");
                     }
                 }
             }

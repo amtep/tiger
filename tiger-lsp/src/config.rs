@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use partially::Partial;
 use serde_derive::Deserialize;
@@ -19,5 +19,16 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self { game: Game::Ck3, ck3_dir: None, vic3_dir: None, imperator_dir: None, eu5_dir: None }
+    }
+}
+
+impl Config {
+    pub fn game_dir(&self) -> Option<&Path> {
+        match self.game {
+            Game::Ck3 => self.ck3_dir.as_deref(),
+            Game::Vic3 => self.vic3_dir.as_deref(),
+            Game::Imperator => self.imperator_dir.as_deref(),
+            Game::Eu5 => self.eu5_dir.as_deref(),
+        }
     }
 }
