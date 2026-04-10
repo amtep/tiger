@@ -1,7 +1,4 @@
-use std::fs;
-use std::path::Path;
-
-use crate::util::HashSet;
+use std::sync::LazyLock;
 
 pub mod loca_line;
 pub mod util;
@@ -13,27 +10,12 @@ lalrpop_util::lalrpop_mod!(
     "parse/game_concepts.rs"
 );
 
-pub fn load_game_concepts(game_dir_path: &Path) -> Result<HashSet<String>, std::io::Error> {
-    let game_concepts_path = game_dir_path.join("common/game_concepts");
-
-    let mut results = HashSet::with_capacity(4096);
-
-    for concept_file in fs::read_dir(game_concepts_path)? {
-        let concept_file = concept_file?.path();
-        let concept_content = fs::read_to_string(concept_file)?;
-
-        if let Ok(concepts) = game_concepts::ConceptsParser::new().parse(&concept_content) {
-            results.extend(concepts);
-        }
-    }
-
-    Ok(results)
-}
+pub static GAME_CONCEPTS_PARSER: LazyLock<game_concepts::ConceptsParser> =
+    LazyLock::new(game_concepts::ConceptsParser::new);
 
 #[test]
 fn test_parse_game_concepts() {
-    let content = r#"
-        vassal = {
+    let content = r#"vassal = {
 	alias = { vassals vassalize vassalization vassal_possessive vassals_possessive vassalage }
 	parent = ruler
 	texture = "gfx/interface/icons/icon_vassal.dds"
@@ -116,8 +98,7 @@ fn test_parse_game_concepts() {
         }
 
     "#;
-
-    let concepts = game_concepts::ConceptsParser::new().parse(&content).unwrap();
+    let concepts = game_concepts::ConceptsParser::new().parse(content).unwrap();
     assert_eq!(
         concepts.iter().map(String::as_str).collect::<Vec<&str>>(),
         vec![

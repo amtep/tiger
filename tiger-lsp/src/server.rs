@@ -26,6 +26,7 @@ pub struct Server {
     open: HashMap<Uri, OpenFile>,
     config: Config,
     datatype_tables: DatatypeTables,
+    workspace_dir: Option<Uri>,
     game_concepts: GameConcepts,
 }
 
@@ -37,6 +38,7 @@ impl Server {
             utf16: true,
             open: HashMap::default(),
             config: Config::default(),
+            workspace_dir: None,
             datatype_tables: DatatypeTables::new(),
             game_concepts: GameConcepts::new(),
         }
@@ -111,12 +113,28 @@ impl Server {
             }
 
             if let Some(game_dir) = self.config.game_dir() {
-                match GameConcepts::load(game_dir) {
+                match GameConcepts::load_game(game_dir) {
                     Ok(game_concepts) => {
                         self.game_concepts = game_concepts;
                     }
                     Err(err) => {
                         warn!("failed to load game concepts: {err}");
+                    }
+                }
+            }
+
+            if let Some(workspace_dirs) = client.workspace_folders {
+                self.workspace_dir = workspace_dirs.first().map(|w| w.uri.clone());
+
+                if let Some(workspace_dir) = &self.workspace_dir
+                    && workspace_dir.scheme().map(|s| s.as_str()) == Some("file")
+                {
+                    let workspace_dir_path = workspace_dir.path().as_str();
+
+                    if let Err(err) =
+                        self.game_concepts.load_mod(std::path::Path::new(workspace_dir_path))
+                    {
+                        warn!("failed to load mod game concepts: {err}");
                     }
                 }
             }
@@ -160,6 +178,7 @@ impl Server {
                     if let Some((contents, span)) = hover_description(
                         self.config.game,
                         &self.datatype_tables,
+                        &self.game_concepts,
                         &line,
                         cursor as usize,
                     ) {

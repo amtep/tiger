@@ -4,6 +4,7 @@ use tiger_tables::datatype::{Arg, Args, Datatype};
 use tiger_tables::game::Game;
 
 use crate::datatype_tables::DatatypeTables;
+use crate::game_concepts::GameConcepts;
 use crate::loca::Kind;
 use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
@@ -12,6 +13,7 @@ use crate::util::tree;
 pub fn hover_description(
     game: Game,
     tables: &DatatypeTables,
+    game_concepts: &GameConcepts,
     line: &str,
     cursor: usize,
 ) -> Option<(String, Span)> {
@@ -41,6 +43,8 @@ pub fn hover_description(
                     ("global function", vec![(a, vec![d])], vec![])
                 } else if let Some((a, d)) = tables.lookup_global_promote(game, chain[0].0) {
                     ("global promote", vec![(a, vec![d])], vec![])
+                } else if game_concepts.contains(chain[0].0) {
+                    ("game concept", vec![(Args::Args(&[]), vec![Datatype::CString])], vec![])
                 } else {
                     ("unknown", vec![(Args::Unknown, vec![Datatype::Unknown])], vec![])
                 }
