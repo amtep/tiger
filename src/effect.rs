@@ -422,8 +422,8 @@ pub fn validate_effect_field(
                         tooltipped,
                         special_tokens,
                     );
+                    sc.close();
                 }
-                sc.close();
             }
             Effect::Identifier(kind) => {
                 if let Some(token) = bv.expect_value() {
@@ -475,8 +475,8 @@ pub fn validate_effect_field(
                 tooltipped,
                 special_tokens,
             );
+            sc.close();
         }
-        sc.close();
         return has_tooltip && tooltipped.is_tooltipped();
     }
 
