@@ -80,6 +80,8 @@ impl DbKind for Law {
         data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("{key}_effects_not_in_prev");
         data.mark_used(Item::Localization, &loca);
+        let loca = format!("{key}_subname");
+        data.mark_used(Item::Localization, &loca);
 
         vd.field_item("pass_phrase", Item::Localization);
         vd.field_item("confirmation_title", Item::Localization);

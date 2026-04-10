@@ -26,6 +26,15 @@ impl Election {
 
 impl DbKind for Election {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let loca = format!("{key}_candidates");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+        let loca = format!("{key}_candidates_tooltip");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+        let loca = format!("{key}_electors");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+        let loca = format!("{key}_electors_tooltip");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+
         let mut vd = Validator::new(block, data);
         let mut sc = ScopeContext::new(Scopes::Character, key);
         sc.define_name("title", Scopes::LandedTitle, key);
