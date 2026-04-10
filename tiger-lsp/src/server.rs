@@ -127,7 +127,7 @@ impl Server {
                 self.workspace_dir = workspace_dirs.first().map(|w| w.uri.clone());
 
                 if let Some(workspace_dir) = &self.workspace_dir
-                    && workspace_dir.scheme().map(|s| s.as_str()) == Some("file")
+                    && workspace_dir.scheme().is_some_and(|s| s.eq_lowercase("file"))
                 {
                     let workspace_dir_path = workspace_dir.path().as_str();
 

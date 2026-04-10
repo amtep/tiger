@@ -47,3 +47,8 @@ pub enum Kind {
     /// For example a line that starts `loca_%key` will start with an `Error` instead of a `Key`.
     Error,
 }
+
+/// Return the index in `v` of the node whose span contains the cursor.
+pub fn find_cursor_index(v: &[Node], cursor: usize) -> Option<usize> {
+    v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()
+}

@@ -5,7 +5,7 @@ use tiger_tables::game::Game;
 
 use crate::datatype_tables::DatatypeTables;
 use crate::game_concepts::GameConcepts;
-use crate::loca::Kind;
+use crate::loca::{Kind, find_cursor_index};
 use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
 use crate::util::tree;
@@ -18,12 +18,12 @@ pub fn hover_description(
     cursor: usize,
 ) -> Option<(String, Span)> {
     let mut v = parse_line(line);
-    let mut cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
+    let mut cursor_i = find_cursor_index(&v, cursor)?;
     log::trace!("\n{}", tree(&v[cursor_i], line));
 
     while !v[cursor_i].content.is_empty() {
         v = take(&mut v[cursor_i].content);
-        cursor_i = v.binary_search_by(|node| node.span.compare_inclusive(cursor)).ok()?;
+        cursor_i = find_cursor_index(&v, cursor)?;
     }
 
     match v[cursor_i].kind {
@@ -152,7 +152,7 @@ fn display_dtype_literal(literal: &str) -> &'static str {
         ("(float)", "literal: float"),
         ("(double)", "literal: double"),
     ] {
-        if inner.strip_prefix(prefix).is_some() {
+        if inner.starts_with(prefix) {
             return literal;
         }
     }
