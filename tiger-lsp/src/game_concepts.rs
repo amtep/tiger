@@ -1,14 +1,16 @@
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::parse::GAME_CONCEPTS_PARSER;
-use crate::util::{HashMap, HashSet};
+use crate::util::HashMap;
 
-type ConceptFileMap = HashMap<String, HashSet<String>>;
+type ConceptFileMap = HashMap<String, HashMap<String, Rc<[String]>>>;
 
 #[derive(Debug)]
 pub struct GameConcepts {
     game: ConceptFileMap,
+    // ? the removed part can be simplified to remove aliases lists.
     mod_: (ConceptFileMap, ConceptFileMap),
 }
 
@@ -34,10 +36,18 @@ impl GameConcepts {
         Ok(())
     }
 
-    pub fn contains(&self, concept: &str) -> bool {
-        self.mod_.0.values().any(|h| h.contains(concept))
-            || (!self.mod_.1.values().any(|h| h.contains(concept))
-                && self.game.values().any(|h| h.contains(concept)))
+    pub fn get(&self, concept: &str) -> Option<&[String]> {
+        if let Some(aliases) = self.mod_.0.values().find_map(|h| h.get(concept)) {
+            return Some(aliases);
+        }
+
+        if !self.mod_.1.values().any(|h| h.contains_key(concept))
+            && let Some(aliases) = self.game.values().find_map(|h| h.get(concept))
+        {
+            return Some(aliases);
+        }
+
+        None
     }
 
     fn load_game_concepts(game_dir_path: &Path) -> Result<ConceptFileMap, std::io::Error> {
@@ -55,7 +65,16 @@ impl GameConcepts {
                     concept_content.strip_prefix('\u{feff}').unwrap_or(&concept_content);
 
                 if let Ok(concepts) = GAME_CONCEPTS_PARSER.parse(concept_content) {
-                    results.insert(key, HashSet::from_iter(concepts));
+                    let mut concept_aliases_map = HashMap::new();
+
+                    for concept in concepts {
+                        let aliases: Rc<[String]> = Rc::from(concept.as_slice());
+                        for c in concept {
+                            concept_aliases_map.insert(c, Rc::clone(&aliases));
+                        }
+                    }
+
+                    results.insert(key, concept_aliases_map);
                 }
             }
         }
@@ -86,7 +105,17 @@ impl GameConcepts {
                         if let Some(concepts) = game.get(&key) {
                             removed.insert(key.clone(), concepts.clone());
                         }
-                        added.insert(key, HashSet::from_iter(concepts));
+
+                        let mut concept_aliases_map = HashMap::new();
+
+                        for concept in concepts {
+                            let aliases: Rc<[String]> = Rc::from(concept.as_slice());
+                            for c in concept {
+                                concept_aliases_map.insert(c, Rc::clone(&aliases));
+                            }
+                        }
+
+                        added.insert(key, concept_aliases_map);
                     }
                     Err(err) => {
                         log::trace!("failed to parse mod game concept: {err}");

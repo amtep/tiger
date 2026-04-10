@@ -10,8 +10,8 @@ match {
 
 }
 
-pub Concepts: Vec<String> = {
-    <Concept*> => <>.into_iter().flatten().collect()
+pub Concepts: Vec<Vec<String>> = {
+    <Concept*> => <>
 }
 
 Concept: Vec<String> = {

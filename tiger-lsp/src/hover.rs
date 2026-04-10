@@ -36,6 +36,8 @@ pub fn hover_description(
                 .filter(|&node| node.kind == Kind::DatatypeId)
                 .map(|node| (node.span.extract(line), node.span.contains_inclusive(cursor)))
                 .collect();
+
+            let mut aliases: Option<Vec<&str>> = None;
             // When checking functions, check promotes too because the user may be intending to add
             // a function after the current id.
             let (desc, args_vec, dtypes) = if chain.len() == 1 {
@@ -43,7 +45,13 @@ pub fn hover_description(
                     ("global function", vec![(a, vec![d])], vec![])
                 } else if let Some((a, d)) = tables.lookup_global_promote(game, chain[0].0) {
                     ("global promote", vec![(a, vec![d])], vec![])
-                } else if game_concepts.contains(chain[0].0) {
+                } else if let Some(a) = game_concepts.get(chain[0].0) {
+                    if a.len() != 1 {
+                        // * at least one alias
+                        aliases = Some(
+                            a.iter().map(String::as_str).filter(|a| *a != chain[0].0).collect(),
+                        );
+                    }
                     ("game concept", vec![(Args::Args(&[]), vec![Datatype::CString])], vec![])
                 } else {
                     ("unknown", vec![(Args::Unknown, vec![Datatype::Unknown])], vec![])
@@ -114,6 +122,9 @@ pub fn hover_description(
                 .join("\n");
             if !dtypes.is_empty() {
                 message = format!("{}  \n{message}", display_dtypes(&dtypes));
+            }
+            if let Some(aliases) = aliases {
+                message = format!("{message}\naliases: {}", aliases.join(", "));
             }
 
             Some((message, v[cursor_i].span))
