@@ -26,6 +26,7 @@ simplelog = "0.12.2"
 strum_macros = "0.28.0"
 termtree = "1.0.0"
 lalrpop-util = "0.23.1"
+walkdir = "2.5.0"
 
 tiger-tables = { path = "../tiger-tables", version = "1.0.0", features = ["ck3", "vic3", "imperator", "eu5"] }
 

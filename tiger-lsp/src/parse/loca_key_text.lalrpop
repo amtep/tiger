@@ -1,0 +1,33 @@
+use std::str::FromStr;
+
+grammar;
+
+match {
+    r"[ \t]*" => { },
+    r"#.*" => { },
+} else {
+    r"[0-9]+" => VERSION,
+    _,
+} else {
+    r"[\r\n]" => NL,
+    r"[A-Za-z0-9_][A-Za-z0-9_\-'.]*" => KEY,
+    r#"".*""# => TEXT,
+}
+
+Line<T>: Vec<T> = {
+    <mut v:(<T> NL+)*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+pub KeyTexts: Vec<(String, Option<u16>, String)> = {
+    NL* KEY ":" NL+ <Line<KeyText>> => <>,
+}
+
+KeyText: (String, Option<u16>, String) = {
+    <KEY> ":" <VERSION?> <TEXT> => (<>.to_string(), <>.map(|v| u16::from_str(v).unwrap()), <>.to_string()),
+}

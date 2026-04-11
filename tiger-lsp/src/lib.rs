@@ -9,6 +9,7 @@ mod datatype_tables;
 mod error_codes;
 mod game_concepts;
 mod hover;
+mod key_texts;
 mod loca;
 mod logger;
 mod notification;

@@ -133,7 +133,7 @@ impl Parser {
                 self.context.span_start = i + 1;
             }
             _ => {
-                if !(c.is_alphanumeric() || c == '_' || c == '.') {
+                if !(c.is_alphanumeric() || c == '_' || c == '.' || c == '-' || c == '\'') {
                     self.context.error = true;
                 }
             }
@@ -292,7 +292,7 @@ impl Parser {
                 self.context.state = Expecting::TrailingSpace;
                 self.context.span_start = i + 1;
             }
-            _ if c.is_alphanumeric() || c == '_' || c == '.' => {}
+            _ if c.is_alphanumeric() || c == '_' || c == '.' || c == '-' || c == '\'' => {}
             _ => {
                 self.context.error = true;
             }

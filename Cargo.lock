@@ -3059,6 +3059,7 @@ dependencies = [
  "strum_macros 0.28.0",
  "termtree",
  "tiger-tables",
+ "walkdir",
 ]
 
 [[package]]

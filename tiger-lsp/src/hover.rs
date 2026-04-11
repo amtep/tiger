@@ -5,6 +5,7 @@ use tiger_tables::game::Game;
 
 use crate::datatype_tables::DatatypeTables;
 use crate::game_concepts::GameConcepts;
+use crate::key_texts::KeyTexts;
 use crate::loca::{Kind, find_cursor_index};
 use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
@@ -14,6 +15,7 @@ pub fn hover_description(
     game: Game,
     tables: &DatatypeTables,
     game_concepts: &GameConcepts,
+    key_texts: &KeyTexts,
     line: &str,
     cursor: usize,
 ) -> Option<(String, Span)> {
@@ -47,7 +49,7 @@ pub fn hover_description(
                     ("global promote", vec![(a, vec![d])], vec![])
                 } else if let Some(a) = game_concepts.get(chain[0].0) {
                     if a.len() != 1 {
-                        // * at least one alias
+                        // INFO: at least one alias
                         aliases = Some(
                             a.iter().map(String::as_str).filter(|a| *a != chain[0].0).collect(),
                         );
@@ -130,7 +132,20 @@ pub fn hover_description(
             Some((message, v[cursor_i].span))
         }
         Kind::IconText => Some(("Icon".to_string(), v[cursor_i].span)),
-        Kind::MacroText => Some(("Macro".to_string(), v[cursor_i].span)),
+        Kind::MacroText => {
+            let macro_ = v[cursor_i].span.extract(line);
+            log::debug!("{macro_}");
+            let message = if let Some((version, text)) = key_texts.get(macro_) {
+                format!(
+                    "Localization macro:{}\n{text}",
+                    version.map(|v| v.to_string()).unwrap_or_else(String::new)
+                )
+            } else {
+                "Macro".to_string()
+            };
+
+            Some((message, v[cursor_i].span))
+        }
         _ => None,
     }
 }

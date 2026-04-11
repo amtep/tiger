@@ -15,6 +15,7 @@ use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
 use crate::game_concepts::GameConcepts;
 use crate::hover::hover_description;
+use crate::key_texts::KeyTexts;
 use crate::openfile::OpenFile;
 use crate::positions::{ClientToServer, ServerToClient};
 use crate::response::Response;
@@ -30,6 +31,7 @@ pub struct Server {
     datatype_tables: DatatypeTables,
     workspace_dir: Option<Uri>,
     game_concepts: GameConcepts,
+    key_texts: KeyTexts,
     completion: Completion,
 }
 
@@ -44,6 +46,7 @@ impl Server {
             workspace_dir: None,
             datatype_tables: DatatypeTables::new(),
             game_concepts: GameConcepts::new(),
+            key_texts: KeyTexts::new(),
             completion: Completion::default(),
         }
     }
@@ -142,6 +145,15 @@ impl Server {
                         warn!("failed to load game concepts: {err}");
                     }
                 }
+
+                match KeyTexts::load_game(game_dir) {
+                    Ok(key_texts) => {
+                        self.key_texts = key_texts;
+                    }
+                    Err(err) => {
+                        warn!("failed to load key texts: {err}");
+                    }
+                }
             }
 
             if let Some(workspace_dirs) = client.workspace_folders {
@@ -200,6 +212,7 @@ impl Server {
                         self.config.game,
                         &self.datatype_tables,
                         &self.game_concepts,
+                        &self.key_texts,
                         &line,
                         cursor as usize,
                     ) {

@@ -10,8 +10,18 @@ lalrpop_util::lalrpop_mod!(
     "parse/game_concepts.rs"
 );
 
+lalrpop_util::lalrpop_mod!(
+    #[allow(clippy::pedantic)]
+    #[allow(clippy::if_then_some_else_none)]
+    loca_key_text,
+    "parse/loca_key_text.rs"
+);
+
 pub static GAME_CONCEPTS_PARSER: LazyLock<game_concepts::ConceptsParser> =
     LazyLock::new(game_concepts::ConceptsParser::new);
+
+pub static LOCA_KEY_TEXTS_PARSER: LazyLock<loca_key_text::KeyTextsParser> =
+    LazyLock::new(loca_key_text::KeyTextsParser::new);
 
 #[test]
 fn test_parse_game_concepts() {
@@ -100,54 +110,108 @@ fn test_parse_game_concepts() {
     "#;
     let concepts = game_concepts::ConceptsParser::new().parse(content).unwrap();
     assert_eq!(
-        concepts.iter().map(String::as_str).collect::<Vec<&str>>(),
+        concepts,
         vec![
-            "vassals",
-            "vassalize",
-            "vassalization",
-            "vassal_possessive",
-            "vassals_possessive",
-            "vassalage",
-            "vassal",
-            "direct_vassals",
-            "direct_vassal",
-            "powerful_vassals",
-            "powerful_vassal_powerful",
-            "powerful_vassal_possessive",
-            "powerful_vassal",
-            "strong_vassals",
-            "strong_vassal",
-            "vassal_stances",
-            "preferred_heir",
-            "unpreferred_heir",
-            "preferred_heirs",
-            "unpreferred_heirs",
-            "vassal_stance",
-            "rulers",
-            "rulerpossessive",
-            "ruler",
-            "title_i",
-            "titles",
-            "titlepossessive",
-            "title",
-            "usurp",
-            "usurpation",
-            "usurped",
-            "usurp_title",
-            "domain_limit",
-            "recently_acquired_holdings",
-            "recently_acquired_holding",
-            "primary_titles",
-            "primary_title",
-            "income",
-            "tax",
-            "taxation",
-            "taxes",
-            "levy",
-            "levies",
-            "obligations",
-            "obligation",
-            "vassal_obligations"
+            vec![
+                "vassals",
+                "vassalize",
+                "vassalization",
+                "vassal_possessive",
+                "vassals_possessive",
+                "vassalage",
+                "vassal"
+            ],
+            vec!["direct_vassals", "direct_vassal"],
+            vec![
+                "powerful_vassals",
+                "powerful_vassal_powerful",
+                "powerful_vassal_possessive",
+                "powerful_vassal"
+            ],
+            vec!["strong_vassals", "strong_vassal"],
+            vec![
+                "vassal_stances",
+                "preferred_heir",
+                "unpreferred_heir",
+                "preferred_heirs",
+                "unpreferred_heirs",
+                "vassal_stance"
+            ],
+            vec!["rulers", "rulerpossessive", "ruler"],
+            vec!["title_i", "titles", "titlepossessive", "title"],
+            vec!["usurp", "usurpation", "usurped", "usurp_title"],
+            vec!["domain_limit"],
+            vec!["recently_acquired_holdings", "recently_acquired_holding"],
+            vec!["primary_titles", "primary_title"],
+            vec!["income"],
+            vec!["tax", "taxation", "taxes"],
+            vec!["levy", "levies"],
+            vec!["obligations", "obligation", "vassal_obligations"]
+        ]
+    );
+}
+
+#[test]
+fn test_parse_loca_key_text() {
+    let content = r#"l_english:
+
+     ##################################################
+     # Misc
+     board_games.0000.t:0 "The Greatest Game: [SCOPE.Custom('BG_GameType')|U]"
+     board_games.0001.t:0 "$board_games.0000.t$"
+
+     ##################################################
+     # Opponent Winning
+     board_games.0001.desc.opponent_winning.diplomacy.low:0 ""You know," muses my opponent, "I may not be much of a talker, but I'm alarmingly good at [SCOPE.Custom('BG_GameType')].""
+     board_games.0001.desc.opponent_winning.diplomacy.medium:0 ""Ahhhh, if only public speaking was as easy as beating you at [SCOPE.Custom('BG_GameType')]," remarks my opponent."
+     board_games.0001.desc.opponent_winning.diplomacy.high:0 ""I genuinely don't know which is easier," laments my opponent, "beating you at [SCOPE.Custom('BG_GameType')] or telling the tale of your embarrassing loss.""
+     board_games.0001.desc.opponent_winning.martial.low:0 ""If war was as easy as [SCOPE.Custom('BG_GameType')], I'd rule the world by now," laughs my opponent. "But then, that's just me.""
+     board_games.0001.desc.opponent_winning.martial.medium:0 ""Mmmm, you're not much of a strategist, are you?" chortles my opponent."
+     board_games.0001.desc.opponent_winning.martial.high:0 ""The battlefield, the board, it's all just a case of that most important thing," warbles my opponent. [bg_opponent.GetSheHe|U] taps [bg_opponent.GetHerHis] forehead with a knuckle for emphasis."
+     "#;
+    let concepts = loca_key_text::KeyTextsParser::new().parse(content).unwrap();
+    assert_eq!(
+        concepts
+            .iter()
+            .map(|(k, v, t)| (k.as_str(), *v, t.as_str()))
+            .collect::<Vec<(&str, Option<u16>, &str)>>(),
+        vec![
+            (
+                "board_games.0000.t",
+                Some(0),
+                "\"The Greatest Game: [SCOPE.Custom('BG_GameType')|U]\""
+            ),
+            ("board_games.0001.t", Some(0), "\"$board_games.0000.t$\""),
+            (
+                "board_games.0001.desc.opponent_winning.diplomacy.low",
+                Some(0),
+                "\"\"You know,\" muses my opponent, \"I may not be much of a talker, but I'm alarmingly good at [SCOPE.Custom('BG_GameType')].\"\""
+            ),
+            (
+                "board_games.0001.desc.opponent_winning.diplomacy.medium",
+                Some(0),
+                "\"\"Ahhhh, if only public speaking was as easy as beating you at [SCOPE.Custom('BG_GameType')],\" remarks my opponent.\""
+            ),
+            (
+                "board_games.0001.desc.opponent_winning.diplomacy.high",
+                Some(0),
+                "\"\"I genuinely don't know which is easier,\" laments my opponent, \"beating you at [SCOPE.Custom('BG_GameType')] or telling the tale of your embarrassing loss.\"\""
+            ),
+            (
+                "board_games.0001.desc.opponent_winning.martial.low",
+                Some(0),
+                "\"\"If war was as easy as [SCOPE.Custom('BG_GameType')], I'd rule the world by now,\" laughs my opponent. \"But then, that's just me.\"\""
+            ),
+            (
+                "board_games.0001.desc.opponent_winning.martial.medium",
+                Some(0),
+                "\"\"Mmmm, you're not much of a strategist, are you?\" chortles my opponent.\""
+            ),
+            (
+                "board_games.0001.desc.opponent_winning.martial.high",
+                Some(0),
+                "\"\"The battlefield, the board, it's all just a case of that most important thing,\" warbles my opponent. [bg_opponent.GetSheHe|U] taps [bg_opponent.GetHerHis] forehead with a knuckle for emphasis.\""
+            )
         ]
     );
 }

@@ -163,7 +163,7 @@ impl DatatypeTables {
         }
 
         for r in removed {
-            // * remove all incompatible datatypes from possible input
+            // INFO: remove all incompatible datatypes from possible input
             dtypes.remove(r);
         }
         args_outtypes

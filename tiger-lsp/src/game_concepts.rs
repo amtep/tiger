@@ -2,16 +2,19 @@ use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 
+use walkdir::WalkDir;
+
 use crate::parse::GAME_CONCEPTS_PARSER;
 use crate::util::HashMap;
 
+// INFO: filename to a map of key to aliases (including the key)
 type ConceptFileMap = HashMap<String, HashMap<String, Rc<[String]>>>;
 
 #[derive(Debug)]
 pub struct GameConcepts {
     game: ConceptFileMap,
     mod_added: ConceptFileMap,
-    // ? can be simplified to remove aliases lists.
+    // TODO: can be simplified to remove aliases lists.
     mod_removed: ConceptFileMap,
 }
 
@@ -26,8 +29,8 @@ impl GameConcepts {
     }
 
     pub fn load_mod(&mut self, workspace_path: &Path) -> Result<(), std::io::Error> {
-        // * if workspace_path does not contain the common/game_concepts folder,
-        // * simply return Ok(()) rather than an error.
+        // INFO: if workspace_path does not contain the common/game_concepts folder,
+        // INFO: simply return Ok(()) rather than an error.
         if !workspace_path.join("common/game_concepts").exists() {
             return Ok(());
         }
@@ -58,8 +61,9 @@ impl GameConcepts {
     ) -> Result<(), std::io::Error> {
         let game_concepts_path = root_path.join("common/game_concepts");
 
-        for concept_file in fs::read_dir(game_concepts_path)? {
-            let concept_file = concept_file?.path();
+        for concept_file in WalkDir::new(game_concepts_path) {
+            let concept_file = concept_file?;
+            let concept_file = concept_file.path();
             if concept_file.extension() == Some(std::ffi::OsStr::new("txt")) {
                 let key = concept_file.file_name().unwrap().to_string_lossy().into_owned();
 
@@ -70,7 +74,7 @@ impl GameConcepts {
                 match GAME_CONCEPTS_PARSER.parse(concept_content) {
                     Ok(concepts) => f(key, concepts),
                     Err(err) => {
-                        log::trace!("failed to parse mod game concept: {err}");
+                        log::trace!("failed to parse mod game concept:\n{key}: {err}");
                     }
                 }
             }
