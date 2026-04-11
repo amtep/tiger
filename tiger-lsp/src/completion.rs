@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use log::{error, warn};
+use log::{error, info, warn};
 use lsp_types::{CompletionItem, CompletionItemKind};
 
 use tiger_tables::datatype::{Arg, Args, Datatype};
@@ -134,6 +134,10 @@ impl Completion {
                         incoming_dtypes = Some(
                             possibilities.iter().flat_map(|(_, dtypes)| dtypes).copied().collect(),
                         );
+                    }
+                    Kind::Error => {
+                        info!("skipping completion because of error node in parse result");
+                        return None;
                     }
                     // We shouldn't find anything else in a DatatypeExpr since we already ruled out Format.
                     _ => {
@@ -274,6 +278,10 @@ impl Completion {
                             })
                             .collect(),
                     );
+                }
+                Kind::Error => {
+                    // TODO: should this be treated the same as DatatypeId?
+                    return None;
                 }
                 _ => {
                     warn!(
