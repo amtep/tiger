@@ -85,6 +85,11 @@ impl Parser {
         self.context.push(inside, result, end);
     }
 
+    fn pop_all_stack(&mut self, end: usize) {
+        while !self.stack.is_empty() {
+            self.pop_stack(end);
+        }
+    }
     /// Handle changes after a `[` is seen.
     fn open_datatype(&mut self, i: usize) {
         self.context.span_start = i;
@@ -256,6 +261,12 @@ impl Parser {
                 self.pop_stack(i + 1);
                 self.context.span_start = i + 1;
             }
+            '"' if i == self.last_dquote => {
+                self.context.push_simple(Kind::IconText, i);
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
+                self.context.span_start = i + 1;
+            }
             _ if c.is_alphanumeric() || c == '_' => {}
             _ => {
                 self.context.error = true;
@@ -275,6 +286,12 @@ impl Parser {
                 self.pop_stack(i + 1);
                 self.context.span_start = i + 1;
             }
+            '"' if i == self.last_dquote => {
+                self.context.push_simple(Kind::MacroText, i);
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
+                self.context.span_start = i + 1;
+            }
             _ if c.is_alphanumeric() || c == '_' || c == '.' => {}
             _ => {
                 self.context.error = true;
@@ -287,6 +304,12 @@ impl Parser {
             '$' => {
                 self.context.push_simple(Kind::Format, i);
                 self.pop_stack(i + 1);
+                self.context.span_start = i + 1;
+            }
+            '"' if i == self.last_dquote => {
+                self.context.push_simple(Kind::Format, i);
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
                 self.context.span_start = i + 1;
             }
             _ if c.is_alphanumeric() => {}
@@ -346,6 +369,11 @@ impl Parser {
                 self.context.state = Expecting::DatatypeLiteral;
                 self.context.span_start = i;
             }
+            '"' if i == self.last_dquote => {
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
+                self.context.span_start = i + 1;
+            }
             _ => {
                 if !c.is_alphabetic() {
                     self.context.error = true;
@@ -363,6 +391,12 @@ impl Parser {
                 self.context.state = Expecting::DatatypeSpace;
                 self.handle_datatypespace(i, c);
             }
+            '"' if i == self.last_dquote => {
+                self.context.push_simple(Kind::DatatypeId, i);
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
+                self.context.span_start = i + 1;
+            }
             _ => {
                 if !(c.is_alphanumeric() || c == '_') {
                     self.context.error = true;
@@ -376,6 +410,12 @@ impl Parser {
             ']' => {
                 self.context.push_simple(Kind::Format, i);
                 self.pop_stack(i + 1);
+                self.context.span_start = i + 1;
+            }
+            '"' if i == self.last_dquote => {
+                self.context.push_simple(Kind::Format, i);
+                self.pop_all_stack(i);
+                self.context.state = Expecting::TrailingSpace;
                 self.context.span_start = i + 1;
             }
             _ => {

@@ -215,6 +215,7 @@ impl DatatypeTables {
         .copied()
     }
 
+    #[allow(clippy::unused_self)] // self is here for symmetry
     pub fn list_global_promotes(
         &self,
         game: Game,
@@ -228,6 +229,7 @@ impl DatatypeTables {
         .copied()
     }
 
+    #[allow(clippy::unused_self)] // self will be needed once we add an index
     pub fn list_global_functions(
         &self,
         game: Game,
