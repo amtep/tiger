@@ -177,6 +177,7 @@ impl Completion {
                         Cow<'static, str>,
                         CompletionItemKind,
                     )>;
+                    // TODO: add the following dot `.` to promote suggestions?
                     let outtypes: HashSet<Datatype> = parent_arg_possibilities
                         .iter()
                         .map(|arg| match arg {
@@ -249,6 +250,11 @@ impl Completion {
                         // TODO: game concepts
                         // TODO: IType and Choice args
                     }
+                    // This deduplication ignores the 'Kind' parameter, which can lead to a random
+                    // decision between functions and promotes of the same name, but reducing the list
+                    // length is more important.
+                    candidates.sort_by(|(a1, a2, _), (b1, b2, _)| a1.cmp(b1).then(a2.cmp(b2)));
+                    candidates.dedup_by(|(a1, a2, _), (b1, b2, _)| a1 == b1 && a2 == b2);
                     return Some(
                         candidates
                             .iter()

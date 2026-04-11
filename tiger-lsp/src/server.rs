@@ -63,7 +63,15 @@ impl Server {
                     },
                 )),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
-                completion_provider: Some(CompletionOptions { ..Default::default() }),
+                completion_provider: Some(CompletionOptions {
+                    trigger_characters: Some(vec![
+                        "[".to_string(),
+                        "(".to_string(),
+                        ".".to_string(),
+                        ",".to_string(),
+                    ]),
+                    ..Default::default()
+                }),
                 ..Default::default()
             },
         };
