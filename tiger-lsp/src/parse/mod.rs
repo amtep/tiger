@@ -13,6 +13,7 @@ lalrpop_util::lalrpop_mod!(
 lalrpop_util::lalrpop_mod!(
     #[allow(clippy::pedantic)]
     #[allow(clippy::if_then_some_else_none)]
+    #[allow(clippy::type_complexity)]
     loca_key_text,
     "parse/loca_key_text.rs"
 );

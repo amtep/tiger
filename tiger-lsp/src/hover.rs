@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::mem::take;
 
 use tiger_tables::datatype::{Arg, Args, Datatype};
@@ -10,6 +11,29 @@ use crate::loca::{Kind, find_cursor_index};
 use crate::parse::loca_line::parse_line;
 use crate::parse::util::Span;
 use crate::util::tree;
+
+#[derive(Debug, PartialEq, Eq)]
+struct SortArgs(Args);
+
+impl Ord for SortArgs {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self.0, other.0) {
+            (Args::Unknown, Args::Unknown) => Ordering::Equal,
+            (Args::Unknown, Args::Args(_)) => Ordering::Less,
+            (Args::Args(_), Args::Unknown) => Ordering::Greater,
+            (Args::Args(args1), Args::Args(args2)) => args1
+                .len()
+                .cmp(&args2.len())
+                .then_with(|| display_args(self.0).cmp(&display_args(other.0))),
+        }
+    }
+}
+
+impl PartialOrd for SortArgs {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 pub fn hover_description(
     game: Game,
@@ -42,7 +66,7 @@ pub fn hover_description(
             let mut aliases: Option<Vec<&str>> = None;
             // When checking functions, check promotes too because the user may be intending to add
             // a function after the current id.
-            let (desc, args_vec, dtypes) = if chain.len() == 1 {
+            let (desc, mut args_vec, dtypes) = if chain.len() == 1 {
                 if let Some((a, d)) = tables.lookup_global_function(game, chain[0].0) {
                     ("global function", vec![(a, vec![d])], vec![])
                 } else if let Some((a, d)) = tables.lookup_global_promote(game, chain[0].0) {
@@ -101,6 +125,8 @@ pub fn hover_description(
                 }
                 (desc, args_vec, dtypes)
             };
+
+            args_vec.sort_unstable_by_key(|(a, _)| SortArgs(*a));
 
             #[allow(clippy::comparison_chain)]
             let mut message = args_vec
