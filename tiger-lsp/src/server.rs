@@ -1,22 +1,24 @@
 use log::{error, info, trace, warn};
 use lsp_types::{
-    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, PositionEncodingKind,
-    ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
-    TextDocumentSyncOptions, Uri,
+    CompletionOptions, CompletionParams, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
+    DidOpenTextDocumentParams, HoverParams, HoverProviderCapability, InitializeParams,
+    InitializeResult, PositionEncodingKind, ServerCapabilities, ServerInfo,
+    TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions, Uri,
 };
 use partially::Partial;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 
+use crate::completion::Completion;
 use crate::config::{Config, PartialConfig};
 use crate::datatype_tables::DatatypeTables;
 use crate::error_codes::ErrorCode;
 use crate::game_concepts::GameConcepts;
 use crate::hover::hover_description;
 use crate::openfile::OpenFile;
+use crate::positions::{ClientToServer, ServerToClient};
 use crate::response::Response;
-use crate::util::{ClientToServer, HashMap, ServerToClient};
+use crate::util::HashMap;
 
 #[derive(Debug)]
 pub struct Server {
@@ -28,6 +30,7 @@ pub struct Server {
     datatype_tables: DatatypeTables,
     workspace_dir: Option<Uri>,
     game_concepts: GameConcepts,
+    completion: Completion,
 }
 
 impl Server {
@@ -41,6 +44,7 @@ impl Server {
             workspace_dir: None,
             datatype_tables: DatatypeTables::new(),
             game_concepts: GameConcepts::new(),
+            completion: Completion::default(),
         }
     }
 
@@ -59,6 +63,7 @@ impl Server {
                     },
                 )),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+                completion_provider: Some(CompletionOptions { ..Default::default() }),
                 ..Default::default()
             },
         };
@@ -98,6 +103,14 @@ impl Server {
             } else {
                 PositionEncodingKind::UTF8
             });
+
+            if let Some(text_document) = client.capabilities.text_document
+                && let Some(completion) = text_document.completion
+                && let Some(completion_item) = completion.completion_item
+            {
+                self.completion.commit_characters_support =
+                    completion_item.commit_characters_support == Some(true);
+            }
 
             if let Some(init_options) = client.initialization_options {
                 match PartialConfig::deserialize(init_options) {
@@ -205,6 +218,44 @@ impl Server {
             }
         } else {
             error!("could not parse hover request");
+            Response::error(id, ErrorCode::InvalidParams, "could not parse params", None)
+        }
+    }
+
+    pub fn completion(&mut self, id: Value, params: &Map<String, Value>) -> Response {
+        if let Ok(completion) = CompletionParams::deserialize(params) {
+            if let Some(open) = self.open.get(&completion.text_document_position.text_document.uri)
+            {
+                if open.language_id() != "pdx-localization" {
+                    return Response::result(id, Value::Null);
+                }
+                let position =
+                    completion.text_document_position.position.into_server(self.utf16, &open.text);
+                if let Some(line) = open.get_line_around(position) {
+                    let cursor = position.character;
+                    if let Some(mut completions) = self.completion.completions(
+                        self.config.game,
+                        &self.datatype_tables,
+                        &line,
+                        cursor as usize,
+                    ) {
+                        for completion in &mut completions {
+                            (*completion).to_client(self.utf16, &open.text);
+                        }
+                        Response::result(id, json!(completions))
+                    } else {
+                        Response::result(id, Value::Null)
+                    }
+                } else {
+                    error!("completion request for invalid position");
+                    Response::error(id, ErrorCode::InvalidRequest, "invalid position", None)
+                }
+            } else {
+                error!("completion request for non open file");
+                Response::error(id, ErrorCode::InvalidRequest, "file not open", None)
+            }
+        } else {
+            error!("could not parse completion request");
             Response::error(id, ErrorCode::InvalidParams, "could not parse params", None)
         }
     }

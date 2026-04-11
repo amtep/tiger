@@ -58,7 +58,10 @@ const GENERIC_TYPES: &[&str] = &[
 
 fn write_types(mut types: HashSet<String>, fname: PathBuf) -> Result<()> {
     let mut outf = File::create(fname)?;
-    writeln!(outf, "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString)]")?;
+    writeln!(
+        outf,
+        "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString, EnumIter, EnumString)]"
+    )?;
     writeln!(outf, "#[strum(use_phf)]")?;
     writeln!(outf, "pub enum Hoi4Datatype {{")?;
     let mut types: Vec<_> = types.drain().collect();

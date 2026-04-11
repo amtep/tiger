@@ -1,7 +1,7 @@
 use tiger_tables::datatype::*;
 use tiger_tables::game::Game;
 
-use crate::util::HashMap;
+use crate::util::{HashMap, HashSet};
 
 #[derive(Debug)]
 struct GameDatatypeTables {
@@ -167,5 +167,82 @@ impl DatatypeTables {
             dtypes.remove(r);
         }
         args_outtypes
+    }
+
+    #[allow(clippy::unused_self)] // will need self once we add indexes
+    pub fn list_promotes(
+        &self,
+        game: Game,
+        intypes: &HashSet<Datatype>,
+    ) -> impl Iterator<Item = (&'static str, Datatype, Args, Datatype)> {
+        let iter = match game {
+            Game::Ck3 => PROMOTES_CK3.iter(),
+            Game::Vic3 => PROMOTES_VIC3.iter(),
+            Game::Imperator => PROMOTES_IMPERATOR.iter(),
+            Game::Eu5 => PROMOTES_EU5.iter(),
+        };
+        // TODO: handle AnyScope
+        let unknown_ok =
+            intypes.contains(&Datatype::Unknown) || intypes.contains(&Datatype::AnyScope);
+        // TODO: add an index for intypes
+        // This will require a function signature change, probably to a boxed dyn iterator
+        iter.filter(move |(_, dtype, _, _)| unknown_ok || intypes.contains(dtype)).copied()
+    }
+
+    #[allow(clippy::unused_self)] // will need self once we add indexes
+    pub fn list_functions(
+        &self,
+        game: Game,
+        intypes: &HashSet<Datatype>,
+        outtypes: &HashSet<Datatype>,
+    ) -> impl Iterator<Item = (&'static str, Datatype, Args, Datatype)> {
+        let iter = match game {
+            Game::Ck3 => FUNCTIONS_CK3.iter(),
+            Game::Vic3 => FUNCTIONS_VIC3.iter(),
+            Game::Imperator => FUNCTIONS_IMPERATOR.iter(),
+            Game::Eu5 => FUNCTIONS_EU5.iter(),
+        };
+        let unknown_in_ok =
+            intypes.contains(&Datatype::Unknown) || intypes.contains(&Datatype::AnyScope);
+        let unknown_out_ok =
+            outtypes.contains(&Datatype::Unknown) || outtypes.contains(&Datatype::AnyScope);
+        // TODO: add indexes for intypes and outtypes? Picking which to use will require some logic.
+        // This will require a function signature change, probably to a boxed dyn iterator
+        iter.filter(move |(_, intype, _, outtype)| {
+            (unknown_in_ok || intypes.contains(intype))
+                && (unknown_out_ok || outtypes.contains(outtype))
+        })
+        .copied()
+    }
+
+    pub fn list_global_promotes(
+        &self,
+        game: Game,
+    ) -> impl Iterator<Item = (&'static str, Args, Datatype)> {
+        match game {
+            Game::Ck3 => GLOBAL_PROMOTES_CK3.iter(),
+            Game::Vic3 => GLOBAL_PROMOTES_VIC3.iter(),
+            Game::Imperator => GLOBAL_PROMOTES_IMPERATOR.iter(),
+            Game::Eu5 => GLOBAL_PROMOTES_EU5.iter(),
+        }
+        .copied()
+    }
+
+    pub fn list_global_functions(
+        &self,
+        game: Game,
+        outtypes: &HashSet<Datatype>,
+    ) -> impl Iterator<Item = (&'static str, Args, Datatype)> {
+        let iter = match game {
+            Game::Ck3 => GLOBAL_FUNCTIONS_CK3.iter(),
+            Game::Vic3 => GLOBAL_FUNCTIONS_VIC3.iter(),
+            Game::Imperator => GLOBAL_FUNCTIONS_IMPERATOR.iter(),
+            Game::Eu5 => GLOBAL_FUNCTIONS_EU5.iter(),
+        };
+        let unknown_ok =
+            outtypes.contains(&Datatype::Unknown) || outtypes.contains(&Datatype::AnyScope);
+        // TODO: add an index for outtypes
+        // This will require a function signature change, probably to a boxed dyn iterator
+        iter.filter(move |(_, _, dtype)| unknown_ok || outtypes.contains(dtype)).copied()
     }
 }

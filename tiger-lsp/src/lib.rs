@@ -2,6 +2,7 @@ pub mod main_loop;
 
 pub use logger::ConnectionLogger;
 
+mod completion;
 mod config;
 mod connection;
 mod datatype_tables;
@@ -13,6 +14,7 @@ mod logger;
 mod notification;
 mod openfile;
 mod parse;
+mod positions;
 mod request;
 mod response;
 mod server;

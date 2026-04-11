@@ -151,6 +151,12 @@ fn display_dtype_literal(literal: &str) -> &'static str {
         ("(bool)", "literal: bool"),
         ("(float)", "literal: float"),
         ("(double)", "literal: double"),
+        ("(CVector2f)", "literal: CVector2f"),
+        ("(CVector2i)", "literal: CVector2i"),
+        ("(CVector3f)", "literal: CVector3f"),
+        ("(CVector3i)", "literal: CVector3i"),
+        ("(CVector4f)", "literal: CVector4f"),
+        ("(CVector4i)", "literal: CVector4i"),
     ] {
         if inner.starts_with(prefix) {
             return literal;

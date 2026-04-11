@@ -80,7 +80,10 @@ pub fn write_types<H: BuildHasher>(
     game: Game,
 ) -> Result<()> {
     let mut outf = File::create(fname)?;
-    writeln!(outf, "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString)]")?;
+    writeln!(
+        outf,
+        "#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString, EnumIter)]"
+    )?;
     writeln!(outf, "#[strum(use_phf)]")?;
     writeln!(outf, "pub enum {game}Datatype {{")?;
     let mut types: Vec<_> = types.drain().collect();

@@ -5,7 +5,8 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use phf::phf_map;
-use strum_macros::{Display, EnumString};
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter, EnumString};
 
 use crate::game::Game;
 #[cfg(feature = "jomini")]
@@ -130,6 +131,96 @@ impl Datatype {
                 Game::Hoi4 => Hoi4Datatype::from_str(s).map(Datatype::Hoi4),
             }
         })
+    }
+
+    pub fn list_datatypes(game: Game) -> impl Iterator<Item = Datatype> {
+        // This helper function is here for the dyn Iterator type signature
+        fn sub_list(game: Game) -> Box<dyn Iterator<Item = Datatype>> {
+            match game {
+                #[cfg(feature = "ck3")]
+                Game::Ck3 => Box::new(Ck3Datatype::iter().map(Datatype::Ck3)),
+                #[cfg(feature = "vic3")]
+                Game::Vic3 => Box::new(Vic3Datatype::iter().map(Datatype::Vic3)),
+                #[cfg(feature = "imperator")]
+                Game::Imperator => Box::new(ImperatorDatatype::iter().map(Datatype::Imperator)),
+                #[cfg(feature = "eu5")]
+                Game::Eu5 => Box::new(Eu5Datatype::iter().map(Datatype::Eu5)),
+                #[cfg(feature = "hoi4")]
+                Game::Hoi4 => Box::new(Hoi4Datatype::iter().map(Datatype::Hoi4)),
+            }
+        }
+        [
+            Datatype::CFixedPoint,
+            Datatype::CString,
+            Datatype::CUTF8String,
+            Datatype::CVector2f,
+            Datatype::CVector2i,
+            Datatype::CVector3f,
+            Datatype::CVector3i,
+            Datatype::CVector4f,
+            Datatype::CVector4i,
+            Datatype::Date,
+            Datatype::Scope,
+            Datatype::TopScope,
+            Datatype::bool,
+            Datatype::double,
+            Datatype::float,
+            Datatype::int16,
+            Datatype::int32,
+            Datatype::int64,
+            Datatype::int8,
+            Datatype::uint16,
+            Datatype::uint32,
+            Datatype::uint64,
+            Datatype::uint8,
+            Datatype::void,
+        ]
+        .iter()
+        .copied()
+        .chain(sub_list(game))
+    }
+
+    /// Datatypes that can be used like `'(int32)0'` in string literals.
+    pub fn can_literal(self) -> bool {
+        matches!(
+            self,
+            Datatype::CFixedPoint
+                | Datatype::CVector2f
+                | Datatype::CVector2i
+                | Datatype::CVector3f
+                | Datatype::CVector3i
+                | Datatype::CVector4f
+                | Datatype::CVector4i
+                | Datatype::bool
+                | Datatype::double
+                | Datatype::float
+                | Datatype::int16
+                | Datatype::int32
+                | Datatype::int64
+                | Datatype::int8
+                | Datatype::uint16
+                | Datatype::uint32
+                | Datatype::uint64
+                | Datatype::uint8
+        )
+    }
+
+    /// Datatypes that can be used in datatype expression like `MenAtArmsType.GetName`
+    pub fn can_global_promote(self) -> bool {
+        match self {
+            Datatype::Date | Datatype::Scope | Datatype::TopScope => true,
+            #[cfg(feature = "ck3")]
+            Datatype::Ck3(_) => true,
+            #[cfg(feature = "vic3")]
+            Datatype::Vic3(_) => true,
+            #[cfg(feature = "imperator")]
+            Datatype::Imperator(_) => true,
+            #[cfg(feature = "eu5")]
+            Datatype::Eu5(_) => true,
+            #[cfg(feature = "hoi4")]
+            Datatype::Hoi4(_) => true,
+            _ => false,
+        }
     }
 }
 

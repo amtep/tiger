@@ -1,4 +1,4 @@
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Display, EnumString, EnumIter)]
 #[strum(use_phf)]
 pub enum ImperatorDatatype {
     AISettingsMenu,

@@ -21,6 +21,9 @@ pub fn main_loop() -> Result<()> {
                 "textDocument/hover" => {
                     Connection::send_response(&server.hover(request.id, &request.params))?;
                 }
+                "textDocument/completion" => {
+                    Connection::send_response(&server.completion(request.id, &request.params))?;
+                }
                 _ => {
                     info!("rejecting {} request", request.method);
                     Connection::send_response(&Response::error(
