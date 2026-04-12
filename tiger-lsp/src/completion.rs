@@ -1,14 +1,15 @@
 use std::borrow::Cow;
 
-use log::{error, info, warn};
+use log::{error, info, trace, warn};
 use lsp_types::{CompletionItem, CompletionItemKind};
 
 use tiger_tables::datatype::{Arg, Args, Datatype};
 use tiger_tables::game::Game;
 
 use crate::datatype_tables::DatatypeTables;
-use crate::loca::{Kind, find_cursor_index};
+use crate::loca::{Kind, Node, find_cursor_index};
 use crate::parse::loca_line::parse_line;
+use crate::parse::util::Span;
 use crate::util::{HashSet, tree};
 
 #[derive(Debug, Default)]
@@ -24,6 +25,13 @@ impl Completion {
         line: &str,
         cursor: usize,
     ) -> Option<Vec<CompletionItem>> {
+        // A dummy node sometimes inserted into an empty DatatypeExpr
+        let placeholder = vec![Node {
+            kind: Kind::DatatypeId,
+            content: Vec::new(),
+            span: Span::new(cursor, cursor),
+        }];
+
         let mut v = &parse_line(line);
         let mut cursor_i = find_cursor_index(v, cursor)?;
         log::trace!("\n{}", tree(&v[cursor_i], line));
@@ -44,6 +52,10 @@ impl Completion {
         // followed by zero or more DatatypeExpr for its arguments, possibly followed
         // by another for the next promote or function, etc.
         v = &v[cursor_i].content;
+        if v.is_empty() {
+            trace!("inserting dummy id");
+            v = &placeholder;
+        }
         cursor_i = find_cursor_index(v, cursor)?;
 
         if v[cursor_i].kind == Kind::Format {
@@ -169,121 +181,19 @@ impl Completion {
                         .collect();
                     // Enter the next level of expression (must be an argument of the latest id)
                     v = &v[cursor_i].content;
+                    if v.is_empty() {
+                        trace!("inserting dummy id");
+                        v = &placeholder;
+                    }
                     cursor_i = find_cursor_index(v, cursor)?;
                 }
                 Kind::DatatypeId => {
-                    let mut candidates: Vec<(
-                        Cow<'static, str>,
-                        Cow<'static, str>,
-                        CompletionItemKind,
-                    )>;
-                    // TODO: add the following dot `.` to promote suggestions?
-                    let outtypes: HashSet<Datatype> = parent_arg_possibilities
-                        .iter()
-                        .map(|arg| match arg {
-                            Arg::DType(dtype) => *dtype,
-                            Arg::IType(_) | Arg::Choice(_) => Datatype::CString,
-                        })
-                        .collect();
-                    if let Some(incoming_dtypes) = incoming_dtypes {
-                        let intypes: HashSet<Datatype> = incoming_dtypes.into_iter().collect();
-                        candidates = tables
-                            .list_promotes(game, &intypes)
-                            .map(|(name, _, args, _)| {
-                                (Cow::Borrowed(name), args_detail(args), CompletionItemKind::METHOD)
-                            })
-                            .collect();
-                        candidates.extend(tables.list_functions(game, &intypes, &outtypes).map(
-                            |(name, _, args, _)| {
-                                (
-                                    Cow::Borrowed(name),
-                                    args_detail(args),
-                                    CompletionItemKind::FUNCTION,
-                                )
-                            },
-                        ));
-                    } else {
-                        fn dtype_filter(
-                            dtype: Datatype,
-                        ) -> Option<(Cow<'static, str>, Cow<'static, str>, CompletionItemKind)>
-                        {
-                            if dtype.can_literal() {
-                                Some((
-                                    Cow::Owned(format!("'({dtype})")),
-                                    Cow::Borrowed(""),
-                                    CompletionItemKind::TEXT,
-                                ))
-                            } else if dtype.can_global_promote() {
-                                // TODO: make this Borrowed
-                                Some((
-                                    Cow::Owned(dtype.to_string()),
-                                    Cow::Borrowed(""),
-                                    CompletionItemKind::CLASS,
-                                ))
-                            } else {
-                                None
-                            }
-                        }
-                        candidates = tables
-                            .list_global_promotes(game)
-                            .map(|(name, args, _)| {
-                                (Cow::Borrowed(name), args_detail(args), CompletionItemKind::METHOD)
-                            })
-                            .collect();
-                        candidates.extend(tables.list_global_functions(game, &outtypes).map(
-                            |(name, args, _)| {
-                                (
-                                    Cow::Borrowed(name),
-                                    args_detail(args),
-                                    CompletionItemKind::FUNCTION,
-                                )
-                            },
-                        ));
-                        if outtypes.contains(&Datatype::Unknown)
-                            || outtypes.contains(&Datatype::AnyScope)
-                        {
-                            candidates
-                                .extend(Datatype::list_datatypes(game).filter_map(dtype_filter));
-                        } else {
-                            candidates.extend(outtypes.iter().copied().filter_map(dtype_filter));
-                        }
-                        // TODO: game concepts
-                        // TODO: IType and Choice args
-                    }
-                    // This deduplication ignores the 'Kind' parameter, which can lead to a random
-                    // decision between functions and promotes of the same name, but reducing the list
-                    // length is more important.
-                    candidates.sort_by(|(a1, a2, _), (b1, b2, _)| a1.cmp(b1).then(a2.cmp(b2)));
-                    candidates.dedup_by(|(a1, a2, _), (b1, b2, _)| a1 == b1 && a2 == b2);
-                    return Some(
-                        candidates
-                            .iter()
-                            .map(|(label, details, kind)| {
-                                let commit_v = self.commit_characters_support.then(|| {
-                                    let mut commit_v =
-                                        vec![")".to_string(), "]".to_string(), "|".to_string()];
-                                    if details.starts_with('(') {
-                                        commit_v.push("(".to_string());
-                                    }
-                                    if *kind == CompletionItemKind::METHOD {
-                                        commit_v.push(".".to_string());
-                                    }
-                                    commit_v
-                                });
-                                CompletionItem {
-                                    label: label.to_string(),
-                                    detail: if details.is_empty() {
-                                        None
-                                    } else {
-                                        Some(details.to_string())
-                                    },
-                                    kind: Some(*kind),
-                                    commit_characters: commit_v,
-                                    ..Default::default()
-                                }
-                            })
-                            .collect(),
-                    );
+                    return Some(self.calc_completions(
+                        game,
+                        tables,
+                        &parent_arg_possibilities,
+                        incoming_dtypes,
+                    ));
                 }
                 Kind::Error => {
                     // TODO: should this be treated the same as DatatypeId?
@@ -298,6 +208,105 @@ impl Completion {
                 }
             }
         }
+    }
+
+    fn calc_completions(
+        &self,
+        game: Game,
+        tables: &DatatypeTables,
+        parent_arg_possibilities: &[Arg],
+        incoming_dtypes: Option<Vec<Datatype>>,
+    ) -> Vec<CompletionItem> {
+        let mut candidates: Vec<(Cow<'static, str>, Cow<'static, str>, CompletionItemKind)>;
+        // TODO: add the following dot `.` to promote suggestions?
+        let outtypes: HashSet<Datatype> = parent_arg_possibilities
+            .iter()
+            .map(|arg| match arg {
+                Arg::DType(dtype) => *dtype,
+                Arg::IType(_) | Arg::Choice(_) => Datatype::CString,
+            })
+            .collect();
+        if let Some(incoming_dtypes) = incoming_dtypes {
+            let intypes: HashSet<Datatype> = incoming_dtypes.into_iter().collect();
+            candidates = tables
+                .list_promotes(game, &intypes)
+                .map(|(name, _, args, _)| {
+                    (Cow::Borrowed(name), args_detail(args), CompletionItemKind::METHOD)
+                })
+                .collect();
+            candidates.extend(tables.list_functions(game, &intypes, &outtypes).map(
+                |(name, _, args, _)| {
+                    (Cow::Borrowed(name), args_detail(args), CompletionItemKind::FUNCTION)
+                },
+            ));
+        } else {
+            fn dtype_filter(
+                dtype: Datatype,
+            ) -> Option<(Cow<'static, str>, Cow<'static, str>, CompletionItemKind)> {
+                if dtype.can_literal() {
+                    Some((
+                        Cow::Owned(format!("'({dtype})")),
+                        Cow::Borrowed(""),
+                        CompletionItemKind::TEXT,
+                    ))
+                } else if dtype.can_global_promote() {
+                    // TODO: make this Borrowed
+                    Some((
+                        Cow::Owned(dtype.to_string()),
+                        Cow::Borrowed(""),
+                        CompletionItemKind::CLASS,
+                    ))
+                } else {
+                    None
+                }
+            }
+            candidates = tables
+                .list_global_promotes(game)
+                .map(|(name, args, _)| {
+                    (Cow::Borrowed(name), args_detail(args), CompletionItemKind::METHOD)
+                })
+                .collect();
+            candidates.extend(tables.list_global_functions(game, &outtypes).map(
+                |(name, args, _)| {
+                    (Cow::Borrowed(name), args_detail(args), CompletionItemKind::FUNCTION)
+                },
+            ));
+            if outtypes.contains(&Datatype::Unknown) || outtypes.contains(&Datatype::AnyScope) {
+                candidates.extend(Datatype::list_datatypes(game).filter_map(dtype_filter));
+            } else {
+                candidates.extend(outtypes.iter().copied().filter_map(dtype_filter));
+            }
+            // TODO: game concepts
+            // TODO: IType and Choice args
+        }
+        // This deduplication ignores the 'Kind' parameter, which can lead to a random
+        // decision between functions and promotes of the same name, but reducing the list
+        // length is more important.
+        candidates.sort_by(|(a1, a2, _), (b1, b2, _)| a1.cmp(b1).then(a2.cmp(b2)));
+        candidates.dedup_by(|(a1, a2, _), (b1, b2, _)| a1 == b1 && a2 == b2);
+        trace!("{} candidates", candidates.len());
+        candidates
+            .iter()
+            .map(|(label, details, kind)| {
+                let commit_v = self.commit_characters_support.then(|| {
+                    let mut commit_v = vec![")".to_string(), "]".to_string(), "|".to_string()];
+                    if details.starts_with('(') {
+                        commit_v.push("(".to_string());
+                    }
+                    if *kind == CompletionItemKind::METHOD {
+                        commit_v.push(".".to_string());
+                    }
+                    commit_v
+                });
+                CompletionItem {
+                    label: label.to_string(),
+                    detail: if details.is_empty() { None } else { Some(details.to_string()) },
+                    kind: Some(*kind),
+                    commit_characters: commit_v,
+                    ..Default::default()
+                }
+            })
+            .collect()
     }
 }
 
