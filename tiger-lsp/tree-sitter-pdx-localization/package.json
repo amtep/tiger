@@ -5,10 +5,10 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tree-sitter/tree-sitter-pdx_localization.git"
+    "url": "git+https://github.com/amtep/tiger.git"
   },
   "funding": "",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "author": {
     "name": "tiger",
     "url": ""

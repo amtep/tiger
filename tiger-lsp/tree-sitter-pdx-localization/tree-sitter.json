@@ -14,7 +14,7 @@
   ],
   "metadata": {
     "version": "0.1.0",
-    "license": "MIT",
+    "license": "GPL-3.0",
     "description": "Paradox Localization",
     "authors": [
       {
@@ -23,7 +23,7 @@
       }
     ],
     "links": {
-      "repository": "https://github.com/tree-sitter/tree-sitter-pdx_localization",
+      "repository": "https://github.com/amtep/tiger",
       "funding": ""
     }
   },
