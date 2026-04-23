@@ -502,6 +502,7 @@ impl Localization {
         sc: &mut ScopeContext,
         lang: Language,
     ) {
+        #[allow(clippy::collapsible_match)]
         match value {
             LocaValue::Concat(v) | LocaValue::CalculatedIcon(v) => {
                 for value in v {

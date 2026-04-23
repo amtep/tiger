@@ -192,7 +192,7 @@ fn log_line_from_source<O: Write + Send>(
     spaces: usize,
 ) {
     let line_from_source: &[ANSIString<'static>] = &[
-        errors.styles.style(Styled::Location).paint(format!("{:indentation$}", pointer.loc.line,)),
+        errors.styles.style(Styled::Location).paint(format!("{:indentation$}", pointer.loc.line)),
         errors.styles.style(Styled::Default).paint(" "),
         errors.styles.style(Styled::Location).paint("|"),
         errors.styles.style(Styled::Default).paint(" "),

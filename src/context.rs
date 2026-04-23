@@ -773,7 +773,7 @@ impl ScopeContext {
                 .filter(|(_, (_, temp))| *temp != Temporary::Wiped)
                 .map(|(&name, (i, _))| (name, sc.resolve_named(*i, data).0))
                 .collect();
-            names.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
+            names.sort_by_key(|(name, _)| *name);
             names
         }
 
@@ -784,7 +784,7 @@ impl ScopeContext {
         ) -> Vec<(&'static str, Scopes)> {
             let mut names: Vec<_> =
                 names.iter().map(|(&name, &i)| (name, sc.resolve_named(i, data).0)).collect();
-            names.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
+            names.sort_by_key(|(name, _)| *name);
             names
         }
 
