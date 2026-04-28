@@ -7,7 +7,7 @@ description = "Library used by Tiger Validator. It holds tables that may be usef
 homepage = "https://github.com/amtep/tiger"
 repository = "https://github.com/amtep/tiger"
 readme = "../README.md"
-keywords = [ "ck3", "vic3", "imperator", "paradox", "validator", "linter", "mods" ]
+keywords = [ "paradox", "validator", "linter", "mods" ]
 categories = [ "development-tools", "game-development" ]
 rust-version = "1.88"
 
