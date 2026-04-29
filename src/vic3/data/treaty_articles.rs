@@ -264,7 +264,7 @@ impl DbKind for TreatyArticle {
                             // TODO: verify whether X or X_type scopes
                             "building_type" => sc.define_name("building", Scopes::Building, key),
                             "law_type" => sc.define_name("law", Scopes::Law, key),
-                            _ => unreachable!(),
+                            _ => {}
                         }
                     }
                     sc
@@ -286,7 +286,9 @@ fn build_input_sc(key: &Token, input: &Token) -> ScopeContext {
         "building_type" => Scopes::BuildingType,
         "law_type" => Scopes::LawType,
         "country" => Scopes::Country,
-        _ => unreachable!(),
+        _ => {
+            return sc;
+        }
     };
     sc.define_name("input", input_scope, key);
 
