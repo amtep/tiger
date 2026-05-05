@@ -1421,13 +1421,8 @@ static MODIF_FLOW_SUGGEST: LazyLock<TigerHashMap<&str, (&str, ModifKinds)>> = La
     map
 });
 
-const MODIF_FLOW_SUGGEST_TABLE: &[(&str, &str)] = &[
-    ("unit_blockade_mult", "character_blockade_mult"),
-    ("unit_convoy_defense_mult", "character_convoy_protection_mult"),
-    ("unit_convoy_raiding_mult", "character_convoy_raiding_mult"),
-    ("unit_convoy_raiding_interception_mult", "character_interception_add"),
-    ("unit_supply_consumption_mult", "building_mobilization_cost_mult"),
-];
+const MODIF_FLOW_SUGGEST_TABLE: &[(&str, &str)] =
+    &[("unit_supply_consumption_mult", "building_mobilization_cost_mult")];
 
 static MODIF_REMOVED_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static str>> =
     LazyLock::new(|| {
