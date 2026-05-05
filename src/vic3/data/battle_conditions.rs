@@ -14,14 +14,24 @@ use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 
 #[derive(Clone, Debug)]
 pub struct BattleCondition {}
+#[derive(Clone, Debug)]
+pub struct NavalBattleCondition {}
 
 inventory::submit! {
     ItemLoader::Normal(GameFlags::Vic3, Item::BattleCondition, BattleCondition::add)
+}
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Vic3, Item::NavalBattleCondition, NavalBattleCondition::add)
 }
 
 impl BattleCondition {
     pub fn add(db: &mut Db, key: Token, block: Block) {
         db.add_exact_dup_ok(Item::BattleCondition, key, block, Box::new(Self {}));
+    }
+}
+impl NavalBattleCondition {
+    pub fn add(db: &mut Db, key: Token, block: Block) {
+        db.add_exact_dup_ok(Item::NavalBattleCondition, key, block, Box::new(Self {}));
     }
 }
 
@@ -52,5 +62,41 @@ impl DbKind for BattleCondition {
         vd.field_script_value("weight", &mut sc);
         vd.field_trigger_builder("instant_switch", Tooltipped::No, sc_builder);
         vd.field_trigger_builder("possible", Tooltipped::No, sc_builder);
+    }
+}
+
+impl DbKind for NavalBattleCondition {
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+
+        maybe_warn_modifiable_capitalization(key);
+
+        data.verify_exists(Item::Localization, key);
+        let loca = format!("{key}_desc");
+        data.verify_exists_implied(Item::Localization, &loca, key);
+
+        vd.field_item("icon", Item::File);
+
+        let sc_builder = |key: &Token| {
+            let mut sc = ScopeContext::new(Scopes::Battle, key);
+            sc.define_name("region", Scopes::StateRegion, key);
+            sc.define_name("attacker", Scopes::Country, key);
+            sc.define_name("defender", Scopes::Country, key);
+            sc.define_name("attacker_commander", Scopes::Character, key);
+            sc.define_name("defender_commander", Scopes::Character, key);
+            sc
+        };
+
+        vd.field_trigger_builder("possible", Tooltipped::No, sc_builder);
+        vd.field_script_value_no_breakdown_builder("weight", sc_builder);
+        vd.field_script_value_no_breakdown_builder("max_hull_damage", sc_builder);
+        vd.field_script_value_no_breakdown_builder("max_crew_damage", sc_builder);
+        vd.field_script_value_no_breakdown_builder("period", sc_builder);
+        vd.field_script_value_no_breakdown_builder("intensity", sc_builder);
+
+        vd.field_validated_block("modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Ship, vd);
+        });
     }
 }

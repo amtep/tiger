@@ -443,6 +443,7 @@ pub enum Item {
 
     // Items specific to vic3
     #[cfg(feature = "vic3")] AcceptanceStatus,
+    #[cfg(feature = "vic3")] AiStrategicRegionStanceType,
     #[cfg(feature = "vic3")] AirGraphics,
     #[cfg(feature = "vic3")] Alert,
     #[cfg(feature = "vic3")] AlertGroup,
@@ -454,6 +455,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] BuildingGroup,
     #[cfg(feature = "vic3")] BuyPackage,
     #[cfg(feature = "vic3")] CanalType,
+    #[cfg(feature = "vic3")] CharacterArchetype,
     #[cfg(feature = "vic3")] CharacterRole,
     #[cfg(feature = "vic3")] CityBuildingVfx,
     #[cfg(feature = "vic3")] CityCenterpiece,
@@ -496,6 +498,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] InfamyThreshold,
     #[cfg(feature = "vic3")] InterestGroup,
     #[cfg(feature = "vic3")] InterestGroupTrait,
+    #[cfg(feature = "vic3")] InterestTierType,
     #[cfg(feature = "vic3")] JournalEntry,
     #[cfg(feature = "vic3")] JournalEntryGroup,
     #[cfg(feature = "vic3")] LanguageTrait,
@@ -510,6 +513,8 @@ pub enum Item {
     #[cfg(feature = "vic3")] MilitaryFormationFlag,
     #[cfg(feature = "vic3")] MobilizationOption,
     #[cfg(feature = "vic3")] MobilizationOptionGroup,
+    #[cfg(feature = "vic3")] NavalBattleCondition,
+    #[cfg(feature = "vic3")] NavalMissionType,
     #[cfg(feature = "vic3")] Objective,
     #[cfg(feature = "vic3")] ObjectiveSubgoal,
     #[cfg(feature = "vic3")] ObjectiveSubgoalCategory,
@@ -535,10 +540,16 @@ pub enum Item {
     #[cfg(feature = "vic3")] ScriptedTest,
     #[cfg(feature = "vic3")] SecretGoal,
     #[cfg(feature = "vic3")] Skin,
+    #[cfg(feature = "vic3")] ShipGroup,
+    #[cfg(feature = "vic3")] ShipModification,
+    #[cfg(feature = "vic3")] ShipModificationSlot,
+    #[cfg(feature = "vic3")] ShipNameDefinition,
+    #[cfg(feature = "vic3")] ShipType,
     #[cfg(feature = "vic3")] SocialClass,
     #[cfg(feature = "vic3")] SocialHierarchy,
     #[cfg(feature = "vic3")] StateRegion,
     #[cfg(feature = "vic3")] StateTrait,
+    #[cfg(feature = "vic3")] StraitDefinition,
     #[cfg(feature = "vic3")] Strata,
     #[cfg(feature = "vic3")] TechnologyEra,
     #[cfg(feature = "vic3")] TerrainKey,
@@ -1652,6 +1663,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::AcceptanceStatus => "common/acceptance_statuses/",
             #[cfg(feature = "vic3")]
+            Item::AiStrategicRegionStanceType => "common/ai_strategic_region_stance_types",
+            #[cfg(feature = "vic3")]
             Item::AirGraphics => "gfx/map/air_graphics/",
             #[cfg(feature = "vic3")]
             Item::Alert => "common/alert_types",
@@ -1674,7 +1687,9 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::CanalType => "common/canals/",
             #[cfg(feature = "vic3")]
-            Item::CharacterRole => "",
+            Item::CharacterArchetype => "",
+            #[cfg(feature = "vic3")]
+            Item::CharacterRole => "common/character_roles/",
             #[cfg(feature = "vic3")]
             Item::CityBuildingVfx => "gfx/map/city_data/city_building_vfx/",
             #[cfg(feature = "vic3")]
@@ -1759,6 +1774,8 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::InterestGroupTrait => "common/interest_group_traits/",
             #[cfg(feature = "vic3")]
+            Item::InterestTierType => "common/interest_tier_types/",
+            #[cfg(feature = "vic3")]
             Item::JournalEntry => "common/journal_entries/",
             #[cfg(feature = "vic3")]
             Item::JournalEntryGroup => "common/journal_entry_groups/",
@@ -1786,6 +1803,10 @@ impl Item {
             Item::MobilizationOption => "common/mobilization_options/",
             #[cfg(feature = "vic3")]
             Item::MobilizationOptionGroup => "common/mobilization_option_groups/",
+            #[cfg(feature = "vic3")]
+            Item::NavalBattleCondition => "common/naval_battle_conditions/",
+            #[cfg(feature = "vic3")]
+            Item::NavalMissionType => "common/naval_mission_types/",
             #[cfg(feature = "vic3")]
             Item::Objective => "common/objectives/",
             #[cfg(feature = "vic3")]
@@ -1837,6 +1858,16 @@ impl Item {
             #[cfg(feature = "vic3")]
             Item::Skin => "gfx/skins/",
             #[cfg(feature = "vic3")]
+            Item::ShipGroup => "common/ship_groups/",
+            #[cfg(feature = "vic3")]
+            Item::ShipModification => "common/ship_modifications/",
+            #[cfg(feature = "vic3")]
+            Item::ShipModificationSlot => "common/ship_modification_slots/",
+            #[cfg(feature = "vic3")]
+            Item::ShipNameDefinition => "common/ship_name_definitions/",
+            #[cfg(feature = "vic3")]
+            Item::ShipType => "common/ship_types/",
+            #[cfg(feature = "vic3")]
             Item::SocialClass => "common/social_classes/",
             #[cfg(feature = "vic3")]
             Item::SocialHierarchy => "common/social_hierarchies/",
@@ -1844,6 +1875,8 @@ impl Item {
             Item::StateRegion => "map_data/state_regions/",
             #[cfg(feature = "vic3")]
             Item::StateTrait => "common/state_traits/",
+            #[cfg(feature = "vic3")]
+            Item::StraitDefinition => "common/strait_definitions/",
             #[cfg(feature = "vic3")]
             Item::Strata => "",
             #[cfg(feature = "vic3")]

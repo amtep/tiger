@@ -963,7 +963,7 @@ impl Everything {
         match itype {
             Item::Approval => APPROVALS.contains(&key),
             Item::Attitude => ATTITUDES.contains(&&*key.to_lowercase()),
-            Item::CharacterRole => CHARACTER_ROLES.contains(&key),
+            Item::CharacterArchetype => CHARACTER_ARCHETYPES.contains(&key),
             Item::Coa => self.coas.exists(key),
             Item::CoaTemplate => self.coas.template_exists(key),
             Item::CountryTier => COUNTRY_TIERS.contains(&key),

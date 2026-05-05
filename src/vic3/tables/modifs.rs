@@ -74,6 +74,14 @@ pub fn lookup_engine_modif(
 
     // Look up generated modifs, in a careful order because of possibly overlapping suffixes.
 
+    // battle_$NavalBattleCondition$_chance_mult
+    if let Some(part) = name_lc.strip_prefix_unchecked("battle_")
+        && let Some(part) = part.strip_suffix_unchecked("_chance_mult")
+    {
+        maybe_warn(Item::NavalBattleCondition, &part, name, data, warn);
+        return Some(ModifKinds::Battle);
+    }
+
     // building_employment_$PopType$_add
     // building_employment_$PopType$_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("building_employment_") {
@@ -406,8 +414,8 @@ pub fn lookup_engine_modif(
     // country_$SocialClass$_education_access_mult
     // country_$SocialClass$_qualification_growth_add
     // country_$SocialClass$_qualification_growth_mult
-    // country_$SocialClass$_qualification_growth_other_class
-    // country_$SocialClass$_qualification_growth_same_class
+    // country_$SocialClass$_qualification_growth_other_class_mult
+    // country_$SocialClass$_qualification_growth_same_class_mult
     if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
         for &sfx in &[
             "_acceptance_max_add",
@@ -418,8 +426,8 @@ pub fn lookup_engine_modif(
             "_education_access_mult",
             "_qualification_growth_add",
             "_qualification_growth_mult",
-            "_qualification_growth_other_class",
-            "_qualification_growth_same_class",
+            "_qualification_growth_other_class_mult",
+            "_qualification_growth_same_class_mult",
         ] {
             if let Some(part) = part.strip_suffix_unchecked(sfx) {
                 maybe_warn(Item::SocialClass, &part, name, data, warn);
@@ -643,6 +651,47 @@ pub fn lookup_engine_modif(
         }
     }
 
+    // country_$ShipGroup$_construction_efficiency_add
+    // country_$ShipType$_construction_efficiency_add
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_")
+        && let Some(part) = part.strip_suffix_unchecked("_construction_efficiency_add")
+    {
+        if let Some(sev) = warn
+            && !data.item_exists_lc(Item::ShipGroup, &part)
+            && !data.item_exists_lc(Item::ShipType, &part)
+        {
+            let msg = format!("{part} not found as ship type or ship group");
+            let info = format!("so the modifier {name} will have no effect");
+            report(ErrorKey::MissingItem, sev).msg(msg).info(info).loc(name).push();
+        }
+        return Some(ModifKinds::Country);
+    }
+
+    // country_$ShipGroup$_construction_progress_max_add
+    // country_$ShipGroup$_construction_progress_max_mult
+    if let Some(part) = name_lc.strip_prefix_unchecked("country_") {
+        for &sfx in &["_construction_progress_max_add", "_construction_progress_max_mult"] {
+            if let Some(part) = part.strip_suffix_unchecked(sfx) {
+                maybe_warn(Item::ShipGroup, &part, name, data, warn);
+                return Some(ModifKinds::Country);
+            }
+        }
+    }
+
+    // ship_battle_against_$ShipType$_accuracy_add
+    // ship_battle_against_$ShipType$_accuracy_mult
+    // ship_battle_against_$ShipType$_hull_damage_mult
+    if let Some(part) = name_lc.strip_prefix_unchecked("ship_battle_against_") {
+        for &sfx in
+            &["_accuracy_add", "_accuracy_mult", "_hull_damage_mult", "_supply_capacity_mult"]
+        {
+            if let Some(part) = part.strip_suffix_unchecked(sfx) {
+                maybe_warn(Item::ShipType, &part, name, data, warn);
+                return Some(ModifKinds::Ship);
+            }
+        }
+    }
+
     // TODO: modifiers from terrain labels
 
     None
@@ -768,6 +817,9 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("building_nationalization_cost_mult", ModifKinds::Building),
     ("building_nationalization_investment_return_add", ModifKinds::Building),
     ("building_nationalization_radicals_mult", ModifKinds::Building),
+    ("building_naval_administration_hiring_rate_mult", ModifKinds::Building),
+    ("building_naval_administration_training_rate_add", ModifKinds::Building),
+    ("building_naval_administration_training_rate_mult", ModifKinds::Building),
     ("building_self_investment_chance_add", ModifKinds::Building),
     ("building_subsistence_output_add", ModifKinds::Building),
     ("building_subsistence_output_mult", ModifKinds::Building),
@@ -785,6 +837,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("character_blockade_mult", ModifKinds::Character),
     ("character_command_limit_add", ModifKinds::Character),
     ("character_command_limit_mult", ModifKinds::Character),
+    ("character_commander_looyalty_add", ModifKinds::Character),
     ("character_convoy_protection_mult", ModifKinds::Character),
     ("character_convoy_raiding_mult", ModifKinds::Character),
     ("character_coup_strength_add", ModifKinds::Character),
@@ -792,7 +845,13 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("character_expedition_events_explorer_mult", ModifKinds::Character),
     ("character_health_add", ModifKinds::Character),
     ("character_interception_add", ModifKinds::Character),
+    ("character_loyalty_add", ModifKinds::Character),
+    ("character_loyalty_mult", ModifKinds::Character),
+    ("character_max_offensive_battles_add", ModifKinds::Character),
+    ("character_naval_mission_area_add", ModifKinds::Character),
+    ("character_piracy_goods_capacity_mult", ModifKinds::Character),
     ("character_popularity_add", ModifKinds::Character),
+    ("character_raid_supply_add", ModifKinds::Character),
     ("character_supply_route_cost_mult", ModifKinds::MilitaryFormation),
     ("country_acceptance_homeland_add", ModifKinds::Country),
     ("country_acceptance_no_shared_heritage_trait_add", ModifKinds::Country),
@@ -809,6 +868,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_acceptance_shared_religious_trait_group_add", ModifKinds::Country),
     ("country_acceptance_shared_tradition_trait_add", ModifKinds::Country),
     ("country_acceptance_state_religion_add", ModifKinds::Country),
+    ("country_admiral_rank_impact_mult", ModifKinds::Country),
     ("country_agitator_slots_add", ModifKinds::Country),
     ("country_ahead_of_time_research_penalty_mult", ModifKinds::Country),
     ("country_all_buildings_protected_bool", ModifKinds::Country),
@@ -827,9 +887,11 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_bureaucracy_mult", ModifKinds::Country),
     ("country_can_form_construction_company_bool", ModifKinds::Country),
     ("country_can_only_conscript_peasants_bool", ModifKinds::Country),
+    ("country_cannot_be_subjugated_bool", ModifKinds::Country),
     ("country_cannot_be_target_for_law_imposition_bool", ModifKinds::Country),
     ("country_cannot_cancel_law_enactment_bool", ModifKinds::Country),
     ("country_cannot_enact_laws_bool", ModifKinds::Country),
+    ("country_cannot_join_power_bloc_bool", ModifKinds::Country),
     ("country_cannot_start_law_enactment_bool", ModifKinds::Country),
     ("country_company_construction_efficiency_bonus_add", ModifKinds::Country),
     ("country_company_throughput_bonus_add", ModifKinds::Country),
@@ -837,14 +899,11 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_construction_goods_cost_mult", ModifKinds::Country),
     ("country_consumption_tax_cost_mult", ModifKinds::Country),
     ("country_conversion_delta_threshold_add", ModifKinds::Country),
-    ("country_convoy_contribution_to_market_owner_add", ModifKinds::Country),
-    ("country_convoy_damage_taken_mult", ModifKinds::Country),
-    ("country_convoys_capacity_add", ModifKinds::Country),
-    ("country_convoys_capacity_mult", ModifKinds::Country),
     ("country_coup_resistance_add", ModifKinds::Country),
     ("country_coup_resistance_mult", ModifKinds::Country),
     ("country_damage_relations_speed_mult", ModifKinds::Country),
     ("country_diplomatic_play_maneuvers_add", ModifKinds::Country),
+    ("country_diplomatic_play_maneuvers_mult", ModifKinds::Country),
     ("country_diplomatic_reputation_add", ModifKinds::Country),
     ("country_disable_investment_pool_bool", ModifKinds::Country),
     ("country_disable_nationalization_bool", ModifKinds::Country),
@@ -854,17 +913,21 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_disallow_agitator_invites_bool", ModifKinds::Country),
     ("country_disallow_trade_bool", ModifKinds::Country),
     ("country_disallow_trade_outside_canton_bool", ModifKinds::Country),
+    ("country_disallow_trade_outside_kyushu_bool", ModifKinds::Country),
     ("country_economic_dependence_on_overlord_add", ModifKinds::Country),
     ("country_education_fervor_add", ModifKinds::Country),
     ("country_electoral_confidence_impact_mult", ModifKinds::Country),
+    ("country_electoral_confidence_over_time", ModifKinds::Country),
     ("country_expedition_events_explorer_mult", ModifKinds::Country),
     ("country_expenses_add", ModifKinds::Country),
     ("country_financial_districts_buy_farms_likelyhood", ModifKinds::Country),
+    ("country_flagship_interest_gain_mult", ModifKinds::Country),
     ("country_free_charters_add", ModifKinds::Country),
     ("country_forbid_electoral_fraud_bool", ModifKinds::Country),
     ("country_forbid_monopoly_bool", ModifKinds::Country),
     ("country_force_privatization_bool", ModifKinds::Country),
     ("country_foreign_collectivization_bool", ModifKinds::Country),
+    ("country_general_rank_impact_mult", ModifKinds::Country),
     ("country_gold_reserve_limit_mult", ModifKinds::Country),
     ("country_government_buildings_protected_bool", ModifKinds::Country),
     ("country_government_dividends_efficiency_add", ModifKinds::Country),
@@ -873,7 +936,6 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_government_wages_mult", ModifKinds::Country),
     ("country_higher_diplomatic_acceptance_same_religion_bool", ModifKinds::Country),
     ("country_higher_leverage_from_economic_dependence_bool", ModifKinds::Country),
-    ("country_ignores_landing_craft_penalty_bool", ModifKinds::Country),
     ("country_improve_relations_speed_mult", ModifKinds::Country),
     ("country_infamy_decay_mult", ModifKinds::Country),
     ("country_infamy_generation_mult", ModifKinds::Country),
@@ -882,6 +944,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_influence_mult", ModifKinds::Country),
     ("country_initiator_war_goal_maneuver_cost_mult", ModifKinds::Country),
     ("country_institution_size_change_speed_mult", ModifKinds::Country),
+    ("country_je_korea_action_cost", ModifKinds::Country),
     ("country_join_power_bloc_member_in_defensive_plays_bool", ModifKinds::Country),
     ("country_join_power_bloc_member_in_plays_bool", ModifKinds::Country),
     ("country_law_enactment_imposition_success_add", ModifKinds::Country),
@@ -907,14 +970,16 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_liberty_desire_decrease_mult", ModifKinds::Country),
     ("country_liberty_desire_increase_mult", ModifKinds::Country),
     ("country_liberty_desire_of_subjects_mult", ModifKinds::Country),
+    ("country_limit_officers_qualifications_to_upper_strata", ModifKinds::Country),
     ("country_loan_interest_rate_add", ModifKinds::Country),
     ("country_loan_interest_rate_mult", ModifKinds::Country),
     ("country_lobby_leverage_generation_mult", ModifKinds::Country),
+    ("country_lobby_support", ModifKinds::Country),
     ("country_loyalists_from_legitimacy_mult", ModifKinds::Country),
     ("country_mass_migration_attraction_mult", ModifKinds::Country),
     ("country_max_companies_add", ModifKinds::Country),
-    ("country_max_declared_interests_add", ModifKinds::Country),
-    ("country_max_declared_interests_mult", ModifKinds::Country),
+    ("country_max_unassigned_admirals_add", ModifKinds::Country),
+    ("country_max_unassigned_generals_add", ModifKinds::Country),
     ("country_max_weekly_construction_progress_add", ModifKinds::Country),
     ("country_migration_restrictiveness_add", ModifKinds::Country),
     ("country_military_goods_cost_mult", ModifKinds::Country),
@@ -926,6 +991,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_minting_mult", ModifKinds::Country),
     ("country_must_have_movement_to_enact_laws_bool", ModifKinds::Country),
     ("country_nationalization_cost_non_members_mult", ModifKinds::Country),
+    ("country_navy_goods_cost_mult", ModifKinds::Country),
     ("country_no_advantage_loss_from_lack_of_interest_bool", ModifKinds::Country),
     ("country_non_state_religion_wages_mult", ModifKinds::Country),
     ("country_opposition_ig_approval_add", ModifKinds::Country),
@@ -933,6 +999,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_pact_leverage_generation_add", ModifKinds::Country),
     ("country_pact_leverage_generation_mult", ModifKinds::Country),
     ("country_party_whip_impact_add", ModifKinds::Country),
+    ("country_piracy_income_add", ModifKinds::Country),
     ("country_port_connection_cost_mult", ModifKinds::Country),
     ("country_prestige_add", ModifKinds::Country),
     ("country_prestige_from_army_power_projection_mult", ModifKinds::Country),
@@ -950,14 +1017,22 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_revolution_clock_time_add", ModifKinds::Country),
     ("country_revolution_progress_add", ModifKinds::Country),
     ("country_revolution_progress_mult", ModifKinds::Country),
+    ("country_sailors_max_add", ModifKinds::Country),
     ("country_secession_clock_time_add", ModifKinds::Country),
     ("country_secession_progress_add", ModifKinds::Country),
     ("country_secession_progress_mult", ModifKinds::Country),
+    ("country_ship_construction_add", ModifKinds::Country),
+    ("country_ship_construction_efficiency_add", ModifKinds::Country),
+    ("country_ship_construction_goods_cost_mult", ModifKinds::Country),
+    ("country_ship_construction_progress_max_add", ModifKinds::Country),
     ("country_society_tech_research_speed_mult", ModifKinds::Country),
     ("country_society_tech_spread_mult", ModifKinds::Country),
     ("country_state_religion_wages_mult", ModifKinds::Country),
     ("country_subject_income_transfer_heathen_mult", ModifKinds::Country),
     ("country_subject_income_transfer_mult", ModifKinds::Country),
+    ("country_supply_ship_construction_progress_max_add", ModifKinds::Country),
+    ("country_supply_ship_construction_progress_max_mult", ModifKinds::Country),
+    ("country_supply_ship_construction_ratio_add", ModifKinds::Country),
     ("country_support_independence_weekly_liberty_desire_add", ModifKinds::Country),
     ("country_support_separatism_resistance_mult", ModifKinds::Country),
     ("country_support_separatism_separatism_mult", ModifKinds::Country),
@@ -991,12 +1066,15 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("interest_group_pol_str_factor", ModifKinds::InterestGroup),
     ("interest_group_pol_str_mult", ModifKinds::InterestGroup),
     ("interest_group_pop_attraction_mult", ModifKinds::InterestGroup),
+    ("military_formation_army_movement_speed_add", ModifKinds::MilitaryFormation),
+    ("military_formation_army_movement_speed_mult", ModifKinds::MilitaryFormation),
     ("military_formation_attrition_risk_add", ModifKinds::MilitaryFormation),
     ("military_formation_attrition_risk_mult", ModifKinds::MilitaryFormation),
+    ("military_formation_fleet_movement_speed_add", ModifKinds::MilitaryFormation),
+    ("military_formation_fleet_movement_speed_mult", ModifKinds::MilitaryFormation),
+    ("military_formation_interest_gain_mult", ModifKinds::MilitaryFormation),
     ("military_formation_mobilization_speed_add", ModifKinds::MilitaryFormation),
     ("military_formation_mobilization_speed_mult", ModifKinds::MilitaryFormation),
-    ("military_formation_movement_speed_add", ModifKinds::MilitaryFormation),
-    ("military_formation_movement_speed_mult", ModifKinds::MilitaryFormation),
     ("military_formation_organization_gain_add", ModifKinds::MilitaryFormation),
     ("military_formation_organization_gain_mult", ModifKinds::MilitaryFormation),
     ("political_movement_character_attraction_mult", ModifKinds::PoliticalMovement),
@@ -1008,6 +1086,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
         ModifKinds::PoliticalMovement,
     ),
     ("power_bloc_allow_foreign_investment_lower_rank_bool", ModifKinds::PowerBloc),
+    ("power_bloc_allow_port_access_bool", ModifKinds::PowerBloc),
     ("power_bloc_allow_wider_migration_area_bool", ModifKinds::PowerBloc),
     ("power_bloc_cohesion_add", ModifKinds::PowerBloc),
     ("power_bloc_cohesion_mult", ModifKinds::PowerBloc),
@@ -1026,7 +1105,62 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("power_bloc_mandate_progress_mult", ModifKinds::PowerBloc),
     ("power_bloc_target_sway_cost_mult", ModifKinds::PowerBloc),
     ("power_bloc_trade_advantage_add", ModifKinds::PowerBloc),
+    ("ship_accuracy_add", ModifKinds::Ship),
+    ("ship_accuracy_mult", ModifKinds::Ship),
+    ("ship_armor_add", ModifKinds::Ship),
+    ("ship_armor_mult", ModifKinds::Ship),
+    ("ship_battle_condition_accuracy_penalty_mult", ModifKinds::Ship),
+    ("ship_blockade_strength_add", ModifKinds::Ship),
+    ("ship_blockade_strength_mult", ModifKinds::Ship),
+    ("ship_carrying_capacity_add", ModifKinds::Ship),
+    ("ship_carrying_capacity_mult", ModifKinds::Ship),
+    ("ship_construction_progress_max_add", ModifKinds::Ship),
+    ("ship_construction_progress_max_mult", ModifKinds::Ship),
+    ("ship_crew_damage_add", ModifKinds::Ship),
+    ("ship_crew_damage_mult", ModifKinds::Ship),
+    ("ship_crew_experience_gain_add", ModifKinds::Ship),
+    ("ship_crew_experience_gain_mult", ModifKinds::Ship),
+    ("ship_crew_max_add", ModifKinds::Ship),
+    ("ship_crew_max_mult", ModifKinds::Ship),
+    ("ship_critical_hit_chance_add", ModifKinds::Ship),
+    ("ship_critical_hit_chance_mult", ModifKinds::Ship),
+    ("ship_critical_hit_multiplier_add", ModifKinds::Ship),
+    ("ship_critical_hit_multiplier_mult", ModifKinds::Ship),
+    ("ship_detection_add", ModifKinds::Ship),
+    ("ship_detection_mult", ModifKinds::Ship),
+    ("ship_hit_points_max_add", ModifKinds::Ship),
+    ("ship_hit_points_max_mult", ModifKinds::Ship),
+    ("ship_hull_damage_add", ModifKinds::Ship),
+    ("ship_hull_damage_mult", ModifKinds::Ship),
+    ("ship_interest_gain_add", ModifKinds::Ship),
+    ("ship_interest_gain_mult", ModifKinds::Ship),
+    ("ship_marine_capacity_add", ModifKinds::Ship),
+    ("ship_marine_capacity_mult", ModifKinds::Ship),
+    ("ship_max_distance_to_port_add", ModifKinds::Ship),
+    ("ship_max_distance_to_port_mult", ModifKinds::Ship),
+    ("ship_movement_speed_add", ModifKinds::Ship),
+    ("ship_movement_speed_mult", ModifKinds::Ship),
+    ("ship_naval_invasion_speed_mult", ModifKinds::Ship),
+    ("ship_readiness_gain_add", ModifKinds::Ship),
+    ("ship_readiness_gain_mult", ModifKinds::Ship),
+    ("ship_screening_add", ModifKinds::Ship),
+    ("ship_screening_mult", ModifKinds::Ship),
+    ("ship_suffered_accuracy_mult", ModifKinds::Ship),
+    ("ship_suffered_crew_damage_mult", ModifKinds::Ship),
+    ("ship_suffered_crit_chance_mult", ModifKinds::Ship),
+    ("ship_suffered_crit_damage_mult", ModifKinds::Ship),
+    ("ship_suffered_hull_damage_mult", ModifKinds::Ship),
+    ("ship_supply_capacity_add", ModifKinds::Ship),
+    ("ship_supply_capacity_mult", ModifKinds::Ship),
+    ("ship_supply_efficiency_add", ModifKinds::Ship),
+    ("ship_supply_efficiency_mult", ModifKinds::Ship),
+    ("ship_visibility_add", ModifKinds::Ship),
+    ("ship_visibility_mult", ModifKinds::Ship),
+    ("ship_vulnerability_add", ModifKinds::Ship),
+    ("ship_vulnerability_mult", ModifKinds::Ship),
     ("state_allow_assimilation_in_homeland_bool", ModifKinds::State),
+    ("state_allow_assimilation_without_presence_bool", ModifKinds::State),
+    ("state_allow_conversion_without_presence_bool", ModifKinds::State),
     ("state_assimilation_mult", ModifKinds::State),
     ("state_birth_rate_mult", ModifKinds::State),
     ("state_blockade_resistance_add", ModifKinds::State),
@@ -1037,6 +1171,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("state_conscription_rate_mult", ModifKinds::State),
     ("state_construction_mult", ModifKinds::State),
     ("state_contiguous_incorporation_speed_mult", ModifKinds::State),
+    ("state_control_strait_bool", ModifKinds::State),
     ("state_conversion_mult", ModifKinds::State),
     ("state_decree_cost_mult", ModifKinds::State),
     ("state_dependent_political_participation_add", ModifKinds::State),
@@ -1051,6 +1186,9 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("state_export_advantage_mult", ModifKinds::State),
     ("state_free_state_pop_support_movement_anti_slavery_mult", ModifKinds::State),
     ("state_food_security_add", ModifKinds::State),
+    ("state_fortification_bombardment_resistance_add", ModifKinds::State),
+    ("state_fortification_naval_battle_mult", ModifKinds::State),
+    ("state_fortification_naval_invasion_add", ModifKinds::State),
     ("state_import_advantage_mult", ModifKinds::State),
     ("state_incorporation_speed_mult", ModifKinds::State),
     ("state_infrastructure_add", ModifKinds::State),
@@ -1061,6 +1199,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("state_infrastructure_from_population_mult", ModifKinds::State),
     ("state_infrastructure_mult", ModifKinds::State),
     ("state_institution_impact_add", ModifKinds::State),
+    ("state_literacy_growth_add", ModifKinds::State),
     ("state_lower_strata_expected_sol_add", ModifKinds::State),
     ("state_lower_strata_standard_of_living_add", ModifKinds::State),
     ("state_loyalists_from_political_movements_mult", ModifKinds::State),
@@ -1104,6 +1243,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("state_trade_advantage_same_religion_add", ModifKinds::State),
     ("state_trade_capacity_add", ModifKinds::State),
     ("state_trade_capacity_mult", ModifKinds::State),
+    ("state_trace_center_max_limit_add", ModifKinds::State),
     ("state_trade_quantity_mult", ModifKinds::State),
     ("state_turmoil_effects_mult", ModifKinds::State),
     ("state_unincorporated_starting_wages_mult", ModifKinds::State),
@@ -1135,11 +1275,6 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("unit_army_experience_gain_mult", ModifKinds::Unit),
     ("unit_army_offense_add", ModifKinds::UnitCombat),
     ("unit_army_offense_mult", ModifKinds::UnitCombat),
-    ("unit_blockade_add", ModifKinds::UnitNonCombat),
-    ("unit_blockade_mult", ModifKinds::UnitNonCombat),
-    ("unit_convoy_defense_mult", ModifKinds::UnitNonCombat),
-    ("unit_convoy_raiding_interception_mult", ModifKinds::UnitNonCombat),
-    ("unit_convoy_raiding_mult", ModifKinds::UnitNonCombat),
     ("unit_defense_add", ModifKinds::UnitCombat),
     ("unit_defense_mult", ModifKinds::UnitCombat),
     ("unit_devastation_mult", ModifKinds::UnitCombat),
@@ -1150,12 +1285,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("unit_morale_loss_add", ModifKinds::UnitCombat),
     ("unit_morale_loss_mult", ModifKinds::UnitCombat),
     ("unit_morale_recovery_mult", ModifKinds::UnitNonCombat),
-    ("unit_navy_defense_add", ModifKinds::UnitCombat),
-    ("unit_navy_defense_mult", ModifKinds::UnitCombat),
-    ("unit_navy_experience_gain_add", ModifKinds::Unit),
-    ("unit_navy_experience_gain_mult", ModifKinds::Unit),
-    ("unit_navy_offense_add", ModifKinds::UnitCombat),
-    ("unit_navy_offense_mult", ModifKinds::UnitCombat),
+    ("unit_naval_invasion_efficiency_mult", ModifKinds::UnitCombat),
     ("unit_occupation_mult", ModifKinds::UnitCombat),
     ("unit_offense_add", ModifKinds::UnitCombat),
     ("unit_offense_mult", ModifKinds::UnitCombat),
@@ -1482,4 +1612,24 @@ const MODIF_REMOVED_TABLE: &[(&str, &str)] = &[
     ("state_migration_push_mult", "removed in 1.12"),
     ("unit_advancement_speed_mult", "removed in 1.12"),
     ("unit_convoy_requirements_mult", "removed in 1.12"),
+    ("country_convoy_contribution_to_market_owner_add", "removed in 1.13"),
+    ("country_convoy_damage_taken_mult", "removed in 1.13"),
+    ("country_convoys_capacity_add", "removed in 1.13"),
+    ("country_convoys_capacity_mult", "removed in 1.13"),
+    ("country_ignores_landing_craft_penalty_bool", "removed in 1.13"),
+    ("country_max_declared_interests_add", "removed in 1.13"),
+    ("country_max_declared_interests_mult", "removed in 1.13"),
+    ("military_formation_movement_speed_add", "replaced with army and fleet modifiers in 1.13"),
+    ("military_formation_movement_speed_mult", "replaced with army and fleet modifiers in 1.13"),
+    ("unit_blockade_add", "removed in 1.13"),
+    ("unit_blockade_mult", "removed in 1.13"),
+    ("unit_convoy_defense_mult", "removed in 1.13"),
+    ("unit_convoy_raiding_interception_mult", "removed in 1.13"),
+    ("unit_convoy_raiding_mult", "removed in 1.13"),
+    ("unit_navy_defense_add", "removed in 1.13"),
+    ("unit_navy_defense_mult", "removed in 1.13"),
+    ("unit_navy_experience_gain_add", "removed in 1.13"),
+    ("unit_navy_experience_gain_mult", "removed in 1.13"),
+    ("unit_navy_offense_add", "removed in 1.13"),
+    ("unit_navy_offense_mult", "removed in 1.13"),
 ];

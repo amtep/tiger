@@ -50,9 +50,10 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "colonial_growth_per_colony", Scopes::Value),
     (Scopes::Province, "combat_width", Scopes::Value),
     (Scopes::Character, "command_limit_num_units", Scopes::Value),
+    (Scopes::MilitaryFormation, "commander", Scopes::Character),
     (Scopes::Character, "commander_military_formation", Scopes::MilitaryFormation),
     (Scopes::Province.union(Scopes::State), "controller", Scopes::Country),
-    (Scopes::MilitaryFormation, "country", Scopes::Country),
+    (Scopes::MilitaryFormation.union(Scopes::Ship), "country", Scopes::Country),
     (Scopes::Country, "country_definition", Scopes::CountryDefinition),
     (Scopes::Country, "credit", Scopes::Value),
     (
@@ -70,7 +71,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::War, "defender_warleader", Scopes::Country),
     (Scopes::NewCombatUnit, "defense", Scopes::Value),
     (Scopes::NewCombatUnit, "demoralized", Scopes::Value),
-    (Scopes::DiplomaticPact, "diplomatic_pact_other_country(", Scopes::Country),
+    (Scopes::MilitaryFormation, "detection", Scopes::Value),
+    (Scopes::Country, "diplomatic_pact_expense_ratio", Scopes::Value),
     (Scopes::War, "diplomatic_play", Scopes::DiplomaticPlay),
     (Scopes::Treaty, "enforced_on_country", Scopes::Country),
     (Scopes::Treaty, "enforcer_country", Scopes::Country),
@@ -84,6 +86,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         "first_country",
         Scopes::Country,
     ),
+    (Scopes::Country, "flagship", Scopes::Ship),
     (
         Scopes::Battle
             .union(Scopes::Character)
@@ -94,14 +97,17 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         Scopes::Front,
     ),
     (Scopes::Front, "front_length", Scopes::Value),
-    (Scopes::Country.union(Scopes::State), "gdp", Scopes::Value),
+    (
+        Scopes::Country.union(Scopes::State).union(Scopes::Market).union(Scopes::StrategicRegion),
+        "gdp",
+        Scopes::Value,
+    ),
     (Scopes::None, "global_gdp", Scopes::Value),
     (Scopes::JournalEntry, "goal_value", Scopes::Value),
     (Scopes::MarketGoods.union(Scopes::StateGoods), "goods", Scopes::Goods),
     (Scopes::Country.union(Scopes::PoliticalMovement), "government_size", Scopes::Value),
     (Scopes::Building.union(Scopes::BuildingType), "group", Scopes::BuildingGroup),
     (Scopes::Country, "heir", Scopes::Character),
-    (Scopes::MilitaryFormation, "highest_ranked_commander", Scopes::Character),
     (Scopes::Character.union(Scopes::Pop), "home_country", Scopes::Country),
     (Scopes::MilitaryFormation, "home_hq", Scopes::Hq),
     (Scopes::PowerBloc, "identity", Scopes::PowerBlocIdentity),
@@ -123,6 +129,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "input_goods", Scopes::Goods),
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "input_law", Scopes::LawType),
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "input_quantity", Scopes::Value),
+    (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "input_ship", Scopes::Ship),
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "input_state", Scopes::State),
     (
         Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions),
@@ -173,15 +180,32 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::NewCombatUnit, "morale", Scopes::Value),
     (Scopes::PoliticalMovement, "most_desired_law", Scopes::LawType),
     (Scopes::Culture, "national_awakening_state_region", Scopes::StateRegion),
+    (Scopes::Country, "naval_combat_power", Scopes::Value),
     (Scopes::Province, "naval_controller_hq", Scopes::Hq),
+    (Scopes::Country, "naval_hostility_average_damage_dealt", Scopes::Value),
     (Scopes::Province, "naval_hq", Scopes::Hq),
+    (Scopes::Country, "naval_vulnerability", Scopes::Value),
     (Scopes::Country, "navy_size", Scopes::Value),
     (Scopes::None, "no", Scopes::Bool),
     (Scopes::None, "NO", Scopes::Bool),
-    (Scopes::Country, "num_active_declared_interests", Scopes::Value),
     (Scopes::Country, "num_active_interests", Scopes::Value),
     (Scopes::Country, "num_active_natural_interests", Scopes::Value),
     (Scopes::Country, "num_active_plays", Scopes::Value),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_active_ships",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_active_ships_in_battle",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_active_ships_not_in_battle",
+        Scopes::Value,
+    ),
     (Scopes::Country, "num_admirals", Scopes::Value),
     (Scopes::Country, "num_alliances", Scopes::Value),
     (Scopes::Character, "num_battalions", Scopes::Value),
@@ -189,9 +213,6 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "num_colony_projects", Scopes::Value),
     (Scopes::MilitaryFormation, "num_commanderless_units", Scopes::Value),
     (Scopes::Country, "num_commanders", Scopes::Value),
-    (Scopes::Country, "num_convoys_available", Scopes::Value),
-    (Scopes::Country, "num_convoys_required", Scopes::Value),
-    (Scopes::Country, "num_declared_interests", Scopes::Value),
     (Scopes::Country, "num_defensive_pacts", Scopes::Value),
     (Scopes::Hq, "num_garrison_units", Scopes::Value),
     (Scopes::Country, "num_generals", Scopes::Value),
@@ -203,6 +224,21 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::PowerBloc, "num_mandates", Scopes::Value),
     (Scopes::Character, "num_mobilized_battalions", Scopes::Value),
     (Scopes::Country, "num_natural_interests", Scopes::Value),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_non_destroyed_ships",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_non_destroyed_ships_in_battle",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_non_destroyed_ships_not_in_battle",
+        Scopes::Value,
+    ),
     (Scopes::Country, "num_obligations_earned", Scopes::Value),
     (Scopes::Country, "num_pending_events", Scopes::Value),
     (Scopes::Country, "num_politicians", Scopes::Value),
@@ -213,6 +249,21 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "num_queued_private_constructions", Scopes::Value),
     (Scopes::Country, "num_rivals", Scopes::Value),
     (Scopes::Country, "num_ruling_igs", Scopes::Value),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_ships",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_ships_in_battle",
+        Scopes::Value,
+    ),
+    (
+        Scopes::Country.union(Scopes::Character).union(Scopes::MilitaryFormation),
+        "num_ships_not_in_battle",
+        Scopes::Value,
+    ),
     (Scopes::Country, "num_states", Scopes::Value),
     (Scopes::Country, "num_unincorporated_states", Scopes::Value),
     (Scopes::Character.union(Scopes::MilitaryFormation), "num_units", Scopes::Value),
@@ -238,11 +289,12 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::Law)
             .union(Scopes::Market)
             .union(Scopes::MarketGoods)
+            .union(Scopes::MilitaryFormation)
+            .union(Scopes::PoliticalMovement)
             .union(Scopes::Pop)
             .union(Scopes::Province)
-            .union(Scopes::State)
-            .union(Scopes::MilitaryFormation)
-            .union(Scopes::PoliticalMovement),
+            .union(Scopes::Ship)
+            .union(Scopes::State),
         "owner",
         Scopes::Country,
     ),
@@ -258,6 +310,11 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::State, "population_below_expected_sol", Scopes::Value),
     (Scopes::Country, "power_bloc", Scopes::PowerBloc),
     (Scopes::PowerBloc, "power_bloc_leader", Scopes::Country),
+    (
+        Scopes::NewCombatUnit.union(Scopes::MilitaryFormation).union(Scopes::Ship),
+        "power_projection",
+        Scopes::Value,
+    ),
     (Scopes::PowerBloc, "power_struggle_contender", Scopes::Country),
     (Scopes::Country, "principal", Scopes::Value),
     (Scopes::Company, "prosperity", Scopes::Value),
@@ -287,6 +344,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "ruler", Scopes::Character),
     (Scopes::DiplomaticRelations, "scope_relations", Scopes::Value),
     (Scopes::DiplomaticRelations, "scope_tension", Scopes::Value),
+    (Scopes::MilitaryFormation, "screening", Scopes::Value),
     (
         Scopes::DiplomaticPact
             .union(Scopes::TreatyArticle)
@@ -296,11 +354,9 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         "second_country",
         Scopes::Country,
     ),
-    (
-        Scopes::MilitaryFormation.union(Scopes::TreatyArticle),
-        "shipping_lane",
-        Scopes::ShippingLanes,
-    ),
+    (Scopes::Ship, "ship_fleet", Scopes::MilitaryFormation),
+    (Scopes::Ship, "ship_group", Scopes::ShipGroup),
+    (Scopes::TreatyArticle, "shipping_lane", Scopes::ShippingLanes),
     (Scopes::BuildingType, "slaves_role", Scopes::PopType),
     (Scopes::TreatyArticle.union(Scopes::TreatyArticleOptions), "source_country", Scopes::Country),
     (Scopes::Amendment, "sponsor", Scopes::InterestGroup),
@@ -325,6 +381,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Country, "top_overlord", Scopes::Country),
     (Scopes::Country, "total_export_value", Scopes::Value),
     (Scopes::Country, "total_import_value", Scopes::Value),
+    (Scopes::Country, "total_marine_capacity", Scopes::Value),
+    (Scopes::DiplomaticRelations, "total_pirated_trade_value", Scopes::Value),
     (Scopes::Country, "total_trade_value", Scopes::Value),
     (Scopes::Market, "trade_center", Scopes::State),
     (Scopes::Building, "training_rate", Scopes::Value),
@@ -342,6 +400,8 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::InterestGroup)
             .union(Scopes::Law)
             .union(Scopes::PoliticalMovement)
+            .union(Scopes::Ship)
+            .union(Scopes::Strait)
             .union(Scopes::HarvestCondition)
             .union(Scopes::Amendment),
         "type",
@@ -354,9 +414,13 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::InterestGroupType)
             .union(Scopes::LawType)
             .union(Scopes::PoliticalMovementType)
+            .union(Scopes::ShipType)
+            .union(Scopes::StraitType)
             .union(Scopes::HarvestConditionType)
             .union(Scopes::AmendmentType),
     ),
+    (Scopes::MilitaryFormation, "visibility", Scopes::Value),
+    (Scopes::MilitaryFormation, "vulnerability", Scopes::Value),
     (Scopes::DiplomaticPlay, "war", Scopes::War),
     (Scopes::Company, "weekly_prosperity_change", Scopes::Value),
     (Scopes::Pop, "workplace", Scopes::Building),
@@ -502,7 +566,11 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Item(Item::PoliticalMovement),
         ),
         (Scopes::Country, "mutual_trade_value_with_country", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Country, "naval_hostility_damage", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::State, "nf", Scopes::Decree, Item(Item::Decree)),
+        (Scopes::Province, "num_active_ships", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_active_ships_in_battle", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_active_ships_not_in_battle", Scopes::Value, Scope(Scopes::Country)),
         (
             Scopes::Country,
             "num_alliances_and_defensive_pacts_with_allies",
@@ -516,6 +584,28 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Scope(Scopes::Country),
         ),
         (Scopes::Front, "num_defending_battalions", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_non_destroyed_ships", Scopes::Value, Scope(Scopes::Country)),
+        (
+            Scopes::Province,
+            "num_non_destroyed_ships_in_battle",
+            Scopes::Value,
+            Scope(Scopes::Country),
+        ),
+        (
+            Scopes::Province,
+            "num_non_destroyed_ships_not_in_battle",
+            Scopes::Value,
+            Scope(Scopes::Country),
+        ),
+        (Scopes::Province, "num_ships", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_ships_in_battle", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::Province, "num_ships_not_in_battle", Scopes::Value, Scope(Scopes::Country)),
+        (
+            Scopes::Country.union(Scopes::MilitaryFormation),
+            "num_ships_of_group",
+            Scopes::Value,
+            Scope(Scopes::ShipGroup),
+        ),
         (Scopes::Country, "num_pending_events", Scopes::Value, Item(Item::EventCategory)),
         (Scopes::Country, "num_shared_rivals", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Front, "num_total_battalions", Scopes::Value, Scope(Scopes::Country)),
@@ -523,6 +613,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::Province, "num_units_in_battle", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::Province, "num_units_not_in_battle", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::None, "p", Scopes::Province, Item(Item::Province)),
+        (Scopes::Country, "pirated_trade_value_by", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::None, "play_type", Scopes::DiplomaticPlayType, Item(Item::DiplomaticPlay)),
         (Scopes::None, "pop_type", Scopes::PopType, Item(Item::PopType)),
         (Scopes::None, "principle", Scopes::PowerBlocPrinciple, Item(Item::Principle)),
@@ -542,7 +633,11 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
         (Scopes::None, "s", Scopes::StateRegion, Item(Item::StateRegion)),
         (Scopes::None, "scope", Scopes::all(), UncheckedValue),
         (Scopes::State, "sg", Scopes::StateGoods, Item(Item::Goods)),
+        (Scopes::None, "ship_group", Scopes::ShipGroup, Item(Item::ShipGroup)),
+        (Scopes::None, "ship_type", Scopes::ShipType, Item(Item::ShipType)),
         (Scopes::None, "sr", Scopes::StrategicRegion, Item(Item::StrategicRegion)),
+        (Scopes::Country, "strait_trade_importance_by", Scopes::Value, Scope(Scopes::Country)),
+        (Scopes::None, "strait_type", Scopes::StraitType, Item(Item::StraitDefinition)),
         (Scopes::Country, "tension", Scopes::Value, Scope(Scopes::Country)),
         (Scopes::None, "tension_threshold", Scopes::Value, UncheckedValue),
         (Scopes::None, "unit_type", Scopes::CombatUnitType, Item(Item::CombatUnit)),
@@ -578,4 +673,9 @@ const SCOPE_TO_SCOPE_REMOVED: &[(&str, &str, &str)] = &[
     ("target_market", "1.9", "replaced by world market system"),
     ("expenses", "1.12", ""),
     ("fixed_expenses", "1.12", ""),
+    ("highest_ranked_commander", "1.13", ""),
+    ("num_active_declared_interests", "1.13", ""),
+    ("num_convoys_available", "1.13", ""),
+    ("num_convoys_required", "1.13", ""),
+    ("num_declared_interests", "1.13", ""),
 ];

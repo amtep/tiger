@@ -148,7 +148,7 @@ bitflags! {
         #[cfg(feature = "vic3")] const BattleSide = 1<<17;
         #[cfg(feature = "vic3")] const Building = 1<<18;
         #[cfg(feature = "vic3")] const BuildingType = 1<<19;
-        #[cfg(feature = "vic3")] const CanalType = 1<<20;
+        #[cfg(feature = "vic3")] const CharacterRole = 1<<20;
         #[cfg(feature = "vic3")] const CivilWar = 1<<21;
         #[cfg(feature = "vic3")] const CulturalCommunity = 1<<22;
         #[cfg(feature = "vic3")] const NewCombatUnit = 1<<23;
@@ -222,6 +222,16 @@ bitflags! {
         #[cfg(feature = "vic3")] const GeographicRegion = 1<<91;
         #[cfg(feature = "vic3")] const WarGoal = 1<<92;
         #[cfg(feature = "vic3")] const WarGoalType = 1<<93;
+        #[cfg(feature = "vic3")] const InterestTierType = 1<<94;
+        #[cfg(feature = "vic3")] const NavalBattle = 1<<95;
+        #[cfg(feature = "vic3")] const NavalMission = 1<<96;
+        #[cfg(feature = "vic3")] const NavalMissionType = 1<<97;
+        #[cfg(feature = "vic3")] const Ship = 1<<98;
+        #[cfg(feature = "vic3")] const ShipGroup = 1<<99;
+        #[cfg(feature = "vic3")] const ShipModificationType = 1<<100;
+        #[cfg(feature = "vic3")] const ShipType = 1<<101;
+        #[cfg(feature = "vic3")] const Strait = 1<<102;
+        #[cfg(feature = "vic3")] const StraitType = 1<<103;
 
         #[cfg(feature = "imperator")] const Area = 1<<16;
         #[cfg(feature = "imperator")] const CountryCulture = 1<<17;

@@ -143,9 +143,9 @@ pub const TREATY_ARTICLE_CATEGORIES: &[&str] = &[
     "other",
 ];
 
-// LAST UPDATED VIC3 VERSION 1.3.6
-// TODO: maybe ruler and heir too?
-pub const CHARACTER_ROLES: &[&str] = &["admiral", "agitator", "general", "politician", "executive"];
+// LAST UPDATED VIC3 VERSION 1.13
+pub const CHARACTER_ARCHETYPES: &[&str] =
+    &["politician", "general", "admiral", "executive", "agitator", "ruler", "heir", "magnate"];
 
 // LAST UPDATED VIC3 VERSION 1.7.1
 // Taken from common/labels/00_terrain_labels.txt and the unit_offense_ and unit_defense_ modifs.
@@ -163,6 +163,7 @@ pub const TERRAIN_KEYS: &[&str] = &[
 pub const COMMON_DIRS: &[&str] = &[
     "common/acceptance_statuses",
     "common/achievements",
+    "common/ai_strategic_region_stance_types",
     "common/ai_strategies",
     "common/alert_groups",
     "common/alert_types",
@@ -171,8 +172,8 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/building_groups",
     "common/buildings",
     "common/buy_packages",
-    "common/canals",
     "common/character_interactions",
+    "common/character_roles",
     "common/character_templates",
     "common/character_traits",
     "common/coat_of_arms/coat_of_arms",
@@ -224,6 +225,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/institutions",
     "common/interest_group_traits",
     "common/interest_groups",
+    "common/interest_tier_types",
     "common/journal_entries",
     "common/journal_entry_groups",
     "common/labels",
@@ -239,6 +241,8 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/mobilization_options",
     "common/modifier_type_definitions",
     "common/named_colors",
+    "common/naval_battle_conditions",
+    "common/naval_mission_types",
     "common/objective_subgoal_categories",
     "common/objective_subgoals",
     "common/objectives",
@@ -272,10 +276,16 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/scripted_progress_bars",
     "common/scripted_rules",
     "common/scripted_triggers",
+    "common/ship_groups",
+    "common/ship_modification_slots",
+    "common/ship_modifications",
+    "common/ship_name_definitions",
+    "common/ship_types",
     "common/social_classes",
     "common/social_hierarchies",
     "common/state_traits",
     "common/static_modifiers",
+    "common/strait_definitions",
     "common/strategic_regions",
     "common/subject_types",
     "common/technology/eras",

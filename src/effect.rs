@@ -323,15 +323,15 @@ pub fn validate_effect_field(
                     vd.field_target(tkey, sc, outscopes);
                 }
             }
-            #[cfg(feature = "ck3")]
-            Effect::ItemValue(key, itype) => {
+            #[cfg(any(feature = "ck3", feature = "vic3"))]
+            Effect::ItemValue(key, itype, valuekey) => {
                 if let Some(block) = bv.expect_block() {
                     let mut vd = Validator::new(block, data);
                     vd.set_case_sensitive(false);
                     vd.req_field(key);
-                    vd.req_field("value");
+                    vd.req_field(valuekey);
                     vd.field_item(key, itype);
-                    vd.field_script_value("value", sc);
+                    vd.field_script_value(valuekey, sc);
                 }
             }
             Effect::Choice(choices) => {
@@ -535,10 +535,16 @@ pub fn validate_effect_control(
         && (caller == "custom_description"
             || caller == "custom_description_no_bullet"
             || caller == "custom_tooltip"
-            || caller == "custom_label")
+            || caller == "custom_tooltip_no_bullet"
+            || caller == "custom_label"
+            || caller == "custom_label_no_bullet")
     {
         vd.req_field("text");
-        if caller == "custom_tooltip" || caller == "custom_label" {
+        if caller == "custom_tooltip"
+            || caller == "custom_tooltip_no_bullet"
+            || caller == "custom_label"
+            || caller == "custom_label_no_bullet"
+        {
             vd.field_item("text", Item::Localization);
             if let Some(value) = block.get_field_value("text") {
                 data.validate_localization_sc(value.as_str(), sc);
@@ -712,8 +718,8 @@ pub enum Effect {
     /// the given [`Item`] type and the other specifies a script value.
     ///
     /// * Example: `set_amenity_level = { type = court_food_quality value = 3 }`
-    #[cfg(feature = "ck3")]
-    ItemValue(&'static str, Item),
+    #[cfg(any(feature = "ck3", feature = "vic3"))]
+    ItemValue(&'static str, Item, &'static str),
     /// The effect takes either a localization key or a description block with `first_valid` etc.
     ///
     /// * Example: `set_artifact_name = relic_weapon_name`

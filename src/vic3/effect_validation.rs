@@ -342,6 +342,23 @@ pub fn validate_create_building(
     });
 }
 
+pub fn validate_create_ship(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.field_item("type", Item::ShipType);
+    vd.field_target("fleet", sc, Scopes::MilitaryFormation);
+    vd.field_item("name", Item::Localization);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Ship, name, Temporary::No);
+    }
+}
+
 pub fn validate_create_character(
     key: &Token,
     block: &Block,
@@ -1078,7 +1095,9 @@ pub fn validate_withdraw(
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
+    vd.req_field("country");
     vd.field_target("country", sc, Scopes::Country);
+    vd.field_bool("apply_break_penalties");
 }
 
 pub fn validate_create_treaty(
@@ -1229,4 +1248,94 @@ pub fn validate_teleport_to_front(
             vd.field_target("base_camp", sc, Scopes::Province);
         }
     }
+}
+
+pub fn validate_career_length(
+    _key: &Token,
+    _block: &Block,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("role");
+    #[allow(clippy::collapsible_if)]
+    if let Some(role) = vd.field_value("role") {
+        if !data.item_exists(Item::CharacterRole, role.as_str())
+            && !data.item_exists(Item::CharacterArchetype, role.as_str())
+        {
+            let msg = "`{role}` not found as character role or character archetype";
+            err(ErrorKey::MissingItem).msg(msg).loc(role).push();
+        }
+    }
+    validate_optional_duration(&mut vd, sc);
+    // TODO: this might just be a script value
+    vd.field_list_numeric_exactly("random_range", 2);
+}
+
+pub fn validate_add_character_role(
+    _key: &Token,
+    mut vvd: ValueValidator,
+    _sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    let role = vvd.value();
+    if !vvd.data().item_exists(Item::CharacterRole, role.as_str())
+        && !vvd.data().item_exists(Item::CharacterArchetype, role.as_str())
+    {
+        let msg = "`{role}` not found as character role or character archetype";
+        err(ErrorKey::MissingItem).msg(msg).loc(role).push();
+    }
+    vvd.accept();
+}
+
+pub fn validate_temporary_hostilities(
+    key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("country");
+    vd.field_target("country", sc, Scopes::Country);
+    vd.field_choice("type", &["naval", "war", "limited_war"]);
+    if key.as_str().starts_with("enable_") {
+        validate_optional_duration(&mut vd, sc);
+    }
+}
+
+pub fn validate_replace_character_roles(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    _sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    for field in &["add", "remove"] {
+        vd.field_validated_list(field, |role, data| {
+            if !data.item_exists(Item::CharacterRole, role.as_str())
+                && !data.item_exists(Item::CharacterArchetype, role.as_str())
+            {
+                let msg = "`{role}` not found as character role or character archetype";
+                err(ErrorKey::MissingItem).msg(msg).loc(role).push();
+            }
+        });
+    }
+    vd.field_bool("remove_all");
+}
+
+pub fn validate_start_harvest_condition(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.field_item("type", Item::HarvestConditionType);
+    vd.field_script_value("intensity", sc);
+    vd.field_script_value("duration", sc);
 }

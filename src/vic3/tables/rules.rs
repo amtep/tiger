@@ -37,12 +37,16 @@ pub const SCRIPTED_RULES: &str = "
 	can_start_diplomatic_plays_against = {
 		root = country
 		target_country = country
+		region = strategic_region
+		stakeholder = country
+		state = state
 	}
 
 	can_join_side_in_diplomatic_play = {
 		root = country
 		target_country = country
 		enemy_country = country
+		region = strategic_region
 	}
 
 	can_impose_law_default = {
@@ -80,6 +84,11 @@ pub const SCRIPTED_RULES: &str = "
 	}
 
 	can_sign_treaty_with = {
+		root = country
+		other_country = country
+	}
+
+	can_threaten_naval_hostilities = {
 		root = country
 		other_country = country
 	}

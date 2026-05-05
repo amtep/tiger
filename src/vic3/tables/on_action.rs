@@ -290,12 +290,6 @@ pub const ON_ACTION_SCOPES: &str = "
 	on_unification_candidate_removed = { root = country }
 	on_stop_supporting_unification = { root = country }
 
-	on_enemy_convoys_raided = {
-                root = character
-                region = state_region
-        }
-	on_our_convoys_raided = on_enemy_convoys_raided
-
 	on_repudiate_obligation = {
 		root = country
 		target_country = country
@@ -428,5 +422,77 @@ pub const ON_ACTION_SCOPES: &str = "
 	on_negotiate_with = {
 		root = country
 		negotiating_interest_group = interest_group
+	}
+
+	on_ship_constructed = {
+		root = country
+		ship = ship
+		fleet = military_formation
+	}
+	on_naval_battle_started = {
+		root = country
+		enemy_country = country
+		battle = battle
+		attacker = character
+		defender = character
+		state = state
+	}
+	on_naval_battle_ended = on_naval_battle_started
+	on_naval_battle_won = on_naval_battle_started
+	on_naval_battle_lost = on_naval_battle_started
+
+	on_flagship_battle_won = {
+		root = country
+		battle = battle
+		ship = ship
+		attacker = country
+		defender = country
+		attacker_commander = character
+		defender_commander = character
+		other_country = country
+	}
+	on_flagship_battle_lost = on_flagship_battle_won
+	on_flagship_destroyed = on_flagship_battle_won
+
+	on_our_supply_ship_raiders_intercepted = {
+		root = country
+		region = strategic_region
+		attacker_commander = character
+		attacker = country
+		defender_commander = character
+		defender = country
+		num_sunk_ships = value
+		battle = battle
+	}
+	on_enemy_supply_ship_raiders_intercepted = on_our_supply_ship_raiders_intercepted
+	on_our_supply_ships_raided = on_our_supply_ship_raiders_intercepted
+	on_enemy_supply_ships_raided = on_our_supply_ship_raiders_intercepted
+
+	on_fleet_destroyed = {
+		root = military_formation
+	}
+
+	on_character_became_adult = {
+		root = character
+	}
+	on_character_spawned_in_pool = {
+		root = character
+	}
+
+	on_invasion_succeeded = {
+		root = country
+		invasion = invasion
+		target_state = state
+		target_country = country
+	}
+
+	on_strait_access_setting_changed = {
+		root = country
+		strait = strait
+	}
+
+	on_travel_deploy_to_state_cancelled = {
+		root = military_formation
+		state = state
 	}
 ";

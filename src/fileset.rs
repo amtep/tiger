@@ -783,6 +783,9 @@ impl Fileset {
             } else if Game::is_ck3() && entry.path.starts_with("common/religion/doctrines") {
                 let msg = "common/religion/doctrines was split to common/religion/doctrine_types and doctrine_group_types in 1.19";
                 err(ErrorKey::Filename).msg(msg).loc(entry).push();
+            } else if Game::is_vic3() && entry.path.starts_with("common/canals") {
+                let msg = "common/canals/ was merged into common/strait_definitions/";
+                err(ErrorKey::Filename).msg(msg).loc(entry).push();
             } else {
                 let msg = format!("file in unexpected directory `{}`", dirname.display());
                 err(ErrorKey::Filename).msg(msg).loc(entry).push();

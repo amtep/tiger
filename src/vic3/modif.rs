@@ -31,6 +31,7 @@ bitflags! {
         const Goods             = 1<<12;
         const MilitaryFormation = 1<<13;
         const PowerBloc         = 1<<14;
+        const Ship              = 1<<15;
         // Special scopes that allows tiger to distinguish between
         // modifiers that apply to units generally, or while in
         // combat. This matters because unit modifiers only flow
