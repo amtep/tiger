@@ -426,37 +426,51 @@ pub const ON_ACTION_SCOPES: &str = "
   on_ship_constructed = {
   }
   on_naval_battle_started = {
+		root = country
   }
   on_our_supply_ship_raiders_intercepted = {
+		root = country
   }
   on_fleet_destroyed = {
+		root = country
   }
   on_enemy_supply_ships_raided = {
+		root = country
   }
   on_character_became_adult = {
+		root = character
   }
   on_enemy_supply_ship_raiders_intercepted = {
+		root = country
   }
   on_invasion_succeeded = {
+		root = country
   }
   on_flagship_battle_lost = {
+		root = country
   }
   on_our_supply_ships_raided = {
+		root = country
   }
   on_flagship_destroyed = {
+		root = country
   }
   on_strait_access_setting_changed = {
   }
   on_naval_battle_lost = {
   }
   on_flagship_battle_won = {
+		root = country
   }
   on_naval_battle_won = {
+		root = country
   }
   on_travel_deploy_to_state_cancelled = {
+		root = military_formation
   }
   on_naval_battle_ended = {
   }
   on_character_spawned_in_pool = {
+		root = character
   }
 ";
