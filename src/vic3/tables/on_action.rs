@@ -1,4 +1,4 @@
-// LAST UPDATED VIC3 VERSION 1.12.2
+// LAST UPDATED VIC3 VERSION 1.13.3
 pub const ON_ACTION_SCOPES: &str = "
         on_monthly_pulse = {
             root = none

@@ -27,7 +27,7 @@ static SCOPE_EFFECT_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Effect)>> 
         hash
     });
 
-// LAST UPDATED VIC3 VERSION 1.12.2
+// LAST UPDATED VIC3 VERSION 1.13.3
 // See `effects.log` from the game data dumps
 const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::InterestGroup, "abandon_revolution", Boolean),

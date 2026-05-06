@@ -4,7 +4,7 @@ use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
-use crate::report::{ErrorKey, err};
+use crate::report::{err, ErrorKey};
 use crate::scopes::Scopes;
 use crate::token::Token;
 
@@ -40,7 +40,7 @@ static ITERATOR_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>> = La
     hash
 });
 
-/// LAST UPDATED VIC3 VERSION 1.12.0
+/// LAST UPDATED VIC3 VERSION 1.13.3
 /// See `effects.log` from the game data dumps
 /// These are the list iterators. Every entry represents
 /// a every_, ordered_, random_, and any_ version.
