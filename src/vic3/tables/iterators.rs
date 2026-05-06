@@ -131,7 +131,11 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::Country, "scope_ally", Scopes::Country),
     (Scopes::Law, "scope_amendment", Scopes::Amendment),
-    (Scopes::Country.union(Scopes::Front).union(Scopes::Hq), "scope_army", Scopes::Army), // unsure
+    (
+        Scopes::Country.union(Scopes::Front).union(Scopes::Hq),
+        "scope_army",
+        Scopes::MilitaryFormation, // unsure
+    ),
     (Scopes::Treaty, "scope_article", Scopes::TreatyArticle),
     (
         Scopes::TreatyOptions.union(Scopes::Treaty),
