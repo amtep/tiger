@@ -50,6 +50,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::None, "character", Scopes::Character),
     (Scopes::None, "character_in_exile_pool", Scopes::Character),
     (Scopes::None, "character_in_void", Scopes::Character),
+    (Scopes::Character, "character_role", UncheckedTodo),
     (Scopes::Country, "civil_war", Scopes::CivilWar),
     (Scopes::Country, "cobelligerent_in_diplo_play", Scopes::Country),
     (Scopes::Country, "cobelligerent_in_war", Scopes::Country),
@@ -64,6 +65,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::Country, "company", Scopes::Company),
     (Scopes::None, "country", Scopes::Country),
+    (Scopes::Country, "country_strategic_region", UncheckedTodo),
     (Scopes::None, "decentralized_country", Scopes::Country),
     (Scopes::Country, "diplomatic_catalyst", Scopes::DiplomaticCatalyst),
     (Scopes::None, "diplomatic_play", Scopes::DiplomaticPlay),
@@ -104,6 +106,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         Scopes::State,
     ),
     (Scopes::Country, "overlord_or_above", Scopes::Country),
+    (Scopes::Company, "owned_country", UncheckedTodo),
     (Scopes::DiplomaticPact, "participant", Scopes::Country),
     (Scopes::Country.union(Scopes::InterestGroup), "political_lobby", Scopes::PoliticalLobby),
     (Scopes::Country, "political_movement", Scopes::PoliticalMovement),
@@ -128,6 +131,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::Country, "scope_ally", Scopes::Country),
     (Scopes::Law, "scope_amendment", Scopes::Amendment),
+    (Scopes::Country.union(Scopes::Front).union(Scopes::Hq), "scope_army", UncheckedTodo),
     (Scopes::Treaty, "scope_article", Scopes::TreatyArticle),
     (
         Scopes::TreatyOptions.union(Scopes::Treaty),
@@ -150,6 +154,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::Country.union(Scopes::State), "scope_culture", Scopes::Culture),
     (Scopes::Country, "scope_diplomatic_pact", Scopes::DiplomaticPact),
+    (Scopes::Country.union(Scopes::Hq), "scope_fleet", UncheckedTodo),
     (Scopes::War, "scope_front", Scopes::Front),
     (
         Scopes::Country
@@ -160,6 +165,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         Scopes::Character,
     ),
     (Scopes::Country, "scope_held_interest_marker", Scopes::InterestMarker),
+    (Scopes::Country.union(Scopes::Culture), "scope_homeland_state", UncheckedTodo),
     (Scopes::DiplomaticPlay, "scope_initiator_ally", Scopes::Country),
     (
         Scopes::Country.union(Scopes::StateRegion).union(Scopes::StrategicRegion),
@@ -182,6 +188,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         Scopes::Pop,
     ),
     (Scopes::Company, "scope_regional_hqs", Scopes::Building),
+    (Scopes::Country.union(Scopes::MilitaryFormation), "scope_ship", UncheckedTodo),
     (
         Scopes::Country
             .union(Scopes::Front)
@@ -191,6 +198,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
         "scope_state",
         Scopes::State,
     ),
+    (Scopes::Country.union(Scopes::State), "scope_strait", UncheckedTodo),
     (Scopes::DiplomaticPlay, "scope_target_ally", Scopes::Country),
     (Scopes::Country, "scope_theater", Scopes::Theater),
     (Scopes::Country, "scope_treaty", Scopes::Treaty),
@@ -202,6 +210,7 @@ const ITERATOR: &[(Scopes, &str, Scopes)] = &[
     (Scopes::None, "state", Scopes::State),
     (Scopes::None, "state_region", Scopes::StateRegion),
     (Scopes::Country, "strategic_objective", Scopes::State),
+    (Scopes::None, "strategic_region", UncheckedTodo),
     (Scopes::Country, "subject_of_subject", Scopes::Country),
     (Scopes::Country, "subject_or_below", Scopes::Country),
     (Scopes::PoliticalMovement, "supporting_character", Scopes::Character),
