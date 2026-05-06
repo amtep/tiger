@@ -423,4 +423,49 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = country
 		negotiating_interest_group = interest_group
 	}
+  on_ship_constructed = {
+		root = country
+		ship = ship
+		fleet = fleet
+  }
+  on_naval_battle_started = {
+		root = country
+                enemy_country = country
+		battle = naval_battle
+		attacker = character
+		defender = character
+		state = state
+  }
+  on_our_supply_ship_raiders_intercepted = {
+  }
+  on_fleet_destroyed = {
+  }
+  on_enemy_supply_ships_raided = {
+  }
+  on_character_became_adult = {
+  }
+  on_enemy_supply_ship_raiders_intercepted = {
+  }
+  on_invasion_succeeded = {
+  }
+  on_flagship_battle_lost = {
+  }
+  on_our_supply_ships_raided = {
+  }
+  on_flagship_destroyed = {
+  }
+  on_strait_access_setting_changed = {
+  }
+  on_naval_battle_lost = {
+  }
+  on_flagship_battle_won = {
+  }
+  on_naval_battle_won = {
+  }
+  on_travel_deploy_to_state_cancelled = {
+  }
+  on_naval_battle_ended = {
+  }
+  on_character_spawned_in_pool = {
+  }
 ";
