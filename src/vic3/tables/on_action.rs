@@ -424,17 +424,8 @@ pub const ON_ACTION_SCOPES: &str = "
 		negotiating_interest_group = interest_group
 	}
   on_ship_constructed = {
-		root = country
-		ship = ship
-		fleet = fleet
   }
   on_naval_battle_started = {
-		root = country
-                enemy_country = country
-		battle = naval_battle
-		attacker = character
-		defender = character
-		state = state
   }
   on_our_supply_ship_raiders_intercepted = {
   }
