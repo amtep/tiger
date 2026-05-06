@@ -26,7 +26,7 @@ bitflags! {
     /// The available scope types depend on the game.
     /// They are listed in `event_scopes.log` from the game data dumps.
     // LAST UPDATED CK3 VERSION 1.16.0
-    // LAST UPDATED VIC3 VERSION 1.8.1
+    // LAST UPDATED VIC3 VERSION 1.13.3
     // LAST UPDATED IR VERSION 2.0.4
     //
     // Each scope type gets one bitflag. In order to keep the bit count down, scope types from
@@ -222,6 +222,17 @@ bitflags! {
         #[cfg(feature = "vic3")] const GeographicRegion = 1<<91;
         #[cfg(feature = "vic3")] const WarGoal = 1<<92;
         #[cfg(feature = "vic3")] const WarGoalType = 1<<93;
+        #[cfg(feature = "vic3")] const CharacterRole = 1<<94;
+        #[cfg(feature = "vic3")] const InterestTierType = 1<<95;
+        #[cfg(feature = "vic3")] const NavalBattle = 1<<96;
+        #[cfg(feature = "vic3")] const NavalMission = 1<<97;
+        #[cfg(feature = "vic3")] const NavalMissionType = 1<<98;
+        #[cfg(feature = "vic3")] const Ship = 1<<99;
+        #[cfg(feature = "vic3")] const ShipGroup = 1<<100;
+        #[cfg(feature = "vic3")] const ShipType = 1<<101;
+        #[cfg(feature = "vic3")] const Strait = 1<<102;
+        #[cfg(feature = "vic3")] const StraitType = 1<<103;
+        #[cfg(feature = "vic3")] const ShipModificationType = 1<<104;
 
         #[cfg(feature = "imperator")] const Area = 1<<16;
         #[cfg(feature = "imperator")] const CountryCulture = 1<<17;
