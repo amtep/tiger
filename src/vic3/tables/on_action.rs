@@ -424,6 +424,7 @@ pub const ON_ACTION_SCOPES: &str = "
 		negotiating_interest_group = interest_group
 	}
   on_ship_constructed = {
+		root = country
   }
   on_naval_battle_started = {
 		root = country
@@ -456,8 +457,10 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = country
   }
   on_strait_access_setting_changed = {
+		root = country
   }
   on_naval_battle_lost = {
+		root = country
   }
   on_flagship_battle_won = {
 		root = country
@@ -469,6 +472,7 @@ pub const ON_ACTION_SCOPES: &str = "
 		root = military_formation
   }
   on_naval_battle_ended = {
+		root = country
   }
   on_character_spawned_in_pool = {
 		root = character
