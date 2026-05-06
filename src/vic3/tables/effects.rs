@@ -61,7 +61,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Culture, "add_cultural_taboo", UncheckedTodo),
     (Scopes::Country, "add_culture_acceptance_modifier", Vb(validate_add_culture_modifier)),
     (Scopes::State, "add_culture_standard_of_living_modifier", Vb(validate_add_culture_modifier)),
-    (Scopes::Country, "add_declared_interest", Item(Item::StrategicRegion)), // TODO: REMOVED
+    (Scopes::Country, "add_declared_interest", Revmoed("1.13.0", "")),
     (Scopes::StateRegion.union(Scopes::State), "add_devastation", ScriptValue),
     (
         Scopes::DiplomaticPlay,

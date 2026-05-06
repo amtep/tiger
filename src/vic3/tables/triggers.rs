@@ -146,7 +146,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "can_have_as_subject",
         Block(&[("who", Scope(Scopes::Country)), ("type", Item(Item::SubjectType))]),
     ),
-    (Scopes::StrategicRegion, "can_have_declared_interest_here", Scope(Scopes::Country)), // TODO: REMOVED
+    (Scopes::StrategicRegion, "can_have_declared_interest_here", Removed("1.13.0", "")),
     (Scopes::Country, "can_have_political_movement", Removed("1.8", "")),
     (Scopes::Country, "can_have_subjects", Boolean),
     (Scopes::Country, "can_increase_autonomy", Boolean),
@@ -288,11 +288,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "country_has_primary_culture", Scope(Scopes::Culture)),
     (Scopes::Country, "country_has_state_religion", Scope(Scopes::Religion)),
     (Scopes::Country, "country_innovation", CompareValue),
-    (
-        Scopes::Country,
-        "country_navy_unit_type_fraction", // TODO: REMOVED
-        Block(&[("target", Scope(Scopes::CombatUnitType)), ("value", CompareValue)]),
-    ),
+    (Scopes::Country, "country_navy_unit_type_fraction", Removed("1.13.0", "")),
     (Scopes::Country, "country_or_subject_owns_entire_state_region", Item(Item::StateRegion)),
     (Scopes::Building, "country_ownership_fraction", CompareValue),
     (Scopes::Country, "country_pm_usage", Removed("1.6", "")),
@@ -406,11 +402,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "formation_army_unit_type_fraction",
         Block(&[("target", Scope(Scopes::CombatUnitType)), ("value", CompareValue)]),
     ),
-    (
-        Scopes::MilitaryFormation,
-        "formation_navy_unit_type_fraction", // TODO: REMOVED
-        Block(&[("target", Scope(Scopes::CombatUnitType)), ("value", CompareValue)]),
-    ),
+    (Scopes::MilitaryFormation, "formation_navy_unit_type_fraction", Removed("1.13.0", "")),
     (Scopes::MilitaryFormation, "formation_ship_type_fraction", UncheckedTodo),
     (
         Scopes::Building,
@@ -502,7 +494,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Culture, "has_cultural_obsession", Item(Item::Goods)),
     (Scopes::Character, "has_culture", Scope(Scopes::Character.union(Scopes::Culture))),
     (Scopes::Culture, "has_culture_graphics", Item(Item::CultureGraphics)),
-    (Scopes::Country, "has_decreasing_interests", Boolean), // TODO: REMOVED
+    (Scopes::Country, "has_decreasing_interests", Removed("1.13.0", "")),
     (Scopes::State, "has_decree", Item(Item::Decree)),
     (Scopes::Building, "has_deployed_units", Boolean),
     // TODO: limit the type to diplomatic actions that have pacts
@@ -632,7 +624,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "has_political_movement", Removed("1.8", "")),
     (Scopes::Pop, "has_pop_culture", Item(Item::Culture)),
     (Scopes::Pop, "has_pop_religion", Item(Item::Religion)),
-    (Scopes::Country.union(Scopes::Market).union(Scopes::State), "has_port", Boolean), // TODO: REMOVED
+    (Scopes::Country.union(Scopes::Market).union(Scopes::State), "has_port", Removed("1.13.0", "")),
     (Scopes::Country, "has_port_country", UncheckedTodo),
     (Scopes::Market, "has_port_market", UncheckedTodo),
     (Scopes::State, "has_port_state", UncheckedTodo),
@@ -847,7 +839,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::JournalEntry, "is_goal_complete", Boolean),
     (Scopes::Building, "is_government_funded", Boolean),
-    (Scopes::Character, "is_heir", Boolean), // TODO: REMOVED
+    (Scopes::Character, "is_heir", Removed("1.13.0", "")),
     (Scopes::Character, "is_heir_of_own_country", UncheckedTodo),
     (Scopes::Character, "is_historical", Boolean),
     (Scopes::Treaty, "is_historical_treaty", UncheckedTodo),
@@ -889,7 +881,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "is_insurrectionary",
         Boolean,
     ),
-    (Scopes::InterestMarker, "is_interest_active", Boolean), // TODO: REMOVED
+    (Scopes::InterestMarker, "is_interest_active", Removed("1.13.0", "")),
     (Scopes::Character, "is_interest_group_leader", UncheckedTodo),
     (
         Scopes::Character.union(Scopes::InterestGroup),
@@ -985,7 +977,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Removed("1.8", "replaced with is_revolutionary"),
     ),
     (Scopes::None, "is_rightclick_menu_open", UncheckedTodo),
-    (Scopes::Character, "is_ruler", Boolean), // TODO: REMOVED
+    (Scopes::Character, "is_ruler", Removed("1.13.0", "")),
     (Scopes::Character, "is_ruler_of_any_country", UncheckedTodo),
     (Scopes::Character, "is_ruler_of_other_country", UncheckedTodo),
     (Scopes::Character, "is_ruler_of_own_country", UncheckedTodo),
@@ -1259,7 +1251,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Country, "max_law_enactment_setbacks", CompareValue),
     (Scopes::MilitaryFormation, "max_organization", Removed("1.9", "")),
     (Scopes::Country, "max_num_companies", CompareValue),
-    (Scopes::Country, "max_num_declared_interests", CompareValue), // TODO: REMOVED
+    (Scopes::Country, "max_num_declared_interests", Removed("1.13.0", "")),
     (Scopes::Country, "military_ship_maintenance_fulfillment", UncheckedTodo),
     (Scopes::Country, "military_wage_level", CompareChoice(LEVELS)),
     (Scopes::Country, "military_wage_level_value", CompareValue),
@@ -1310,7 +1302,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::State, "num_cultural_communities", CompareValue),
     (Scopes::War, "num_dead", CompareValue),
-    (Scopes::Country, "num_declared_interests", CompareValue), // TODO: REMOVED
+    (Scopes::Country, "num_declared_interests", Removed("1.13.0", "")),
     // TODO: check that the DiplomaticAction has a pact.
     (
         Scopes::Country,
