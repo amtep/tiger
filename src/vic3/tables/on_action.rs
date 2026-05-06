@@ -290,12 +290,6 @@ pub const ON_ACTION_SCOPES: &str = "
 	on_unification_candidate_removed = { root = country }
 	on_stop_supporting_unification = { root = country }
 
-	on_enemy_convoys_raided = {
-                root = character
-                region = state_region
-        }
-	on_our_convoys_raided = on_enemy_convoys_raided
-
 	on_repudiate_obligation = {
 		root = country
 		target_country = country
