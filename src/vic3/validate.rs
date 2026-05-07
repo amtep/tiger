@@ -57,6 +57,7 @@ pub fn validate_locators(vd: &mut Validator) -> Vec<&'static str> {
         vd.field_list_precise_numeric_exactly("position", 3);
         vd.field_list_precise_numeric_exactly("rotation", 3);
         vd.field_numeric("scale");
+        vd.field_list_precise_numeric_exactly("bezier", 4);
     });
     locator_names.into_iter().map(|n| n.as_str()).collect()
 }

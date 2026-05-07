@@ -42,6 +42,11 @@ impl DbKind for TreatyArticle {
         vd.field_numeric("relations_progress_per_day");
         vd.field_integer_range("relations_improvement_max", 0..);
         vd.field_integer_range("relations_improvement_min", 0..);
+        vd.field_integer("max_target_involvement");
+        vd.field_choice(
+            "target_involvement_applies_to",
+            &["source_country", "target_country", "mutual"],
+        );
 
         vd.field_item("icon", Item::File);
 
@@ -68,6 +73,8 @@ impl DbKind for TreatyArticle {
             "is_take_on_debt",
             "is_treaty_port",
             "is_law_commitment",
+            "is_non_piracy_agreement",
+            "is_abandon_piracy",
             "can_be_renegotiated",
             "can_be_enforced",
             "causes_state_transfer",
@@ -100,6 +107,7 @@ impl DbKind for TreatyArticle {
             "building_type",
             "law_type",
             "country",
+            "ship",
         ];
         vd.field_list_choice("required_inputs", required_inputs);
 
@@ -264,6 +272,7 @@ impl DbKind for TreatyArticle {
                             // TODO: verify whether X or X_type scopes
                             "building_type" => sc.define_name("building", Scopes::Building, key),
                             "law_type" => sc.define_name("law", Scopes::Law, key),
+                            "ship" => sc.define_name("ship", Scopes::Ship, key),
                             _ => {}
                         }
                     }

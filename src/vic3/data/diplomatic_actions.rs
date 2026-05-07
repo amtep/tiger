@@ -232,6 +232,11 @@ fn validate_pact(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     vd.field_numeric("relations_improvement_min"); // undocumented
 
     vd.field_integer("forced_duration");
+    vd.field_integer("max_target_involvement");
+    vd.field_choice(
+        "target_involvement_applies_to",
+        &["source_country", "target_country", "mutual"],
+    );
 
     vd.field_item("propose_string", Item::Localization);
     vd.field_item("break_string", Item::Localization);

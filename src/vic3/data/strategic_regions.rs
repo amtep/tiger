@@ -62,6 +62,8 @@ impl DbKind for StrategicRegion {
         vd.field_item("capital_province", Item::Province);
         vd.field_validated("map_color", validate_possibly_named_color);
         vd.field_list_items("states", Item::StateRegion);
+        vd.field_numeric("dioarama_radius_multiplier");
+        vd.field_list_numeric_exactly("diorama_center_offset", 2);
         vd.field_value("graphical_culture"); // TODO
     }
 }

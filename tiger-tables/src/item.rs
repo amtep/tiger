@@ -454,7 +454,6 @@ pub enum Item {
     #[cfg(feature = "vic3")] BattleCondition,
     #[cfg(feature = "vic3")] BuildingGroup,
     #[cfg(feature = "vic3")] BuyPackage,
-    #[cfg(feature = "vic3")] CanalType,
     #[cfg(feature = "vic3")] CharacterArchetype,
     #[cfg(feature = "vic3")] CharacterRole,
     #[cfg(feature = "vic3")] CityBuildingVfx,
@@ -1684,8 +1683,6 @@ impl Item {
             Item::BuildingGroup => "common/building_groups/",
             #[cfg(feature = "vic3")]
             Item::BuyPackage => "common/buy_packages/",
-            #[cfg(feature = "vic3")]
-            Item::CanalType => "common/canals/",
             #[cfg(feature = "vic3")]
             Item::CharacterArchetype => "",
             #[cfg(feature = "vic3")]

@@ -84,10 +84,13 @@ impl DbKind for CommanderOrder {
         vd.field_numeric("escape_power_ratio");
         vd.field_numeric("experience");
 
-        // TODO: verify scope type
-        let mut sc = ScopeContext::new(Scopes::Character, key);
+        vd.field_value("ai_order_type");
+
+        vd.field_numeric("target_involvement_ratio");
+
         // undocumented
-        vd.field_script_value("ai_weight", &mut sc);
+        // TODO: verify scope type
+        vd.field_script_value_no_breakdown_rooted("ai_weight", Scopes::Character);
     }
 }
 

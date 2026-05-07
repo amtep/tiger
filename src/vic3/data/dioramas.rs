@@ -48,6 +48,7 @@ impl DbKind for FleetDiorama {
         let mut vd = Validator::new(block, data);
 
         vd.field_choice("group", &["fleet", "battle_side", "blockade"]);
+        vd.field_numeric("random_offset");
         validate_diorama(vd, false);
     }
 }
@@ -82,5 +83,6 @@ fn validate_diorama(mut vd: Validator, is_army: bool) {
             sc.define_name("num_units", Scopes::Value, key);
             sc
         });
+        vd.field_bool("main");
     });
 }

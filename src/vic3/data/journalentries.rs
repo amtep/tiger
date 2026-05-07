@@ -78,6 +78,13 @@ impl DbKind for JournalEntry {
         vd.field_effect("on_become_involved_after_activation", Tooltipped::No, &mut country_sc);
         vd.field_effect("on_no_longer_involved", Tooltipped::No, &mut country_sc);
 
+        vd.field_validated_block("widget", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_item("gui", Item::File);
+            vd.field_value("name");
+            vd.field_value("container");
+        });
+
         if !vd.field_validated_sc("status_desc", &mut sc, validate_desc) {
             data.mark_used(Item::Localization, &format!("{key}_status"));
         }
@@ -158,6 +165,7 @@ impl DbKind for JournalEntry {
         vd.field_item("why_tutorial", Item::TutorialLesson);
 
         vd.field_bool("should_be_pinned_by_default");
+        vd.field_bool("should_be_pinned_by_default_uninvolved_or_context");
 
         // undocumented
 

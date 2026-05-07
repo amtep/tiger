@@ -36,6 +36,9 @@ impl DbKind for HarvestConditionType {
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
+        vd.field_choice("area_type", &["land", "sea"]);
+        vd.field_bool("has_animation");
+
         vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::StateRegion);
         // TODO: figure out scope here
         vd.field_trigger_rooted("time", Tooltipped::No, Scopes::StateRegion);

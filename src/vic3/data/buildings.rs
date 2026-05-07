@@ -141,6 +141,7 @@ impl DbKind for BuildingType {
 
         vd.replaced_field("recruits_combat_unit", "recruits_combat_units = yes");
         vd.field_bool("recruits_combat_units");
+        vd.field_bool("recruits_sailors");
 
         vd.field_bool("company_headquarter");
 
@@ -164,7 +165,7 @@ impl DbKind for BuildingType {
         vd.field_numeric("min_raise_to_hire");
 
         vd.field_bool("naval");
-        vd.field_item("canal", Item::CanalType);
+        vd.field_item("strait", Item::StraitDefinition);
 
         vd.field_script_value_rooted("ai_value", Scopes::State);
         vd.field_numeric("ai_subsidies_weight");

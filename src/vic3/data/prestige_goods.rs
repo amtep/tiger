@@ -31,6 +31,6 @@ impl DbKind for PrestigeGoods {
         vd.field_numeric("prestige_bonus");
         vd.field_item("texture", Item::File);
 
-        vd.field_trigger_rooted("is_possible", Tooltipped::No, Scopes::Country);
+        vd.field_trigger_rooted("possible", Tooltipped::No, Scopes::Country);
     }
 }
