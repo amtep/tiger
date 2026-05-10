@@ -294,7 +294,7 @@ const SCOPE_EFFECT: &[(Scopes, &str, Effect)] = &[
     (Scopes::Country, "remove_banned_goods", Scope(Scopes::Goods)),
     (Scopes::State, "remove_building", Item(Item::BuildingType)),
     (Scopes::PoliticalMovement, "remove_character_ideology", Item(Item::Ideology)),
-    (Scopes::Character, "remove_character_role", Item(Item::CharacterRole)),
+    (Scopes::Character, "remove_character_role", Vv(validate_add_character_role)),
     (Scopes::StateRegion, "remove_claim", Scope(Scopes::Country)),
     (Scopes::Country, "remove_company", Scope(Scopes::CompanyType)),
     (Scopes::Culture, "remove_cultural_obsession", Item(Item::Goods)),

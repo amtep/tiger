@@ -351,7 +351,7 @@ pub fn validate_create_ship(
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("type");
-    vd.field_item("type", Item::ShipType);
+    vd.field_target("type", sc, Scopes::ShipType);
     vd.field_target("fleet", sc, Scopes::MilitaryFormation);
     vd.field_item("name", Item::Localization);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {

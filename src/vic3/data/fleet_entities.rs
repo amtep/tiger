@@ -69,7 +69,7 @@ impl DbKind for FleetEntity {
         vd.multi_field_validated_block("modification", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_value("name");
-            vd.field_item("slot_type", Item::ShipModification);
+            vd.field_item("slot_type", Item::ShipModificationSlot);
             // TODO: The number of entities must be equal to the number of modification levels in the slot
             vd.multi_field_item("entity", Item::Entity);
         });
@@ -77,7 +77,7 @@ impl DbKind for FleetEntity {
         vd.multi_field_validated_block("attach", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_value("locator");
-            vd.field_item("slot_type", Item::ShipModification);
+            vd.field_item("slot_type", Item::ShipModificationSlot);
             // TODO: The number of entities must be equal to the number of modification levels in the slot
             vd.multi_field_validated_block("modification", |block, data| {
                 let mut vd = Validator::new(block, data);

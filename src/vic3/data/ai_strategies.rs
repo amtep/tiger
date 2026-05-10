@@ -177,9 +177,13 @@ impl DbKind for AiStrategy {
         vd.field_validated_key_block("war_subsidies", validate_subsidies);
         vd.field_validated_key_block("goods_stances", validate_goods_stances);
 
-        vd.field_script_value_rooted("colonial_interest_ratio", Scopes::Country);
+        vd.field_script_value_no_breakdown_rooted("colonial_interest_ratio", Scopes::Country);
         vd.field_validated_block("liberate_country_scores", validate_liberate_country_scores);
-        vd.field_validated_key_block("strategic_region_scores", validate_strategic_region_scores);
+        vd.field_script_value_no_breakdown_builder("strategic_region_scores", |key| {
+            let mut sc = ScopeContext::new(Scopes::Country, key);
+            sc.define_name("region", Scopes::StrategicRegion, key);
+            sc
+        });
         vd.field_validated_key_block("secret_goal_scores", validate_secret_goal_scores);
         vd.field_validated_key_block("secret_goal_weights", validate_secret_goal_weights);
         vd.field_validated_key_block("treaty_category_scores", validate_treaty_category_scores);
@@ -241,15 +245,6 @@ fn validate_goods_stances(key: &Token, block: &Block, data: &Everything) {
         vd.req_field("stance");
         vd.field_choice("stance", &["wants_high_supply", "wants_export", "does_not_want"]);
         vd.field_trigger("trigger", Tooltipped::No, &mut sc);
-    });
-}
-
-fn validate_strategic_region_scores(key: &Token, block: &Block, data: &Everything) {
-    let mut vd = Validator::new(block, data);
-    let mut sc = ScopeContext::new(Scopes::Country, key);
-    vd.unknown_fields(|key, bv| {
-        data.verify_exists(Item::StrategicRegion, key);
-        validate_script_value(bv, data, &mut sc);
     });
 }
 

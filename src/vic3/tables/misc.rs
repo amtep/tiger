@@ -30,6 +30,9 @@ pub const DLC_FEATURES_VIC3: &[&str] = &[
     "ip3_cosmetics",
     "ip4_content",
     "ip4_cosmetics",
+    "ep2_content",
+    "ep2_cosmetics",
+    "ship_designer",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
