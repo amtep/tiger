@@ -28,6 +28,7 @@ pub mod discrimination_traits;
 pub mod dynamic_country;
 pub mod dynamic_treaty;
 pub mod flag_definitions;
+pub mod fleet_entities;
 pub mod front_graphics;
 pub mod gameconcepts;
 pub mod gamerules;

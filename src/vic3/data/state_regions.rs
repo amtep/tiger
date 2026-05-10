@@ -27,14 +27,12 @@ impl DbKind for StateRegion {
 
         vd.req_field("id");
         vd.field_integer("id"); // TODO: verify unique?
-        // TODO: check that it's actually a subsistence building
-        vd.field_item("subsistence_building", Item::BuildingType);
         vd.req_field("provinces");
         vd.field_list_items("provinces", Item::Province);
-        vd.field_list_items("prime_land", Item::Province);
-        vd.field_list_items("impassable", Item::Province);
-        vd.field_item("center_province", Item::Province);
-        vd.multi_field_list_items("traits", Item::StateTrait);
+
+        // TODO: check that it's actually a subsistence building
+        vd.field_item("subsistence_building", Item::BuildingType);
+        vd.field_item("graphical_culture", Item::Culture);
 
         // TODO: verify that they're all there? except "port" for non-coastal state regions.
         for hub in &["city", "port", "mine", "farm", "wood"] {
@@ -59,9 +57,29 @@ impl DbKind for StateRegion {
             vd.req_field("type");
             vd.field_item("type", Item::BuildingType);
             vd.field_item("depleted_type", Item::BuildingType);
-            vd.field_integer("discovered_amount");
+            vd.field_integer("amount");
             vd.field_integer("undiscovered_amount");
+            vd.field_integer("discovered_amount");
+            vd.field_integer("depleted_amount");
+            vd.field_numeric("discover_chance_mult");
+            vd.field_numeric("deplete_chance_mult");
         });
+
+        vd.multi_field_list_items("traits", Item::StateTrait);
+
+        // TODO: required for coastal land
         vd.field_value("naval_exit_id"); // TODO it's an id of the sea provinces
+
+        vd.field_list_items("impassable", Item::Province);
+        vd.field_list_items("prime_land", Item::Province);
+        vd.field_item("center_province", Item::Province);
+
+        vd.field_validated_block("blockade_locator", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.field_list_numeric_exactly("position", 3);
+            vd.field_numeric("yaw");
+        });
+        vd.field_numeric("diorama_radius_multiplier");
+        vd.field_list_numeric_exactly("diorama_center_offset", 2);
     }
 }
