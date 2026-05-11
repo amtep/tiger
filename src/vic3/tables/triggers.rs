@@ -1857,7 +1857,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     // TODO: exactly one of pop_type, religion, or culture must be specified
     (
         Scopes::Country.union(Scopes::State),
-        "weath_share",
+        "wealth_share",
         Block(&[
             ("?pop_type", ScopeOrItem(Scopes::PopType, Item::PopType)),
             ("?religion", ScopeOrItem(Scopes::Religion, Item::Religion)),
