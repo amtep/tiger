@@ -147,6 +147,9 @@ impl Display for ModifKinds {
         if self.contains(ModifKinds::PowerBloc) {
             vec.push("power bloc");
         }
+        if self.contains(ModifKinds::Ship) {
+            vec.push("ship");
+        }
         write!(f, "{}", vec.join(", "))
     }
 }

@@ -46,6 +46,7 @@ pub const SCRIPTED_RULES: &str = "
 		root = country
 		target_country = country
 		enemy_country = country
+		initiator = country
 		region = strategic_region
 	}
 

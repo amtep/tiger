@@ -83,6 +83,12 @@ impl DbKind for TreatyArticle {
             "hostile",
             // undocumented
             "target_subjects_as_input",
+            "ai_consider_threaten_naval_hostilities",
+            "exclude_from_make_this_work",
+            "is_ship_transfer",
+            "is_toll_exemption",
+            "is_strait_access",
+            "is_no_strait_closure",
         ];
         vd.field_list_choice("flags", flags);
 

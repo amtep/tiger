@@ -1258,7 +1258,6 @@ pub fn validate_career_length(
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
-    vd.req_field("role");
     #[allow(clippy::collapsible_if)]
     if let Some(role) = vd.field_value("role") {
         if !data.item_exists(Item::CharacterRole, role.as_str())

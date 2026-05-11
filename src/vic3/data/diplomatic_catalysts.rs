@@ -85,6 +85,7 @@ impl DbKind for DiplomaticCatalyst {
                 "type",
                 &[
                     "all",
+                    "not_hostile", // undocumented
                     "more_friendly",
                     "more_hostile",
                     "only_friendly",

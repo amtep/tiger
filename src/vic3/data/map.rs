@@ -105,6 +105,7 @@ const MAP_PAINTING_MODES: &[&str] = &[
     "strategic_regions",
     "technology_progress",
     "player_country",
+    "interests",
 ];
 
 // LAST UPDATED VIC3 VERSION 1.7.1

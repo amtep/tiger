@@ -32,7 +32,18 @@ impl DbKind for ShipNameDefinition {
             let mut vd = Validator::new(block, data);
             for block in vd.blocks() {
                 let mut vd = Validator::new(block, data);
-                vd.field_choice("type", &["custom_text", "name_list"]);
+                vd.field_choice(
+                    "type",
+                    &[
+                        "custom_text",
+                        "name_list",
+                        "ordinal_number",
+                        "owned_hubs",
+                        "ship_type",
+                        "culture_surnames",
+                        "owned_states",
+                    ],
+                );
                 vd.field_item("key", Item::Localization);
                 vd.field_item("custom_text", Item::Localization);
                 vd.multi_field_item("quick_trigger_required_law", Item::LawType);
