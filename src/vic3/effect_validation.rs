@@ -1210,7 +1210,7 @@ pub fn validate_add_amendment(
 ) {
     vd.req_field("type");
     vd.req_field("sponsor");
-    vd.field_item("type", Item::Amendment);
+    vd.field_item_or_target("type", sc, Item::Amendment, Scopes::AmendmentType);
     vd.field_target("sponsor", sc, Scopes::InterestGroup);
     vd.field_script_value("cooldown", sc);
     vd.field_script_value("timeout", sc);

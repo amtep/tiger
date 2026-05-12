@@ -54,6 +54,8 @@ impl DbKind for ProductionMethod {
         vd.multi_field_list_items("disallowing_laws", Item::LawType);
         vd.multi_field_list_items("unlocking_religions", Item::Religion);
         vd.multi_field_list_items("disallowing_religions", Item::Religion);
+        vd.multi_field_list_items("unlocking_amendments", Item::Amendment);
+        vd.multi_field_list_items("disallowing_amendments", Item::Amendment);
         vd.multi_field_list_items("unlocking_technologies", Item::Technology);
         vd.multi_field_list_items("unlocking_production_methods", Item::ProductionMethod);
         vd.multi_field_list_items("unlocking_global_technologies", Item::Technology);
