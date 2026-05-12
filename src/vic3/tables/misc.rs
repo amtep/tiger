@@ -284,6 +284,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/ship_modifications",
     "common/ship_name_definitions",
     "common/ship_types",
+    "common/ship_veterancy_levels",
     "common/social_classes",
     "common/social_hierarchies",
     "common/state_traits",

@@ -40,6 +40,8 @@ impl DbKind for NavalMissionType {
         vd.field_bool("piracy");
         vd.field_bool("port_bombardment");
 
+        vd.field_numeric("experience");
+
         vd.field_list_choice("intercept_targets", &["none", "hostile", "piracy", "all"]);
         vd.field_list_choice(
             "piracy_targets",

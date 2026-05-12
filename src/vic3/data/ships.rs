@@ -16,12 +16,17 @@ use crate::vic3::tables::modifs::maybe_warn_modifiable_capitalization;
 pub struct ShipType {}
 #[derive(Clone, Debug)]
 pub struct ShipGroup {}
+#[derive(Clone, Debug)]
+pub struct ShipVeterancyLevel {}
 
 inventory::submit! {
     ItemLoader::Normal(GameFlags::Vic3, Item::ShipType, ShipType::add)
 }
 inventory::submit! {
     ItemLoader::Normal(GameFlags::Vic3, Item::ShipGroup, ShipGroup::add)
+}
+inventory::submit! {
+    ItemLoader::Normal(GameFlags::Vic3, Item::ShipVeterancyLevel, ShipVeterancyLevel::add)
 }
 
 impl ShipType {
@@ -32,6 +37,11 @@ impl ShipType {
 impl ShipGroup {
     pub fn add(db: &mut Db, key: Token, block: Block) {
         db.add(Item::ShipGroup, key, block, Box::new(Self {}));
+    }
+}
+impl ShipVeterancyLevel {
+    pub fn add(db: &mut Db, key: Token, block: Block) {
+        db.add(Item::ShipVeterancyLevel, key, block, Box::new(Self {}));
     }
 }
 
@@ -120,5 +130,20 @@ impl DbKind for ShipGroup {
         // undocumented
 
         vd.field_choice("category", &["capital_group", "cruiser_group", "torpedo_group", "supply"]);
+    }
+}
+
+impl DbKind for ShipVeterancyLevel {
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        let mut vd = Validator::new(block, data);
+
+        data.verify_exists(Item::Localization, key);
+
+        vd.field_item("icon", Item::File);
+        vd.field_numeric("experience_threshold");
+        vd.field_validated_block("modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Ship, vd);
+        });
     }
 }

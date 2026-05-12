@@ -878,7 +878,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_heir", Removed("1.13", "replaced with `is_heir_of_own_country`")),
     (Scopes::Character, "is_heir_of_own_country", Boolean),
     (Scopes::Character, "is_historical", Boolean),
-    (Scopes::Treaty, "is_historical_treaty", Boolean),
+    (Scopes::Treaty.union(Scopes::TreatyOptions), "is_historical_treaty", Boolean),
     (Scopes::War, "is_holder_of_wargoal_in_war", Scope(Scopes::Country)),
     (Scopes::Country, "is_home_country_for", Scope(Scopes::Country)),
     (Scopes::StateRegion, "is_homeland", ScopeOrItem(Scopes::Culture, Item::Culture)),

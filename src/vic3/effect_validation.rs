@@ -566,6 +566,7 @@ pub fn validate_create_military_formation(
     vd.field_choice("type", &["army", "fleet"]);
     let is_fleet = block.field_value_is("type", "fleet");
     vd.field_target("hq_region", sc, Scopes::StrategicRegion);
+    vd.field_target("supply_hub", sc, Scopes::State);
     vd.multi_field_validated_block("combat_unit", |block, data| {
         let mut vd = Validator::new(block, data);
         vd.field_target("type", sc, Scopes::CombatUnitType);

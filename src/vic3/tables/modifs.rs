@@ -1025,6 +1025,8 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("country_ship_construction_efficiency_add", ModifKinds::Country),
     ("country_ship_construction_goods_cost_mult", ModifKinds::Country),
     ("country_ship_construction_progress_max_add", ModifKinds::Country),
+    ("country_ship_crew_starting_veterancy_experience_add", ModifKinds::Country),
+    ("country_ship_crew_starting_veterancy_experience_mult", ModifKinds::Country),
     ("country_society_tech_research_speed_mult", ModifKinds::Country),
     ("country_society_tech_spread_mult", ModifKinds::Country),
     ("country_state_religion_wages_mult", ModifKinds::Country),

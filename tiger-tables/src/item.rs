@@ -545,6 +545,7 @@ pub enum Item {
     #[cfg(feature = "vic3")] ShipModificationSlot,
     #[cfg(feature = "vic3")] ShipNameDefinition,
     #[cfg(feature = "vic3")] ShipType,
+    #[cfg(feature = "vic3")] ShipVeterancyLevel,
     #[cfg(feature = "vic3")] SocialClass,
     #[cfg(feature = "vic3")] SocialHierarchy,
     #[cfg(feature = "vic3")] StateRegion,
@@ -1867,6 +1868,8 @@ impl Item {
             Item::ShipNameDefinition => "common/ship_name_definitions/",
             #[cfg(feature = "vic3")]
             Item::ShipType => "common/ship_types/",
+            #[cfg(feature = "vic3")]
+            Item::ShipVeterancyLevel => "common/ship_veterancy_levels/",
             #[cfg(feature = "vic3")]
             Item::SocialClass => "common/social_classes/",
             #[cfg(feature = "vic3")]
