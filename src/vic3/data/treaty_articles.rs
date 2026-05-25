@@ -89,6 +89,7 @@ impl DbKind for TreatyArticle {
             "is_toll_exemption",
             "is_strait_access",
             "is_no_strait_closure",
+            "is_no_tolls",
         ];
         vd.field_list_choice("flags", flags);
 
