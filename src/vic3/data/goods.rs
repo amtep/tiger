@@ -29,20 +29,20 @@ impl DbKind for Goods {
         data.verify_exists(Item::Localization, key);
 
         vd.field_item("texture", Item::File);
-        vd.field_numeric("cost");
+        vd.field_integer("cost");
         vd.field_choice("category", &["industrial", "luxury", "military", "staple"]);
 
         vd.field_bool("local");
         vd.field_bool("tradeable");
         vd.field_bool("fixed_price");
 
-        vd.field_numeric("prestige_factor");
+        vd.field_integer("prestige_factor");
         vd.field_numeric("traded_quantity");
         vd.field_numeric("convoy_cost_multiplier");
 
         vd.field_numeric("obsession_chance");
-        vd.field_numeric("consumption_tax_cost");
+        vd.field_integer("consumption_tax_cost");
 
-        vd.field_bool("pop_consumption_can_add_infrastructure"); // undocumented
+        vd.field_bool("pop_consumption_can_add_infrastructure");
     }
 }
