@@ -2218,6 +2218,12 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Item(Item::ScriptedProgressBar),
             Scopes::Value,
         ),
+        (
+            Scopes::Country,
+            "ship_modification_market_demand_ratio",
+            Scope(Scopes::ShipModificationType),
+            Scopes::Value,
+        ),
         (Scopes::Country, "stall_chance_for_law", Scope(Scopes::LawType), Scopes::Value),
         (
             Scopes::Country,

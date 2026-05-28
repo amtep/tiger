@@ -58,10 +58,15 @@ impl DbKind for CharacterTemplate {
 
         vd.field_validated_value("culture", |_, mut vd| {
             vd.maybe_is("primary_culture");
+            vd.maybe_is("random_accepted");
+            vd.maybe_is("random");
             vd.maybe_is("ig_before_primary_culture");
+            vd.maybe_is("ig_before_random_accepted");
+            vd.maybe_is("ig_before_random");
             vd.target(&mut sc, Scopes::Culture);
         });
         vd.field_validated_value("religion", |_, mut vd| {
+            vd.maybe_is("random_accepted");
             vd.maybe_is("random");
             vd.item_or_target(&mut sc, Item::Religion, Scopes::Religion);
         });

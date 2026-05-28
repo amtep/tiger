@@ -36,7 +36,6 @@ impl DbKind for ScriptedButton {
 
         vd.req_field("name");
         vd.field_validated_sc("name", &mut sc, validate_desc);
-        vd.req_field("desc");
         vd.field_validated_sc("desc", &mut sc, validate_desc);
 
         vd.field_validated_block_sc("cooldown", &mut sc, validate_duration);

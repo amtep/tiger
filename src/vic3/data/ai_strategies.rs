@@ -156,8 +156,34 @@ impl DbKind for AiStrategy {
         });
         vd.field_script_value_rooted("wanted_construction_output", Scopes::Country);
         vd.replaced_field("wanted_construction_sector_levels", "wanted_construction_output");
+        vd.field_validated_block("strategic_region_stance_type_scores", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_fields(|key, bv| {
+                let mut sc = ScopeContext::new(Scopes::Country, key);
+                sc.define_name("target_region", Scopes::StrategicRegion, key);
+                sc.define_name("region_score", Scopes::Value, key);
+
+                data.verify_exists(Item::AiStrategicRegionStanceType, key);
+                validate_script_value(bv, data, &mut sc);
+            });
+        });
         vd.field_script_value_rooted("wanted_army_size", Scopes::Country);
+        vd.field_script_value_rooted("wanted_marines", Scopes::Country);
+        vd.field_script_value_rooted("target_marine_formation_size", Scopes::Country);
         vd.field_script_value_rooted("wanted_navy_size", Scopes::Country);
+        vd.field_script_value_rooted("wanted_num_supply_ships", Scopes::Country);
+        vd.field_script_value_rooted("ship_construction_output_multiplier", Scopes::Country);
+
+        vd.field_validated_block("ship_group_weights", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_fields(|key, bv| {
+                let mut sc = ScopeContext::new(Scopes::Country, key);
+                data.verify_exists(Item::ShipGroup, key);
+                validate_script_value(bv, data, &mut sc);
+            });
+        });
+        vd.field_script_value_rooted("max_ship_design_complexity", Scopes::Country);
+        vd.field_script_value_rooted("wanted_naval_fortification_levels", Scopes::Country);
 
         vd.field_validated_key_block(
             "combat_unit_group_weights",
