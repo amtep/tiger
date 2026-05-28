@@ -157,6 +157,7 @@
     ("GetSubjectType", Args::Args(&[IType(Item::SubjectType)]), Vic3(SubjectType)),
     ("GetTechnology", Args::Args(&[IType(Item::Technology)]), Vic3(Technology)),
     ("GetTutorialJournalEntry", Args::Args(&[]), Vic3(JournalEntry)),
+    ("GetVariableFromGlobalVariableMap", Args::Args(&[DType(Unknown), DType(Unknown)]), Scope),
     ("GetVariableSystem", Args::Args(&[]), Vic3(VariableSystem)),
     ("GetWarGoalType", Args::Args(&[DType(Unknown)]), Vic3(WarGoalType)),
     ("GuiScope", Args::Args(&[]), TopScope),

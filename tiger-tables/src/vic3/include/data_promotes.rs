@@ -1358,6 +1358,7 @@
     ("GetUprisingCountry", Vic3(CivilWar), Args::Args(&[]), Vic3(Country)),
     ("GetUprisingDefinition", Vic3(PoliticalMovement), Args::Args(&[]), Vic3(CountryDefinition)),
     ("GetVariable", Scope, Args::Args(&[DType(Unknown)]), Scope),
+    ("GetVariableFromVariableMap", Scope, Args::Args(&[DType(Unknown), DType(Unknown)]), Scope),
     ("GetVeterancyLevel", Vic3(Ship), Args::Args(&[]), Vic3(ShipVeterancyLevel)),
     ("GetWar", Scope, Args::Args(&[]), Vic3(War)),
     ("GetWar", Vic3(DiplomaticPlay), Args::Args(&[]), Vic3(War)),

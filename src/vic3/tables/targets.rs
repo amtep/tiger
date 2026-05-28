@@ -208,6 +208,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     ),
     (Scopes::Country, "num_admirals", Scopes::Value),
     (Scopes::Country, "num_alliances", Scopes::Value),
+    (Scopes::MilitaryFormation, "num_assigned_supply_ships", Scopes::Value),
     (Scopes::Character, "num_battalions", Scopes::Value),
     (Scopes::Country, "num_characters", Scopes::Value),
     (Scopes::Country, "num_colony_projects", Scopes::Value),
