@@ -49,6 +49,13 @@ impl DbKind for FleetDiorama {
 
         vd.field_choice("group", &["fleet", "battle_side", "blockade"]);
         vd.field_numeric("random_offset");
+        vd.field_validated_block("composition", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_value_fields(|key, value| {
+                data.verify_exists(Item::ShipGroup, key);
+                value.expect_integer();
+            });
+        });
         validate_diorama(vd, false);
     }
 }
@@ -77,6 +84,8 @@ fn validate_diorama(mut vd: Validator, is_army: bool) {
         if is_army {
             vd.field_bool("general");
             vd.field_bool("ignore_terrain");
+        } else {
+            vd.field_item("group", Item::ShipGroup);
         }
         vd.field_trigger_builder("is_visible", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Country, key);

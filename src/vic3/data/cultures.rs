@@ -76,6 +76,7 @@ impl DbKind for Culture {
         // undocumented fields
 
         vd.field_value("name_format"); // valid values not known
+        vd.field_numeric("assimilation_rate");
     }
 }
 

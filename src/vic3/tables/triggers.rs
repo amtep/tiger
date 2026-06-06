@@ -274,7 +274,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Country,
         "country_has_building_group_levels",
-        Block(&[("type", Item(Item::BuildingGroup)), ("value", CompareValue)]),
+        Block(&[
+            ("type", ScopeOrItem(Scopes::BuildingGroup, Item::BuildingGroup)),
+            ("value", CompareValue),
+        ]),
     ),
     (Scopes::Country, "country_has_building_levels", CompareValue),
     (
@@ -1986,13 +1989,13 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (
             Scopes::Country,
             "country_has_building_group_levels",
-            Item(Item::BuildingGroup),
+            ScopeOrItem(Scopes::BuildingGroup, Item::BuildingGroup),
             Scopes::Value,
         ),
         (
             Scopes::Country,
             "country_has_building_type_levels",
-            Item(Item::BuildingType),
+            ScopeOrItem(Scopes::BuildingType, Item::BuildingType),
             Scopes::Value,
         ),
         (Scopes::Country, "country_ship_type_fraction", Scope(Scopes::ShipType), Scopes::Value),

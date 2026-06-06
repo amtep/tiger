@@ -996,13 +996,9 @@ impl WidgetProperty {
                 GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
             }
 
-            max_height => GameFlags::Ck3 | GameFlags::Eu5,
-
             max_update_rate | min_dist_from_screen_edge => {
                 GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
             }
-
-            min_height => GameFlags::Ck3 | GameFlags::Eu5,
 
             on_keyframe_move
             | onalt
@@ -1040,8 +1036,6 @@ impl WidgetProperty {
             | disable_common_context
             | disable_input_fallthrough
             | distance
-            | draggable_behavior
-            | drop_target
             | enabled_input
             | frame_grid
             | ignore_layout
@@ -1082,9 +1076,11 @@ impl WidgetProperty {
 
             tooltip_enabled => GameFlags::Vic3 | GameFlags::Imperator | GameFlags::Eu5,
             tooltip_visible | tooltip_when_disabled => GameFlags::Ck3,
-            video | wrap_count => GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5,
+            max_height | min_height | video | wrap_count => {
+                GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
+            }
 
-            onctrl => GameFlags::Vic3 | GameFlags::Eu5,
+            draggable_behavior | drop_target | onctrl => GameFlags::Vic3 | GameFlags::Eu5,
 
             frame_tier | ondatacontextchanged | dragdropid | dragdropargs | forcedown | url
             | onleave_signal | onenter_signal => GameFlags::Imperator,

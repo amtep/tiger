@@ -34,8 +34,11 @@ impl DbKind for CharacterTemplate {
             vd.req_field("first_name");
             vd.req_field("last_name");
             vd.req_field("historical");
+            vd.req_field("religion");
             vd.req_field("culture");
             vd.req_field("female");
+            vd.req_field("home_region");
+            vd.req_field("holding_type");
             vd.req_field("dna");
             vd.req_field("age");
             vd.req_field("interest_group");
@@ -71,6 +74,15 @@ impl DbKind for CharacterTemplate {
             vd.item_or_target(&mut sc, Item::Religion, Scopes::Religion);
         });
 
+        vd.field_validated_value("home_region", |_, mut vd| {
+            vd.maybe_is("random");
+            vd.item_or_target(&mut sc, Item::StateRegion, Scopes::StateRegion);
+        });
+        vd.field_validated_value("holding_type", |_, mut vd| {
+            vd.maybe_is("random");
+            vd.item_or_target(&mut sc, Item::BuildingType, Scopes::BuildingType);
+        });
+
         vd.field_validated_value("dna", |_, mut vd| {
             vd.maybe_is("random");
             vd.item(Item::Dna);
@@ -93,6 +105,11 @@ impl DbKind for CharacterTemplate {
             vd.maybe_is("default");
             vd.item(Item::CommanderRank);
         });
+        vd.field_validated_value("role", |_, mut vd| {
+            vd.maybe_item(Item::CharacterArchetype);
+            vd.item(Item::CharacterRole);
+        });
+
         vd.field_bool("ruler");
         vd.field_bool("heir");
         vd.field_bool("ig_leader");
@@ -137,5 +154,9 @@ impl DbKind for CharacterTemplate {
             vd.field_date("latest_usage_date");
             vd.field_numeric_range("chance", 0.0..=100.0);
         });
+
+        // undocumented
+        vd.field_target("company", &mut sc, Scopes::CompanyType);
+        vd.field_bool("is_for_ruler_selector");
     }
 }

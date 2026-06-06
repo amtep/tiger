@@ -3,7 +3,9 @@ use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
+use crate::scopes::Scopes;
 use crate::token::Token;
+use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
@@ -26,6 +28,10 @@ impl DbKind for ShipNameDefinition {
         vd.field_item("name", Item::Localization);
         vd.field_numeric("selection_weight");
         vd.field_item("country", Item::Country);
+        vd.field_item("culture", Item::Culture);
+        vd.field_bool("template");
+        vd.field_bool("fallback");
+        vd.field_item("clone_properties", Item::ShipNameDefinition);
 
         vd.field_list_items("allowed_ship_types", Item::ShipType);
         vd.field_validated_block("properties", |block, data| {
@@ -47,8 +53,11 @@ impl DbKind for ShipNameDefinition {
                 vd.field_item("key", Item::Localization);
                 vd.field_item("custom_text", Item::Localization);
                 vd.multi_field_item("quick_trigger_required_law", Item::LawType);
+                vd.multi_field_item("quick_trigger_forbidden_law", Item::LawType);
+                vd.multi_field_item("quick_trigger_required_country", Item::Country);
                 vd.field_bool("quick_trigger_country_leader_female");
                 vd.field_list_items("name_list", Item::Localization);
+                vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Ship);
             }
         });
     }

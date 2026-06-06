@@ -265,6 +265,7 @@ impl DbKind for BuildingGroup {
         vd.field_bool("has_trade_revenue"); // undocumented
         vd.field_bool("company_headquarter"); // undocumented
         vd.field_bool("regional_company_headquarter"); // undocumented
+        vd.field_bool("builds_ships"); // undocumented
 
         // TODO: are category and land_usage really both valid?
         vd.field_choice("category", &["urban", "rural", "development"]);

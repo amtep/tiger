@@ -1,4 +1,5 @@
 use crate::block::Block;
+use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
@@ -28,6 +29,7 @@ impl DbKind for CharacterRole {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
+        vd.field_item("texture", Item::File);
         vd.field_choice("type", CHARACTER_ARCHETYPES);
         vd.field_numeric("priority");
         vd.field_bool("auto_assigned");
@@ -61,6 +63,26 @@ impl DbKind for CharacterRole {
         vd.field_validated_block("character_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.field_validated_block("character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+
+        // undocumented
+        vd.field_validated_block("holding_scores", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.unknown_block_fields(|_, block| {
+                let mut vd = Validator::new(block, data);
+                vd.field_item("type", Item::BuildingType);
+                vd.field_script_value_no_breakdown_builder("score", |key| {
+                    let mut sc = ScopeContext::new(Scopes::Country, key);
+                    sc.define_name("is_monarch", Scopes::Bool, key);
+                    sc.define_name("interest_group", Scopes::InterestGroup, key);
+                    sc.define_name("state", Scopes::State, key);
+                    sc
+                });
+            });
         });
     }
 }

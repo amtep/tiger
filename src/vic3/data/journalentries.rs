@@ -165,6 +165,7 @@ impl DbKind for JournalEntry {
         vd.field_item("why_tutorial", Item::TutorialLesson);
 
         vd.field_bool("should_be_pinned_by_default");
+        vd.field_bool("should_be_pinned_by_default_involved");
         vd.field_bool("should_be_pinned_by_default_uninvolved_or_context");
 
         // undocumented
@@ -195,6 +196,7 @@ impl DbKind for JournalEntryGroup {
 
         let mut vd = Validator::new(block, data);
         vd.field_choice("context", &["none", "country"]);
+        vd.field_bool("updates_strategic_region_stances");
     }
 
     fn has_property(

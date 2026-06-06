@@ -46,6 +46,8 @@ impl DbKind for CharacterInteraction {
         // undocumented
 
         vd.field_trigger_rooted("should_ai_evaluate", Tooltipped::No, Scopes::Country);
+        // TODO: ai_will_do seems to overlap the previous one. Check if it really works.
+        vd.field_trigger_rooted("ai_will_do", Tooltipped::No, Scopes::Country);
         vd.field_bool("ai_considers_exiles");
     }
 }

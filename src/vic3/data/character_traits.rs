@@ -70,5 +70,9 @@ impl DbKind for CharacterTrait {
 
         vd.field_list_items("replace", Item::CharacterTrait);
         vd.field_integer("value");
+
+        // undocumented
+
+        vd.field_list_items("affected_naval_mission_types", Item::NavalMissionType);
     }
 }

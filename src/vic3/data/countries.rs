@@ -117,6 +117,8 @@ impl DbKind for CountryRank {
         vd.field_bool("enforce_subject_rank_check");
         vd.field_numeric("diplo_pact_cost");
         vd.field_numeric("treaty_article_cost");
+        vd.field_numeric("ai_pool_character_multiplier");
+        vd.field_numeric("ai_innovation_critical_threshold");
         vd.field_numeric("prestige_average_threshold");
         vd.field_numeric("prestige_relative_threshold");
         vd.field_numeric("infamy_aggressor_scaling");

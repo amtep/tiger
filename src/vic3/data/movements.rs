@@ -132,6 +132,7 @@ impl DbKind for PoliticalMovement {
                 vd.field_validated_key("state_weight", |key, bv, data| {
                     let mut sc = ScopeContext::new(Scopes::State, key);
                     sc.define_name("political_movement", Scopes::PoliticalMovement, key);
+                    sc.define_name("clout", Scopes::Value, key);
                     validate_script_value(bv, data, &mut sc);
                 });
                 vd.field_validated_key("target_fraction_of_states", |key, bv, data| {

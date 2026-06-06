@@ -41,6 +41,7 @@ impl DbKind for CombatUnit {
 
         vd.field_item("group", Item::CombatUnitGroup);
         vd.field_integer("max_manpower");
+        vd.field_numeric("supply_capacity");
         vd.field_bool("conscript_peasant_levies");
         vd.multi_field_validated_block("battle_modifier", |block, data| {
             let vd = Validator::new(block, data);

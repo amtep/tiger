@@ -171,6 +171,7 @@ impl DbKind for LawGroup {
         vd.field_numeric("regressive_movement_chance");
 
         vd.field_trigger_rooted("change_allowed_trigger", Tooltipped::Yes, Scopes::Country);
+        vd.field_trigger_rooted("enable", Tooltipped::No, Scopes::Country);
 
         // undocumented
 

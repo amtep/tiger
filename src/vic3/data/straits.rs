@@ -28,6 +28,7 @@ impl DbKind for StraitDefinition {
         vd.field_choice("type", &["natural", "artificial"]);
         vd.field_bool("total_block_requires_full_control");
         vd.field_bool("military_block_requires_full_control");
+        vd.field_bool("tolls_require_full_control");
         vd.field_item("first_land_endpoint", Item::Province);
         vd.field_item("second_land_endpoint", Item::Province);
         vd.field_item("first_sea_endpoint", Item::Province);

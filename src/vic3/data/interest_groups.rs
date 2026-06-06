@@ -72,11 +72,16 @@ impl DbKind for InterestGroup {
         vd.field_script_value_rooted("monarch_weight", Scopes::InterestGroup);
         vd.field_script_value_rooted("agitator_weight", Scopes::InterestGroup);
         vd.field_script_value_rooted("commander_weight", Scopes::InterestGroup);
+        vd.field_script_value_rooted("magnate_weight", Scopes::InterestGroup);
         vd.field_script_value_rooted("executive_weight", Scopes::InterestGroup);
         vd.field_script_value_rooted("female_commander_chance", Scopes::InterestGroup);
         vd.field_script_value_rooted("female_politician_chance", Scopes::InterestGroup);
         vd.field_script_value_rooted("female_agitator_chance", Scopes::InterestGroup);
         vd.field_script_value_rooted("female_executive_chance", Scopes::InterestGroup);
+        vd.field_script_value_rooted("female_monarch_chance", Scopes::InterestGroup);
+        vd.field_script_value_rooted("commander_leader_weight", Scopes::InterestGroup);
+        vd.field_script_value_rooted("magnate_leader_weight", Scopes::InterestGroup);
+        vd.field_script_value_rooted("executive_leader_weight", Scopes::InterestGroup);
 
         vd.field_script_value_rooted("noble_chance", Scopes::None);
         vd.field_validated_key("commander_leader_chance", |key, bv, data| {

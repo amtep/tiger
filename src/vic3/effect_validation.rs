@@ -362,7 +362,7 @@ pub fn validate_create_ship(
 pub fn validate_create_character(
     key: &Token,
     block: &Block,
-    _data: &Everything,
+    data: &Everything,
     sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
@@ -387,6 +387,14 @@ pub fn validate_create_character(
         vd.item_or_target(sc, Item::Culture, Scopes::Culture);
     });
     vd.field_item_or_target("religion", sc, Item::Religion, Scopes::Religion);
+    if let Some(role) = vd.field_value("role") {
+        if !data.item_exists(Item::CharacterRole, role.as_str())
+            && !data.item_exists(Item::CharacterArchetype, role.as_str())
+        {
+            let msg = "`{role}` not found as character role or character archetype";
+            err(ErrorKey::MissingItem).msg(msg).loc(role).push();
+        }
+    }
     vd.field_validated_value("female", |_, mut vd| {
         vd.maybe_bool();
         vd.target(sc, Scopes::Character);
@@ -415,11 +423,16 @@ pub fn validate_create_character(
         }
     });
     vd.field_item_or_target("ideology", sc, Item::Ideology, Scopes::Ideology);
+    vd.field_item_or_target("holding_type", sc, Item::BuildingType, Scopes::BuildingType);
     vd.field_item_or_target("interest_group", sc, Item::InterestGroup, Scopes::InterestGroup);
+    vd.field_item("home_region", Item::StateRegion);
     vd.field_item("template", Item::CharacterTemplate);
     vd.field_effect_rooted("on_created", Tooltipped::No, Scopes::Character);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
         sc.define_name_token(name.as_str(), Scopes::Character, name, Temporary::No);
+    }
+    if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Character, name, Temporary::Yes);
     }
     vd.field_effect_rooted("trait_generation", Tooltipped::No, Scopes::Character);
     // The item option is undocumented
@@ -594,6 +607,16 @@ pub fn validate_create_military_formation(
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
         sc.define_name_token(name.as_str(), Scopes::MilitaryFormation, name, Temporary::No);
     }
+    if let Some(name) = vd.field_identifier("save_temporary_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::MilitaryFormation, name, Temporary::Yes);
+    }
+    vd.field_validated_block("ship", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.field_target("type", sc, Scopes::ShipType);
+        vd.field_integer("count");
+        vd.field_target("state_region", sc, Scopes::StateRegion);
+        vd.field_bool("flagship");
+    });
 }
 
 pub fn validate_create_pop(

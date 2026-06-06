@@ -69,6 +69,9 @@ impl DbKind for TriggerLocalization {
         vd.field_item("third_not", Item::Localization);
         vd.field_item("none", Item::Localization);
         vd.field_item("none_not", Item::Localization);
+        if Game::is_vic3() {
+            vd.field_bool("show_children");
+        }
     }
 }
 
