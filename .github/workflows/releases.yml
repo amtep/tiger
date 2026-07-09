@@ -51,10 +51,10 @@ jobs:
           echo "::set-output name=vic3_pkgdir::$vic3_pkgdir"
           echo "::set-output name=imperator_pkgdir::$imperator_pkgdir"
 
-      # - name: Verify version against tag
-      #   shell: bash
-      #   run: |
-      #     test "${{ github.ref_name }}" = "${{ steps.version.outputs.version }}"
+      - name: Verify version against tag
+        shell: bash
+        run: |
+          test "${{ github.ref_name }}" = "${{ steps.version.outputs.version }}"
 
       - name: Build CK3
         run: cargo build --release -p ck3-tiger
