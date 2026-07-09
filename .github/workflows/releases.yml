@@ -18,6 +18,14 @@ jobs:
             name: windows
             extension: .exe
             archive: zip
+          - os: macos-latest # ARM
+            name: mac-arm
+            extension:
+            archive: zip
+          - os: macos-15-intel # x86
+            name: mac-x86
+            extension:
+            archive: zip
     name: ${{ matrix.name }} build
     runs-on: ${{ matrix.os }}
     steps:
