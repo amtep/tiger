@@ -19,11 +19,11 @@ jobs:
             extension: .exe
             archive: zip
           - os: macos-latest # ARM
-            name: Mac (ARM)
+            name: mac-arm
             extension:
             archive: zip
           - os: macos-15-intel # x86
-            name: Mac (x86/Intel)
+            name: mac-x86
             extension:
             archive: zip
     name: ${{ matrix.name }} build
