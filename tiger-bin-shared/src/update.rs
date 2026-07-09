@@ -1,14 +1,14 @@
 use std::env::consts;
 
 use cfg_if::cfg_if;
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 use regex::Regex;
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 use self_update::backends::github::UpdateBuilder;
 use thiserror::Error;
 
 cfg_if! {
-    if #[cfg(any(target_os = "windows", target_os = "linux"))] {
+    if #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))] {
         #[derive(Debug, Error)]
         pub enum UpdateError {
             #[error("Version tag not in the format of '(v)X.Y.Z'")]
@@ -26,7 +26,7 @@ cfg_if! {
     }
 }
 
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 cfg_if! {
     if #[cfg(feature = "ck3")] {
         const BIN_NAME: &str = "ck3-tiger";
@@ -51,7 +51,7 @@ cfg_if! {
 #[allow(dead_code)]
 pub fn update(current_version: &str, target_version: Option<&str>) -> Result<(), UpdateError> {
     cfg_if! {
-        if #[cfg(any(target_os = "windows", target_os = "linux"))] {
+        if #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))] {
             if let Some(version) = target_version {
                 let re = Regex::new(r"^v?[0-9]+\.[0-9]+\.[0-9]+$").unwrap();
                 if !re.is_match(version) {
@@ -61,6 +61,8 @@ pub fn update(current_version: &str, target_version: Option<&str>) -> Result<(),
 
             #[cfg(target_os = "linux")]
             let bin_path = format!("{BIN_NAME}-linux-v{{{{version}}}}/{BIN_NAME}");
+            #[cfg(target_os = "macos")]
+            let bin_path = format!("{BIN_NAME}-macos-v{{{{version}}}}/{BIN_NAME}");
             #[cfg(target_os = "windows")]
             let bin_path = format!("{}.exe", BIN_NAME);
 
