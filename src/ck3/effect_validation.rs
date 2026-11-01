@@ -2242,7 +2242,7 @@ pub fn validate_situation_catalyst(
             vd.field_item("catalyst", Item::SituationCatalyst);
             vd.field_target("character", sc, Scopes::Character);
             if key.is("trigger_situation_catalyst") {
-                // TODO: verify if "county" really takes a province
+                // Tested in game (1.20.1.2): "county" takes a province and rejects a county title
                 vd.field_target("county", sc, Scopes::Province);
             }
         }
