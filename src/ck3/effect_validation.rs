@@ -2728,7 +2728,7 @@ pub fn validate_create_holy_site(
     _tooltipped: Tooltipped,
 ) {
     vd.req_field("type");
-    // TODO: verify. The docs say a "holy_site_scope_object", which may be a holy site scope.
+    // Tested in game (1.20.1.2): a holy site scope is rejected, despite the docs' "holy_site_scope_object"
     vd.field_item_or_target("type", sc, Item::HolySite, Scopes::HolySiteType);
     vd.field_bool("eminent");
     vd.field_target("county", sc, Scopes::LandedTitle);
