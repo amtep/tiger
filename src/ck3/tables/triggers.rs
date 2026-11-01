@@ -98,7 +98,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Accolade, "accolade_can_have_more_attributes", Boolean),
     (Scopes::Accolade, "accolade_can_spend_attribute", Boolean),
     (Scopes::Accolade, "accolade_rank", CompareValue),
-    (Scopes::AccoladeType, "accolade_type_tier", Scope(Scopes::AccoladeType)),
+    (Scopes::AccoladeType, "accolade_type_tier", Choice(&["common", "skilled", "eminent"])),
     (Scopes::LandedTitle, "active_de_jure_drift_progress", CompareValue),
     // TODO: warn if this is in an any_ iterator and not at the end
     (Scopes::all_but_none(), "add_to_temporary_list", Special),
