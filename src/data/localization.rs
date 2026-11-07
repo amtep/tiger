@@ -435,6 +435,16 @@ impl Localization {
         }
     }
 
+    /// Marks a localization key as used for one language, or for all languages if `lang` is `None`.
+    #[allow(dead_code)] // Not used by all games
+    pub fn mark_used_lang(&self, key: &str, lang: Option<Language>) {
+        if let Some(lang) = lang {
+            self.mark_used_lang_return_exists(key, lang);
+        } else {
+            self.mark_used_return_exists(key);
+        }
+    }
+
     /// Marks a localization key as used for all languages.
     /// Returns whether the key exists for any language (same as [`Localization::exists`]).
     pub fn mark_used_return_exists(&self, key: &str) -> bool {
