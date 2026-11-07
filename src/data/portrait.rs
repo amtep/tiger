@@ -35,6 +35,22 @@ impl DbKind for PortraitModifierGroup {
         #[cfg(feature = "ck3")]
         if Game::is_ck3() {
             vd.field_item("portrait_group", Item::PortraitType);
+            // The docs say it must come before the modifiers, because they are read using it
+            if let Some(group) = block.get_field_value("portrait_group")
+                && let Some(modifier) = block
+                    .iter_fields()
+                    .take_while(|field| !field.key().is("portrait_group"))
+                    .find(|field| matches!(field.bv(), BV::Block(_)))
+            {
+                let msg = "`portrait_group` must come before the modifiers";
+                let info = "the docs say the modifiers are read using it";
+                warn(ErrorKey::Validation)
+                    .msg(msg)
+                    .info(info)
+                    .loc(group)
+                    .loc_msg(modifier.key(), "modifier")
+                    .push();
+            }
         }
         vd.field_choice("usage", &["customization", "game", "both", "none"]);
         vd.field_integer("interface_position");
