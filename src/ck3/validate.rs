@@ -274,13 +274,7 @@ pub fn validate_random_faith(block: &Block, data: &Everything, sc: &mut ScopeCon
 /// Validate a `maa_upgrade` block of culture eras and innovations
 pub fn validate_maa_upgrade(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
-    if let Some(token) = vd.field_value("type")
-        && !data.item_exists(Item::MenAtArms, token.as_str())
-        && !data.item_exists(Item::MenAtArmsBase, token.as_str())
-    {
-        let msg = format!("{token} is not a men-at-arms type or base type");
-        err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-    }
+    vd.field_item("type", Item::MenAtArmsBase);
     // undocumented
     vd.field_item("men_at_arms", Item::MenAtArms);
     vd.field_integer("max_size");
