@@ -492,8 +492,7 @@ pub fn validate_trigger_key_bv(
                     #[cfg(feature = "jomini")]
                     data.script_values.validate_call(part, data, sc);
                     sc.replace(Scopes::Value, part.clone());
-                } else if !(is_removed_link_last(part, part_flags)
-                    && scope_trigger(part, data).is_some())
+                } else if !(is_removed_link_last(part, part_flags) && is_live_trigger(part, data))
                     && let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data))
                 {
                     #[cfg(any(feature = "ck3", feature = "imperator"))]
@@ -1340,6 +1339,16 @@ fn match_trigger_bv(
 fn is_removed_link_last(part: &Token, part_flags: PartFlags) -> bool {
     part_flags.contains(PartFlags::Last)
         && scope_to_scope_removed(&part.as_str().to_ascii_lowercase()).is_some()
+}
+
+/// Return true if `part` names a trigger that is not marked as removed.
+fn is_live_trigger(part: &Token, data: &Everything) -> bool {
+    match scope_trigger(part, data) {
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
+        Some((_, Trigger::Removed(..))) => false,
+        Some(_) => true,
+        None => false,
+    }
 }
 
 /// Validate that `token` is valid as the right-hand side of a field.
