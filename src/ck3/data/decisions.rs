@@ -45,11 +45,10 @@ impl DbKind for Decision {
                         sc.define_name(token.as_str(), Scopes::Bool, token);
                     }
                 }
-            } else if controller.is("create_holy_order") {
-                sc.define_name("ruler", Scopes::Character, controller);
-                // The docs say it has the same data context as `revoke_holy_order_lease`
-                sc.define_name("barony", Scopes::LandedTitle, controller);
-            } else if controller.is("revoke_holy_order_lease") {
+            } else if controller.is("create_holy_order") || controller.is("revoke_holy_order_lease")
+            {
+                // The docs give `create_holy_order` the same data context as
+                // `revoke_holy_order_lease`
                 sc.define_name("barony", Scopes::LandedTitle, controller);
             } else if controller.is("select_scope_object") {
                 sc.define_name("selected_item", Scopes::all_but_none(), controller);
