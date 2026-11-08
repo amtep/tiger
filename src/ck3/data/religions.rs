@@ -260,10 +260,19 @@ impl DbKind for Faith {
             .and_then(|religion| data.database.get_key_block(Item::Religion, religion.as_str()))
             .map(|(_, block)| block.get_field_values("doctrine").into_iter().cloned().collect())
             .unwrap_or_default();
+        // The docs say the main rite's tenets and doctrines become the faith's, and in game
+        // they can make it unreformed
+        let main_rite = block
+            .get_field_value("main_rite")
+            .and_then(|rite| data.database.get_key_block(Item::RiteType, rite.as_str()))
+            .map(|(_, block)| block);
+        let rite_list = |field| main_rite.and_then(|block| block.get_field_list(field));
         let pagan =
             unreformed(Item::Doctrine, &block.get_field_list("doctrines").unwrap_or_default())
                 || unreformed(Item::Tenet, &block.get_field_list("tenets").unwrap_or_default())
-                || unreformed(Item::Doctrine, &religion_doctrines);
+                || unreformed(Item::Doctrine, &religion_doctrines)
+                || unreformed(Item::Doctrine, &rite_list("doctrines").unwrap_or_default())
+                || unreformed(Item::Tenet, &rite_list("tenets").unwrap_or_default());
         if pagan {
             let loca = format!("{key}_old");
             data.verify_exists_implied(Item::Localization, &loca, key);
