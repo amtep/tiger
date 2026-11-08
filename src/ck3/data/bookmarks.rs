@@ -196,7 +196,7 @@ fn validate_bookmark_character(
                 data.characters.get_culture(id, start_date),
                 name,
             );
-            // `religion` is a loc key, but vanilla uses the key of the character's rite.
+            // `religion` is a loca key, but vanilla uses the key of the character's rite.
             // A history that gives only a faith implies the faith's main rite. Skip faiths whose
             // main rite is created dynamically.
             let faith = data.characters.get_faith(id, start_date);

@@ -119,8 +119,9 @@ impl DbKind for Decision {
             data.validate_localization_sc(&loca, &mut sc);
         }
 
-        // The docs give `scope:puppeteer` to the triggers and the cost, for a ruler taking the
-        // decision through root as their puppet
+        // The decision docs give `scope:puppeteer` to the triggers and the cost, and the puppet
+        // action docs to the effect too, for a ruler taking the decision through root as their
+        // puppet
         let mut sc_puppet = sc.clone();
         sc_puppet.define_name("puppeteer", Scopes::Character, key);
         vd.field_trigger("is_shown", Tooltipped::No, &mut sc_puppet);
@@ -140,7 +141,6 @@ impl DbKind for Decision {
         });
         check_cost(&block.get_field_blocks("minimum_cost"));
 
-        // undocumented scope:puppeteer
         vd.field_effect("effect", Tooltipped::Yes, &mut sc_puppet);
         vd.field_trigger("ai_potential", Tooltipped::No, &mut sc);
         vd.field_validated_block_sc("ai_will_do", &mut sc, validate_modifiers_with_base);
