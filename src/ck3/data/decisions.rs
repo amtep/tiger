@@ -256,7 +256,12 @@ impl DbKind for Decision {
                                 sc
                             };
                             vd.field_script_value_no_breakdown_builder("ai_item_will_do", item_sc);
-                            vd.field_trigger_builder("is_item_valid", Tooltipped::Yes, item_sc);
+                            // The docs say invalid items get a tooltip explaining why
+                            vd.field_trigger_builder(
+                                "is_item_valid",
+                                Tooltipped::FailuresOnly,
+                                item_sc,
+                            );
                         }
                         _ => (),
                     }
