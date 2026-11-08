@@ -70,20 +70,16 @@ impl DbKind for DiarchyType {
 
         vd.multi_field_validated_block("liege_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
-            // The docs say `scale` requires a `name`
-            if block.has_key("scale") {
-                vd.req_field("name");
-            }
+            // The docs and the game's error message say it requires a `name`
+            vd.req_field("name");
             vd.field_item("name", Item::Localization);
             vd.field_script_value_rooted("scale", Scopes::Character);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
         vd.multi_field_validated_block("diarch_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
-            // The docs say `scale` requires a `name`
-            if block.has_key("scale") {
-                vd.req_field("name");
-            }
+            // The docs and the game's error message say it requires a `name`
+            vd.req_field("name");
             vd.field_item("name", Item::Localization);
             vd.field_script_value_rooted("scale", Scopes::Character);
             validate_modifs(block, data, ModifKinds::Character, vd);
