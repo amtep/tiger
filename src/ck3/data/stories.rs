@@ -5,6 +5,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::scopes::Scopes;
+use crate::script_value::validate_non_dynamic_script_value;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
@@ -91,8 +92,8 @@ impl DbKind for Story {
             // TODO: handle case of multiple of these fields being specified
             for field in &["days", "weeks", "months", "years"] {
                 vd.field_validated(field, |bv, data| match bv {
-                    BV::Value(token) => {
-                        token.expect_integer();
+                    BV::Value(_) => {
+                        validate_non_dynamic_script_value(bv, data);
                     }
                     BV::Block(block) => {
                         let mut vd = Validator::new(block, data);
