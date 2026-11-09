@@ -235,7 +235,21 @@ pub fn validate_datatypes(
     while i < codes.len() {
         #[cfg(any(feature = "ck3", feature = "vic3"))]
         if Game::is_ck3() || Game::is_vic3() {
-            while let Some(binding) = data.data_bindings.get(codes[i].name.as_str()) {
+            // Only expand a data binding macro here when the element is not also a method.
+            // Vanilla uses some names (for example `IsNomad` and `GetScriptValueBreakdown`) both
+            // as a leading macro and as a method later in a chain (for example `Title.IsNomad`).
+            // Expanding the macro for the later method call mismatches its argument count and
+            // false-positives. So for a non-leading element, check the promote and function
+            // tables first: if the name resolves as a method, leave it for the normal lookup
+            // below and do not expand a macro. Pure macros (for example `And3`, which nested
+            // macros place in the middle of a chain) are not in those tables, so they still
+            // expand here as before.
+            let resolves_as_method = i != 0
+                && (!matches!(lookup_promote(codes[i].name.as_str(), Datatype::Unknown), LookupResult::NotFound)
+                    || !matches!(lookup_function(codes[i].name.as_str(), Datatype::Unknown), LookupResult::NotFound));
+            while !resolves_as_method
+                && let Some(binding) = data.data_bindings.get(codes[i].name.as_str())
+            {
                 if let Some(replacement) = binding.replace(&codes[i]) {
                     macro_count += 1;
                     if macro_count > 255 {
