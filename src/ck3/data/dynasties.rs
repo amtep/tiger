@@ -30,7 +30,7 @@ impl DbKind for Dynasty {
         vd.req_field_warn("culture");
         vd.field_item("culture", Item::Culture);
         // The docs say these two are read but not used by the game
-        vd.field_value("forced_coa_religiongroup");
+        vd.advice_field("forced_coa_religiongroup", "not used by the game");
         vd.advice_field("color", "not used by the game");
     }
 }
