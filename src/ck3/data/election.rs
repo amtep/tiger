@@ -60,9 +60,7 @@ impl DbKind for Election {
             vd.field_integer("max");
             validate_candidates(&mut vd, &mut sc);
             // The docs say electors must include all candidates
-            vd.field_validated_value("candidate_policy", |_, mut vd| {
-                vd.choice(&["include_all_candidates"]);
-            });
+            vd.field_choice("candidate_policy", &["include_all_candidates"]);
         });
 
         vd.field_validated_block_sc("elector_vote_strength", &mut sc, validate_modifiers_with_base);

@@ -52,17 +52,16 @@ impl DbKind for EpidemicType {
             vd.field_choice("channel", &["red", "green", "blue", "alpha"]);
         });
 
-        vd.field_trigger_builder("can_infect_character", Tooltipped::No, |key| {
-            let mut sc = build_character_epidemic_sc(key);
-            sc.define_name("province", Scopes::Province, key);
-            sc
-        });
+        vd.field_trigger_builder(
+            "can_infect_character",
+            Tooltipped::No,
+            build_character_province_epidemic_sc,
+        );
 
-        vd.field_script_value_no_breakdown_builder("character_infection_chance", |key| {
-            let mut sc = build_character_epidemic_sc(key);
-            sc.define_name("province", Scopes::Province, key);
-            sc
-        });
+        vd.field_script_value_no_breakdown_builder(
+            "character_infection_chance",
+            build_character_province_epidemic_sc,
+        );
 
         vd.field_effect_builder(
             "on_character_infected",
@@ -124,6 +123,12 @@ fn build_character_epidemic_sc(key: &Token) -> ScopeContext {
     sc
 }
 
+fn build_character_province_epidemic_sc(key: &Token) -> ScopeContext {
+    let mut sc = build_character_epidemic_sc(key);
+    sc.define_name("province", Scopes::Province, key);
+    sc
+}
+
 fn build_province_epidemic_sc(key: &Token) -> ScopeContext {
     let mut sc = ScopeContext::new(Scopes::Province, key);
     sc.define_name("epidemic", Scopes::Epidemic, key);
@@ -149,9 +154,7 @@ fn validate_outbreak_level(block: &Block, data: &Everything) {
                 if !vd.maybe_is("") {
                     vd.item(Item::Event);
                     // The docs give the events these scopes
-                    let mut sc = ScopeContext::new(Scopes::Character, key);
-                    sc.define_name("epidemic", Scopes::Epidemic, key);
-                    sc.define_name("province", Scopes::Province, key);
+                    let mut sc = build_character_province_epidemic_sc(key);
                     let token = vd.value();
                     data.event_check_scope(token, &mut sc);
                     if let Some(mut event_sc) = sc.root_for_event(token, data) {
