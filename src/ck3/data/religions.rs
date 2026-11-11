@@ -7,6 +7,7 @@ use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::fileset::FileKind;
 use crate::game::GameFlags;
+use crate::helpers::TigerHashSet;
 use crate::item::{Item, ItemLoader};
 use crate::report::{ErrorKey, warn};
 use crate::scopes::Scopes;
@@ -359,10 +360,10 @@ impl DbKind for Faith {
 
 /// The docs say a holy site is either eminent or not, and is never listed twice
 fn validate_holy_sites(block: &Block) {
-    let mut seen: Vec<Token> = Vec::new();
+    let mut seen: TigerHashSet<Token> = TigerHashSet::default();
     for field in ["eminent_holy_sites", "holy_sites"] {
         for site in block.get_field_list(field).unwrap_or_default() {
-            if let Some(other) = seen.iter().find(|&t| t == &site) {
+            if let Some(other) = seen.get(&site) {
                 let msg = format!("holy site {site} is listed twice");
                 warn(ErrorKey::DuplicateItem)
                     .msg(msg)
@@ -370,7 +371,7 @@ fn validate_holy_sites(block: &Block) {
                     .loc_msg(other, "earlier listing")
                     .push();
             } else {
-                seen.push(site);
+                seen.insert(site);
             }
         }
     }

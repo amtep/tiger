@@ -6,7 +6,7 @@ use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
-use crate::helpers::{TigerHashMap, stringify_choices};
+use crate::helpers::{TigerHashMap, TigerHashSet, stringify_choices};
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
 use crate::report::{ErrorKey, err, warn};
@@ -100,12 +100,10 @@ impl DbKind for Doctrine {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
         if let Some(block) = block.get_field_block("parameters") {
             for token in block.iter_values() {
-                db.add_flag(Item::DoctrineBooleanParameter, token.clone());
                 db.add_flag(Item::DoctrineParameter, token.clone());
             }
             // undocumented
             for (key, _) in block.iter_assignments() {
-                db.add_flag(Item::DoctrineBooleanParameter, key.clone());
                 db.add_flag(Item::DoctrineParameter, key.clone());
             }
         }
@@ -119,8 +117,6 @@ impl DbKind for Doctrine {
         let mut can_pick_sc = ScopeContext::new(Scopes::Faith, key);
         can_pick_sc.define_name("actor", Scopes::Character, key);
         can_pick_sc.define_list("selected_doctrines", selected, key);
-        let mut rite_sc = ScopeContext::new(Scopes::Rite, key);
-        rite_sc.define_list("selected_doctrines", selected, key);
 
         let icon = vd.field_value("icon");
         // Without an icon file of its own, a doctrine shows its group's icon
@@ -156,7 +152,7 @@ impl DbKind for Doctrine {
         vd.field_item("doctrine_group_type", Item::DoctrineGroup);
         vd.field_integer("index");
         vd.field_validated_block("parameters", validate_parameters);
-        vd.field_script_value("piety_cost", &mut rite_sc);
+        vd.field_script_value_rooted("piety_cost", Scopes::Rite);
         vd.field_trigger("is_shown", Tooltipped::No, &mut sc);
         vd.field_trigger("can_pick", Tooltipped::Yes, &mut can_pick_sc);
 
@@ -185,16 +181,30 @@ fn icon_exists(define: &str, name: &Token, data: &Everything) -> bool {
 
 fn validate_parameters(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
-    vd.values();
+    for name in vd.values() {
+        verify_parameter_loca(name, data);
+    }
     // The `parameter = yes` form is undocumented, but still works (verified in 1.20.1)
-    vd.unknown_value_fields(validate_parameter_value);
+    vd.unknown_value_fields(|key, value| {
+        verify_parameter_loca(key, data);
+        validate_parameter_value(key, value);
+    });
+}
+
+/// The docs say a doctrine's effects are localized with `doctrine_parameter_` plus the parameter
+/// name, and that tenets follow the doctrine docs
+pub fn verify_parameter_loca(name: &Token, data: &Everything) {
+    // TODO: verify. The game may skip a parameter without this loca instead of showing the key.
+    let loca = format!("doctrine_parameter_{name}");
+    data.verify_exists_implied(Item::Localization, &loca, name);
 }
 
 /// Check that no doctrine is listed twice, and that no two doctrines are from the same group
 pub fn validate_doctrine_groups(doctrines: &[Token], data: &Everything) {
+    let mut seen: TigerHashSet<&Token> = TigerHashSet::default();
     let mut groups: TigerHashMap<&str, &Token> = TigerHashMap::default();
-    for (i, doctrine) in doctrines.iter().enumerate() {
-        if let Some(other) = doctrines[..i].iter().find(|&d| d == doctrine) {
+    for doctrine in doctrines {
+        if let Some(&other) = seen.get(doctrine) {
             let msg = format!("duplicate doctrine {doctrine}");
             warn(ErrorKey::DuplicateField)
                 .msg(msg)
@@ -203,6 +213,7 @@ pub fn validate_doctrine_groups(doctrines: &[Token], data: &Everything) {
                 .push();
             continue;
         }
+        seen.insert(doctrine);
         let Some((_, block)) = data.database.get_key_block(Item::Doctrine, doctrine.as_str())
         else {
             continue;
@@ -227,7 +238,6 @@ pub fn validate_doctrine_groups(doctrines: &[Token], data: &Everything) {
 
 const HOSTILITY_LEVELS: &[&str] = &["righteous", "astray", "hostile", "evil"];
 
-/// The `special_parameters` block of doctrines and tenets
 /// Whether a doctrine or tenet makes its faith unreformed
 pub fn is_unreformed(block: &Block) -> bool {
     block
@@ -235,6 +245,7 @@ pub fn is_unreformed(block: &Block) -> bool {
         .is_some_and(|special| special.field_value_is("unreformed", "yes"))
 }
 
+/// The `special_parameters` block of doctrines and tenets
 pub fn validate_special_parameters(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.field_integer("number_of_spouses");
@@ -269,6 +280,9 @@ pub fn validate_special_parameters(block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         vd.unknown_value_fields(|key, value| {
             data.verify_exists(Item::DoctrineParameter, key);
+            // The docs say the opinion tooltip uses this loca
+            let loca = format!("doctrine_parameter_{key}_opinion_active");
+            data.verify_exists_implied(Item::Localization, &loca, key);
             value.expect_integer();
         });
     });

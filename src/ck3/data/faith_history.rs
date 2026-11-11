@@ -4,6 +4,7 @@ use crate::date::Date;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
+use crate::helpers::TigerHashSet;
 use crate::item::{Item, ItemLoader};
 use crate::report::{ErrorKey, warn};
 use crate::token::Token;
@@ -65,10 +66,10 @@ fn validate_history(_date: Date, _key: &Token, block: &Block, data: &Everything)
 
 /// The docs say the game warns about tenets that are in more than one of these lists
 fn validate_tenet_status(block: &Block) {
-    let mut seen: Vec<Token> = Vec::new();
+    let mut seen: TigerHashSet<Token> = TigerHashSet::default();
     for field in ["known", "permitted", "prohibited"] {
         for tenet in block.get_field_list(field).unwrap_or_default() {
-            if let Some(other) = seen.iter().find(|&t| t == &tenet) {
+            if let Some(other) = seen.get(&tenet) {
                 let msg = format!("tenet {tenet} is listed twice");
                 warn(ErrorKey::DuplicateItem)
                     .msg(msg)
@@ -76,7 +77,7 @@ fn validate_tenet_status(block: &Block) {
                     .loc_msg(other, "earlier listing")
                     .push();
             } else {
-                seen.push(tenet);
+                seen.insert(tenet);
             }
         }
     }

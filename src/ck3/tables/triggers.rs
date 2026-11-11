@@ -831,7 +831,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_dlc_feature", Item(Item::DlcFeature)),
     (Scopes::Faith, "has_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
     (Scopes::Faith, "has_doctrine_group", Item(Item::DoctrineGroup)),
-    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineBooleanParameter)),
+    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineParameter)),
     (Scopes::Character, "has_domicile", Boolean),
     (Scopes::Domicile, "has_domicile_building", Item(Item::DomicileBuilding)),
     (Scopes::Domicile, "has_domicile_building_or_higher", Item(Item::DomicileBuilding)),
@@ -2146,7 +2146,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Rite, "rite_has_culture", Scope(Scopes::Culture)),
     (Scopes::Rite, "rite_has_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
     (Scopes::Rite, "rite_has_dominant_ruling_gender", Scope(Scopes::Character)),
-    (Scopes::Rite, "rite_has_parameter", Item(Item::DoctrineBooleanParameter)),
+    (Scopes::Rite, "rite_has_parameter", Item(Item::DoctrineParameter)),
     (Scopes::Rite, "rite_has_preferred_gender_for_clergy", Scope(Scopes::Character)),
     (Scopes::Rite, "rite_has_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
     (

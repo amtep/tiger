@@ -1,5 +1,7 @@
 use crate::block::{BV, Block};
-use crate::ck3::data::doctrines::{is_unreformed, validate_special_parameters};
+use crate::ck3::data::doctrines::{
+    is_unreformed, validate_special_parameters, verify_parameter_loca,
+};
 use crate::ck3::modif::ModifKinds;
 use crate::ck3::validate::{validate_parameter_value, validate_traits};
 use crate::context::ScopeContext;
@@ -42,11 +44,9 @@ impl DbKind for Tenet {
         // Tenet parameters are plain flags that can be checked like doctrine parameters
         if let Some(block) = block.get_field_block("parameters") {
             for token in block.iter_values() {
-                db.add_flag(Item::DoctrineBooleanParameter, token.clone());
                 db.add_flag(Item::DoctrineParameter, token.clone());
             }
             for (key, _) in block.iter_assignments() {
-                db.add_flag(Item::DoctrineBooleanParameter, key.clone());
                 db.add_flag(Item::DoctrineParameter, key.clone());
             }
         }
@@ -67,7 +67,7 @@ impl DbKind for Tenet {
         can_pick_sc.define_list("selected_doctrines", selected, key);
         let mut rite_sc = ScopeContext::new(Scopes::Rite, key);
         let mut cost_sc = ScopeContext::new(Scopes::Rite, key);
-        // undocumented for piety_cost, but vanilla uses it there (like for doctrines)
+        // TODO: verify. Undocumented for piety_cost, but one vanilla tenet uses it there.
         cost_sc.define_list("selected_doctrines", selected, key);
 
         // Documented as a triggered list, but vanilla uses plain icon names
@@ -97,9 +97,14 @@ impl DbKind for Tenet {
         vd.field_item("requires_dlc_flag", Item::DlcFeature);
         vd.field_validated_block("parameters", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.values();
+            for name in vd.values() {
+                verify_parameter_loca(name, data);
+            }
             // TODO: verify. Vanilla uses `name = yes` only in doctrine parameters.
-            vd.unknown_value_fields(validate_parameter_value);
+            vd.unknown_value_fields(|key, value| {
+                verify_parameter_loca(key, data);
+                validate_parameter_value(key, value);
+            });
         });
         vd.field_script_value("piety_cost", &mut cost_sc);
         vd.field_trigger("is_shown", Tooltipped::No, &mut faith_sc);
