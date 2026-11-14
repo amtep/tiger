@@ -72,7 +72,10 @@ impl FileHandler<Block> for GameConcepts {
                     let msg = format!("alias {token} is also a game concept");
                     err(ErrorKey::Conflict).msg(msg).loc(token).push();
                 } else if let Some(&other) = self.aliases.get(token.as_str()) {
-                    if other != *key {
+                    if other == *key {
+                        let msg = format!("alias {token} is listed twice");
+                        warn(ErrorKey::DuplicateItem).msg(msg).loc(token).push();
+                    } else {
                         let msg = format!("alias {token} is also an alias of game concept {other}");
                         err(ErrorKey::Conflict).msg(msg).loc(token).push();
                     }
