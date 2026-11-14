@@ -27,16 +27,19 @@ impl DbKind for HolyOrderType {
         let mut vd = Validator::new(block, data);
 
         // The trigger and weight have an empty scope
-        let mut sc = ScopeContext::new(Scopes::None, key);
-        sc.define_name("leader", Scopes::Character, key);
-        sc.define_name("founder", Scopes::Character, key);
-        sc.define_name("province", Scopes::Province, key);
+        let build_sc = |key: &Token| {
+            let mut sc = ScopeContext::new(Scopes::None, key);
+            sc.define_name("leader", Scopes::Character, key);
+            sc.define_name("founder", Scopes::Character, key);
+            sc.define_name("province", Scopes::Province, key);
+            sc
+        };
 
         vd.req_field("type");
         vd.field_choice("type", &["monastic", "military"]);
         vd.field_item("government", Item::GovernmentType);
-        vd.field_trigger("trigger", Tooltipped::No, &mut sc.clone());
-        vd.field_script_value("weight", &mut sc.clone());
+        vd.field_trigger_builder("trigger", Tooltipped::No, build_sc);
+        vd.field_script_value_builder("weight", build_sc);
 
         vd.field_item("title", Item::Title);
         if !vd.field_item("name", Item::Localization) && !block.has_key("title") {

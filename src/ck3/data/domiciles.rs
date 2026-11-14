@@ -200,8 +200,6 @@ impl DbKind for DomicileBuilding {
 
         vd.multi_field_validated_block("asset", validate_building_asset);
 
-        // undocumented
-
         vd.field_validated_block_sc("refund", &mut sc, validate_cost);
     }
 }

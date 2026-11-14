@@ -3,10 +3,11 @@ use crate::ck3::modif::ModifKinds;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
+use crate::helpers::TigerHashMap;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{ErrorKey, err, warn};
-use crate::token::Token;
+use crate::report::{ErrorKey, err, untidy, warn};
+use crate::token::{Loc, Token};
 use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
@@ -19,6 +20,56 @@ inventory::submit! {
 impl SpiritualFulfillmentType {
     pub fn add(db: &mut Db, key: Token, block: Block) {
         db.add(Item::SpiritualFulfillmentType, key, block, Box::new(Self {}));
+    }
+
+    /// The docs say no two types may share a religion, since that is how characters get their
+    /// type, and that one type should have an empty religion list as the fallback
+    pub fn validate_all(db: &Db, _data: &Everything) {
+        // Each religion with its type
+        let mut seen: TigerHashMap<&str, (&Token, &Token)> = TigerHashMap::default();
+        let mut fallback: Option<&Token> = None;
+        // Go in load order, so that reports point at the later type
+        let mut types: Vec<_> = db.iter_key_block(Item::SpiritualFulfillmentType).collect();
+        types.sort_by_key(|(key, _)| key.loc);
+        for (key, block) in types {
+            let religions: Vec<&Token> = block
+                .get_field_block("religions")
+                .map(|block| block.iter_values().collect())
+                .unwrap_or_default();
+            if religions.is_empty() {
+                if let Some(other) = fallback {
+                    let msg = "more than one spiritual fulfillment type without religions";
+                    warn(ErrorKey::Conflict).msg(msg).loc(key).loc_msg(other, "other type").push();
+                } else {
+                    fallback = Some(key);
+                }
+            }
+            for religion in religions {
+                match seen.get(religion.as_str()) {
+                    Some(&(other_type, other)) if other_type == key => {
+                        let msg = format!("religion {religion} is listed twice");
+                        untidy(ErrorKey::DuplicateItem)
+                            .msg(msg)
+                            .loc(religion)
+                            .loc_msg(other, "earlier listing")
+                            .push();
+                    }
+                    Some(&(_, other)) => {
+                        let msg = format!(
+                            "religion {religion} is in more than one spiritual fulfillment type"
+                        );
+                        err(ErrorKey::Conflict)
+                            .msg(msg)
+                            .loc(religion)
+                            .loc_msg(other, "other type")
+                            .push();
+                    }
+                    None => {
+                        seen.insert(religion.as_str(), (key, religion));
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -37,7 +88,6 @@ impl DbKind for SpiritualFulfillmentType {
         let mut vd = Validator::new(block, data);
 
         vd.field_list_items("religions", Item::Religion);
-        validate_religions(key, block, data);
 
         let min = data
             .get_defined_string("NReligion|MIN_SPIRITUAL_FULFILLMENT")
@@ -49,23 +99,26 @@ impl DbKind for SpiritualFulfillmentType {
             .unwrap_or(100.0);
 
         vd.req_field("level");
-        let mut thresholds = Vec::new();
+        let mut levels = 0;
+        let mut thresholds: TigerHashMap<u64, Loc> = TigerHashMap::default();
         vd.multi_field_validated_block("level", |block, data| {
+            levels += 1;
             let mut vd = Validator::new(block, data);
             vd.field_numeric_range("threshold", min..=max);
             let threshold =
                 block.get_field_value("threshold").and_then(Token::get_number).unwrap_or(min);
-            if let Some((other, _)) =
-                thresholds.iter().find(|(_, t): &&(_, f64)| (t - threshold).abs() < f64::EPSILON)
-            {
+            // The docs say the thresholds must be unique. Adding 0.0 turns -0.0 into 0.0.
+            let bits = (threshold + 0.0).to_bits();
+            if let Some(&other) = thresholds.get(&bits) {
                 let msg = "levels must have unique thresholds";
                 err(ErrorKey::DuplicateField)
                     .msg(msg)
                     .loc(block)
-                    .loc_msg(*other, "other level")
+                    .loc_msg(other, "other level")
                     .push();
+            } else {
+                thresholds.insert(bits, block.loc);
             }
-            thresholds.push((block.loc, threshold));
 
             vd.field_validated_block("modifier", |block, data| {
                 let vd = Validator::new(block, data);
@@ -81,7 +134,7 @@ impl DbKind for SpiritualFulfillmentType {
 
         // The docs say level names are `<key>_level_<index>`, falling back to
         // `default_fulfillment_level_<index>`, where the index is the position by threshold
-        for index in 0..thresholds.len() {
+        for index in 0..levels {
             let loca = format!("{key}_level_{index}");
             let fallback = format!("default_fulfillment_level_{index}");
             if data.item_exists(Item::Localization, &loca) {
@@ -90,30 +143,6 @@ impl DbKind for SpiritualFulfillmentType {
                 data.mark_used(Item::Localization, &fallback);
             } else {
                 data.verify_exists_implied(Item::Localization, &loca, key);
-            }
-        }
-    }
-}
-
-/// The docs say no two types may share a religion, since that is how characters get their type,
-/// and that one type should have an empty religion list as the fallback
-fn validate_religions(key: &Token, block: &Block, data: &Everything) {
-    let religions = block.get_field_list("religions").unwrap_or_default();
-    for (other_key, other_block) in data.database.iter_key_block(Item::SpiritualFulfillmentType) {
-        // Report each pair only once
-        if other_key.as_str() >= key.as_str() {
-            continue;
-        }
-        let other_religions = other_block.get_field_list("religions").unwrap_or_default();
-        if religions.is_empty() && other_religions.is_empty() {
-            let msg = "more than one spiritual fulfillment type without religions";
-            warn(ErrorKey::Conflict).msg(msg).loc(key).loc_msg(other_key, "other type").push();
-        }
-        for religion in &religions {
-            if let Some(other) = other_religions.iter().find(|r| r == &religion) {
-                let msg =
-                    format!("religion {religion} is in more than one spiritual fulfillment type");
-                err(ErrorKey::Conflict).msg(msg).loc(religion).loc_msg(other, "other type").push();
             }
         }
     }

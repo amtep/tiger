@@ -1225,7 +1225,7 @@ pub fn validate_spawn_army(
         vd.field_item("type", Item::MenAtArms);
         vd.field_script_value("men", sc);
         vd.field_script_value("stacks", sc);
-        vd.field_bool("inheritable"); // undocumented
+        vd.field_bool("inheritable");
     });
     vd.field_target("location", sc, Scopes::Province);
     vd.field_target("origin", sc, Scopes::Province);

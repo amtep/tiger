@@ -226,7 +226,7 @@ impl DbKind for HouseRelationType {
 
                 let mut vd = Validator::new(block, data);
                 vd.field_integer("opinion");
-                vd.field_integer("cohesion_contribution"); // undocumented since 1.20
+                vd.field_integer("cohesion_contribution");
                 vd.field_validated_list("parameters", |value, data| {
                     let loca = format!("house_relation_parameter_{value}");
                     data.verify_exists_implied(Item::Localization, &loca, value);

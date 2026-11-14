@@ -9,7 +9,7 @@ use crate::game::GameFlags;
 use crate::helpers::TigerHashMap;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{ErrorKey, err, warn};
+use crate::report::{ErrorKey, err, untidy, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -580,18 +580,35 @@ impl NameEquivalency {
 
     /// Check that no name is in two lists of the same gender. The docs say the game logs an error.
     pub fn validate_all(db: &Db, _data: &Everything) {
-        let mut seen: TigerHashMap<(bool, &str), &Token> = TigerHashMap::default();
-        for (key, block) in db.iter_key_block(Item::NameEquivalency) {
+        // Each name with its list
+        let mut seen: TigerHashMap<(bool, &str), (&Token, &Token)> = TigerHashMap::default();
+        // Go in load order, so that reports point at the later list
+        let mut lists: Vec<_> = db.iter_key_block(Item::NameEquivalency).collect();
+        lists.sort_by_key(|(key, _)| key.loc);
+        for (key, block) in lists {
             let female = key.as_str().ends_with("_female");
             for name in block.iter_values() {
-                if let Some(&other) = seen.get(&(female, name.as_str())) {
-                    let msg = format!("name {name} is in two name equivalency lists");
-                    err(ErrorKey::Conflict).msg(msg).loc(name).loc_msg(other, "other list").push();
+                match seen.get(&(female, name.as_str())) {
+                    Some(&(other_list, other)) if other_list == key => {
+                        let msg = format!("name {name} is listed twice");
+                        untidy(ErrorKey::DuplicateItem)
+                            .msg(msg)
+                            .loc(name)
+                            .loc_msg(other, "earlier listing")
+                            .push();
+                    }
+                    Some(&(_, other)) => {
+                        let msg = format!("name {name} is in two name equivalency lists");
+                        err(ErrorKey::Conflict)
+                            .msg(msg)
+                            .loc(name)
+                            .loc_msg(other, "other list")
+                            .push();
+                    }
+                    None => {
+                        seen.insert((female, name.as_str()), (key, name));
+                    }
                 }
-            }
-            // Add the names after checking the list, so that repeats within it are not reported
-            for name in block.iter_values() {
-                seen.entry((female, name.as_str())).or_insert(name);
             }
         }
     }

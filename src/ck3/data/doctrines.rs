@@ -158,7 +158,7 @@ impl DbKind for Doctrine {
 
         vd.field_validated_block("character_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.field_item("name", Item::Localization);
+            vd.field_item("name", Item::Localization); // undocumented
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
 
