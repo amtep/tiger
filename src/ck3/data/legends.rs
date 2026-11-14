@@ -45,10 +45,10 @@ impl DbKind for LegendType {
         let mut vd = Validator::new(block, data);
         vd.field_validated("color", validate_possibly_named_color);
         vd.field_effect_builder("on_province_spread", Tooltipped::No, build_province_legend_sc);
-        vd.field_effect_builder("on_province_recovered", Tooltipped::No, build_province_legend_sc);
+        vd.replaced_field("on_province_recovered", "on_province_removed");
+        vd.field_effect_builder("on_province_removed", Tooltipped::No, build_province_legend_sc);
         vd.field_effect_rooted("on_start", Tooltipped::No, Scopes::Legend);
         vd.field_effect_rooted("on_end", Tooltipped::No, Scopes::Legend);
-        // ScopeContext undocumented
         vd.field_effect_builder("on_yearly", Tooltipped::No, build_character_legend_sc);
         // TODO: verify tooltip
         vd.field_effect_builder(
@@ -129,7 +129,7 @@ fn validate_legend_quality(block: &Block, data: &Everything) {
     );
     vd.field_validated("max_provinces", validate_non_dynamic_script_value);
     vd.field_validated_block_rooted("owner_cost", Scopes::Character, validate_cost);
-    vd.field_validated_block_build_sc("promoter_cost", build_character_legend_sc, validate_cost);
+    vd.field_validated_block_rooted("promoter_cost", Scopes::Character, validate_cost);
     vd.field_validated_block_rooted("creation_cost", Scopes::Character, validate_cost);
     vd.field_validated_block_rooted("upgrade_cost", Scopes::Character, validate_cost);
     vd.field_validated_block_rooted("removal_duration", Scopes::None, validate_duration);
@@ -358,7 +358,6 @@ impl DbKind for LegendChronicle {
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
-        // undocumented
         vd.field_item("portrait_animation", Item::PortraitAnimation);
 
         vd.field_validated_block("properties", |block, data| {
@@ -380,7 +379,6 @@ impl DbKind for LegendChronicle {
                 });
             },
         );
-        // Assume the same scope context as impact in `LegendType`
         vd.field_validated_block("impact", |block, data| {
             let mut vd = Validator::new(block, data);
             validate_impact_modifiers(&mut vd);

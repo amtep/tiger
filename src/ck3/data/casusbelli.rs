@@ -30,7 +30,6 @@ impl DbKind for CasusBelli {
         data.verify_exists(Item::Localization, key);
 
         let mut vd = Validator::new(block, data);
-        let has_claimant = block.has_key("is_allowed_claim_title");
 
         let sc_builder = |key: &Token| {
             let mut sc = ScopeContext::new(Scopes::CasusBelli, key);
@@ -40,9 +39,6 @@ impl DbKind for CasusBelli {
             sc.define_name("claimant", Scopes::Character, key);
             // TODO: be more specific about when this list is defined
             sc.define_list("target_titles", Scopes::LandedTitle, key);
-            if has_claimant {
-                sc.define_name("claimant", Scopes::Character, key);
-            }
             sc
         };
 
@@ -78,6 +74,7 @@ impl DbKind for CasusBelli {
         vd.field_bool("full_occupation_by_attacker_gives_victory");
         vd.field_bool("landless_attacker_needs_armies");
         vd.field_bool("allow_hostages");
+        vd.field_list_items("same_faith_defenders_allowed_parameter", Item::GovernmentFlag);
 
         vd.field_numeric("occupation_participation_mult");
         vd.field_numeric("siege_participation_mult");
@@ -93,8 +90,9 @@ impl DbKind for CasusBelli {
         let sc_effect_builder = |key: &Token| {
             let mut sc = sc_builder(key);
             sc.define_name("war", Scopes::War, key);
-            sc.define_list("attackers", Scopes::LandedTitle, key);
-            sc.define_list("defenders", Scopes::LandedTitle, key);
+            // undocumented here, but the group docs say these are lists of characters
+            sc.define_list("attackers", Scopes::Character, key);
+            sc.define_list("defenders", Scopes::Character, key);
             sc
         };
 
@@ -108,10 +106,12 @@ impl DbKind for CasusBelli {
         for field in
             &["on_victory_desc", "on_defeat_desc", "on_white_peace_desc", "on_invalidated_desc"]
         {
-            vd.field_validated_sc(field, &mut sc, validate_desc);
+            vd.req_field(field);
+            vd.field_validated_build_sc(field, sc_effect_builder, validate_desc);
         }
 
-        vd.field_trigger("should_invalidate", Tooltipped::No, &mut sc);
+        // undocumented scope:war. The group docs give it to the group's `should_invalidate`.
+        vd.field_trigger_builder("should_invalidate", Tooltipped::No, sc_effect_builder);
         vd.field_trigger("mutually_exclusive_titles", Tooltipped::No, &mut sc);
         vd.field_bool("combine_into_one");
 
@@ -170,7 +170,6 @@ impl DbKind for CasusBelli {
         vd.field_bool("target_de_jure_regions_above");
         vd.field_bool("use_de_jure_wargoal_only");
 
-        // undocumented
         vd.field_item("cb_name", Item::Localization);
         vd.field_item("cb_name_no_target", Item::Localization);
 
@@ -183,9 +182,8 @@ impl DbKind for CasusBelli {
 
         vd.multi_field_value("ignore_effect"); // TODO
 
-        let choices = &["invalidate", "inherit", "inherit_faction"];
-        vd.field_choice("on_primary_attacker_death", choices);
-        vd.field_choice("on_primary_defender_death", choices);
+        vd.field_choice("on_primary_attacker_death", &["invalidate", "inherit", "inherit_faction"]);
+        vd.field_choice("on_primary_defender_death", &["invalidate", "inherit"]);
         vd.field_choice("transfer_behavior", &["invalidate", "transfer"]);
         vd.field_bool("check_attacker_inheritance_validity");
         vd.field_bool("check_defender_inheritance_validity");
@@ -214,14 +212,12 @@ impl DbKind for CasusBelli {
         vd.field_bool("gui_defender_faith_might_join");
         vd.field_bool("defender_faith_can_join");
         vd.field_bool("is_great_holy_war");
-        vd.field_bool("is_holy_war"); // undocumented
+        vd.field_bool("is_holy_war");
         vd.field_bool("target_top_liege_if_outside_realm");
         vd.field_bool("should_check_for_interface_availability");
 
         vd.field_script_value("ai_score", &mut sc);
         vd.field_script_value("ai_score_mult", &mut sc);
-
-        // undocumented
         vd.field_bool("should_show_war_goal_subview");
     }
 }
@@ -242,12 +238,26 @@ impl CasusBelliGroup {
 impl DbKind for CasusBelliGroup {
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
-        vd.field_trigger_rooted("allowed_for_character", Tooltipped::No, Scopes::Character);
+        vd.field_trigger_builder("allowed_for_character", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("attacker", Scopes::Character, key);
+            sc.define_name("defender", Scopes::Character, key);
+            sc.define_list("target_titles", Scopes::LandedTitle, key);
+            sc
+        });
+        vd.field_trigger_builder("should_invalidate", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::CasusBelli, key);
+            sc.define_name("attacker", Scopes::Character, key);
+            sc.define_name("defender", Scopes::Character, key);
+            sc.define_name("claimant", Scopes::Character, key);
+            sc.define_name("war", Scopes::War, key);
+            sc.define_list("target_titles", Scopes::LandedTitle, key);
+            sc.define_list("attackers", Scopes::Character, key);
+            sc.define_list("defenders", Scopes::Character, key);
+            sc
+        });
         vd.field_bool("should_check_for_interface_availability");
         vd.field_bool("can_only_start_via_script");
-
-        // undocumented
-
         vd.field_bool("debug");
     }
 }

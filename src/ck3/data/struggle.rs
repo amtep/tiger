@@ -90,13 +90,14 @@ impl DbKind for Struggle {
                 if let Some(vec) = block.get_field_list("ending_decisions") {
                     has_ending |= !vec.is_empty();
                 }
+                // The docs say an ending phase also counts
+                has_ending |= block.has_key("on_start");
             });
             if !has_one {
                 warn(ErrorKey::Validation).msg("must have at least one phase").loc(block).push();
             }
-            // TODO: Verify if it is OK to have an ending phase but no ending decisions
             if !has_ending {
-                let msg = "must have at least one phase with ending_decisions";
+                let msg = "must have at least one phase with ending_decisions or an ending phase";
                 warn(ErrorKey::Validation).msg(msg).loc(block).push();
             }
         });
@@ -115,10 +116,9 @@ impl DbKind for Struggle {
 fn validate_phase(block: &Block, data: &Everything, phases: &[&Token]) {
     let mut vd = Validator::new(block, data);
 
+    vd.field_bool("save_progress");
     // Ending phase
     if vd.field_block("on_start") {
-        // Undocumented
-        vd.field_bool("save_progress");
         vd.field_effect_rooted("on_start", Tooltipped::Yes, Scopes::Struggle);
         vd.unknown_fields(|key, _| {
             let msg = format!("ending phase should not have {key}, which will be ignored");
@@ -148,7 +148,6 @@ fn validate_phase(block: &Block, data: &Everything, phases: &[&Token]) {
                     let msg = format!("{key} is not a struggle phase of this struggle");
                     warn(ErrorKey::UnknownField).msg(msg).loc(key).push();
                 }
-                vd.field_bool("default");
                 vd.field_validated_block("catalysts", validate_catalyst_list);
             });
             if !has_one {
@@ -172,7 +171,7 @@ fn validate_catalyst_list(block: &Block, data: &Everything) {
     vd.unknown_fields(|key, bv| {
         if bv.expect_value().is_some() {
             data.verify_exists(Item::Catalyst, key);
-            let mut sc = ScopeContext::new(Scopes::None, key);
+            let mut sc = ScopeContext::new(Scopes::Struggle, key);
             validate_script_value(bv, data, &mut sc);
         }
     });
@@ -193,8 +192,12 @@ fn validate_phase_effects(block: &Block, data: &Everything) {
         });
     }
 
-    for field in &["involved_doctrine_character_modifier", "interloper_doctrine_character_modifier"]
-    {
+    vd.replaced_field("involved_doctrine_character_modifier", "involved_faith_character_modifier");
+    vd.replaced_field(
+        "interloper_doctrine_character_modifier",
+        "interloper_faith_character_modifier",
+    );
+    for field in &["involved_faith_character_modifier", "interloper_faith_character_modifier"] {
         vd.field_validated_block(field, |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_item("doctrine", Item::Doctrine);

@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use crate::block::Block;
+use crate::block::{BV, Block};
 use crate::ck3::modif::ModifKinds;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
@@ -8,6 +8,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
+use crate::script_value::validate_script_value;
 use crate::token::Token;
 use crate::validator::Validator;
 
@@ -38,7 +39,7 @@ impl DbKind for Modifier {
         vd.field_bool("stacking");
         vd.field_bool("hide_effects");
         // `scale` is validated in `validate_call`
-        vd.field_block("scale");
+        vd.field("scale");
         validate_modifs(block, data, ModifKinds::all(), vd);
     }
 
@@ -52,16 +53,17 @@ impl DbKind for Modifier {
         sc: &mut ScopeContext,
     ) {
         let mut vd = Validator::new(block, data);
-        // docs say that the object the scale is applied to is `root`, but I suspect it's really `this`.
-        // TODO: verify
-        vd.field_validated_block("scale", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.req_field("value");
-            vd.field_script_value("value", sc);
-            vd.field_item("desc", Item::Localization);
-            // Undocumented `display_mode`
-            // TODO: get all possible values
-            vd.field_choice("display_mode", &["scaled"]);
+        // The docs say `this` is the object getting the modifier, and root and saved scopes are
+        // those of the calling effect
+        vd.field_validated("scale", |bv, data| match bv {
+            BV::Value(_) => validate_script_value(bv, data, sc),
+            BV::Block(block) => {
+                let mut vd = Validator::new(block, data);
+                vd.req_field("value");
+                vd.field_script_value("value", sc);
+                vd.field_item("desc", Item::Localization);
+                vd.field_choice("display_mode", &["default", "scaled", "unscaled"]);
+            }
         });
         vd.no_warn_remaining();
     }
@@ -86,7 +88,7 @@ impl DbKind for Modifier {
     }
 }
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 /// Get the modifier kinds from property name
 /// See `effects.log` from the game data dumps.
 fn get_modif_kinds(name: &str) -> ModifKinds {

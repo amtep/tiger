@@ -61,6 +61,15 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
     // TODO: Should be an `Item::WidgetName` but widget name processing currently doesn't catch
     // subwidgets with names.
     vd.field_value("window");
+    if event.block.field_value_is("window", "fullscreen_event") {
+        vd.req_field("queue_icon");
+        vd.field_script_value_rooted("queue_priority", Scopes::Character);
+        vd.field_item("queue_name", Item::Localization);
+    } else {
+        vd.ban_field("queue_priority", || "`window = fullscreen_event`");
+        vd.ban_field("queue_name", || "`window = fullscreen_event`");
+    }
+    vd.field_item("queue_icon", Item::File);
 
     if let Some(token) = vd.field_value("scope")
         && Scopes::from_snake_case(token.as_str()).is_none()
@@ -70,6 +79,7 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
 
     // "dlc or mod this event comes from"
     vd.field_item("content_source", Item::Dlc);
+    vd.field_integer("id_override_priority");
 
     vd.field_bool("hidden");
     vd.field_bool("major");
@@ -142,8 +152,17 @@ pub fn validate_event(event: &Event, data: &Everything, sc: &mut ScopeContext) {
         vd.req_field("option");
     }
     let mut has_options = false;
+    let mut timeout_option = None;
     vd.multi_field_validated_block("option", |block, data| {
         has_options = true;
+        // The docs say only one option per event may be marked
+        if block.get_field_bool("timeout_option").unwrap_or(false) {
+            if let Some(other) = timeout_option {
+                let msg = "more than one `timeout_option`";
+                err(ErrorKey::Validation).msg(msg).loc(block).loc_msg(other, "other option").push();
+            }
+            timeout_option = Some(block.loc);
+        }
         sc.wipe_temporaries();
         validate_event_option(block, data, sc, tooltipped);
     });
@@ -203,6 +222,8 @@ fn validate_event_option(
     vd.field_bool("exclusive");
 
     vd.field_bool("is_cancel_option");
+    vd.field_bool("timeout_option");
+    vd.field_bool("original_recipient_only");
 
     // If fallback = yes, the option is shown despite its trigger,
     // if there would otherwise be no other option
@@ -234,7 +255,6 @@ fn validate_court_scene(block: &Block, data: &Everything, sc: &mut ScopeContext)
     vd.field_bool("show_timeout_info");
     vd.field_bool("should_pause_time");
     vd.field_target("court_owner", sc, Scopes::Character);
-    vd.field_item("scripted_animation", Item::ScriptedAnimation);
     vd.multi_field_validated_block("roles", |b, data| {
         for (key, bv) in b.iter_assignments_and_definitions_warn() {
             match bv {
@@ -245,6 +265,7 @@ fn validate_court_scene(block: &Block, data: &Everything, sc: &mut ScopeContext)
                     vd.field_item("group", Item::CourtSceneGroup);
                     vd.field_item("role", Item::CourtSceneRole);
                     vd.field_item("animation", Item::PortraitAnimation);
+                    vd.field_item("scripted_animation", Item::ScriptedAnimation);
                     vd.multi_field_validated_block("triggered_animation", |b, data| {
                         validate_triggered_animation(b, data, sc);
                     });
@@ -338,6 +359,8 @@ fn validate_portrait(v: &BV, data: &Everything, sc: &mut ScopeContext) {
             vd.field_list("outfit_tags"); // TODO
             vd.field_bool("remove_default_outfit");
             vd.field_bool("hide_info");
+            vd.field_numeric_range("lighting_yaw_offset", -359.0..=359.0);
+            vd.field_integer_range("stacking_order", -100..=100);
             vd.multi_field_validated_block("triggered_outfit", |b, data| {
                 validate_triggered_outfit(b, data, sc);
             });

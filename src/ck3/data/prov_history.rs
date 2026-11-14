@@ -116,8 +116,9 @@ impl ProvinceHistory {
 
     fn validate_common(vd: &mut Validator, data: &Everything) {
         vd.field_item("culture", Item::Culture);
-        vd.field_item("religion", Item::Faith);
         vd.field_item("faith", Item::Faith);
+        // takes priority over faith
+        vd.field_item("rite", Item::RiteType);
         if let Some(token) = vd.field_value("holding")
             && !token.is("auto")
             && !token.is("none")
@@ -145,7 +146,7 @@ impl ProvinceHistory {
         // This needs province mappings to be loaded too
         let mut vd = Validator::new(&self.block, data);
         Self::validate_common(&mut vd, data);
-        vd.field_value("terrain"); // TODO: this does not seem to be an Item::Terrain
+        vd.advice_field("terrain", "removed in 1.20");
         vd.validate_history_blocks(Self::validate_history);
     }
 }

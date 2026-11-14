@@ -258,7 +258,9 @@ impl Title {
         vd.field_bool("de_jure_drift_disabled");
         vd.field_bool("ignore_titularity_for_title_weighting");
         vd.field_bool("noble_family");
+        vd.field_bool("nomad");
         vd.field_bool("can_use_nomadic_naming");
+        vd.field_item("dlc_feature", Item::DlcFeature);
 
         let mut sc_entry = ScopeContext::new(Scopes::Character, &self.key);
         sc_entry.define_name("target", Scopes::Character, &self.key);
@@ -281,7 +283,7 @@ impl Title {
         vd.field_list_items("holding_regnal_female_names", Item::Localization);
         vd.field_list_items("posthumous_regnal_female_names", Item::Localization);
 
-        vd.field_bool("disable_regnal_numbers");
+        vd.field_choice("disable_regnal_numbers", &["never", "auto", "always"]);
         vd.advice_field("enable_regnal_numbers", "replaced with `disable_regnal_numbers` in 1.18");
 
         if Tier::try_from(&self.key) == Ok(Tier::Barony) {

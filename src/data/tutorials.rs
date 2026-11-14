@@ -108,7 +108,7 @@ impl DbKind for TutorialLessonChain {
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
-        // TODO: verify root scope
+        // The CK3 docs say the root is the player character. TODO: verify for Vic3
         vd.field_trigger_rooted("trigger", Tooltipped::No, game_tutorial_scope());
         vd.field_integer("delay");
         vd.field_bool("save_progress_in_gamestate");
@@ -144,7 +144,7 @@ impl DbKind for TutorialLessonStep {
         data.verify_exists(Item::Localization, key);
 
         vd.field_item("text", Item::Localization);
-        vd.field_item("header_info", Item::Localization); // undocumented
+        vd.field_item("header_info", Item::Localization);
 
         // see gui_tag in TutorialLesson
         vd.multi_field_value("gui_tag");
@@ -187,9 +187,11 @@ impl DbKind for TutorialLessonStep {
         });
         vd.multi_field_validated_block("trigger_transition", validate_trigger_transition);
 
-        // TODO: verify this works in Vic3 too
         // TODO: need a general way to restrict effects to interface effects only
-        vd.field_effect_rooted("interface_effect", Tooltipped::No, Scopes::None);
+        // The CK3 docs give all lesson effects the player character as root.
+        // TODO: verify this works in Vic3 too
+        let root = if Game::is_ck3() { game_tutorial_scope() } else { Scopes::None };
+        vd.field_effect_rooted("interface_effect", Tooltipped::No, root);
 
         if self.chain.as_ref().is_some_and(|t| {
             data.item_has_property(Item::TutorialLessonChain, t.as_str(), "gamestate_tutorial")

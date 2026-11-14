@@ -37,11 +37,11 @@ impl DbKind for Secret {
         let loca = format!("{key}_type_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        if let Some(token) = vd.field_value("category") {
-            let loca = format!("secret_category_{token}");
-            data.verify_exists_implied(Item::Localization, &loca, token);
-            data.verify_icon("NGameIcons|SECRET_TYPE_PATH", token, ".dds");
-        }
+        // The docs say the category defaults to the key
+        let category = vd.field_value("category").unwrap_or(key);
+        let loca = format!("secret_category_{category}");
+        data.verify_exists_implied(Item::Localization, &loca, category);
+        data.verify_icon("NGameIcons|SECRET_TYPE_PATH", category, ".dds");
 
         vd.field_trigger("is_valid", Tooltipped::No, &mut sc.clone());
 

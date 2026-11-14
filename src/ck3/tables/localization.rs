@@ -295,6 +295,7 @@ const BUILTIN_MACROS: &[&str] = &[
     "OWNED",
     "PARAMETERS",
     "PARAMETER_NAME",
+    "PARENT_KEY",
     "PARTICIPANT_LIST",
     "PATH_DURATION_DIFF",
     "PATRONYM",
@@ -443,10 +444,13 @@ pub(crate) static COMPLEX_TOOLTIPS_CK3: LazyLock<TigerHashMap<&'static str, Opti
 /// Handling of `#TOOLTIP:tag:value` formatting in localization. The table contains the tag strings
 /// and the corresponding item type of the value. If the item type is `None`, it means the value is
 /// a runtime id which cannot be validated statically.
-// LAST UPDATED CK3 VERSION 1.12.3
+// LAST UPDATED CK3 VERSION 1.20.1
 // The list of tag types can be found in localization/english/tooltip_structs_l_english.yml
 // The table entries were verified by deleting the `#TOOLTIP:` part of the entries and viewing
 // examples of them in-game.
+// Tags left out have their value checked as a localization key. That is right for `GLOSSARY`.
+// `CONTRACT` and `SITUATION_MODIFIER_NAMED_SET` get only code-supplied values in vanilla, and
+// with a database key the game shows the raw text (in-game test, 1.20.1.2).
 const COMPLEX_TOOLTIPS: &[(&str, Option<Item>)] = &[
     ("accolade", None),
     ("accolade_type", Some(Item::AccoladeType)),
@@ -466,6 +470,8 @@ const COMPLEX_TOOLTIPS: &[(&str, Option<Item>)] = &[
     ("culture_pillar", Some(Item::CulturePillar)),
     ("culture_tradition", Some(Item::CultureTradition)),
     ("decision", Some(Item::Decision)),
+    ("doctrine", Some(Item::Doctrine)),
+    ("domicile_building", Some(Item::DomicileBuilding)),
     ("dynasty", None),
     ("dynasty_house", None),
     ("dynasty_perk", Some(Item::DynastyPerk)),
@@ -473,16 +479,20 @@ const COMPLEX_TOOLTIPS: &[(&str, Option<Item>)] = &[
     ("faction", None),
     ("faith", Some(Item::Faith)),
     ("focus", Some(Item::Focus)),
+    ("fulfillment_level", None),
     ("game_concept", Some(Item::GameConcept)),
-    ("game_faith_doctrine", Some(Item::Doctrine)),
     ("game_trait", Some(Item::Trait)),
     ("geographical_region", Some(Item::Region)),
     ("government_type", Some(Item::GovernmentType)),
+    ("great_project", None),
     ("holding", None),
+    ("holy_order", None),
+    ("house_relation_level", None),
     ("house_unity_stage", Some(Item::HouseUnityStage)),
     ("inspiration", None),
     ("landed_title", None),
     ("law", Some(Item::Law)),
+    ("lease_contract_type", Some(Item::LeaseContract)),
     ("legend", None),
     ("lifestyle", Some(Item::Lifestyle)),
     ("men_at_arms_type", Some(Item::MenAtArms)),
@@ -490,19 +500,29 @@ const COMPLEX_TOOLTIPS: &[(&str, Option<Item>)] = &[
     ("obligation_level", Some(Item::SubjectContract)),
     ("perk", Some(Item::Perk)),
     ("province", Some(Item::Province)),
+    ("puppet_type", Some(Item::PuppetType)),
     ("religion", Some(Item::Religion)),
     ("religion_family", Some(Item::ReligionFamily)),
+    ("rite", None),
     // TODO This tooltip takes five tokens while ComplexTooltip handles up to three.
     ("scaled_static_modifier", Some(Item::Modifier)),
     ("scheme", None),
+    ("scheme_agent_slot_type", Some(Item::AgentType)),
     ("scheme_type", Some(Item::Scheme)),
     ("secret", None),
     ("secret_type", Some(Item::Secret)),
+    ("situation", None),
+    ("situation_participant_group_type", Some(Item::SituationParticipantGroup)),
+    ("situation_phase_type", Some(Item::Situation)),
+    ("situation_sub_region", None),
+    ("situation_type", Some(Item::Situation)),
     ("specific_men_at_arms_type", None),
     ("static_modifier", Some(Item::Modifier)),
     ("struggle", None),
     ("struggle_phase", Some(Item::StrugglePhase)),
+    ("subject_contract_group", Some(Item::SubjectContractGroup)),
     ("tax_slot_obligation", Some(Item::TaxSlotObligation)),
+    ("tenet", Some(Item::Tenet)),
     ("terrain", Some(Item::Terrain)),
     ("travel_option", Some(Item::TravelOption)),
     ("travel_plan", None),

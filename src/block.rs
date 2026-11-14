@@ -1,6 +1,7 @@
 //! [`Block`] is the core type to represent Pdx script code
 
 use crate::date::Date;
+use crate::game::Game;
 use crate::macros::MACRO_MAP;
 use crate::parse::pdxfile::{MacroComponent, MacroComponentKind, PdxfileMemory, parse_pdx_macro};
 use crate::token::{Loc, Token};
@@ -90,7 +91,8 @@ impl Block {
                     || value.is("rgb")
                     || value.is("hsv360")
                     || value.is("cylindrical")
-                    || value.is("cartesian"))
+                    || value.is("cartesian")
+                    || (Game::is_ck3() && value.is("hex")))
             {
                 let key = key.clone();
                 let cmp = *cmp;

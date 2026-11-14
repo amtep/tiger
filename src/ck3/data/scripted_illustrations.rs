@@ -40,12 +40,15 @@ impl DbKind for ScriptedIllustration {
                 vd.field_trigger("trigger", Tooltipped::No, &mut sc);
             }
         });
-        vd.multi_field_validated_block("environment", |block, data| {
-            let mut vd = Validator::new(block, data);
-            if let Some(token) = vd.field_value("reference") {
-                data.verify_exists(Item::PortraitEnvironment, token);
+        vd.multi_field_validated("environment", |bv, data| match bv {
+            BV::Value(token) => data.verify_exists(Item::PortraitEnvironment, token),
+            BV::Block(block) => {
+                let mut vd = Validator::new(block, data);
+                if let Some(token) = vd.field_value("reference") {
+                    data.verify_exists(Item::PortraitEnvironment, token);
+                }
+                vd.field_trigger("trigger", Tooltipped::No, &mut sc);
             }
-            vd.field_trigger("trigger", Tooltipped::No, &mut sc);
         });
     }
 }

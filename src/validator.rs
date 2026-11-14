@@ -1040,7 +1040,7 @@ impl<'a> Validator<'a> {
         self.field_check(name, AllowInject::Yes, |key, bv| {
             let mut sc = ScopeContext::new(scopes, key);
             // TODO: pass max_severity value down
-            validate_script_value(bv, self.data, &mut sc);
+            validate_script_value_no_breakdown(bv, self.data, &mut sc);
         })
     }
 

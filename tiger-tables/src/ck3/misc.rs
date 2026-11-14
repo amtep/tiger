@@ -1,4 +1,4 @@
-// LAST UPDATED CK3 VERSION 1.18.3
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from the Faith.random_ values in `data_types_uncategorized.txt`
 pub const CUSTOM_RELIGION_LOCAS: &[&str] = &[
     "AltPriestTermPlural",
@@ -95,6 +95,7 @@ pub const CUSTOM_RELIGION_LOCAS: &[&str] = &[
     "PriestNeuter",
     "PriestNeuterPlural",
     "ReligiousHeadName",
+    "ReligiousHeadNameFemale",
     "ReligiousHeadTitleName",
     "ReligiousSymbol",
     "ReligiousSymbol2",
@@ -111,5 +112,22 @@ pub const CUSTOM_RELIGION_LOCAS: &[&str] = &[
     "WarGodHerHis",
     "WarGodName",
     "WarGodNamePossessive",
+    "WarGodSheHe",
+    "WaterGodHerHim",
+    "WaterGodHerHis",
+    "WaterGodName",
+    "WaterGodNamePossessive",
+    "WaterGodSheHe",
+    "WealthGodHerHim",
+    "WealthGodHerHis",
+    "WealthGodName",
+    "WealthGodNamePossessive",
+    "WealthGodSheHe",
+    "WitchGodHerHim",
+    "WitchGodHerHis",
+    "WitchGodMistressMaster",
+    "WitchGodMotherFather",
+    "WitchGodName",
+    "WitchGodNamePossessive",
     "WitchGodSheHe",
 ];

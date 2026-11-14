@@ -45,7 +45,6 @@ impl DbKind for ModifierFormat {
 
         vd.field_item("dlc_feature", Item::DlcFeature);
 
-        // Docs say these are in a `format = { ... }` block, but apparently not.
         vd.field_bool("percent");
         vd.field_bool("already_percent");
         vd.field_bool("hidden");

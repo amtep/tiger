@@ -61,6 +61,7 @@ impl DbKind for DiarchyType {
             let mut vd = Validator::new(block, data);
             vd.field_integer("swing");
             vd.multi_field_item("parameter", Item::Localization);
+            // Not shown in the UI, so it needs no loca
             vd.multi_field_value("hidden_parameter");
         });
         vd.field_script_value_rooted("swing_balance", Scopes::Character);
@@ -69,12 +70,16 @@ impl DbKind for DiarchyType {
 
         vd.multi_field_validated_block("liege_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
+            // The docs and the game's error message say it requires a `name`
+            vd.req_field("name");
             vd.field_item("name", Item::Localization);
             vd.field_script_value_rooted("scale", Scopes::Character);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
         vd.multi_field_validated_block("diarch_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
+            // The docs and the game's error message say it requires a `name`
+            vd.req_field("name");
             vd.field_item("name", Item::Localization);
             vd.field_script_value_rooted("scale", Scopes::Character);
             validate_modifs(block, data, ModifKinds::Character, vd);

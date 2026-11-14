@@ -435,7 +435,6 @@ pub fn validate_change_struggle_phase(
             let mut vd = Validator::new(block, data);
             vd.set_case_sensitive(false);
             vd.req_field("struggle_phase");
-            vd.req_field("with_transition");
             vd.field_item("struggle_phase", Item::StrugglePhase);
             vd.field_bool("with_transition");
         }
@@ -615,6 +614,7 @@ pub fn validate_create_character(
     vd.field_item("template", Item::CharacterTemplate); // undocumented
     vd.field_target_ok_this("template_character", sc, Scopes::Character);
     vd.field_item_or_target("faith", sc, Item::Faith, Scopes::Faith);
+    vd.field_target("rite", sc, Scopes::Rite);
     vd.field_validated_block_sc("random_faith", sc, validate_random_faith);
     vd.field_item_or_target("random_faith_in_religion", sc, Item::Religion, Scopes::Faith);
     vd.field_item_or_target("culture", sc, Item::Culture, Scopes::Culture);
@@ -722,8 +722,11 @@ pub fn validate_create_nomad_title(
     _tooltipped: Tooltipped,
 ) {
     vd.field_validated_sc("name", sc, validate_desc);
-    vd.field_validated_sc("prefix", sc, validate_desc);
-    vd.field_validated_sc("adjective", sc, validate_desc);
+    vd.replaced_field("prefix", "pre");
+    vd.replaced_field("adjective", "adj");
+    vd.field_validated_sc("article", sc, validate_desc);
+    vd.field_validated_sc("pre", sc, validate_desc);
+    vd.field_validated_sc("adj", sc, validate_desc);
     vd.field_target("holder", sc, Scopes::Character);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
@@ -742,7 +745,10 @@ pub fn validate_create_holy_order(
     vd.req_field("leader");
     vd.req_field("capital");
     vd.field_target("leader", sc, Scopes::Character);
+    vd.field_target("founder", sc, Scopes::Character);
     vd.field_target("capital", sc, Scopes::LandedTitle);
+    vd.field_item("holy_order_type", Item::HolyOrderType);
+    vd.field_choice("random_holy_order_type", &["any", "military", "monastic", "mendicant"]);
     vd.field_item("name", Item::Localization);
     vd.field_item("coat_of_arms", Item::Coa);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
@@ -1219,7 +1225,7 @@ pub fn validate_spawn_army(
         vd.field_item("type", Item::MenAtArms);
         vd.field_script_value("men", sc);
         vd.field_script_value("stacks", sc);
-        vd.field_bool("inheritable"); // undocumented
+        vd.field_bool("inheritable");
     });
     vd.field_target("location", sc, Scopes::Province);
     vd.field_target("origin", sc, Scopes::Province);
@@ -1434,7 +1440,11 @@ pub fn validate_set_coa(
     sc: &mut ScopeContext,
     _tooltipped: Tooltipped,
 ) {
-    let options = Scopes::LandedTitle | Scopes::Dynasty | Scopes::DynastyHouse;
+    let options = Scopes::LandedTitle
+        | Scopes::Dynasty
+        | Scopes::DynastyHouse
+        | Scopes::Organization
+        | Scopes::Confederation;
     vd.item_or_target(sc, Item::Coa, options);
 }
 
@@ -1788,7 +1798,8 @@ pub fn validate_set_owner(
             vd.set_case_sensitive(false);
             vd.req_field("target");
             vd.field_target("target", sc, Scopes::Character);
-            vd.multi_field_validated_block_sc("history", sc, validate_artifact_history);
+            // Only one `history` takes effect (in-game test, 1.20.1.2)
+            vd.field_validated_block_sc("history", sc, validate_artifact_history);
             vd.field_bool("generate_history");
         }
     }
@@ -1812,8 +1823,13 @@ pub fn validate_set_relation(
             // Sometimes both are used and I don't know what that means. TODO: verify
             // vd.req_field_one_of(&["reason", "copy_reason"]);
             vd.field_target("target", sc, Scopes::Character);
-            // TODO: {reason}_corresponding is also a loca
+            // The game uses {reason}_corresponding on the target's side if it exists. Otherwise it
+            // uses {reason} with CHARACTER and TARGET_CHARACTER swapped, which is only correct if the
+            // text is symmetric (verified in 1.20.1).
             vd.field_item("reason", Item::Localization);
+            if let Some(reason) = block.get_field_value("reason") {
+                data.mark_used(Item::Localization, &format!("{reason}_corresponding"));
+            }
             vd.field_item("copy_reason", Item::Relation);
             vd.field_target("province", sc, Scopes::Province);
             vd.field_target("involved_character", sc, Scopes::Character);
@@ -1929,23 +1945,22 @@ pub fn validate_create_adventurer_title(
     vd.req_field("holder");
     vd.field_validated_sc("name", sc, validate_desc);
     vd.field_target("holder", sc, Scopes::Character);
-    vd.field_validated_sc("prefix", sc, validate_desc);
-    vd.field_validated_sc("adjective", sc, validate_desc);
+    vd.replaced_field("prefix", "pre");
+    vd.replaced_field("adjective", "adj");
+    vd.field_validated_sc("article", sc, validate_desc);
+    vd.field_validated_sc("pre", sc, validate_desc);
+    vd.field_validated_sc("adj", sc, validate_desc);
     vd.field_item("government", Item::GovernmentType);
     if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
         sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
     }
-
-    // undocumented
-
-    vd.field_validated_sc("article", sc, validate_desc);
 }
 
 pub fn validate_start_best_war(
     _key: &Token,
     _block: &Block,
     _data: &Everything,
-    _sc: &mut ScopeContext,
+    sc: &mut ScopeContext,
     mut vd: Validator,
     _tooltipped: Tooltipped,
 ) {
@@ -1963,6 +1978,16 @@ pub fn validate_start_best_war(
 
     vd.field_list_items("cb", Item::CasusBelli);
     vd.field_bool("recalculate_cb_targets");
+    vd.field_validated_block_sc("multi_target", sc, |block, data, sc| {
+        let mut vd = Validator::new(block, data);
+        vd.field_script_value("count", sc);
+        vd.field_script_value("max_cumulative_strength", sc);
+        vd.advice_field(
+            "max_accumulative_strength",
+            "docs say `max_accumulative_strength` but it's `max_cumulative_strength`",
+        );
+    });
+    vd.field_bool("first_valid_cb_type");
     vd.field_trigger_builder("is_valid", Tooltipped::No, sc_builder);
     vd.field_effect_builder("on_success", Tooltipped::No, sc_builder);
     vd.field_effect_builder("on_failure", Tooltipped::No, sc_builder);
@@ -2217,7 +2242,7 @@ pub fn validate_situation_catalyst(
             vd.field_item("catalyst", Item::SituationCatalyst);
             vd.field_target("character", sc, Scopes::Character);
             if key.is("trigger_situation_catalyst") {
-                // TODO: verify if "county" really takes a province
+                // Tested in game (1.20.1.2): "county" takes a province and rejects a county title
                 vd.field_target("county", sc, Scopes::Province);
             }
         }
@@ -2456,10 +2481,15 @@ pub fn validate_send_interface(
     vd.field_validated_sc("desc", &mut loca_sc, validate_desc);
     vd.field_validated_sc("tooltip", &mut loca_sc, validate_desc);
     loca_sc.destroy();
+    // The docs list characters, artifacts, titles, dynasties and houses. The others are undocumented,
+    // but vanilla uses them.
     let icon_scopes = Scopes::Character
         | Scopes::LandedTitle
         | Scopes::Artifact
         | Scopes::Faith
+        | Scopes::Rite
+        | Scopes::Tenet
+        | Scopes::Doctrine
         | Scopes::Dynasty
         | Scopes::DynastyHouse
         | Scopes::Confederation;
@@ -2508,4 +2538,321 @@ pub fn validate_set_regnal_name(
             vd.field_target("character", sc, Scopes::Character);
         }
     }
+}
+
+/// For `add_holy_site`, `remove_holy_site`, `make_holy_site_eminent`, etc.
+pub fn validate_holy_site_target(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(token) => {
+            validate_target(token, data, sc, Scopes::HolySite);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("target");
+            vd.field_target("target", sc, Scopes::HolySite);
+            vd.field_target("actor", sc, Scopes::Character);
+        }
+    }
+}
+
+pub fn validate_set_parent_faith(
+    _key: &Token,
+    bv: &BV,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    _tooltipped: Tooltipped,
+) {
+    match bv {
+        BV::Value(token) => {
+            validate_target(token, data, sc, Scopes::Faith);
+        }
+        BV::Block(block) => {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("target");
+            vd.field_target("target", sc, Scopes::Faith);
+            vd.field_bool("main");
+            vd.field_bool("include_derived");
+        }
+    }
+}
+
+pub fn validate_add_saint(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("character");
+    vd.field_target("character", sc, Scopes::Character);
+    vd.field_target("burial_province", sc, Scopes::Province);
+    vd.advice_field("target", "docs say `target` but it's `character`");
+}
+
+pub fn validate_change_rite_divergence(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("value");
+    vd.field_script_value("value", sc);
+    vd.field_script_value("min_value", sc);
+    vd.field_bool("override_tenets_first");
+    vd.field_bool("include_unknown");
+    vd.field_target("character", sc, Scopes::Character);
+    vd.field_integer("max_tenets");
+}
+
+pub fn validate_change_tenet_popularity(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_item_or_target("target", sc, Item::Tenet, Scopes::Tenet);
+    vd.req_field("change");
+    vd.field_script_value("change", sc);
+}
+
+pub fn validate_create_clerical_region(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("domicile_type");
+    vd.field_item("domicile_type", Item::DomicileType);
+    vd.req_field("name");
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_validated_sc("adj", sc, validate_desc);
+    vd.field_validated_sc("pre", sc, validate_desc);
+    vd.field_validated_sc("article", sc, validate_desc);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
+    }
+}
+
+pub fn validate_split_clerical_region(
+    key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.field_item("domicile_type", Item::DomicileType);
+    vd.req_field("name");
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_validated_sc("adj", sc, validate_desc);
+    vd.field_validated_sc("pre", sc, validate_desc);
+    vd.field_validated_sc("article", sc, validate_desc);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
+    }
+    // The docs say the new title is always saved as `scope:new_title`
+    sc.define_name("new_title", Scopes::LandedTitle, key);
+}
+
+pub fn validate_create_domicile_title(
+    _key: &Token,
+    block: &Block,
+    data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    // TODO: verify that name and holder are required (the docs only say so for government)
+    vd.req_field("name");
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.req_field("holder");
+    vd.field_target("holder", sc, Scopes::Character);
+    vd.req_field("government");
+    vd.field_item("government", Item::GovernmentType);
+    if let Some(token) = block.get_field_value("government")
+        && let Some((_, government)) =
+            data.database.get_key_block(Item::GovernmentType, token.as_str())
+        && !government.has_key("domicile_type")
+    {
+        let msg = "the government must have a `domicile_type`";
+        err(ErrorKey::Validation).msg(msg).loc(token).push();
+    }
+    vd.field_validated_sc("article", sc, validate_desc);
+    vd.field_validated_sc("pre", sc, validate_desc);
+    vd.field_validated_sc("adj", sc, validate_desc);
+    vd.field_choice("tier", &["county", "duchy", "kingdom", "empire", "hegemony"]);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::LandedTitle, name, Temporary::No);
+    }
+}
+
+pub fn validate_create_dynamic_rite(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Rite, name, Temporary::No);
+    }
+    vd.field_bool("convert");
+    vd.multi_field_target("core_tenet_override_entry", sc, Scopes::Tenet);
+    vd.multi_field_target("doctrine_override_entry", sc, Scopes::Doctrine);
+    vd.field_script_value("target_divergence", sc);
+    vd.field_bool("include_unknown");
+    vd.field_bool("override_tenets_first");
+}
+
+pub fn validate_create_holy_site(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    // Tested in game (1.20.1.2): a holy site scope is rejected, despite the docs' "holy_site_scope_object"
+    vd.field_item_or_target("type", sc, Item::HolySite, Scopes::HolySiteType);
+    vd.field_bool("eminent");
+    vd.field_target("county", sc, Scopes::LandedTitle);
+    vd.field_target("barony", sc, Scopes::LandedTitle);
+    vd.field_target("actor", sc, Scopes::Character);
+}
+
+pub fn validate_create_rite_from_type(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("type");
+    vd.field_item("type", Item::RiteType);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Rite, name, Temporary::No);
+    }
+    vd.field_bool("convert");
+}
+
+pub fn validate_detach_rite_to_new_faith(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_target("target", sc, Scopes::Rite);
+    if let Some(name) = vd.field_identifier("save_scope_as", "scope name") {
+        sc.define_name_token(name.as_str(), Scopes::Faith, name, Temporary::No);
+    }
+}
+
+pub fn validate_enshrine_holy_site_artifact(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("holy_site");
+    vd.field_target("holy_site", sc, Scopes::HolySite);
+    vd.req_field("artifact");
+    vd.field_target("artifact", sc, Scopes::Artifact);
+    vd.field_item("slot", Item::ArtifactSlot);
+}
+
+pub fn validate_remove_holy_site_artifact(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("holy_site");
+    vd.field_target("holy_site", sc, Scopes::HolySite);
+    vd.req_field("artifact");
+    vd.field_target("artifact", sc, Scopes::Artifact);
+}
+
+/// For `set_faith_name` and `set_rite_name`
+pub fn validate_set_faith_or_rite_name(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    // Without `name`, the game clears the name
+    vd.req_field("name");
+    vd.field_validated_sc("name", sc, validate_desc);
+    vd.field_validated_sc("desc", sc, validate_desc);
+    vd.field_validated_sc("adjective", sc, validate_desc);
+    vd.field_validated_sc("adherent", sc, validate_desc);
+    vd.field_validated_sc("adherent_plural", sc, validate_desc);
+}
+
+pub fn validate_set_holy_site_owner(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_target("target", sc, Scopes::HolySite);
+    // Only one `history` takes effect (in-game test, 1.20.1.2)
+    vd.field_validated_block_sc("history", sc, validate_artifact_history);
+    vd.field_bool("generate_history");
+}
+
+pub fn validate_set_puppet(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("target");
+    vd.field_target("target", sc, Scopes::Character);
+    vd.req_field("type");
+    vd.field_item("type", Item::PuppetType);
+}
+
+pub fn validate_set_tenet_status(
+    _key: &Token,
+    _block: &Block,
+    _data: &Everything,
+    sc: &mut ScopeContext,
+    mut vd: Validator,
+    _tooltipped: Tooltipped,
+) {
+    vd.req_field("tenet");
+    vd.field_target("tenet", sc, Scopes::Tenet);
+    vd.req_field("status");
+    vd.field_choice("status", &["unknown", "known", "prohibited", "permitted", "core"]);
 }

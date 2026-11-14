@@ -12,7 +12,7 @@ use crate::lowercase::Lowercase;
 use crate::modif::validate_modifs;
 use crate::parse::ParserMemory;
 use crate::pdxfile::PdxFile;
-use crate::report::{ErrorKey, err};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::script_value::validate_script_value;
 use crate::token::Token;
@@ -197,7 +197,8 @@ impl Trait {
 
         vd.field_item("category", Item::TraitCategory);
         vd.multi_field_validated_block("culture_modifier", validate_culture_modifier);
-        vd.multi_field_validated_block("faith_modifier", validate_faith_modifier);
+        vd.replaced_field("faith_modifier", "rite_modifier");
+        vd.multi_field_validated_block("rite_modifier", validate_faith_modifier);
         vd.field_item("culture_succession_prio", Item::CultureParameter);
         vd.multi_field_validated_block("triggered_opinion", validate_triggered_opinion);
 
@@ -251,6 +252,15 @@ impl Trait {
         vd.field_bool("genetic");
         vd.field_bool("physical");
         vd.field_bool("good");
+        // The docs say `good` needs a genetic trait or an inherit chance
+        if let Some(key) = self.block.get_key("good")
+            && self.block.field_value_is("good", "yes")
+            && !self.block.field_value_is("genetic", "yes")
+            && !self.block.has_key("inherit_chance")
+        {
+            let msg = "`good` needs `genetic = yes` or `inherit_chance`";
+            warn(ErrorKey::Validation).msg(msg).loc(key).push();
+        }
         vd.field_bool("immortal");
         vd.field_bool("can_have_children");
         vd.field_bool("enables_inbred");
@@ -291,9 +301,10 @@ impl Trait {
         }
         vd.field_bool("shown_in_encyclopedia");
 
-        vd.field_choice("inheritance_blocker", &["none", "dynasty", "all"]);
-        vd.field_choice("claim_inheritance_blocker", &["none", "dynasty", "all"]);
+        vd.field_choice("inheritance_blocker", &["none", "dynasty", "secular", "all"]);
+        vd.field_choice("claim_inheritance_blocker", &["none", "dynasty", "secular", "all"]);
         vd.field_choice("bastard", &["none", "illegitimate", "legitimate"]);
+        vd.field_bool("clergy");
 
         // The ethnicity files refer to these
         vd.field_value("genetic_constraint_all");
@@ -344,7 +355,7 @@ fn validate_trait_track(key: &Token, block: &Block, data: &Everything, warn_key:
         let mut sc = ScopeContext::new(Scopes::None, warn_key);
         validate_script_value(&BV::Value(key.clone()), data, &mut sc);
         if let Some(xp) = key.get_integer() {
-            // LAST UPDATED CK3 VERSION 1.11.3
+            // LAST UPDATED CK3 VERSION 1.20.1
             if xp > 100 {
                 let msg = "trait xp only goes up to 100";
                 err(ErrorKey::Range).strong().msg(msg).loc(key).push();
@@ -353,7 +364,8 @@ fn validate_trait_track(key: &Token, block: &Block, data: &Everything, warn_key:
 
         let mut vd = Validator::new(block, data);
         vd.multi_field_validated_block("culture_modifier", validate_culture_modifier);
-        vd.multi_field_validated_block("faith_modifier", validate_faith_modifier);
+        vd.replaced_field("faith_modifier", "rite_modifier");
+        vd.multi_field_validated_block("rite_modifier", validate_faith_modifier);
         validate_modifs(block, data, ModifKinds::Character, vd);
     });
     // let modif = format!("{key}_xp_degradation_mult");

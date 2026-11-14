@@ -33,8 +33,11 @@ impl DbKind for ImportantAction {
         data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("{key}_click");
         data.verify_exists_implied(Item::Localization, &loca, key);
-        if block.field_value_is("combine_into_one", "yes") {
+        if block.has_key("unimportant") {
+            let loca = format!("{key}_unimportant");
             data.verify_exists_implied(Item::Localization, &loca, key);
+        }
+        if block.field_value_is("combine_into_one", "yes") {
             let loca = format!("{key}_combined_label");
             data.mark_used(Item::Localization, &loca); // TODO: when is _label needed?
             let loca = format!("{key}_combined_group_label");
@@ -63,22 +66,17 @@ impl DbKind for ImportantAction {
 
         // TODO: "only interface effects are allowed"
         vd.field_effect_rooted("check_create_action", Tooltipped::No, Scopes::Character);
-        // TODO: "only interface effects are allowed"
-        vd.field_effect_builder("effect", Tooltipped::No, |key| {
+        let sc_builder = |key: &Token| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             // TODO: The scope context will contain all scopes passed in the try_create_important_action call
             sc.set_strict_scopes(false);
             sc
-        });
+        };
+        // TODO: "only interface effects are allowed"
+        vd.field_effect_builder("effect", Tooltipped::No, sc_builder);
+        // The docs say this has the same scope as `effect`
+        vd.field_trigger_builder("unimportant", Tooltipped::No, sc_builder);
 
         vd.field_item("soundeffect", Item::Sound);
-
-        // undocumented
-        vd.field_trigger_builder("unimportant", Tooltipped::No, |key| {
-            let mut sc = ScopeContext::new(Scopes::Character, key);
-            sc.define_name("actor", Scopes::Character, key);
-            sc.define_name("recipient", Scopes::Character, key);
-            sc
-        });
     }
 }

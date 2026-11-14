@@ -28,7 +28,10 @@ impl DbKind for PoolSelector {
         let mut vd = Validator::new(block, data);
         let mut sc = ScopeContext::new(Scopes::Character, key);
         sc.define_name("base", Scopes::Character, key);
-        if key.is("auto_generated_baron") {
+        if key.is("auto_generated_title_holder")
+            || key.is("auto_generated_local_title_holder")
+            || key.is("pool_theocratic_succession")
+        {
             sc.define_name("province", Scopes::Province, key);
         }
 
@@ -42,12 +45,13 @@ impl DbKind for PoolSelector {
 
         vd.field_integer("selection_count");
 
-        // undocumented
-
-        vd.field_value("pool");
-        vd.field_choice("gender", &["commander", "clergy", "gender_law", "random"]);
-        vd.field_value("culture");
+        vd.field_choice("pool", &["faith", "heritage"]);
         vd.field_bool("court");
+        vd.field_choice(
+            "gender",
+            &["random", "male", "female", "clergy", "commander", "gender_law"],
+        );
+        vd.field_choice("culture", &["character", "province", "company"]);
     }
 }
 

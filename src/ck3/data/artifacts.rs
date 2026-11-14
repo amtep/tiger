@@ -36,8 +36,19 @@ impl DbKind for ArtifactSlot {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
         data.verify_exists(Item::Localization, key);
+        vd.field_bool("allow_any_type_or_category");
+        if !block.field_value_is("allow_any_type_or_category", "yes") {
+            vd.req_field("type");
+        }
         vd.field_item("type", Item::ArtifactSlotType);
         vd.field_choice("category", &["inventory", "court"]);
+        vd.field_bool("holy_site");
+        vd.field_trigger_rooted("available", Tooltipped::No, Scopes::Character);
+        if block.field_value_is("holy_site", "yes") {
+            vd.field_trigger_rooted("available_holy_site", Tooltipped::No, Scopes::HolySite);
+        } else {
+            vd.ban_field("available_holy_site", || "slots with `holy_site = yes`");
+        }
         if let Some(category) = block.get_field_value("category") {
             // TODO: this can probably be simplified
             if category.is("inventory") {
@@ -100,13 +111,19 @@ impl DbKind for ArtifactTemplate {
         vd.field_trigger("can_benefit", Tooltipped::Yes, &mut sc);
         vd.field_trigger("can_reforge", Tooltipped::Yes, &mut sc);
         vd.field_trigger("can_repair", Tooltipped::Yes, &mut sc);
+        vd.field_trigger_builder("is_holy_relic", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Faith, key);
+            sc.define_name("artifact", Scopes::Artifact, key);
+            sc
+        });
 
         vd.field_validated_block("fallback", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
 
-        vd.field_script_value("ai_score", &mut sc);
+        // The docs give it only the root
+        vd.field_script_value_rooted("ai_score", Scopes::Character);
         vd.field_bool("unique");
     }
 }
@@ -132,7 +149,11 @@ impl DbKind for ArtifactVisual {
 
         vd.field_value("default_type"); // unused
 
-        // These two are undocumented
+        // The docs say `pedestal` is an old alias of `support_type`
+        if let Some(key) = block.get_key("pedestal") {
+            let msg = "should use `support_type` instead of `pedestal`";
+            warn(ErrorKey::Deprecated).msg(msg).loc(key).push();
+        }
         vd.field_choice("pedestal", SUPPORT_TYPES);
         vd.field_choice("support_type", SUPPORT_TYPES);
 
@@ -156,26 +177,29 @@ impl DbKind for ArtifactVisual {
             warn(ErrorKey::Validation).msg(msg).loc(key).push();
         }
 
-        unconditional = false;
-        vd.multi_field_validated("asset", |bv, data| match bv {
-            BV::Value(asset) => {
-                unconditional = true;
-                data.verify_exists(Item::Asset, asset);
-            }
-            BV::Block(block) => {
-                let mut vd = Validator::new(block, data);
-                if !block.has_key("trigger") {
+        // `portrait_asset` falls back to `asset`, so only `asset` needs an unconditional entry
+        for field in ["asset", "portrait_asset"] {
+            unconditional = false;
+            vd.multi_field_validated(field, |bv, data| match bv {
+                BV::Value(asset) => {
                     unconditional = true;
+                    data.verify_exists(Item::Asset, asset);
                 }
-                vd.field_trigger("trigger", Tooltipped::No, &mut sc);
-                vd.field_validated_value("reference", |_, mut vd| {
-                    vd.item(Item::Asset);
-                });
+                BV::Block(block) => {
+                    let mut vd = Validator::new(block, data);
+                    if !block.has_key("trigger") {
+                        unconditional = true;
+                    }
+                    vd.field_trigger("trigger", Tooltipped::No, &mut sc);
+                    vd.field_validated_value("reference", |_, mut vd| {
+                        vd.item(Item::Asset);
+                    });
+                }
+            });
+            if field == "asset" && !unconditional {
+                let msg = "needs at least one asset without a trigger";
+                warn(ErrorKey::Validation).msg(msg).loc(key).push();
             }
-        });
-        if !unconditional {
-            let msg = "needs at least one asset without a trigger";
-            warn(ErrorKey::Validation).msg(msg).loc(key).push();
         }
     }
 }

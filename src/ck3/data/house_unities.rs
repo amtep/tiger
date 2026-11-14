@@ -95,7 +95,5 @@ fn validate_stage(key: &Token, block: &Block, data: &Everything) {
     vd.field_effect_rooted("on_end", Tooltipped::No, Scopes::DynastyHouse);
 
     vd.field_list_items("decisions", Item::Decision);
-
-    // Undocumented
     vd.field_item("succession_law_flag", Item::LawFlag);
 }

@@ -1,12 +1,14 @@
 use crate::block::Block;
 use crate::ck3::data::titles::Tier;
 use crate::ck3::modif::ModifKinds;
+use crate::ck3::validate::validate_parameter_value;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
 use crate::report::{ErrorKey, fatal, warn};
+use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::validator::Validator;
 
@@ -29,6 +31,9 @@ impl DbKind for HolySite {
             for token in block.iter_values() {
                 db.add_flag(Item::HolySiteParameter, token.clone());
             }
+            for (key, _) in block.iter_assignments() {
+                db.add_flag(Item::HolySiteParameter, key.clone());
+            }
         }
     }
 
@@ -37,14 +42,25 @@ impl DbKind for HolySite {
 
         let loca = format!("holy_site_{key}_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
+        // The docs say this is only used if it exists
         let loca = format!("holy_site_{key}_effects");
         data.mark_used(Item::Localization, &loca);
 
-        vd.req_field("county");
-        vd.field_item("county", Item::Title);
-        vd.field_item("barony", Item::Title);
+        // A dynamic holy site is a general type without a location
+        let dynamic = block.field_value_is("is_dynamic", "yes");
+        vd.field_bool("is_dynamic");
+        if dynamic {
+            let loca = format!("holy_site_{key}_dynamic_name");
+            data.verify_exists_implied(Item::Localization, &loca, key);
+            vd.ban_field("county", || "holy sites without `is_dynamic = yes`");
+            vd.ban_field("barony", || "holy sites without `is_dynamic = yes`");
+        } else {
+            vd.req_field("county");
+            vd.field_item("county", Item::Title);
+            vd.field_item("barony", Item::Title);
+        }
 
-        if let Some(county) = block.get_field_value("county") {
+        if !dynamic && let Some(county) = block.get_field_value("county") {
             if Tier::try_from(county) != Ok(Tier::County) {
                 warn(ErrorKey::TitleTier).msg("must be a county").loc(county).push();
             }
@@ -61,17 +77,33 @@ impl DbKind for HolySite {
             }
         }
 
-        vd.field_list("parameters");
-
-        vd.multi_field_validated_block("character_modifier", |block, data| {
+        vd.field_validated_block("parameters", |block, data| {
             let mut vd = Validator::new(block, data);
-            if let Some(token) = vd.field_value("name") {
-                data.verify_exists(Item::Localization, token);
-            } else {
-                let loca = format!("holy_site_{key}_effects");
-                data.verify_exists_implied(Item::Localization, &loca, key);
-            }
+            vd.values();
+            // The docs say the `parameter = yes` form is still accepted, ignoring the value
+            vd.unknown_value_fields(validate_parameter_value);
+        });
+
+        vd.replaced_field("character_modifier", "faith_character_modifier");
+        vd.field_validated_block("faith_character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.multi_field_validated_block("faith_character_modifier_scaled", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("scale");
+            vd.field_script_value_rooted("scale", Scopes::HolySite);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.field_validated_block("county_holder_character_modifier", |block, data| {
+            let vd = Validator::new(block, data);
+            validate_modifs(block, data, ModifKinds::Character, vd);
+        });
+        vd.multi_field_validated_block("county_modifier_scaled", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("scale");
+            vd.field_script_value_rooted("scale", Scopes::HolySite);
+            validate_modifs(block, data, ModifKinds::County, vd);
         });
 
         // undocumented

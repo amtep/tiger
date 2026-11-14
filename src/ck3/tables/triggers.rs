@@ -1,8 +1,8 @@
 use std::sync::LazyLock;
 
 use crate::ck3::tables::misc::{
-    AGENT_SLOT_CONTRIBUTION_TYPE, GOVERNMENT_RULES, LEGEND_QUALITY, OUTBREAK_INTENSITIES,
-    TITLE_HISTORY_TYPES,
+    AGENT_SLOT_CONTRIBUTION_TYPE, ARTIFACT_RARITIES, GOVERNMENT_RULES, LEGEND_QUALITY,
+    OUTBREAK_INTENSITIES, TITLE_HISTORY_TYPES,
 };
 use crate::everything::Everything;
 use crate::helpers::TigerHashMap;
@@ -14,7 +14,7 @@ use crate::trigger::Trigger;
 
 use Trigger::*;
 
-/// LAST UPDATED CK3 VERSION 1.18.1
+/// LAST UPDATED CK3 VERSION 1.20.1
 pub fn scope_trigger(name: &Token, data: &Everything) -> Option<(Scopes, Trigger)> {
     let name_lc = name.as_str().to_ascii_lowercase();
 
@@ -77,7 +77,7 @@ static TRIGGER_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Trigger)>> = La
     hash
 });
 
-/// LAST UPDATED CK3 VERSION 1.18.1
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// See `triggers.log` from the game data dumps
 /// special:
 ///    `<legacy>_track_perks`
@@ -98,7 +98,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Accolade, "accolade_can_have_more_attributes", Boolean),
     (Scopes::Accolade, "accolade_can_spend_attribute", Boolean),
     (Scopes::Accolade, "accolade_rank", CompareValue),
-    (Scopes::AccoladeType, "accolade_type_tier", Scope(Scopes::AccoladeType)),
+    (Scopes::AccoladeType, "accolade_type_tier", Choice(&["common", "skilled", "eminent"])),
     (Scopes::LandedTitle, "active_de_jure_drift_progress", CompareValue),
     // TODO: warn if this is in an any_ iterator and not at the end
     (Scopes::all_but_none(), "add_to_temporary_list", Special),
@@ -197,6 +197,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Army, "barter_loot", CompareValue),
     (Scopes::Inspiration, "base_inspiration_gold_cost", CompareValue),
     (Scopes::Character, "base_weight", CompareValue),
+    (Scopes::Character, "birth_date", CompareValue),
     (Scopes::LandedTitle.union(Scopes::Province), "building_levies", CompareValue),
     (Scopes::LandedTitle.union(Scopes::Province), "building_max_garrison", CompareValue),
     (Scopes::Province, "building_slots", CompareValue),
@@ -225,6 +226,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "can_benefit_from_artifact", Scope(Scopes::Artifact)),
     (Scopes::TravelPlan, "can_cancel", Boolean),
     (Scopes::DynastyHouse, "can_change_house_aspiration", Boolean),
+    (Scopes::Rite, "can_convert_to_rite", Boolean),
     (
         Scopes::Character,
         "can_create_faction",
@@ -265,6 +267,15 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         ),
     ),
     (Scopes::Character, "can_employ_court_position_type", Item(Item::CourtPosition)),
+    (
+        Scopes::Character,
+        "can_enshrine_holy_site_artifact",
+        Block(&[
+            ("holy_site", Scope(Scopes::HolySite)),
+            ("artifact", Scope(Scopes::Artifact)),
+            ("?slot", Item(Item::ArtifactSlot)),
+        ]),
+    ),
     (Scopes::Character, "can_equip_artifact", Scope(Scopes::Artifact)),
     (Scopes::Character, "can_execute_decision", ScopeOrItem(Scopes::Decision, Item::Decision)),
     (Scopes::CouncilTask, "can_fire_position", Boolean),
@@ -289,6 +300,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         ),
     ),
     (Scopes::Character, "can_nomad_raze_holding", Scope(Scopes::Province)),
+    (Scopes::Character, "can_pick_personal_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
     (Scopes::Character, "can_plan_great_project", Scope(Scopes::GreatProjectType)),
     (
         Scopes::Character,
@@ -297,6 +309,11 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             ("type_name", Scope(Scopes::GreatProjectType)),
             ("province", Scope(Scopes::Province)),
         ]),
+    ),
+    (
+        Scopes::Character,
+        "can_remove_holy_site_artifact",
+        Block(&[("holy_site", Scope(Scopes::HolySite)), ("artifact", Scope(Scopes::Artifact))]),
     ),
     (Scopes::Character, "can_sponsor_inspiration", Scope(Scopes::Inspiration)),
     (
@@ -330,6 +347,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "character_men_at_arms_expense_treasury_relative", CompareValue),
     (Scopes::Character, "character_treasury_budget_capacity", CompareValue),
     (Scopes::Character, "character_treasury_new_budget_capacity", CompareValue),
+    (Scopes::LandedTitle, "clerical_region_size", CompareValue),
     (Scopes::Confederation, "cohesion", CompareValue),
     (Scopes::Province, "combined_building_level", CompareValue),
     (Scopes::Confederation, "combined_military_strength", CompareValue),
@@ -425,10 +443,13 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "custom_description", Control),
     (Scopes::LandedTitle, "custom_title_name", Item(Item::Localization)),
     (Scopes::None, "custom_tooltip", Special),
+    (Scopes::Character, "day_of_month_of_birth", CompareValue),
+    (Scopes::Character, "day_of_year_of_birth", CompareValue),
     (Scopes::Character, "days_as_ruler", CompareValue),
     (Scopes::Character, "days_in_prison", CompareValue),
     (Scopes::Character, "days_of_continuous_peace", CompareValue),
     (Scopes::Character, "days_of_continuous_war", CompareValue),
+    (Scopes::Character, "days_since_birth", CompareValue),
     (Scopes::Inspiration, "days_since_creation", CompareValue),
     (Scopes::Character, "days_since_death", CompareValue),
     (Scopes::Character, "days_since_joined_court", CompareValue),
@@ -475,6 +496,24 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::CombatSide, "disallowed_retreat", Boolean),
     (Scopes::Faction, "discontent_per_month", CompareValue),
     (
+        Scopes::Rite,
+        "divergence",
+        Block(&[("target", Scope(Scopes::Rite)), ("+value", CompareValue)]),
+    ),
+    (
+        Scopes::Doctrine,
+        "doctrine_divergence",
+        Block(&[("target", Scope(Scopes::Doctrine)), ("+value", CompareValue)]),
+    ),
+    (
+        Scopes::Character,
+        "doctrine_fulfillment_value",
+        Block(&[("target", Scope(Scopes::Doctrine)), ("+value", CompareValue)]),
+    ),
+    (Scopes::Doctrine, "doctrine_has_sin", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (Scopes::Doctrine, "doctrine_has_virtue", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (Scopes::Doctrine, "doctrine_in_same_group", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
+    (
         Scopes::Character,
         "does_ai_liege_in_vassal_contract_desire_admin_province_obligation_change",
         Boolean,
@@ -503,15 +542,28 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("dreaded_character", Scope(Scopes::Character)), ("+value", CompareValue)]),
     ),
     (Scopes::Dynasty, "dynasty_can_unlock_relevant_perk", Boolean),
+    (Scopes::Dynasty, "dynasty_has_base_name", Item(Item::Localization)),
     (Scopes::Dynasty, "dynasty_num_unlocked_perks", CompareValue),
     (Scopes::Dynasty, "dynasty_prestige", CompareValueWarnEq),
     (Scopes::Dynasty, "dynasty_prestige_level", CompareValue),
     (Scopes::Character, "effective_age", CompareValue),
+    (Scopes::Religion, "eminent_holy_sites_max", CompareValue),
+    (Scopes::Religion, "eminent_holy_sites_min", CompareValue),
     (Scopes::Character, "employs_court_position", Item(Item::CourtPosition)),
     (Scopes::Character, "employs_tax_collector", Boolean),
     (Scopes::Province, "epidemic_resistance", CompareValue),
     (Scopes::Faith, "estimated_faith_strength", CompareValue),
     (Scopes::None, "exists", Special),
+    (
+        Scopes::Character,
+        "expected_rite_fulfillment_change",
+        Block(&[("target", Scope(Scopes::Rite)), ("+value", CompareValue)]),
+    ),
+    (
+        Scopes::Character,
+        "expected_tenet_fulfillment_change",
+        Block(&[("target", Scope(Scopes::Tenet)), ("+value", CompareValue)]),
+    ),
     (Scopes::Domicile, "external_domicile_building_slots", CompareValue),
     (Scopes::Faction, "faction_can_press_demands", Boolean),
     (Scopes::Faction, "faction_discontent", CompareValue),
@@ -535,6 +587,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Province, "fort_level", CompareValue),
     (Scopes::Province, "free_building_slots", CompareValue),
     (Scopes::Domicile, "free_external_domicile_building_slots", CompareValue),
+    (Scopes::Character, "free_personal_tenet_slots", CompareValue),
     (Scopes::Culture, "free_tradition_slot", CompareValue),
     (Scopes::None, "game_start_date", CompareDate),
     (
@@ -556,6 +609,23 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "government_allows", Choice(GOVERNMENT_RULES)),
     (Scopes::Character, "government_disallows", Choice(GOVERNMENT_RULES)),
     (Scopes::Character, "government_has_flag", Item(Item::GovernmentFlag)),
+    (
+        Scopes::Character,
+        "government_has_mechanic",
+        Choice(&[
+            "feudal",
+            "mercenary",
+            "holy_order",
+            "clan",
+            "theocracy",
+            "administrative",
+            "landless_adventurer",
+            "herder",
+            "nomad",
+            "mandala",
+        ]),
+    ),
+    (Scopes::GovernmentType, "government_type_has_flag", Item(Item::GovernmentFlag)),
     (Scopes::GreatProject, "great_project_build_progress", CompareValue),
     (
         Scopes::GreatProject,
@@ -564,7 +634,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::GreatProject, "great_project_days_to_completion", CompareValue),
     // There's a trigger that takes an Item and an event target of the same name that returns a Scope.
-    // Handle the name collistion by deleting the event target and making the trigger accept both.
+    // The trigger takes precedence when the name is not part of a chain, so it accepts both.
     (
         Scopes::GreatProject,
         "great_project_type",
@@ -632,6 +702,14 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Artifact, "has_artifact_feature", Item(Item::ArtifactFeature)),
     (Scopes::Artifact, "has_artifact_feature_group", Item(Item::ArtifactFeatureGroup)),
     (Scopes::Artifact, "has_artifact_modifier", Item(Item::Modifier)),
+    (
+        Scopes::Rite,
+        "has_at_least_tenet_status",
+        Block(&[
+            ("tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+            ("status", Choice(&["unknown", "known", "prohibited", "permitted", "core"])),
+        ]),
+    ),
     (Scopes::Character, "has_away_hostages", Boolean),
     (Scopes::Character, "has_bad_nickname", Boolean),
     (Scopes::Character, "has_banish_reason", Scope(Scopes::Character)),
@@ -673,6 +751,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     ),
     (Scopes::LandedTitle, "has_character_nominiated", Scope(Scopes::Character)), // sic
     (Scopes::Character, "has_claim_on", Scope(Scopes::LandedTitle)),
+    (Scopes::LandedTitle, "has_clerical_region", Boolean),
+    (Scopes::Character, "has_clerical_region_in_realm", Scope(Scopes::LandedTitle)),
     (Scopes::Culture, "has_clothing_gfx", Item(Item::ClothingGfx)),
     (Scopes::Culture, "has_coa_gfx", Item(Item::CoaGfx)),
     (Scopes::LandedTitle, "has_coastal_province", Boolean),
@@ -716,9 +796,16 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
             ("*years", CompareValue),
         ]),
     ),
+    // The docs say faith, but it works only in a character (in-game test, 1.20.1.2). The game
+    // still logs "Inconsistent trigger scopes (character vs. faith)" when loading such a use.
+    (Scopes::Character, "has_county_of_faith", Scope(Scopes::Faith)),
     (Scopes::Character, "has_court_language", Item(Item::Language)),
     (Scopes::Character, "has_court_language_of_culture", Scope(Scopes::Culture)),
-    (Scopes::Character, "has_court_position", Item(Item::CourtPosition)),
+    (
+        Scopes::Character,
+        "has_court_position",
+        ScopeOrItem(Scopes::CourtPositionType, Item::CourtPosition),
+    ),
     (Scopes::Character, "has_court_type", Item(Item::CourtType)),
     (Scopes::Culture, "has_cultural_era_or_later", Item(Item::CultureEra)),
     (Scopes::Culture, "has_cultural_parameter", Item(Item::CultureParameter)),
@@ -743,7 +830,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::None, "has_dlc", Item(Item::DlcName)),
     (Scopes::None, "has_dlc_feature", Item(Item::DlcFeature)),
     (Scopes::Faith, "has_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
-    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineBooleanParameter)),
+    (Scopes::Faith, "has_doctrine_group", Item(Item::DoctrineGroup)),
+    (Scopes::Faith, "has_doctrine_parameter", Item(Item::DoctrineParameter)),
     (Scopes::Character, "has_domicile", Boolean),
     (Scopes::Domicile, "has_domicile_building", Item(Item::DomicileBuilding)),
     (Scopes::Domicile, "has_domicile_building_or_higher", Item(Item::DomicileBuilding)),
@@ -758,6 +846,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "has_dread_level_towards",
         Block(&[("target", Scope(Scopes::Character)), ("level", CompareValue)]),
     ),
+    (Scopes::Artifact, "has_durability_decay", Boolean),
     (Scopes::Character, "has_dynasty", Boolean),
     (Scopes::Dynasty, "has_dynasty_modifier", Item(Item::Modifier)),
     (
@@ -796,6 +885,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::GreatHolyWar, "has_forced_defender", Scope(Scopes::Character)),
     (Scopes::Province, "has_free_building_slot", Boolean),
     (Scopes::Character, "has_free_council_slot", Boolean),
+    (Scopes::Character, "has_fulfillment_parameter", Item(Item::FulfillmentParameter)),
     (Scopes::None, "has_game_rule", Item(Item::GameRuleSetting)),
     (Scopes::Character, "has_gene", Special),
     (Scopes::None, "has_global_variable", Identifier("variable name")),
@@ -892,6 +982,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Legend, "has_legend_province_modifier_duration_remaining", UncheckedTodo),
     (Scopes::Character, "has_legitimacy", Boolean),
     (Scopes::Character, "has_legitimacy_flag", Item(Item::LegitimacyFlag)),
+    (Scopes::Character, "has_lessee_approval", Scope(Scopes::Character)),
     (Scopes::Character, "has_lifestyle", Item(Item::Lifestyle)),
     (Scopes::None, "has_local_player_open_court_event", Boolean),
     (Scopes::None, "has_local_player_seen_unopened_court_event", Boolean),
@@ -948,6 +1039,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "has_personal_legend_seed",
         ScopeOrItem(Scopes::LegendType, Item::LegendType),
     ),
+    (Scopes::Character, "has_personal_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+    (Scopes::Character, "has_personal_tenet_flag", Item(Item::PersonalTenetParameter)),
     (
         Scopes::Activity,
         "has_phase",
@@ -1018,6 +1111,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "has_province_with_epidemic",
         Block(&[("+intensity", CompareChoice(&["any", "minor", "major", "apocalyptic"]))]),
     ),
+    (Scopes::Character, "has_puppet_type", Item(Item::PuppetType)),
     (Scopes::Character, "has_raid_immunity_against", Scope(Scopes::Character)),
     (Scopes::Character, "has_raised_armies", Boolean),
     (Scopes::Character, "has_realm_law", Item(Item::Law)),
@@ -1051,6 +1145,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "has_royal_court", Boolean),
     (Scopes::Province, "has_ruined_great_building", Boolean),
     (Scopes::Character, "has_ruler_objective", Boolean),
+    (Scopes::Faith, "has_saint_character", Scope(Scopes::Character)),
     (Scopes::Character, "has_same_court_language", Scope(Scopes::Character)),
     (Scopes::Character, "has_same_court_type_as", Scope(Scopes::Character)),
     (Scopes::Character, "has_same_culture_as", Scope(Scopes::Character)),
@@ -1079,6 +1174,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Province, "has_special_building_slot", Boolean),
     (Scopes::Faction, "has_special_character", Boolean),
     (Scopes::Faction, "has_special_title", Boolean),
+    (Scopes::Character, "has_spiritual_fulfillment_type", Item(Item::SpiritualFulfillmentType)),
     (Scopes::Province, "has_stationed_regiment", Boolean),
     (Scopes::Province, "has_stationed_regiment_of_base_type", Item(Item::MenAtArmsBase)),
     (Scopes::Character, "has_strong_claim_on", Scope(Scopes::LandedTitle)),
@@ -1086,22 +1182,23 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "has_strong_implicit_claim_on", Scope(Scopes::LandedTitle)),
     (Scopes::Character, "has_strong_usable_hook", Scope(Scopes::Character)),
     (Scopes::Struggle, "has_struggle_phase_parameter", Item(Item::StrugglePhaseParameter)),
-    (
-        Scopes::Situation,
-        "has_situation_top_phase_parameter",
-        Item(Item::SituationParticipantGroupParameter),
-    ),
-    (
-        Scopes::SituationSubRegion,
-        "has_sub_region_phase_parameter",
-        Item(Item::SituationParticipantGroupParameter),
-    ),
+    (Scopes::Situation, "has_situation_top_phase_parameter", Special),
+    (Scopes::SituationSubRegion, "has_sub_region_phase_parameter", Special),
     (Scopes::Character, "has_subject_contract_group", Item(Item::SubjectContractGroup)),
     (Scopes::Character, "has_succession_appointment_investors", Scope(Scopes::LandedTitle)),
     (Scopes::Character, "has_targeting_faction", Boolean),
     (Scopes::TaskContract, "has_task_contract_group", Item(Item::TaskContractGroup)),
     (Scopes::TaskContract, "has_task_contract_type", Item(Item::TaskContractType)),
     (Scopes::TaxSlot, "has_tax_collector", Boolean),
+    (Scopes::Faith, "has_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+    (
+        Scopes::Rite,
+        "has_tenet_status",
+        Block(&[
+            ("tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+            ("status", Choice(&["unknown", "known", "prohibited", "permitted", "core"])),
+        ]),
+    ),
     (Scopes::Character, "has_title", Scope(Scopes::LandedTitle)),
     (Scopes::LandedTitle, "has_title_law", Item(Item::Law)),
     (Scopes::LandedTitle, "has_title_law_flag", Item(Item::LawFlag)),
@@ -1157,13 +1254,19 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "has_weak_implicit_claim_on", Scope(Scopes::LandedTitle)),
     (Scopes::LandedTitle, "has_wrong_holding_type", Boolean),
     (Scopes::Character, "health", CompareValue),
+    (Scopes::LandedTitle, "heir_resigns_realm_on_inheriting", Scope(Scopes::Character)),
     (Scopes::Domicile, "herd", CompareValue),
+    (Scopes::Faith, "heresy_threshold", CompareValue),
     (Scopes::Character, "highest_held_title_tier", CompareValue),
-    // TODO: verify whether "prowess" is a valid argument to highest_skill
     (Scopes::Character, "highest_skill", Item(Item::Skill)),
     (Scopes::Character, "highest_skill_including_prowess", Item(Item::Skill)),
     (Scopes::Character, "holds_landed_title", Boolean),
+    (Scopes::HolySite, "holy_site_artifact_count", CompareValue),
+    (Scopes::HolySite, "holy_site_has_artifact", Boolean),
+    (Scopes::HolySite, "holy_site_has_artifact_in_slot", Item(Item::ArtifactSlot)),
     (Scopes::Faith, "holy_sites_controlled", CompareValue),
+    (Scopes::Religion, "holy_sites_max", CompareValue),
+    (Scopes::Religion, "holy_sites_min", CompareValue),
     (Scopes::Domicile, "horde", CompareValue),
     // TODO: verify "weeks" works here
     (
@@ -1207,6 +1310,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_acclaimed", Boolean),
     (Scopes::Accolade, "is_accolade_active", Removed("1.19", "")),
     (Scopes::Character, "is_accolade_successor", Boolean),
+    (Scopes::Artifact, "is_active_holy_relic_for", Scope(Scopes::HolySite)),
     (Scopes::TaxSlot, "is_active_obligation", Item(Item::TaxSlotObligation)),
     (Scopes::Activity, "is_activity_complete", Boolean),
     (
@@ -1214,6 +1318,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "is_activity_type_on_cooldown",
         ScopeOrItem(Scopes::ActivityType, Item::ActivityType),
     ),
+    (Scopes::LandedTitle, "is_adjacent_to_clerical_region", Scope(Scopes::LandedTitle)),
     (Scopes::Character, "is_adult", Boolean),
     (Scopes::Character, "is_agent_exposed_in_scheme", Scope(Scopes::Scheme)),
     (Scopes::AgentSlot, "is_agent_slot_type", Item(Item::AgentType)),
@@ -1265,6 +1370,14 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_betrothed", Boolean),
     (Scopes::Character, "is_bloc_leader_or_bloc_leader_heir_of", Scope(Scopes::Character)),
     (Scopes::TravelPlan, "is_cancelled", Boolean),
+    (
+        Scopes::Character,
+        "is_candidate_from_set",
+        Block(&[
+            ("title", Scope(Scopes::LandedTitle)),
+            ("source", Item(Item::ElectionCandidateSet)),
+        ]),
+    ),
     (Scopes::LandedTitle, "is_capital_barony", Boolean),
     (Scopes::Character, "is_causing_raid_hostility_towards", Scope(Scopes::Character)),
     (
@@ -1351,6 +1464,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Activity, "is_current_phase_active", Boolean),
     (Scopes::LandedTitle, "is_de_facto_liege_or_above_target", Scope(Scopes::LandedTitle)),
     (Scopes::LandedTitle, "is_de_jure_liege_or_above_target", Scope(Scopes::LandedTitle)),
+    (Scopes::Faith, "is_dead_faith", Boolean),
     (Scopes::Character, "is_decision_on_cooldown", ScopeOrItem(Scopes::Decision, Item::Decision)),
     (Scopes::War, "is_defender", Scope(Scopes::Character)),
     (Scopes::Character, "is_defender_in_war", Scope(Scopes::War)),
@@ -1362,8 +1476,18 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Culture, "is_divergent_culture", Boolean),
     (Scopes::Domicile, "is_domicile_type", Item(Item::DomicileType)),
     (Scopes::DynastyHouse, "is_dominant_family", Boolean),
+    (Scopes::Faith, "is_faith_eminent_holy_site", Scope(Scopes::HolySite)),
+    (Scopes::Faith, "is_faith_holy_site", Scope(Scopes::HolySite)),
+    (Scopes::Character, "is_following_religious_head_challenger", Boolean),
     (Scopes::None, "is_frontend_character_selected", Boolean),
+    (Scopes::Artifact, "is_holy_relic", Boolean),
+    (Scopes::Artifact, "is_holy_relic_for", Scope(Scopes::Faith)),
+    (Scopes::HolySite, "is_holy_site_type", Item(Item::HolySite)),
+    (Scopes::Character, "is_in_line_for_external_clerical_region", Boolean),
+    (Scopes::Rite, "is_inactive_rite", Boolean),
     (Scopes::Character, "is_knight_permitted", Scope(Scopes::Character)),
+    (Scopes::HolyOrder, "is_military_order", Boolean),
+    (Scopes::Character, "is_papabile", Boolean),
     (Scopes::Character, "is_perfect_fit_for_accolade", Scope(Scopes::Accolade)),
     (Scopes::DynastyHouse, "is_powerful_family", Boolean),
     (Scopes::Character, "is_employer_of", Scope(Scopes::Character)),
@@ -1446,7 +1570,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Regiment, "is_maa_in_combat", Boolean),
     (Scopes::Regiment, "is_maa_type", Item(Item::MenAtArms)),
     (Scopes::Character, "is_male", Boolean),
-    (Scopes::Character, "is_manual_participant", Boolean),
+    (Scopes::Situation, "is_manual_participant", Scope(Scopes::Character)),
     (Scopes::Character, "is_married", Boolean),
     (Scopes::Character, "is_member_of_confederation", Scope(Scopes::Confederation)),
     (Scopes::CharacterMemory, "is_memory_of_travel", Scope(Scopes::TravelPlan)),
@@ -1487,19 +1611,22 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "is_powerful_vassal_of", Scope(Scopes::Character)),
     (Scopes::Character, "is_pregnant", Boolean),
     (Scopes::Character, "is_primary_heir_of", Scope(Scopes::Character)),
+    (Scopes::Character, "is_puppet_action_valid", Special),
+    (Scopes::Character, "is_puppet_of_type", Item(Item::PuppetType)),
     (Scopes::Army, "is_raid_army", Boolean),
     (Scopes::Province, "is_raided", Boolean),
     (Scopes::Regiment, "is_raised", Boolean),
     (Scopes::Regiment, "is_regular_maa_regiment", Boolean),
     (Scopes::Activity, "is_required_special_guest", Scope(Scopes::Character)),
     (Scopes::Character, "is_rightful_liege_of", Scope(Scopes::Character)),
+    (Scopes::Rite, "is_rite_enabled", Boolean),
     (Scopes::Province, "is_river_province", Boolean),
-    (Scopes::Province, "is_riverside_province", Boolean),
     (Scopes::LandedTitle, "is_riverside_county", Boolean),
     (Scopes::Province, "is_riverside_province", Boolean),
     (Scopes::Province, "is_ruined_building_being_reconstructed", Boolean),
     (Scopes::Character, "is_ruler", Boolean),
     (Scopes::LandedTitle, "is_ruler_de_jure_liege_or_above", Scope(Scopes::Character)),
+    (Scopes::Artifact, "is_sanctified_for_faith", Scope(Scopes::Faith)),
     (Scopes::Scheme, "is_scheme_agent_exposed", Scope(Scopes::Character)),
     (
         Scopes::Scheme,
@@ -1607,8 +1734,16 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("scheme", Scope(Scopes::Scheme)), ("max", SetValue), ("min", SetValue)]),
     ),
     (Scopes::Character, "knows_court_language_of", ScopeOkThis(Scopes::Character)),
+    (Scopes::Character, "knows_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
     (Scopes::Character, "knows_language", Item(Item::Language)),
+    (Scopes::Character, "knows_language_of_character", Scope(Scopes::Character)),
     (Scopes::Character, "knows_language_of_culture", Scope(Scopes::Culture)),
+    (
+        Scopes::Character,
+        "knows_rite_level",
+        Block(&[("target", Scope(Scopes::Rite)), ("+value", CompareValue)]),
+    ),
+    (Scopes::Character, "knows_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
     (Scopes::Character, "learning", CompareValue),
     (
         Scopes::Character,
@@ -1627,7 +1762,6 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Legend, "legend_start_date", CompareDate),
     (Scopes::Character, "legitimacy", CompareValueWarnEq),
     (Scopes::Character, "legitimacy_level", CompareValue),
-    (Scopes::Character, "levies_to_liege", CompareValue),
     (Scopes::Secret, "local_player_knows_this_secret", Boolean),
     (Scopes::None, "local_variable_list_size", Special),
     (Scopes::Character, "long_term_gold", CompareValueWarnEq),
@@ -1694,6 +1828,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "missing_unique_ancestors",
         Removed("1.14", "replaced with parent_relatedness"),
     ),
+    (Scopes::Character, "month_of_year_of_birth", CompareValue),
     (Scopes::Character, "monthly_character_balance", CompareValueWarnEq),
     (Scopes::Character, "monthly_character_expenses", CompareValueWarnEq),
     (Scopes::Character, "monthly_character_income", CompareValueWarnEq),
@@ -1735,6 +1870,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("category", Item(Item::GeneCategory)), ("+value", CompareValue)]),
     ),
     (Scopes::None, "nand", Control),
+    (Scopes::Province, "new_clerical_region_size", CompareValue),
     (Scopes::TravelPlan, "next_destination_arrival_date", CompareDate),
     (Scopes::TravelPlan, "next_destination_arrival_days", CompareValueWarnEq),
     (Scopes::TravelPlan, "next_destination_progress", CompareValue),
@@ -1767,11 +1903,13 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Activity, "num_past_phases", CompareValue),
     (Scopes::Character, "num_personal_legend_seeds", CompareValue),
     (Scopes::Activity, "num_phases", CompareValue),
+    (Scopes::Rite, "num_rite_character_followers", CompareValue),
+    (Scopes::Rite, "num_rite_county_followers", CompareValue),
     (Scopes::Character, "num_scripted_legend_seeds", CompareValue),
     (
         Scopes::Character,
         "num_sinful_traits",
-        BlockOrCompareValue(&[("+value", CompareValue), ("target", Scope(Scopes::Faith))]),
+        BlockOrCompareValue(&[("+value", CompareValue), ("target", Scope(Scopes::Rite))]),
     ),
     (Scopes::Character, "num_taken_task_contracts", CompareValue),
     (Scopes::Character, "num_task_contracts", CompareValue),
@@ -1780,7 +1918,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (
         Scopes::Character,
         "num_virtuous_traits",
-        BlockOrCompareValue(&[("+value", CompareValue), ("target", Scope(Scopes::Faith))]),
+        BlockOrCompareValue(&[("+value", CompareValue), ("target", Scope(Scopes::Rite))]),
     ),
     (
         Scopes::Character,
@@ -1868,6 +2006,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target", Scope(Scopes::Character)), ("+value", CompareValue)]),
     ),
     (Scopes::None, "or", Control),
+    (Scopes::HolyOrder, "order_worldliness", CompareValue),
     (Scopes::Epidemic, "outbreak_intensity", CompareChoice(OUTBREAK_INTENSITIES)),
     (Scopes::Epidemic, "outbreak_start_date", CompareDate),
     (Scopes::Character, "owns_a_story", Boolean),
@@ -1940,6 +2079,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Army, "raid_loot", CompareValue),
     (Scopes::Character, "ransom_cost", CompareValue),
     (Scopes::Artifact, "rarity", Item(Item::ArtifactRarity)),
+    (Scopes::Artifact, "rarity_level", CompareChoiceOrNumber(ARTIFACT_RARITIES)),
     (Scopes::Character, "realm_size", CompareValue),
     (Scopes::Character, "realm_law_group_at_maximum_level", Item(Item::LawGroup)),
     (Scopes::Character, "realm_law_group_at_minimum_level", Item(Item::LawGroup)),
@@ -1968,8 +2108,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "region_is_adjacent_situation_subregion",
         Scope(Scopes::SituationSubRegion),
     ),
+    (Scopes::HolySite, "related_building_type", Item(Item::Building)),
     (Scopes::None, "release_only", Boolean),
     (Scopes::Faith, "religion_tag", Item(Item::Religion)),
+    (Scopes::Character, "remaining_saint_relics", CompareValue),
     (Scopes::SituationParticipantGroup, "require_capital_in_sub_region", Boolean),
     (Scopes::SituationParticipantGroup, "require_domain_in_sub_region", Boolean),
     (Scopes::SituationParticipantGroup, "require_realm_in_sub_region", Boolean),
@@ -1992,6 +2134,28 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "reverse_opinion",
         Block(&[("target", Scope(Scopes::Character)), ("+value", CompareValue)]),
     ),
+    (Scopes::Rite, "rite_can_choose_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
+    (Scopes::Rite, "rite_can_choose_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+    (Scopes::Rite, "rite_counties", CompareValue),
+    (
+        Scopes::Character,
+        "rite_fulfillment_score",
+        Block(&[("target", Scope(Scopes::Rite)), ("+value", CompareValue)]),
+    ),
+    (Scopes::Rite, "rite_has_allowed_gender_for_clergy", Scope(Scopes::Character)),
+    (Scopes::Rite, "rite_has_culture", Scope(Scopes::Culture)),
+    (Scopes::Rite, "rite_has_doctrine", ScopeOrItem(Scopes::Doctrine, Item::Doctrine)),
+    (Scopes::Rite, "rite_has_dominant_ruling_gender", Scope(Scopes::Character)),
+    (Scopes::Rite, "rite_has_parameter", Item(Item::DoctrineParameter)),
+    (Scopes::Rite, "rite_has_preferred_gender_for_clergy", Scope(Scopes::Character)),
+    (Scopes::Rite, "rite_has_tenet", ScopeOrItem(Scopes::Tenet, Item::Tenet)),
+    (
+        Scopes::Rite,
+        "rite_hostility_level",
+        Block(&[("target", Scope(Scopes::Rite)), ("+value", CompareValue)]),
+    ),
+    (Scopes::Rite, "rite_hostility_level_comparison", ScopeCompare(Scopes::Rite)),
+    (Scopes::Rite, "rite_religion_tag", Item(Item::Religion)),
     (Scopes::Secret, "same_secret_type_as", Scope(Scopes::Secret)),
     (Scopes::Character, "save_temporary_opinion_value_as", Special),
     (Scopes::all_but_none(), "save_temporary_scope_as", Special),
@@ -2034,6 +2198,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         "should_decision_create_alert",
         ScopeOrItem(Scopes::Decision, Item::Decision),
     ),
+    (Scopes::None, "should_limit_age_for_dead_portraits", Boolean),
     (
         Scopes::Character,
         "should_notify_can_host_activity",
@@ -2077,6 +2242,8 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Situation, "situation_top_phase_start_date", CompareDate),
     (Scopes::Situation, "situation_type", Item(Item::Situation)),
     (Scopes::CombatSide, "skip_pursuit", Boolean),
+    (Scopes::Character, "spiritual_fulfillment", CompareValue),
+    (Scopes::Character, "split_clerical_region_size", CompareValue),
     (
         Scopes::LandedTitle.union(Scopes::Province),
         "squared_distance",
@@ -2150,6 +2317,14 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
         Block(&[("target", Item(Item::TaxSlotType)), ("+value", CompareValue)]),
     ),
     (Scopes::Character, "tax_to_liege", CompareValueWarnEq),
+    (Scopes::Tenet, "tenet_has_sin", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (Scopes::Tenet, "tenet_has_virtue", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (
+        Scopes::Faith,
+        "tenet_popularity",
+        Block(&[("target", Scope(Scopes::Tenet)), ("+value", CompareValue)]),
+    ),
+    (Scopes::Character, "tenets_doctrines_unknown_to_faith", CompareValue),
     (Scopes::Province, "terrain", Item(Item::Terrain)),
     (Scopes::LandedTitle, "tier", CompareValue), // TODO: advice if this is compared to a bare number
     (
@@ -2217,6 +2392,7 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Character, "title_law_group_at_maximum_level", Item(Item::LawGroup)),
     (Scopes::Character, "title_law_group_at_minimum_level", Item(Item::LawGroup)),
     (Scopes::LandedTitle, "title_will_leave_sub_realm_on_succession", Scope(Scopes::Character)),
+    (Scopes::HolySite, "total_active_artifact_rarity_sum", CompareValue),
     (Scopes::Army, "total_army_damage", CompareValue),
     (Scopes::Army, "total_army_pursuit", CompareValue),
     (Scopes::Army, "total_army_screen", CompareValue),
@@ -2224,12 +2400,24 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::Army, "total_army_toughness", CompareValue),
     (Scopes::Epidemic, "total_infected_provinces", CompareValueWarnEq),
     (
+        Scopes::Rite,
+        "trait_base_spiritual_fulfillment",
+        Block(&[("target", Scope(Scopes::Trait)), ("+value", CompareValue)]),
+    ),
+    (
         Scopes::Character,
         "trait_compatibility",
         Block(&[("target", Scope(Scopes::Character)), ("+value", CompareValue)]),
     ),
     (Scopes::Faith, "trait_is_sin", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (Scopes::Rite, "trait_is_sin_rite", ScopeOrItem(Scopes::Trait, Item::Trait)),
     (Scopes::Faith, "trait_is_virtue", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (Scopes::Rite, "trait_is_virtue_rite", ScopeOrItem(Scopes::Trait, Item::Trait)),
+    (
+        Scopes::Character,
+        "trait_rank",
+        Block(&[("target", Item(Item::Trait)), ("+value", CompareValue)]),
+    ),
     (
         Scopes::Province,
         "travel_danger_type",
@@ -2250,10 +2438,12 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::TravelPlan, "travel_safety", CompareValue),
     (Scopes::TravelPlan, "travel_speed", CompareValue),
     (Scopes::Character, "treasury", CompareValueWarnEq),
+    (Scopes::Character, "treasury_budget_allocation_cardinal", CompareValue),
     (Scopes::Character, "treasury_budget_allocation_excess", CompareValueWarnEq),
     (Scopes::Character, "treasury_budget_allocation_military", CompareValueWarnEq),
     (Scopes::Character, "treasury_budget_allocation_ministries", CompareValueWarnEq),
     (Scopes::Character, "treasury_budget_allocation_salaries", CompareValueWarnEq),
+    (Scopes::Character, "treasury_budget_base_rate_cardinal", CompareValue),
     (Scopes::Character, "treasury_budget_base_rate_military", CompareValueWarnEq),
     (Scopes::Character, "treasury_budget_base_rate_ministries", CompareValueWarnEq),
     (Scopes::Character, "treasury_budget_base_rate_salaries", CompareValueWarnEq),
@@ -2280,7 +2470,10 @@ const TRIGGER: &[(Scopes, &str, Trigger)] = &[
     (Scopes::AccoladeType, "type_has_accolade_category", Item(Item::AccoladeCategory)),
     (Scopes::Character, "tyranny", CompareValue),
     (Scopes::LandedTitle, "uses_county_fertility", Boolean),
+    (Scopes::Character, "uses_treasury_vassal_development", Boolean),
     (Scopes::War, "using_cb", Item(Item::CasusBelli)),
+    (Scopes::Character, "valid_for_council_position", Item(Item::CouncilPosition)),
+    (Scopes::Character, "valid_for_council_task", Scope(Scopes::CouncilTask)),
     (
         Scopes::None,
         "variable_list_size",
@@ -2371,7 +2564,7 @@ static TRIGGER_COMPLEX_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Argumen
         hash
     });
 
-/// LAST UPDATED CK3 VERSION 1.15.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// See `triggers.log` from the game data dumps
 /// `(inscopes, trigger name, argtype, outscopes)`
 /// Currently only works with single argument triggers
@@ -2457,8 +2650,8 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
             Item(Item::CultureEra),
             Scopes::Value,
         ),
-        (Scopes::Character, "num_sinful_traits", Scope(Scopes::Faith), Scopes::Value),
-        (Scopes::Character, "num_virtuous_traits", Scope(Scopes::Faith), Scopes::Value),
+        (Scopes::Character, "num_sinful_traits", Scope(Scopes::Rite), Scopes::Value),
+        (Scopes::Character, "num_virtuous_traits", Scope(Scopes::Rite), Scopes::Value),
         (
             Scopes::Character,
             "number_maa_regiments_of_base_type",
@@ -2529,7 +2722,7 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (
             Scopes::Character,
             "vassal_contract_obligation_level_score",
-            ScopeOrItem(Scopes::VassalObligationLevel, Item::SubjectContract),
+            ScopeOrItem(Scopes::VassalContract, Item::SubjectContract),
             Scopes::Value,
         ),
         // (Scopes::LandedTitle, "title_create_faction_type_chance", Item(Item::Faction), Scope(Scopes::Character), Scopes::Value),
@@ -2537,9 +2730,26 @@ const TRIGGER_COMPLEX: &[(Scopes, &str, ArgumentValue, Scopes)] = {
         (
             Scopes::LandedTitle.union(Scopes::Province),
             "squared_distance",
-            Scope(Scopes::Province),
+            Scope(Scopes::LandedTitle.union(Scopes::Province)),
             Scopes::Value,
         ),
         (Scopes::War, "war_contribution", Scope(Scopes::Character), Scopes::Value),
+        // CK3 1.20
+        (Scopes::Rite, "divergence", Scope(Scopes::Rite), Scopes::Value),
+        (Scopes::Doctrine, "doctrine_divergence", Scope(Scopes::Doctrine), Scopes::Value),
+        (Scopes::Character, "doctrine_fulfillment_value", Scope(Scopes::Doctrine), Scopes::Value),
+        (Scopes::Character, "expected_rite_fulfillment_change", Scope(Scopes::Rite), Scopes::Value),
+        (
+            Scopes::Character,
+            "expected_tenet_fulfillment_change",
+            Scope(Scopes::Tenet),
+            Scopes::Value,
+        ),
+        (Scopes::Character, "knows_rite_level", Scope(Scopes::Rite), Scopes::Value),
+        (Scopes::Character, "rite_fulfillment_score", Scope(Scopes::Rite), Scopes::Value),
+        (Scopes::Rite, "rite_hostility_level", Scope(Scopes::Rite), Scopes::Value),
+        (Scopes::Faith, "tenet_popularity", Scope(Scopes::Tenet), Scopes::Value),
+        (Scopes::Rite, "trait_base_spiritual_fulfillment", Scope(Scopes::Trait), Scopes::Value),
+        (Scopes::Character, "trait_rank", Item(Item::Trait), Scopes::Value),
     ]
 };

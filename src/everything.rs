@@ -21,6 +21,8 @@ use crate::block::Block;
 use crate::ck3::data::{
     characters::Characters,
     climate::Climate,
+    cultures::NameEquivalency,
+    fulfillment::SpiritualFulfillmentType,
     gameconcepts::GameConcepts,
     interaction_cats::CharacterInteractionCategories,
     maa::MenAtArmsTypes,
@@ -794,6 +796,8 @@ impl Everything {
         s.spawn(|_| self.script_values.validate(self));
         s.spawn(|_| self.music.validate(self));
         s.spawn(|_| Climate::validate_all(&self.database, self));
+        s.spawn(|_| NameEquivalency::validate_all(&self.database, self));
+        s.spawn(|_| SpiritualFulfillmentType::validate_all(&self.database, self));
     }
 
     #[cfg(feature = "vic3")]

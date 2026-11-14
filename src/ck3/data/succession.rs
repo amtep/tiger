@@ -33,7 +33,15 @@ impl DbKind for SuccessionAppointment {
         vd.field_choice("level", &["merit", "prestige", "piety", "influence"]);
 
         vd.field_bool("allow_children");
-        vd.field_bool("allow_same_tier_candidates");
+        vd.replaced_field(
+            "allow_same_tier_candidates",
+            "`allowed_candidate_tier = lower_or_equal`",
+        );
+        vd.field_choice("allowed_candidate_tier", &["lower", "lower_or_equal", "any"]);
+        vd.field_bool("cooldown");
+        vd.field_bool("use_investment_cap");
+        vd.field_bool("keep_top_tier_titles_together");
+        vd.field_choice("allow_out_of_realm_investment", &["none", "all", "landed", "landless"]);
     }
 }
 
@@ -52,6 +60,9 @@ const CANDIDATE_TYPES: &[&str] = &[
     "holder_councilor",
     "holder_court_position",
     "direct_subject",
-    // undocumented
     "direct_landed_vassal",
+    "direct_landed_vassal_same_government",
+    // The docs say these only work for theocratic appointment for clerical regions
+    "clerical_region_clergy_councilor",
+    "clerical_region_clergy",
 ];

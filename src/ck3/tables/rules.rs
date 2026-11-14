@@ -8,8 +8,8 @@
 /// `root` is the root of the scope context. Other fields are added named scopes.
 ///
 /// For ease of updating, the rules are in the order they are found in the game files.
-// LAST UPDATED CK3 VERSION 1.16.2.3
-// Taken from information in common/scripted_rules/00_rules.txt
+// LAST UPDATED CK3 VERSION 1.20.1.1
+// Taken from information in common/scripted_rules/
 pub const SCRIPTED_RULES: &str = "
 	can_command_troops = {
 		tooltipped = no
@@ -29,6 +29,14 @@ pub const SCRIPTED_RULES: &str = "
 		faith = faith
 	}
 
+	can_edit_rite = {
+		root = character
+	}
+
+	can_create_rite = {
+		root = character
+	}
+
 	faith_creation = {
 		tooltipped = yes
 		root = character
@@ -38,6 +46,17 @@ pub const SCRIPTED_RULES: &str = "
 		tooltipped = yes
 		root = character
 		new_faith = faith
+	}
+
+	rite_conversion = {
+		tooltipped = yes
+		root = character
+		new_rite = rite
+	}
+
+	can_change_faith = {
+		tooltipped = yes
+		root = character
 	}
 
 	should_mother_give_house_to_bastard = {
@@ -55,6 +74,29 @@ pub const SCRIPTED_RULES: &str = "
 		root = character
 		liege = character
 		landed_title = landed_title
+		government_type = government_type # may be unset
+	}
+
+	is_grant_government_shown = {
+		root = character
+		actor = character
+		landed_title = landed_title
+		government_type = government_type
+		list = {
+			target_titles = landed_title
+		}
+	}
+
+	is_grant_government_valid = {
+		tooltipped = yes
+		root = character
+		actor = character
+		recipient = character
+		government_type = government_type
+		landed_title = landed_title
+		list = {
+			target_titles = landed_title
+		}
 	}
 
 	is_character_allowed_to_be_player = {
@@ -328,6 +370,16 @@ pub const SCRIPTED_RULES: &str = "
 		root = character
 	}
 
+	can_create_title = {
+		root = character
+		title = landed_title
+	}
+
+	can_destroy_title = {
+		root = character
+		title = landed_title
+	}
+
 	ai_should_create_title = {
 		root = character
 		title = landed_title
@@ -352,5 +404,29 @@ pub const SCRIPTED_RULES: &str = "
 	}
 	can_build_in_same_realm = {
 		root = character
+	}
+
+	can_enshrine_artifact = {
+		tooltipped = yes
+		root = artifact
+		actor = character
+		holy_site = holy_site
+		replacing = artifact # may be unset
+	}
+
+	can_create_dynamic_holy_site = {
+		tooltipped = yes
+		root = character
+		title = landed_title
+		holy_site_type = holy_site_type
+		faith = faith
+	}
+
+	can_remove_enshrined_artifact = {
+		tooltipped = yes
+		root = artifact
+		holy_site = holy_site
+		actor = character
+		replacing = artifact # may be unset
 	}
 ";

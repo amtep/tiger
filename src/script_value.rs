@@ -7,6 +7,7 @@
 use crate::block::{BV, Block, BlockItem, Comparator, Eq::*};
 use crate::context::{Reason, ScopeContext, Temporary};
 use crate::everything::Everything;
+use crate::game::Game;
 use crate::helpers::TriBool;
 use crate::item::Item;
 use crate::lowercase::Lowercase;
@@ -84,10 +85,19 @@ fn validate_inner(
             || token.is("divide")
             || token.is("modulo")
             || token.is("round_to")
+            || (Game::is_ck3() && token.is("pow"))
         {
             if have_value == TriBool::False {
                 let msg = format!("nothing to {token} yet");
                 warn(ErrorKey::Logic).msg(msg).loc(token).push();
+            }
+            // The CK3 docs say it must not be 0
+            if Game::is_ck3()
+                && token.is("round_to")
+                && let Some(value) = bv.get_value()
+                && value.get_number() == Some(0.0)
+            {
+                err(ErrorKey::Range).msg("`round_to` must not be 0").loc(value).push();
             }
             validate_bv(bv, data, sc, check_desc);
             made_changes = true;
@@ -115,6 +125,11 @@ fn validate_inner(
                     // imperator allows "round = <yes/no/floor/ceiling>"
                     let msg = "expected yes, no, floor, or ceiling";
                     warn(ErrorKey::Validation).msg(msg).loc(value).push();
+                }
+                if Game::is_ck3() && value.is("no") {
+                    let msg = format!("`{token} = no` still applies `{token}`");
+                    let info = "the docs say the value is ignored, so remove the line instead";
+                    warn(ErrorKey::Logic).msg(msg).info(info).loc(value).push();
                 }
                 made_changes = true;
                 saved_value = false;

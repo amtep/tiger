@@ -60,6 +60,8 @@ impl FileHandler<Block> for ProvinceTerrains {
     }
 
     fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+        // TODO: read every file. The game does, and any file can mix terrains and properties;
+        // this follows the vanilla file names.
         if !entry.filename().to_string_lossy().ends_with("province_terrain.txt") {
             // Omit _province_properties.txt
             return None;
@@ -137,6 +139,7 @@ impl FileHandler<Block> for ProvinceProperties {
     }
 
     fn load_file(&self, entry: &FileEntry, parser: &ParserMemory) -> Option<Block> {
+        // TODO: read every file. See `ProvinceTerrains::load_file`.
         if !entry.filename().to_string_lossy().ends_with("province_properties.txt") {
             // Omit _province_terrain.txt
             return None;
@@ -177,8 +180,10 @@ impl ProvinceProperty {
             vd.ban_field("mild_winter_factor_override", || "sea and river province");
             vd.ban_field("normal_winter_factor_override", || "sea and river province");
             vd.ban_field("harsh_winter_factor_override", || "sea and river province");
+            vd.ban_field("fixed_winter_override", || "sea and river province");
         } else {
             vd.field_numeric_range("winter_severity_bias", 0.0..=1.0);
+            vd.field_numeric_range("fixed_winter_override", 0.0..=1.0);
             vd.field_numeric_range("mild_winter_factor_override", 0.0..=1.0);
             vd.field_numeric_range("normal_winter_factor_override", 0.0..=1.0);
             vd.field_numeric_range("harsh_winter_factor_override", 0.0..=1.0);

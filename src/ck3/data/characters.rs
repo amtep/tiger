@@ -7,7 +7,7 @@ use std::sync::atomic::Ordering;
 
 use atomic_enum::atomic_enum;
 
-use crate::block::{BV, Block, Comparator, Eq::*};
+use crate::block::{BV, Block, Comparator, Eq::*, Field};
 use crate::ck3::data::houses::House;
 use crate::ck3::validate::validate_portrait_modifier_overrides;
 use crate::context::ScopeContext;
@@ -78,14 +78,41 @@ impl Characters {
                     .and_then(|date| block.get_field_at_date("birth", date))
                     .is_some()
             {
-                err(ErrorKey::DuplicateCharacter)
-                    .strong()
-                    .msg("duplicate character id")
-                    .info("this will create two characters with the same id")
-                    .loc(&other.key)
-                    .loc_msg(&key, "duplicate")
-                    .push();
-                self.duplicates.push(Character::new(key, block));
+                // Definitions with a different `history_override_priority` override each other
+                let priority = |block: &Block| {
+                    block.get_field_integer("history_override_priority").unwrap_or(0)
+                };
+                let new_priority = priority(&block);
+                let other_priority = priority(&other.block);
+                // Compare with every earlier definition, not only the one that won
+                let same_priority = if new_priority == other_priority {
+                    Some(other.key.clone())
+                } else {
+                    self.duplicates
+                        .iter()
+                        .find(|dup| dup.key == key && priority(&dup.block) == new_priority)
+                        .map(|dup| dup.key.clone())
+                };
+                if let Some(other_key) = same_priority {
+                    err(ErrorKey::DuplicateCharacter)
+                        .strong()
+                        .msg("duplicate character id")
+                        .info("this will create two characters with the same id")
+                        .loc(other_key)
+                        .loc_msg(&key, "duplicate")
+                        .push();
+                    self.duplicates.push(Character::new(key, block));
+                } else if new_priority > other_priority {
+                    // TODO: only the base attributes and birth date are overridden; the
+                    // history of the other definition is added to this one.
+                    if let Some(other) =
+                        self.characters.insert(key.as_str(), Character::new(key, block))
+                    {
+                        self.duplicates.push(other);
+                    }
+                } else {
+                    self.duplicates.push(Character::new(key, block));
+                }
             }
         } else {
             self.characters.insert(key.as_str(), Character::new(key, block));
@@ -155,6 +182,10 @@ impl Characters {
 
     pub fn get_culture(&self, id: &Token, date: Date) -> Option<&Token> {
         self.characters.get(id.as_str()).and_then(|ch| ch.get_culture(date))
+    }
+
+    pub fn get_rite(&self, id: &Token, date: Date) -> Option<&Token> {
+        self.characters.get(id.as_str()).and_then(|ch| ch.get_rite(date))
     }
 
     pub fn get_faith(&self, id: &Token, date: Date) -> Option<&Token> {
@@ -324,10 +355,12 @@ impl Character {
         self.block.get_field_value_at_date("culture", date)
     }
 
+    pub fn get_rite(&self, date: Date) -> Option<&Token> {
+        self.block.get_field_value_at_date("rite", date)
+    }
+
     pub fn get_faith(&self, date: Date) -> Option<&Token> {
-        self.block
-            .get_field_value_at_date("faith", date)
-            .or_else(|| self.block.get_field_value_at_date("religion", date))
+        self.block.get_field_value_at_date("faith", date)
     }
 
     fn validate_life_event(
@@ -366,7 +399,26 @@ impl Character {
                     }
                     // religion and faith both mean faith here
                     "religion" | "faith" => {
+                        if key.is("religion") {
+                            deprecated_religion(key);
+                        }
                         data.verify_exists(Item::Faith, value);
+                        return None;
+                    }
+                    "rite" => {
+                        data.verify_exists(Item::RiteType, value);
+                        return None;
+                    }
+                    "ethnicity" => {
+                        data.verify_exists(Item::Ethnicity, value);
+                        return None;
+                    }
+                    "sexuality" => {
+                        data.verify_exists(Item::Sexuality, value);
+                        return None;
+                    }
+                    "health" | "fertility" => {
+                        value.expect_number();
                         return None;
                     }
                     "culture" => {
@@ -430,6 +482,10 @@ impl Character {
                         return None;
                     }
                     "remove_spouse" => return Some((RemoveSpouse, value.clone())),
+                    "remove_concubine" => {
+                        data.verify_exists(Item::Character, value);
+                        return None;
+                    }
                     "dynasty" => {
                         data.verify_exists(Item::Dynasty, value);
                         return None;
@@ -449,12 +505,29 @@ impl Character {
                     vd.field_item("killer", Item::Character);
                     return Some((Death, key.clone()));
                 }
-                "effect" => {
+                // effect_even_if_dead executes even if the character is dead at the start date
+                "effect" | "effect_even_if_dead" => {
                     validate_effect(block, data, sc, Tooltipped::No);
+                    return None;
+                }
+                "portrait_override" => {
+                    validate_portrait_override(block, data);
                     return None;
                 }
                 _ => (),
             },
+        }
+
+        if let Some(replacement) = match key.as_str() {
+            "set_house" => Some("dynasty_house"),
+            "set_culture" => Some("culture"),
+            "set_character_faith_no_effect" => Some("faith"),
+            _ => None,
+        } {
+            let msg = format!("`{key}` is an error in character history");
+            let info = format!("use `{replacement}` instead");
+            err(ErrorKey::History).msg(msg).info(info).loc(key).push();
+            return None;
         }
 
         // unknown effect field
@@ -477,11 +550,18 @@ impl Character {
         let mut death = None;
         let mut spouses = TigerHashSet::<Token>::default();
         let mut employed = false;
+        // Vanilla gives the saint trait in the death entry, sometimes before `death`
+        let death_dates: Vec<Date> = life_events
+            .iter()
+            .filter(|e| e.event == LifeEventType::Death)
+            .map(|e| e.date)
+            .collect();
+        let has_birth = life_events.iter().any(|e| e.event == LifeEventType::Birth);
 
         for LifeEvent { date, index: _, token, event } in life_events {
             use LifeEventType::*;
 
-            if birth.is_none() && event != Birth {
+            if birth.is_none() && event != Birth && (event != Other || has_birth) {
                 let msg = format!("{character} was not born yet on {date}");
                 let mut loc = token.loc;
                 loc.column = 0;
@@ -490,6 +570,7 @@ impl Character {
 
             if let Some((death_date, death_loc)) = death
                 && event != Posthumous
+                && (event != Other || date > death_date)
             {
                 let msg = format!(
                     "{character} was not alive on {date}, had already died on {death_date}"
@@ -547,11 +628,12 @@ impl Character {
                     death = Some((date, loc));
                 }
                 Posthumous => {
-                    if death.is_none() {
+                    if death.is_none() && !death_dates.contains(&date) {
                         let msg = format!("{character} had not died yet on {date}");
                         warn(ErrorKey::History).msg(msg).loc(token).push();
                     }
                 }
+                Other => (),
             }
         }
     }
@@ -591,39 +673,62 @@ impl Character {
         }
 
         vd.field_bool("disallow_random_traits");
+        if vd.field_bool("obscured") {
+            // optional flavor description shown instead of the character tooltip
+            let loca = format!("{}_obscured_desc", self.key);
+            data.mark_used(Item::Localization, &loca);
+        }
+        vd.field_integer("history_override_priority");
 
         // religion and faith both mean faith here
+        if let Some(key) = self.block.get_key("religion") {
+            deprecated_religion(key);
+        }
         vd.field_item("religion", Item::Faith);
         vd.field_item("faith", Item::Faith);
+        vd.field_item("rite", Item::RiteType);
 
         vd.field_item("culture", Item::Culture);
 
         vd.field_item("dynasty", Item::Dynasty);
         vd.field_item("dynasty_house", Item::House);
+        vd.field_item("ethnicity", Item::Ethnicity);
 
         vd.field_item("give_nickname", Item::Nickname);
         vd.field_item("sexuality", Item::Sexuality);
         vd.field_numeric("health");
         vd.field_numeric("fertility");
 
-        vd.field_validated_block("portrait_override", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_validated_block(
-                "portrait_modifier_overrides",
-                validate_portrait_modifier_overrides,
-            );
-            vd.field_validated_block("hair", validate_color);
-        });
+        vd.field_validated_block("portrait_override", validate_portrait_override);
 
         let mut life_events = Vec::new();
         let gender = Gender::from_female_bool(self.block.get_field_bool("female").unwrap_or(false));
-        vd.validate_history_blocks(|date, _key, block, data| {
+        vd.validate_history_blocks(|date, key, block, data| {
+            let mut has_life_event = false;
+            let mut has_spouse = false;
             for (index, (key, bv)) in block.iter_assignments_and_definitions_warn().enumerate() {
                 if let Some((life_event_type, token)) =
                     Self::validate_life_event(date, gender, key, bv, data, &mut sc)
                 {
+                    // The docs say only one spouse per date entry
+                    if life_event_type == LifeEventType::AddSpouse {
+                        if has_spouse {
+                            let msg = "only one spouse can be added per date entry";
+                            warn(ErrorKey::History).msg(msg).loc(key).push();
+                        }
+                        has_spouse = true;
+                    }
                     life_events.push(LifeEvent { date, index, event: life_event_type, token });
+                    has_life_event = true;
                 }
+            }
+            // The docs allow entries outside the character's life if they only have this
+            let even_if_dead =
+                block.iter_fields().all(|Field(key, _, _)| key.is("effect_even_if_dead"));
+            if !has_life_event && !even_if_dead {
+                // Sort it after the life events of the same date
+                let event = LifeEventType::Other;
+                life_events.push(LifeEvent { date, index: usize::MAX, event, token: key.clone() });
             }
         });
 
@@ -684,6 +789,18 @@ impl Character {
     }
 }
 
+/// The docs say `religion` is only supported as a compatibility option
+fn deprecated_religion(key: &Token) {
+    let msg = "should use `faith` instead of `religion`";
+    warn(ErrorKey::Deprecated).msg(msg).loc(key).push();
+}
+
+fn validate_portrait_override(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.field_validated_block("portrait_modifier_overrides", validate_portrait_modifier_overrides);
+    vd.field_validated_block("hair", validate_color);
+}
+
 fn block_has_flag(block: &Block, flag: &str) -> bool {
     for token in block.get_field_values("add_character_flag") {
         if token.is(flag) {
@@ -710,6 +827,8 @@ enum LifeEventType {
     /// All other events must happen before death
     Death,
     Posthumous,
+    /// A date entry without life events
+    Other,
     // TODO add Effect validation, e.g. `add_trait`
 }
 

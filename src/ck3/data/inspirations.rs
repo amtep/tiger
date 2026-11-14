@@ -45,7 +45,7 @@ impl DbKind for Inspiration {
             "on_owner_death",
             "on_invalidated",
             "on_sponsor_invalidated",
-            "on_progress_increased", // undocumented
+            "on_progress_increased",
         ] {
             vd.field_effect(field, Tooltipped::No, &mut sc);
         }

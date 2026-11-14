@@ -1,4 +1,5 @@
 use crate::block::{BV, Block};
+use crate::ck3::data::activities::warn_deprecated_province_filters;
 use crate::ck3::tables::misc::PROVINCE_FILTERS;
 use crate::ck3::validate::validate_cost;
 use crate::context::ScopeContext;
@@ -7,7 +8,7 @@ use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
-use crate::report::{ErrorKey, warn};
+use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -47,11 +48,18 @@ impl DbKind for GreatProjectType {
 
         let mut vd = Validator::new(block, data);
 
-        if !block.has_key("icon") {
-            data.verify_icon("NGameIcons|GREAT_PROJECT_TYPE_ICON_PATH", key, ".dds");
-        }
+        // The game logs an error without a fallback icon
+        vd.req_field("icon");
 
+        // The docs say a triggered icon list needs a fallback entry without a trigger
+        let icons = block.get_field_blocks("icon");
+        let has_value = !block.get_field_values("icon").is_empty();
+        if !icons.is_empty() && !has_value && icons.iter().all(|icon| icon.has_key("trigger")) {
+            let msg = "`icon` needs a fallback entry without `trigger`";
+            err(ErrorKey::FieldMissing).msg(msg).loc(key).push();
+        }
         vd.multi_field_validated("icon", |bv, data| match bv {
+            // undocumented since 1.20
             BV::Value(value) => {
                 data.verify_exists(Item::File, value);
             }
@@ -63,6 +71,7 @@ impl DbKind for GreatProjectType {
                     sc.define_name("great_project", Scopes::GreatProject, key);
                     sc.define_name("owner", Scopes::Character, key);
                     sc.define_name("founder", Scopes::Character, key);
+                    sc.define_name("founder_heir", Scopes::Character, key);
                     sc
                 });
                 vd.field_item("reference", Item::File);
@@ -77,6 +86,7 @@ impl DbKind for GreatProjectType {
                 sc.define_name("great_project", Scopes::GreatProject, key);
                 sc.define_name("owner", Scopes::Character, key);
                 sc.define_name("founder", Scopes::Character, key);
+                sc.define_name("founder_heir", Scopes::Character, key);
                 sc
             });
             vd.field_item("reference", Item::File);
@@ -92,10 +102,12 @@ impl DbKind for GreatProjectType {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("province", Scopes::Province, key);
             sc.define_name("founder", Scopes::Character, key);
+            sc.define_name("founder_heir", Scopes::Character, key);
             sc
         });
 
         vd.field_choice("province_filter", PROVINCE_FILTERS);
+        warn_deprecated_province_filters(block);
         if let Some(filter) = block.get_field_value("province_filter") {
             if filter.is("landed_title") {
                 vd.field_item("province_filter_target", Item::Title);
@@ -114,7 +126,15 @@ impl DbKind for GreatProjectType {
             sc.define_name("founder", Scopes::Character, key);
             sc
         });
-        vd.field_trigger_rooted("can_cancel", Tooltipped::Yes, Scopes::Character);
+        vd.field_trigger_builder("can_cancel", Tooltipped::Yes, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("province", Scopes::Province, key);
+            sc.define_name("great_project", Scopes::GreatProject, key);
+            sc.define_name("owner", Scopes::Character, key);
+            sc.define_name("founder", Scopes::Character, key);
+            sc.define_name("founder_heir", Scopes::Character, key);
+            sc
+        });
         vd.field_trigger_builder("is_location_valid", Tooltipped::Yes, |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("province", Scopes::Province, key);
@@ -129,6 +149,9 @@ impl DbKind for GreatProjectType {
                 "province_owner",
                 "founder_primary_title_owner",
                 "founder_top_liege_title_owner",
+                "province_clerical_region_title_owner",
+                "founder_clerical_region_title_owner",
+                "province_clerical_region_or_theocracy_holder",
             ],
         );
         vd.field_trigger_builder("is_valid", Tooltipped::No, |key| {
@@ -137,6 +160,7 @@ impl DbKind for GreatProjectType {
             sc.define_name("great_project", Scopes::GreatProject, key);
             sc.define_name("owner", Scopes::Character, key);
             sc.define_name("founder", Scopes::Character, key);
+            sc.define_name("founder_heir", Scopes::Character, key);
             sc
         });
         vd.field_validated_key_block("cost", |key, block, data| {
@@ -146,14 +170,13 @@ impl DbKind for GreatProjectType {
 
         vd.field_script_value_builder("construction_time", |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("province", Scopes::Province, key);
+            sc.define_name("owner", Scopes::Character, key);
+            sc.define_name("founder", Scopes::Character, key);
             sc.define_name("great_project", Scopes::GreatProject, key);
             sc
         });
-        vd.field_numeric("contribution_threshold");
-        vd.advice_field(
-            "investor_cooldown",
-            "docs say `investor_cooldown` but it's `contributor_cooldown`",
-        );
+        vd.field_numeric_range("contribution_threshold", 0.0..=100.0);
         vd.field_script_value_builder("contributor_cooldown", |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("great_project", Scopes::GreatProject, key);
@@ -169,6 +192,7 @@ impl DbKind for GreatProjectType {
                 sc.define_name("great_project", Scopes::GreatProject, key);
                 sc.define_name("owner", Scopes::Character, key);
                 sc.define_name("founder", Scopes::Character, key);
+                sc.define_name("founder_heir", Scopes::Character, key);
                 sc
             });
         }
@@ -217,8 +241,7 @@ impl DbKind for GreatProjectType {
             &["barony", "county", "duchy", "kingdom", "empire", "hegemony"],
         );
 
-        // TODO: figure out valid values for this choice type
-        vd.field_value("group");
+        vd.field_choice("group", &["major_project", "minor_project", "environmental_project"]);
 
         vd.field_item("completion_sound_effect", Item::Sound);
     }
@@ -232,6 +255,12 @@ fn validate_contributor_filter(block: &Block, data: &Everything) {
     vd.field_bool("top_liege");
     vd.field_bool("owner");
     vd.field_bool("allies");
+    vd.field_bool("head_of_faith");
+    vd.field_bool("founder");
+    vd.field_bool("duchy");
+    vd.field_bool("clerical_region");
+    vd.field_bool("puppeteer");
+    vd.field_bool("councillor");
 }
 
 fn validate_contribution(key: &Token, block: &Block, data: &Everything, gp_key: &Token) {
@@ -239,7 +268,7 @@ fn validate_contribution(key: &Token, block: &Block, data: &Everything, gp_key: 
     data.verify_exists_implied(Item::Localization, &loca, key);
     let loca = format!("great_project_type_{gp_key}_contribution_{key}_desc");
     data.verify_exists_implied(Item::Localization, &loca, key);
-    let loca = format!("great_project_type_{gp_key}_contribution_name_{key}");
+    let loca = format!("great_project_{gp_key}_contribution_name_{key}");
     data.localization.suggest(&loca, key);
 
     let sc_builder = |key: &Token| {
@@ -247,6 +276,7 @@ fn validate_contribution(key: &Token, block: &Block, data: &Everything, gp_key: 
         sc.define_name("province", Scopes::Province, key);
         sc.define_name("great_project", Scopes::GreatProject, key);
         sc.define_name("founder", Scopes::Character, key);
+        sc.define_name("founder_heir", Scopes::Character, key);
         sc.define_name("owner", Scopes::Character, key);
         sc
     };

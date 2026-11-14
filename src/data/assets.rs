@@ -200,6 +200,9 @@ impl Asset {
         }
         vd.field_numeric("scale");
         vd.field_numeric("cull_distance");
+        if Game::is_ck3() {
+            vd.field_choice("streaming", &["Never"]); // undocumented
+        }
 
         vd.multi_field_validated_block("lod_percentages", |block, data| {
             let mut vd = Validator::new(block, data);

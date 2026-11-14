@@ -3,10 +3,10 @@ use crate::block::Block;
 use crate::data::coa::validate_coa_layout;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
-use crate::game::GameFlags;
+use crate::game::{Game, GameFlags};
 use crate::item::{Item, ItemLoader};
 #[cfg(feature = "ck3")]
-use crate::report::{ErrorKey, warn};
+use crate::report::{ErrorKey, err, warn};
 use crate::token::Token;
 use crate::validator::Validator;
 
@@ -30,8 +30,16 @@ impl DbKind for CoaDesignerColoredEmblem {
         let pathname = format!("{}{key}", Item::CoaDesignerColoredEmblem.path());
         data.verify_exists_implied(Item::File, &pathname, key);
 
-        vd.field_integer_range("colors", 0..=5);
+        // The CK3 docs allow 0 to 3 colors
+        let max_colors = if Game::is_ck3() { 3 } else { 5 };
+        vd.field_integer_range("colors", 0..=max_colors);
         vd.field_bool("visible");
+        // The CK3 docs say the game logs an error otherwise
+        #[cfg(feature = "ck3")]
+        if Game::is_ck3() && !block.field_value_is("visible", "no") && !block.has_key("category") {
+            let msg = "visible emblems need a `category`";
+            err(ErrorKey::FieldMissing).msg(msg).loc(key).push();
+        }
         if let Some(token) = vd.field_value("category") {
             let loca = format!("COA_DESIGNER_CATEGORY_{token}");
             data.verify_exists_implied(Item::Localization, &loca, token);

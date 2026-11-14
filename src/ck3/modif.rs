@@ -5,7 +5,7 @@ use bitflags::bitflags;
 use crate::{ck3::tables::modifs::lookup_modif, modif};
 
 bitflags! {
-    // LAST UPDATED CK3 1.15.0
+    // LAST UPDATED CK3 1.20.1
     // Taken from the game's `modifers.log`
     // Remember to update the display_fmt functions when ModifKindsCk3 changes.
     #[derive(Debug, Copy, Clone)]

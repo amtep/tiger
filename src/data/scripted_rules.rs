@@ -34,7 +34,7 @@ impl DbKind for ScriptedRule {
             for (name, s) in &sr_sc.names {
                 sc.define_name(name, *s, key);
             }
-            for (list, s) in &sr_sc.names {
+            for (list, s) in &sr_sc.lists {
                 sc.define_list(list, *s, key);
             }
             validate_trigger(block, data, &mut sc, sr_sc.tooltipped);

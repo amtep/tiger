@@ -60,7 +60,6 @@ impl DbKind for CourtPosition {
         vd.field_trigger("is_shown_character", Tooltipped::No, &mut sc);
         vd.field_trigger("valid_character", Tooltipped::Yes, &mut sc);
 
-        // guessing that root is the liege here
         vd.field_validated_block_rooted("revoke_cost", Scopes::Character, |block, data, sc| {
             validate_cost(block, data, sc);
         });
@@ -82,7 +81,8 @@ impl DbKind for CourtPosition {
             vd.field_item("parameter", Item::CultureParameter);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
-        vd.field_validated_block("faith_modifier", |block, data| {
+        vd.replaced_field("faith_modifier", "rite_modifier");
+        vd.field_validated_block("rite_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_item("parameter", Item::DoctrineParameter);
             validate_modifs(block, data, ModifKinds::Character, vd);
@@ -139,6 +139,10 @@ impl DbKind for CourtPosition {
             sc.define_name("liege", Scopes::Character, key);
             sc.define_name("employee", Scopes::Character, key);
             sc.define_name("firing_court_position", Scopes::Bool, key);
+            sc.define_name("monthly_character_expenses", Scopes::Value, key);
+            sc.define_name("highest_available_aptitude", Scopes::Value, key);
+            sc.define_name("employee_aptitude", Scopes::Value, key);
+            sc.define_name("base_value", Scopes::Value, key);
             sc.define_name("percent_of_monthly_gold_income", Scopes::Value, key);
             sc.define_name("percent_of_positive_monthly_prestige_balance", Scopes::Value, key);
             sc.define_name("percent_of_positive_monthly_piety_balance", Scopes::Value, key);
@@ -153,20 +157,10 @@ impl DbKind for CourtPosition {
                 Scopes::Value,
                 key,
             );
-
-            // undocumented
-
-            sc.define_name("base_value", Scopes::Value, key);
-            sc.define_name("highest_available_aptitude", Scopes::Value, key);
-            sc.define_name("employee_aptitude", Scopes::Value, key);
-
             validate_script_value(bv, data, &mut sc);
         });
 
-        vd.field_script_value("sort_order", &mut sc);
-
-        // undocumented
-
+        vd.field_script_value_rooted("sort_order", Scopes::Character);
         vd.field_bool("is_powerful_agent");
     }
 }
@@ -227,7 +221,6 @@ impl DbKind for CourtPositionTask {
         data.verify_exists_implied(Item::Localization, &loca, key);
 
         let mut vd = Validator::new(block, data);
-        vd.advice_field("position_types", "docs say position_types but it's court_position_types");
         vd.field_list_items("court_position_types", Item::CourtPosition);
 
         vd.multi_field_validated_block("court_position_asset", |block, data| {

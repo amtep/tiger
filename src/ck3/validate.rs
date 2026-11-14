@@ -6,8 +6,9 @@ use crate::context::ScopeContext;
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::item::Item;
-use crate::report::{ErrorKey, err, fatal};
+use crate::report::{ErrorKey, err, fatal, warn};
 use crate::scopes::Scopes;
+use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::trigger::{validate_target, validate_target_ok_this};
 use crate::validate::{validate_modifiers_with_base, validate_scope_chain};
@@ -90,18 +91,28 @@ pub fn validate_theme_effect_2d(bv: &BV, data: &Everything, sc: &mut ScopeContex
     }
 }
 
+/// Parameter lists take bare names, but vanilla also uses `name = yes`
+pub fn validate_parameter_value(key: &Token, value: &Token) {
+    if !value.is("yes") {
+        let msg = format!("expected `{key} = yes` or just `{key}`");
+        warn(ErrorKey::Validation).msg(msg).loc(value).push();
+    }
+}
+
 pub fn validate_cost(block: &Block, data: &Everything, sc: &mut ScopeContext) {
     let mut vd = Validator::new(block, data);
     vd.field_script_value("barter_goods", sc);
     vd.field_script_value("gold", sc);
     vd.field_script_value("herd", sc);
     vd.field_script_value("influence", sc);
+    vd.field_script_value("merit", sc);
     vd.field_script_value("prestige", sc);
     vd.field_script_value("piety", sc);
     vd.field_script_value("renown", sc);
     vd.field_script_value("treasury", sc);
     vd.field_script_value("treasury_or_gold", sc);
     vd.field_bool("round");
+    vd.field_bool("clamp_to_zero");
 }
 
 pub fn validate_traits(block: &Block, data: &Everything) {
@@ -258,6 +269,17 @@ pub fn validate_random_faith(block: &Block, data: &Everything, sc: &mut ScopeCon
         vd.field_validated_block_sc("weight", sc, validate_modifiers_with_base);
         vd.field_trigger("trigger", Tooltipped::No, sc);
     });
+}
+
+/// Validate a `maa_upgrade` block of culture eras and innovations
+pub fn validate_maa_upgrade(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.field_item("type", Item::MenAtArmsBase);
+    // undocumented
+    vd.field_item("men_at_arms", Item::MenAtArms);
+    vd.field_integer("max_size");
+    vd.advice_field("pursue", "docs say `pursue` but it's `pursuit`");
+    validate_maa_stats(&mut vd);
 }
 
 pub fn validate_maa_stats(vd: &mut Validator) {

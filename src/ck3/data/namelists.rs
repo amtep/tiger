@@ -52,7 +52,7 @@ impl DbKind for NameList {
         vd.field_integer("mat_grm_name_chance");
         vd.field_integer("pat_grm_name_chance");
 
-        vd.field_choice("grammar_transform", &["french"]);
+        vd.field_choice("grammar_transform", &["french", "none"]);
         vd.field_bool("dynasty_name_first");
     }
 }

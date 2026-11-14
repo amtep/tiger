@@ -243,6 +243,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] ActivityOptionCategory,
     #[cfg(feature = "ck3")] ActivityPhase,
     #[cfg(feature = "ck3")] ActivityPulseAction,
+    #[cfg(feature = "ck3")] ActivityPulseActionIcon,
     #[cfg(feature = "ck3")] ActivityState,
     #[cfg(feature = "ck3")] ActivityType,
     #[cfg(feature = "ck3")] AiWarStance,
@@ -308,7 +309,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] DiarchyParameter,
     #[cfg(feature = "ck3")] DiarchyType,
     #[cfg(feature = "ck3")] Doctrine,
-    #[cfg(feature = "ck3")] DoctrineBooleanParameter,
+    #[cfg(feature = "ck3")] DoctrineCategory,
     #[cfg(feature = "ck3")] DoctrineGroup,
     #[cfg(feature = "ck3")] DoctrineParameter,
     #[cfg(feature = "ck3")] DomicileBuilding,
@@ -317,6 +318,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] Dynasty,
     #[cfg(feature = "ck3")] DynastyLegacy,
     #[cfg(feature = "ck3")] DynastyPerk,
+    #[cfg(feature = "ck3")] ElectionCandidateSet,
     #[cfg(feature = "ck3")] EpidemicType,
     #[cfg(feature = "ck3")] EpidemicDeathReason,
     #[cfg(feature = "ck3")] EventBackground,
@@ -324,11 +326,13 @@ pub enum Item {
     #[cfg(feature = "ck3")] EventTransition,
     #[cfg(feature = "ck3")] Faction,
     #[cfg(feature = "ck3")] Faith,
+    #[cfg(feature = "ck3")] FaithHistory,
     #[cfg(feature = "ck3")] FaithIcon,
     #[cfg(feature = "ck3")] FervorModifier,
     #[cfg(feature = "ck3")] FlatMapStyle,
     #[cfg(feature = "ck3")] Flavorization,
     #[cfg(feature = "ck3")] Focus,
+    #[cfg(feature = "ck3")] FulfillmentParameter,
     #[cfg(feature = "ck3")] GeneticConstraint,
     #[cfg(feature = "ck3")] GovernmentFlag,
     #[cfg(feature = "ck3")] GraphicalFaith,
@@ -340,6 +344,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] HeadDetermination,
     #[cfg(feature = "ck3")] HoldingParameter,
     #[cfg(feature = "ck3")] HoldingType,
+    #[cfg(feature = "ck3")] HolyOrderType,
     #[cfg(feature = "ck3")] HolySiteParameter,
     #[cfg(feature = "ck3")] Hook,
     #[cfg(feature = "ck3")] House,
@@ -370,9 +375,11 @@ pub enum Item {
     #[cfg(feature = "ck3")] MemoryType,
     #[cfg(feature = "ck3")] MenAtArms,
     #[cfg(feature = "ck3")] MenAtArmsBase,
+    #[cfg(feature = "ck3")] MenuScene,
     #[cfg(feature = "ck3")] MessageFilterType,
     #[cfg(feature = "ck3")] MessageGroupType,
     #[cfg(feature = "ck3")] ModifierFormat,
+    #[cfg(feature = "ck3")] MorphemeStripRule,
     #[cfg(feature = "ck3")] MottoInsert,
     #[cfg(feature = "ck3")] Motto,
     #[cfg(feature = "ck3")] NameEquivalency,
@@ -381,6 +388,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] OpinionModifier,
     #[cfg(feature = "ck3")] Perk,
     #[cfg(feature = "ck3")] PerkTree,
+    #[cfg(feature = "ck3")] PersonalTenetParameter,
     #[cfg(feature = "ck3")] PlayableDifficultyInfo,
     #[cfg(feature = "ck3")] PointOfInterest,
     #[cfg(feature = "ck3")] PoolSelector,
@@ -389,11 +397,16 @@ pub enum Item {
     #[cfg(feature = "ck3")] ProjectContribution,
     #[cfg(feature = "ck3")] ProvinceEffect,
     #[cfg(feature = "ck3")] ProvinceMapping,
+    #[cfg(feature = "ck3")] PuppetAction,
+    #[cfg(feature = "ck3")] PuppetType,
     #[cfg(feature = "ck3")] RaidIntent,
     #[cfg(feature = "ck3")] Relation,
     #[cfg(feature = "ck3")] RelationFlag,
     #[cfg(feature = "ck3")] ReligionFamily,
     #[cfg(feature = "ck3")] RewardItem,
+    #[cfg(feature = "ck3")] RiteIcon,
+    #[cfg(feature = "ck3")] RiteName,
+    #[cfg(feature = "ck3")] RiteType,
     #[cfg(feature = "ck3")] RulerObjectiveType,
     #[cfg(feature = "ck3")] Scheme,
     #[cfg(feature = "ck3")] SchemePulseAction,
@@ -413,6 +426,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] Skill,
     #[cfg(feature = "ck3")] SpecialBuilding,
     #[cfg(feature = "ck3")] SpecialGuest,
+    #[cfg(feature = "ck3")] SpiritualFulfillmentType,
     #[cfg(feature = "ck3")] Story,
     #[cfg(feature = "ck3")] Struggle,
     #[cfg(feature = "ck3")] StruggleHistory,
@@ -431,6 +445,7 @@ pub enum Item {
     #[cfg(feature = "ck3")] TaskContractType,
     #[cfg(feature = "ck3")] TaxSlotObligation,
     #[cfg(feature = "ck3")] TaxSlotType,
+    #[cfg(feature = "ck3")] Tenet,
     #[cfg(feature = "ck3")] Title,
     #[cfg(feature = "ck3")] TitleHistory,
     #[cfg(feature = "ck3")] TraitCategory,
@@ -1161,7 +1176,7 @@ impl Item {
             #[cfg(any(feature = "ck3", feature = "vic3", feature = "imperator"))]
             Item::LawGroup => match Game::game() {
                 #[cfg(feature = "ck3")]
-                Game::Ck3 => "common/laws/",
+                Game::Ck3 => "common/law_groups/",
                 #[cfg(feature = "imperator")]
                 Game::Imperator => "common/laws/",
                 #[cfg(feature = "vic3")]
@@ -1265,6 +1280,8 @@ impl Item {
             Item::ActivityPhase => "common/activities/activity_types/",
             #[cfg(feature = "ck3")]
             Item::ActivityPulseAction => "common/activities/pulse_actions/",
+            #[cfg(feature = "ck3")]
+            Item::ActivityPulseActionIcon => "gfx/interface/icons/activity_pulse_actions/",
             #[cfg(feature = "ck3")]
             Item::ActivityState => "",
             #[cfg(feature = "ck3")]
@@ -1397,7 +1414,7 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::Doctrine => "common/religion/doctrine_types/",
             #[cfg(feature = "ck3")]
-            Item::DoctrineBooleanParameter => "common/religion/doctrine_types/",
+            Item::DoctrineCategory => "common/religion/doctrine_category_types/",
             #[cfg(feature = "ck3")]
             Item::DoctrineGroup => "common/religion/doctrine_group_types/",
             #[cfg(feature = "ck3")]
@@ -1415,6 +1432,8 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::DynastyPerk => "common/dynasty_perks/",
             #[cfg(feature = "ck3")]
+            Item::ElectionCandidateSet => "common/succession_election/",
+            #[cfg(feature = "ck3")]
             Item::EpidemicType => "common/epidemics/",
             #[cfg(feature = "ck3")]
             Item::EpidemicDeathReason => "common/deathreasons/",
@@ -1427,9 +1446,11 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::Faction => "common/factions/",
             #[cfg(feature = "ck3")]
-            Item::Faith => "common/religion/religions/",
+            Item::Faith => "common/religion/faith_types/",
             #[cfg(feature = "ck3")]
-            Item::FaithIcon => "common/religion/religions/",
+            Item::FaithHistory => "history/faiths/",
+            #[cfg(feature = "ck3")]
+            Item::FaithIcon => "common/religion/religion_types/",
             #[cfg(feature = "ck3")]
             Item::FervorModifier => "common/religion/fervor_modifiers/",
             #[cfg(feature = "ck3")]
@@ -1439,11 +1460,13 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::Focus => "common/focuses/",
             #[cfg(feature = "ck3")]
+            Item::FulfillmentParameter => "common/spiritual_fulfillment/",
+            #[cfg(feature = "ck3")]
             Item::GeneticConstraint => "common/traits/",
             #[cfg(feature = "ck3")]
             Item::GovernmentFlag => "common/governments/",
             #[cfg(feature = "ck3")]
-            Item::GraphicalFaith => "common/religion/religions/",
+            Item::GraphicalFaith => "common/religion/religion_types/",
             #[cfg(feature = "ck3")]
             Item::GraphicalUnitType => "common/graphical_unit_types/",
             #[cfg(feature = "ck3")]
@@ -1461,7 +1484,9 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::HoldingType => "common/holdings/",
             #[cfg(feature = "ck3")]
-            Item::HolySiteParameter => "common/religion/holy_sites/",
+            Item::HolyOrderType => "common/holy_orders/",
+            #[cfg(feature = "ck3")]
+            Item::HolySiteParameter => "common/religion/holy_site_types/",
             #[cfg(feature = "ck3")]
             Item::Hook => "common/hook_types/",
             #[cfg(feature = "ck3")]
@@ -1521,11 +1546,15 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::MenAtArmsBase => "common/men_at_arms_types/",
             #[cfg(feature = "ck3")]
+            Item::MenuScene => "common/menu_scenes/",
+            #[cfg(feature = "ck3")]
             Item::MessageFilterType => "common/message_filter_types/",
             #[cfg(feature = "ck3")]
             Item::MessageGroupType => "common/message_group_types/",
             #[cfg(feature = "ck3")]
             Item::ModifierFormat => "common/modifier_definition_formats/",
+            #[cfg(feature = "ck3")]
+            Item::MorphemeStripRule => "common/morpheme_strip_rules/",
             #[cfg(feature = "ck3")]
             Item::MottoInsert => "common/dynasty_house_motto_inserts/",
             #[cfg(feature = "ck3")]
@@ -1543,6 +1572,8 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::PerkTree => "common/lifestyle_perks/",
             #[cfg(feature = "ck3")]
+            Item::PersonalTenetParameter => "common/religion/tenet_types/",
+            #[cfg(feature = "ck3")]
             Item::PlayableDifficultyInfo => "common/playable_difficulty_infos/",
             #[cfg(feature = "ck3")]
             Item::PointOfInterest => "common/travel/point_of_interest_types/",
@@ -1557,6 +1588,10 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::ProvinceMapping => "history/province_mapping/",
             #[cfg(feature = "ck3")]
+            Item::PuppetAction => "common/puppets/actions/",
+            #[cfg(feature = "ck3")]
+            Item::PuppetType => "common/puppets/types/",
+            #[cfg(feature = "ck3")]
             Item::PrisonType => "",
             #[cfg(feature = "ck3")]
             Item::RaidIntent => "common/raids/intents/",
@@ -1568,6 +1603,12 @@ impl Item {
             Item::ReligionFamily => "common/religion/religion_family_types/",
             #[cfg(feature = "ck3")]
             Item::RewardItem => "",
+            #[cfg(feature = "ck3")]
+            Item::RiteIcon => "common/religion/rite_icons/",
+            #[cfg(feature = "ck3")]
+            Item::RiteName => "common/religion/rite_names/",
+            #[cfg(feature = "ck3")]
+            Item::RiteType => "common/religion/rite_types/",
             #[cfg(feature = "ck3")]
             Item::RulerObjectiveType => "common/ruler_objective_advice_types/",
             #[cfg(feature = "ck3")]
@@ -1615,6 +1656,8 @@ impl Item {
             #[cfg(feature = "ck3")]
             Item::SpecialGuest => "common/activities/activity_types/",
             #[cfg(feature = "ck3")]
+            Item::SpiritualFulfillmentType => "common/spiritual_fulfillment/",
+            #[cfg(feature = "ck3")]
             Item::Story => "common/story_cycles/",
             #[cfg(feature = "ck3")]
             Item::Struggle => "common/struggle/struggles/",
@@ -1642,6 +1685,8 @@ impl Item {
             Item::TaxSlotObligation => "common/tax_slots/obligations",
             #[cfg(feature = "ck3")]
             Item::TaxSlotType => "common/tax_slots/types",
+            #[cfg(feature = "ck3")]
+            Item::Tenet => "common/religion/tenet_types/",
             #[cfg(feature = "ck3")]
             Item::Title => "common/landed_titles/",
             #[cfg(feature = "ck3")]

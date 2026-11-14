@@ -69,7 +69,8 @@ impl DbKind for Perk {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
-        vd.multi_field_validated_block("doctrine_character_modifier", |block, data| {
+        vd.replaced_field("doctrine_character_modifier", "faith_character_modifier");
+        vd.multi_field_validated_block("faith_character_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.field_item("doctrine", Item::Doctrine);
             validate_modifs(block, data, ModifKinds::Character, vd);

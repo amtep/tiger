@@ -132,6 +132,22 @@ impl Music {
                 Game::Hoi4 => Scopes::Country,
             };
             let mut sc = ScopeContext::new(scope, &self.key);
+            // The CK3 docs say an entry whose key starts with "group" is a group template
+            if Game::is_ck3() {
+                if self.key.as_str().starts_with("group") {
+                    vd.ban_field("music", || "tracks");
+                    vd.ban_field("group", || "tracks");
+                } else {
+                    vd.ban_field("subsequent_playback_chance", || "group templates");
+                    if let Some(group) = self.block.get_field_value("group")
+                        && !group.as_str().starts_with("group")
+                    {
+                        let msg =
+                            "`group` should name a group template, whose key starts with `group`";
+                        warn(ErrorKey::Validation).msg(msg).loc(group).push();
+                    }
+                }
+            }
             vd.field_localization("name", &mut sc);
             vd.field_item("music", Item::Sound);
             vd.field_item("group", Item::Music); // Take settings from this item
@@ -147,7 +163,17 @@ impl Music {
             vd.field_bool("trigger_prio_override");
             vd.field_trigger("is_valid", Tooltipped::No, &mut sc);
 
-            vd.field_list_numeric_exactly("subsequent_playback_chance", 3);
+            if Game::is_ck3() {
+                vd.field_bool("reset");
+                // The docs say this is only for main themes
+                vd.field_item("dlc", Item::DlcName);
+                // The docs give one chance per subsequent track, and vanilla uses 2 to 4
+                vd.field_validated_list("subsequent_playback_chance", |token, _| {
+                    token.expect_number();
+                });
+            } else {
+                vd.field_list_numeric_exactly("subsequent_playback_chance", 3);
+            }
         }
     }
 }

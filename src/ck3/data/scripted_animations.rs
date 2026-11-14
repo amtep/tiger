@@ -24,7 +24,9 @@ impl ScriptedAnimation {
 
 impl DbKind for ScriptedAnimation {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
-        let mut sc = ScopeContext::new(Scopes::Character, key);
+        // The docs say the scopes come from the context that uses the animation, such as an event
+        let mut sc = ScopeContext::new(Scopes::Character | Scopes::Activity, key);
+        sc.set_strict_scopes(false);
         validate_scripted_animation(&BV::Block(block.clone()), data, &mut sc);
     }
 }
@@ -36,8 +38,10 @@ pub fn validate_scripted_animation(bv: &BV, data: &Everything, sc: &mut ScopeCon
             let mut vd = Validator::new(block, data);
             vd.multi_field_validated_block("triggered_animation", |block, data| {
                 let mut vd = Validator::new(block, data);
+                vd.req_field("trigger");
                 vd.field_trigger("trigger", Tooltipped::No, sc);
                 vd.field_validated("animation", validate_animation);
+                vd.field_item("scripted_animation", Item::ScriptedAnimation);
                 vd.field_item("camera", Item::PortraitCamera);
             });
             vd.field_validated("animation", validate_animation);

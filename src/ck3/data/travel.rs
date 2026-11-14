@@ -45,7 +45,9 @@ impl DbKind for TravelOption {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
+        vd.field_item("owner_modifier_description", Item::Localization);
 
+        sc.define_name("travel_plan", Scopes::TravelPlan, key);
         sc.define_name("travel_speed", Scopes::Value, key);
         sc.define_name("travel_safety", Scopes::Value, key);
         vd.field_effect("on_applied_effect", Tooltipped::Yes, &mut sc);

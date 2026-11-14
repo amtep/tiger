@@ -13,7 +13,7 @@ use crate::token::Token;
 
 /// Returns Some(kinds) if the token is a valid modif or *could* be a valid modif if the appropriate item existed.
 /// Returns None otherwise.
-// LAST UPDATED CK3 VERSION 1.15.0
+// LAST UPDATED CK3 VERSION 1.20.1
 pub fn lookup_modif(name: &Token, data: &Everything, warn: Option<Severity>) -> Option<ModifKinds> {
     let name_lc = Lowercase::new(name.as_str());
 
@@ -448,7 +448,7 @@ static MODIF_MAP: LazyLock<TigerHashMap<Lowercase<'static>, ModifKinds>> = LazyL
     hash
 });
 
-/// LAST UPDATED CK3 VERSION 1.15.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// See `modifiers.log` from the game data dumps.
 /// A `modif` is my name for the things that modifiers modify.
 const MODIF_TABLE: &[(&str, ModifKinds)] = &[
@@ -530,6 +530,9 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("character_max_prestige_level_add", ModifKinds::Character),
     ("character_opinion_from_high_prowess_add", ModifKinds::Character),
     ("character_opinion_from_low_prowess_add", ModifKinds::Character),
+    ("character_spiritual_fulfillment_gain_mult", ModifKinds::Character),
+    ("character_spiritual_fulfillment_loss_mult", ModifKinds::Character),
+    ("character_starting_spiritual_fulfillment_add", ModifKinds::Character),
     ("character_travel_safety", ModifKinds::Character),
     ("character_travel_safety_mult", ModifKinds::Character),
     ("character_travel_speed", ModifKinds::Character),
@@ -610,7 +613,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
         ModifKinds::Character.union(ModifKinds::Province).union(ModifKinds::County),
     ),
     ("different_culture_opinion", ModifKinds::Character),
-    ("different_faith_county_opinion_mult", ModifKinds::Character),
+    ("different_faith_county_opinion_mult", ModifKinds::Character.union(ModifKinds::County)),
     ("different_faith_county_opinion_mult_even_if_baron", ModifKinds::Character),
     ("different_faith_liege_opinion", ModifKinds::Character),
     ("different_faith_opinion", ModifKinds::Character),
@@ -691,8 +694,6 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ),
     ("faith_conversion_piety_cost_add", ModifKinds::Character),
     ("faith_conversion_piety_cost_mult", ModifKinds::Character),
-    ("faith_creation_piety_cost_add", ModifKinds::Character),
-    ("faith_creation_piety_cost_mult", ModifKinds::Character),
     ("fellow_confederation_member_opinion", ModifKinds::Character),
     ("fellow_tributary_opinion", ModifKinds::Character),
     ("fellow_vassal_opinion", ModifKinds::Character),
@@ -762,6 +763,8 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("independent_primary_defender_advantage_add", ModifKinds::Character),
     ("independent_ruler_opinion", ModifKinds::Character),
     ("influence_level_impact_mult", ModifKinds::Character),
+    ("influence_standalone_gain_mult", ModifKinds::Character),
+    ("influence_standalone_loss_mult", ModifKinds::Character),
     ("intimidated_vassal_barter_goods_contribution_add", ModifKinds::Character),
     ("intimidated_vassal_barter_goods_contribution_mult", ModifKinds::Character),
     ("intimidated_vassal_herd_contribution_add", ModifKinds::Character),
@@ -866,6 +869,8 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("mercenary_hire_cost_mult", ModifKinds::Character),
     ("mercenary_hire_time_mult", ModifKinds::Character),
     ("merit_level_impact_mult", ModifKinds::Character),
+    ("merit_standalone_gain_mult", ModifKinds::Character),
+    ("merit_standalone_loss_mult", ModifKinds::Character),
     ("min_combat_roll", ModifKinds::Character),
     (
         "monthly_barter_goods",
@@ -957,6 +962,8 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("monthly_prestige_gain_per_legitimacy_level_mult", ModifKinds::Character),
     ("monthly_prestige_gain_per_knight_add", ModifKinds::Character),
     ("monthly_prestige_gain_per_knight_mult", ModifKinds::Character),
+    ("monthly_treasury_from_cardinal_budget_base", ModifKinds::Character),
+    ("monthly_treasury_from_cardinal_budget_mult", ModifKinds::Character),
     ("monthly_treasury_from_liege_add", ModifKinds::Character),
     ("monthly_treasury_from_liege_mult", ModifKinds::Character),
     ("monthly_treasury_from_military_budget_base", ModifKinds::Character),
@@ -1032,14 +1039,19 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("owned_political_scheme_success_chance_growth_add", ModifKinds::Character),
     ("owned_political_scheme_success_chance_max_add", ModifKinds::Character),
     ("owned_scheme_secrecy_add", ModifKinds::Character),
+    ("personal_tenet_slot_add", ModifKinds::Character),
     ("personal_scheme_phase_duration_add", ModifKinds::Character),
     ("piety_level_impact_mult", ModifKinds::Character),
+    ("piety_standalone_gain_mult", ModifKinds::Character),
+    ("piety_standalone_loss_mult", ModifKinds::Character),
     ("player_heir_opinion", ModifKinds::Character),
     ("political_scheme_phase_duration_add", ModifKinds::Character),
     ("positive_inactive_inheritance_chance", ModifKinds::Character),
     ("positive_random_genetic_chance", ModifKinds::Character),
     ("powerful_vassal_opinion", ModifKinds::Character),
     ("prestige_level_impact_mult", ModifKinds::Character),
+    ("prestige_standalone_gain_mult", ModifKinds::Character),
+    ("prestige_standalone_loss_mult", ModifKinds::Character),
     ("prisoner_opinion", ModifKinds::Character),
     ("provisions_capacity_add", ModifKinds::Character.union(ModifKinds::Terrain)),
     ("provisions_capacity_mult", ModifKinds::Character.union(ModifKinds::Terrain)),
@@ -1067,13 +1079,22 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("retreat_losses", ModifKinds::Character.union(ModifKinds::Terrain)),
     ("revolting_siege_morale_loss_add", ModifKinds::Character),
     ("revolting_siege_morale_loss_mult", ModifKinds::Character),
+    ("rite_creation_piety_cost_add", ModifKinds::Character),
+    ("rite_creation_piety_cost_mult", ModifKinds::Character),
     ("same_culture_holy_order_hire_cost_add", ModifKinds::Character),
     ("same_culture_holy_order_hire_cost_mult", ModifKinds::Character),
     ("same_culture_mercenary_hire_cost_add", ModifKinds::Character),
     ("same_culture_mercenary_hire_cost_mult", ModifKinds::Character),
     ("same_culture_opinion", ModifKinds::Character),
+    (
+        "same_faith_different_rite_county_opinion_add",
+        ModifKinds::Character.union(ModifKinds::County),
+    ),
+    ("same_faith_different_rite_opinion", ModifKinds::Character),
     ("same_faith_opinion", ModifKinds::Character),
     ("same_heritage_county_advantage_add", ModifKinds::Character),
+    ("same_rite_county_opinion_add", ModifKinds::Character.union(ModifKinds::County)),
+    ("same_rite_opinion", ModifKinds::Character),
     ("scheme_discovery_chance_mult", ModifKinds::Character),
     ("scheme_phase_duration", ModifKinds::Scheme),
     ("scheme_resistance", ModifKinds::Scheme),
@@ -1180,6 +1201,7 @@ const MODIF_TABLE: &[(&str, ModifKinds)] = &[
     ("travel_safety", ModifKinds::TravelPlan),
     ("travel_speed_mult", ModifKinds::TravelPlan),
     ("travel_speed", ModifKinds::TravelPlan),
+    ("treasury_cardinal_budget_allocation", ModifKinds::Character),
     ("treasury_military_budget_allocation", ModifKinds::Character),
     ("treasury_ministry_budget_allocation", ModifKinds::Character),
     ("treasury_salary_budget_allocation", ModifKinds::Character),
@@ -1223,8 +1245,10 @@ static SPECIAL_MODIF_LOC_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static
         hash
     });
 
-/// LAST UPDATED CK3 VERSION 1.15.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// Special cases for static modifs defined in `modifiers/modifiers_l_english.yml`
+/// All static modifs were checked against the 1.20.1 localization; some have no localization at all,
+/// e.g. `character_max_piety_level_add` and the `ai_` modifs.
 const SPECIAL_MODIF_LOC_TABLE: &[(&str, &str)] = &[
     // Negate penalty
     ("negate_diplomacy_penalty_add", "MOD_DIPLOMACY_NEGATE_PENALTY"),
@@ -1298,6 +1322,14 @@ const SPECIAL_MODIF_LOC_TABLE: &[(&str, &str)] = &[
         "different_faith_county_opinion_mult_even_if_baron",
         "MOD_COUNTY_OPINION_DIFFERENT_FAITH_MULT_EVEN_IF_BARON",
     ),
+    ("character_spiritual_fulfillment_gain_mult", "MOD_SPIRITUAL_FULFILLMENT_GAIN_MULT"),
+    ("character_spiritual_fulfillment_loss_mult", "MOD_SPIRITUAL_FULFILLMENT_LOSS_MULT"),
+    ("character_starting_spiritual_fulfillment_add", "MOD_STARTING_SPIRITUAL_FULFILLMENT_ADD"),
+    (
+        "same_faith_different_rite_county_opinion_add",
+        "MOD_COUNTY_OPINION_SAME_FAITH_DIFFERENT_RITE_ADD",
+    ),
+    ("same_rite_county_opinion_add", "MOD_COUNTY_OPINION_SAME_RITE_ADD"),
     // Culture
     ("mercenary_count_mult", "MOD_CULTURE_MERCENARY_MULT"),
     ("cultural_head_fascination_add", "MOD_CULTURAL_FASCINATION_INNOVATION_ADD"),
@@ -1307,6 +1339,18 @@ const SPECIAL_MODIF_LOC_TABLE: &[(&str, &str)] = &[
     ("court_grandeur_baseline_add", "MOD_COURT_GRANDEUR_BASELINE"),
     // Tax Slot
     ("tax_slot_add", "MOD_NUM_TAX_SLOTS"),
+    ("accolades", "MOD_NUM_ACCOLADES"),
+    ("capital_additional_fort_level", "MOD_CAPITAL_ADDITIONAL_HOLDING_FORT_LEVEL"),
+    ("capital_fort_level", "MOD_CAPITAL_HOLDING_FORT_LEVEL"),
+    ("county_fertility_decline_add", "MOD_MONTHLY_COUNTY_FERTILITY_DECLINE_ADD"),
+    ("county_fertility_decline_mult", "MOD_MONTHLY_COUNTY_FERTILITY_DECLINE_MULT"),
+    ("county_fertility_growth_add", "MOD_MONTHLY_COUNTY_FERTILITY_GROWTH_ADD"),
+    ("county_fertility_growth_mult", "MOD_MONTHLY_COUNTY_FERTILITY_GROWTH_MULT"),
+    ("epidemic_travel_danger", "MOD_TRAVEL_DANGER_EPIDEMIC"),
+    ("independent_primary_attacker_advantage_add", "MOD_INDEPENDENT_PRIMARY_ATTACKER_ADVANTAGE"),
+    ("monthly_income_per_piety_level", "MOD_MONTHLY_INCOME_PER_PIETY_LEVEL_ADD"),
+    ("monthly_legitimacy_add", "MOD_LEGITIMACY_MONTHLY_CHANGE"),
+    ("negate_health_penalty_add", "MOD_HEALTH_NEGATE_PENALTY"),
 ];
 
 static MODIF_REMOVED_MAP: LazyLock<TigerHashMap<Lowercase<'static>, &'static str>> =
@@ -1360,5 +1404,6 @@ const MODIF_REMOVED_TABLE: &[(&str, &str)] = &[
     ("personal_scheme_resistance_add", "removed in 1.13"),
     ("personal_scheme_resistance_mult", "removed in 1.13"),
     ("random_advantage", "removed in 1.13"),
-    ("siege_phase_time", "removed in 1.18"),
+    ("faith_creation_piety_cost_add", "replaced with rite_creation_piety_cost_add in 1.20"),
+    ("faith_creation_piety_cost_mult", "replaced with rite_creation_piety_cost_mult in 1.20"),
 ];

@@ -35,6 +35,8 @@ impl DbKind for GameRule {
         let loca = format!("rule_{key}");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
+        vd.field_item("dlc", Item::DlcName);
+
         vd.field_validated_block("categories", |block, data| {
             let mut vd = Validator::new(block, data);
             for token in vd.values() {

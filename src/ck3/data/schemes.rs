@@ -42,6 +42,20 @@ impl DbKind for Scheme {
             sc
         }
 
+        /// The scopes the 1.20 docs give to most fields, plus `extra` scopes per field
+        fn sc_builder(root: Scopes, key: &Token, extra: &[(&'static str, Scopes)]) -> ScopeContext {
+            let target_scopes =
+                Scopes::Character | Scopes::LandedTitle | Scopes::Culture | Scopes::Faith;
+            let mut sc = ScopeContext::new(root, key);
+            sc.define_name("owner", Scopes::Character, key);
+            sc.define_name("target", target_scopes, key);
+            sc.define_name("target_title", Scopes::LandedTitle, key);
+            for (name, scopes) in extra {
+                sc.define_name(name, *scopes, key);
+            }
+            sc
+        }
+
         let mut vd = Validator::new(block, data);
         let target_scopes =
             Scopes::Character | Scopes::LandedTitle | Scopes::Culture | Scopes::Faith;
@@ -69,14 +83,13 @@ impl DbKind for Scheme {
         vd.req_field("desc");
         vd.field_validated_sc("desc", &mut sc, validate_desc);
         vd.req_field("success_desc");
-        vd.field_validated_sc("success_desc", &mut sc, validate_desc); // undocumented
-        vd.field_validated_sc("discovery_desc", &mut sc, validate_desc); // undocumented
+        vd.field_validated_sc("success_desc", &mut sc, validate_desc);
+        vd.field_validated_sc("discovery_desc", &mut sc, validate_desc);
 
-        vd.req_field("skill");
         vd.field_item("skill", Item::Skill);
 
-        // "political" is undocumented
         vd.field_choice("category", &["personal", "contract", "hostile", "political"]);
+        vd.req_field("target_type");
         vd.field_choice("target_type", &["character", "title", "culture", "faith", "nothing"]);
 
         vd.advice_field("hostile", "deprecated; replaced with `category`");
@@ -84,12 +97,18 @@ impl DbKind for Scheme {
 
         let icon = vd.field_value("icon").unwrap_or(key);
         data.verify_icon("NGameIcons|SCHEME_TYPE_ICON_PATH", icon, ".dds");
+        vd.req_field("illustration");
         vd.field_item("illustration", Item::File);
 
-        vd.field_trigger("allow", Tooltipped::Yes, &mut sc);
-        vd.field_trigger("valid", Tooltipped::No, &mut sc);
+        let extra = &[("scheme", Scopes::Scheme)];
+        vd.field_trigger_builder("allow", Tooltipped::Yes, |key| {
+            sc_builder(Scopes::Character, key, extra)
+        });
+        vd.field_trigger_builder("valid", Tooltipped::No, |key| {
+            sc_builder(Scopes::Character, key, extra)
+        });
 
-        vd.field_integer("agent_join_threshold");
+        vd.advice_field("agent_join_threshold", "removed in 1.20");
         vd.field_integer("agent_leave_threshold");
         vd.field_bool("uses_resistance");
 
@@ -100,28 +119,33 @@ impl DbKind for Scheme {
         vd.field_list_choice("agent_groups_owner_perspective", AI_TARGETS);
         vd.field_list_choice("agent_groups_target_character_perspective", AI_TARGETS);
 
-        vd.field_script_value("odds_prediction", &mut sc);
+        vd.field_script_value_builder("odds_prediction", |key| {
+            let extra = &[("exposed", Scopes::Bool), ("artifact", Scopes::Artifact)];
+            sc_builder(Scopes::None, key, extra)
+        });
 
         vd.field_validated_key_block("agent_join_chance", |key, block, data| {
-            let mut sc = sc.clone();
+            let extra = &[("scheme", Scopes::Scheme), ("artifact", Scopes::Artifact)];
+            let mut sc = sc_builder(Scopes::Character, key, extra);
             sc.define_name("gift", Scopes::Bool, key);
             validate_modifiers_with_base(block, data, &mut sc);
         });
-        vd.field_validated_block_sc("agent_success_chance", &mut sc, validate_modifiers_with_base);
-        vd.field_validated_block_sc("base_success_chance", &mut sc, validate_modifiers_with_base);
-        vd.advice_field(
-            "base_maximum_success_chance",
-            "docs say `base_maximum_success_chance` but it's `base_maximum_success`",
-        );
+        vd.field_validated_key_block("base_success_chance", |key, block, data| {
+            let mut sc = sc_builder(Scopes::Scheme, key, &[("exposed", Scopes::Bool)]);
+            validate_modifiers_with_base(block, data, &mut sc);
+        });
         vd.field_script_value("base_maximum_success", &mut sc);
         vd.advice_field("maximum_success", "Replaced with `base_maximum_success`");
-        vd.field_integer_range("minimum_success", 0..=100);
+        // The docs say the default is -100
+        vd.field_integer_range("minimum_success", -100..=100);
         vd.field_integer_range("maximum_secrecy", 0..=100);
         vd.field_integer_range("minimum_secrecy", 0..=100);
         vd.advice_field("maximum_progress_chance", "Removed in 1.13");
         vd.advice_field("minimum_progress_chance", "Removed in 1.13");
         vd.field_script_value("base_progress_goal", &mut sc);
         vd.field_integer("maximum_breaches");
+        vd.field_list_items("starting_agent_slots", Item::AgentType);
+        vd.field_script_value("phases_per_agent_charge", &mut sc);
 
         vd.advice_field("power_per_skill_point", "Replaced with `speed_per_skill_point`");
         vd.advice_field("resistance_per_skill_point", "Removed in 1.13");
@@ -143,10 +167,15 @@ impl DbKind for Scheme {
         vd.field_validated_block_sc("cooldown", &mut sc, validate_duration);
 
         vd.field_bool("is_secret");
+        if let Some(key) = block.get_key("use_secrecy")
+            && !block.get_field_bool("is_secret").unwrap_or(false)
+        {
+            let msg = "`use_secrecy` needs `is_secret = yes`";
+            warn(ErrorKey::Validation).msg(msg).loc(key).push();
+        }
         vd.field_trigger("use_secrecy", Tooltipped::No, &mut sc);
         vd.field_script_value_no_breakdown_builder("base_secrecy", sc_secrecy);
 
-        // on_start is undocumented
         for field in &[
             "on_start",
             "on_phase_completed",
@@ -155,7 +184,10 @@ impl DbKind for Scheme {
             "on_semiyearly",
             "on_invalidated",
         ] {
-            vd.field_effect_rooted(field, Tooltipped::No, Scopes::Scheme);
+            vd.field_effect_builder(field, Tooltipped::No, |key| {
+                let extra = &[("scheme", Scopes::Scheme), ("artifact", Scopes::Artifact)];
+                sc_builder(Scopes::Scheme, key, extra)
+            });
         }
         vd.advice_field("on_ready", "Replaced with `on_phase_completed`");
         vd.advice_field("on_agent_join", "Removed in 1.13");
@@ -174,10 +206,6 @@ impl DbKind for Scheme {
         vd.field_script_value("spymaster_speed_per_skill_point", &mut sc);
         vd.field_script_value("target_spymaster_speed_per_skill_point", &mut sc);
         vd.field_integer("tier_speed");
-
-        // undocumented
-
-        vd.field_script_value("phases_per_agent_charge", &mut sc);
     }
 }
 
@@ -203,6 +231,7 @@ impl DbKind for AgentType {
             sc.define_name("owner", Scopes::Character, key);
             sc.define_name("scheme", Scopes::Scheme, key);
             sc.define_name("target", target_scopes, key);
+            sc.define_name("artifact", Scopes::Artifact, key);
             sc
         }
 
@@ -220,6 +249,8 @@ impl DbKind for AgentType {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("owner", Scopes::Character, key);
             sc.define_name("target", target_scopes, key);
+            sc.define_name("artifact", Scopes::Artifact, key);
+            sc.define_name("exposed", Scopes::Bool, key);
             sc
         });
         vd.field_choice("contribution_type", AGENT_SLOT_CONTRIBUTION_TYPE);
@@ -244,9 +275,14 @@ impl SchemePulseAction {
 impl DbKind for SchemePulseAction {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         fn sc_builder(key: &Token) -> ScopeContext {
+            let target_scopes =
+                Scopes::Character | Scopes::LandedTitle | Scopes::Culture | Scopes::Faith;
             let mut sc = ScopeContext::new(Scopes::Scheme, key);
-            sc.define_name("scheme", Scopes::Scheme, key); // docs say "activity"
+            sc.define_name("scheme", Scopes::Scheme, key);
             sc.define_name("owner", Scopes::Character, key);
+            sc.define_name("target", target_scopes, key);
+            sc.define_name("target_title", Scopes::LandedTitle, key);
+            sc.define_name("artifact", Scopes::Artifact, key);
             sc
         }
 
@@ -322,8 +358,6 @@ impl DbKind for Countermeasure {
                 }
             });
         });
-
-        // undocumented
 
         vd.field_item("frame", Item::File);
     }

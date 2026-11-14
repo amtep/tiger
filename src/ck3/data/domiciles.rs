@@ -36,11 +36,11 @@ impl DbKind for DomicileType {
         data.verify_exists_implied(Item::Localization, &loca, key);
 
         vd.field_trigger_rooted("allowed_for_character", Tooltipped::Yes, Scopes::Character);
-        vd.field_choice("rename_window", &["none", "primary_title", "house"]);
+        vd.field_choice("rename_window", &["primary_title", "house"]);
         vd.field_item("illustration", Item::File);
         vd.field_item("icon", Item::File);
         vd.field_item("map_pin_texture", Item::File);
-        vd.field_choice("map_pin_anchor", &["up", "right"]);
+        vd.field_choice("map_pin_anchor", &["up", "down", "left", "right"]);
         vd.field_bool("map_pin_lobby");
         vd.field_bool("provisions");
         vd.field_bool("travel");
@@ -70,6 +70,7 @@ impl DbKind for DomicileType {
                 validate_modifs(block, data, ModifKinds::Character, vd);
             },
         );
+        vd.field_item("construction_soundeffect", Item::Sound);
         vd.field_integer("base_external_slots");
         vd.field_validated_block("domicile_building_slots", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -157,7 +158,7 @@ impl DbKind for DomicileBuilding {
         vd.field_trigger_rooted("can_construct", Tooltipped::Yes, Scopes::Character);
         vd.field_trigger_rooted("can_construct_potential", Tooltipped::No, Scopes::Character);
 
-        for field in &["on_start", "on_canceled", "on_complete"] {
+        for field in &["on_start", "on_cancelled", "on_complete"] {
             vd.field_effect_builder(field, Tooltipped::No, sc_domicile_owner);
         }
 
@@ -198,8 +199,6 @@ impl DbKind for DomicileBuilding {
         vd.field_script_value_no_breakdown_builder("ai_value", sc_ai_value);
 
         vd.multi_field_validated_block("asset", validate_building_asset);
-
-        // undocumented
 
         vd.field_validated_block_sc("refund", &mut sc, validate_cost);
     }

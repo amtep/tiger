@@ -5,6 +5,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
+use crate::report::{ErrorKey, err};
 use crate::token::Token;
 use crate::validator::Validator;
 
@@ -45,9 +46,17 @@ impl DbKind for Relation {
         vd.field_integer("opinion");
         vd.field_numeric("fertility");
         vd.field_list("flags");
-        vd.field_value("secret");
+        vd.field_item("secret", Item::Secret);
         vd.field_bool("special_guest");
         vd.field_bool("hidden");
+        if block.get_field_bool("hidden").unwrap_or(false)
+            && let Some(opinion) = block.get_field_value("opinion")
+            && !opinion.is("0")
+        {
+            let msg = "hidden relations cannot have an opinion";
+            let info = "the docs say the game resets it to 0 with an error";
+            err(ErrorKey::Validation).msg(msg).info(info).loc(opinion).push();
+        }
 
         vd.field_validated_block("modifier", |block, data| {
             let mut vd = Validator::new(block, data);

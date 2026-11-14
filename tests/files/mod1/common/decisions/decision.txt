@@ -1,11 +1,13 @@
 ﻿
 my_decision = {
+    ai_check_interval = 0
     picture = {
         reference = "gfx/dummy.jpg"
     }
 }
 
 my_decision2 = {
+    ai_check_interval = 0
     picture = {
         reference = ""
     }

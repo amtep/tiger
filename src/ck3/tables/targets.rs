@@ -17,7 +17,7 @@ static SCOPE_TO_SCOPE_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes)>
         hash
     });
 
-/// LAST UPDATED CK3 VERSION 1.16.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// See `event_targets.log` from the game data dumps
 /// These are scope transitions that can be chained like `root.joined_faction.faction_leader`
 const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
@@ -36,6 +36,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Artifact, "artifact_owner", Scopes::Character),
     (Scopes::Character, "assigned_tax_slot", Scopes::TaxSlot),
     (Scopes::LandedTitle.union(Scopes::Province), "barony", Scopes::LandedTitle),
+    (Scopes::LandedTitle, "barony_active_holy_site", Scopes::HolySite),
     (Scopes::LandedTitle.union(Scopes::Province), "barony_controller", Scopes::Character),
     (Scopes::Character, "betrothed", Scopes::Character),
     (Scopes::Culture, "calc_culture_dominant_faith", Scopes::Faith),
@@ -45,7 +46,10 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Character, "capital_province", Scopes::Province),
     (Scopes::LandedTitle, "capital_vassal", Scopes::LandedTitle),
     (Scopes::War, "casus_belli", Scopes::CasusBelli),
+    (Scopes::LandedTitle, "challenger_sponsor", Scopes::LandedTitle),
     (Scopes::War.union(Scopes::CasusBelli), "claimant", Scopes::Character),
+    (Scopes::Character, "clerical_elector_title", Scopes::LandedTitle),
+    (Scopes::LandedTitle, "clerical_region_title", Scopes::LandedTitle),
     (Scopes::CombatSide, "combat", Scopes::Combat),
     (Scopes::Combat, "combat_attacker", Scopes::CombatSide),
     (Scopes::Combat, "combat_defender", Scopes::CombatSide),
@@ -61,6 +65,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::CouncilTask, "councillor", Scopes::Character),
     (Scopes::Character, "councillor_task_target", Scopes::all()), // output scope depends on task
     (Scopes::LandedTitle.union(Scopes::Province), "county", Scopes::LandedTitle),
+    (Scopes::LandedTitle, "county_active_holy_site", Scopes::HolySite),
     (Scopes::LandedTitle.union(Scopes::Province), "county_controller", Scopes::Character),
     (Scopes::Character, "court_owner", Scopes::Character),
     (Scopes::Artifact, "creator", Scopes::Character),
@@ -86,6 +91,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Domicile, "domicile_culture", Scopes::Culture),
     (Scopes::Domicile, "domicile_faith", Scopes::Faith),
     (Scopes::Domicile, "domicile_location", Scopes::Province),
+    (Scopes::Domicile, "domicile_rite", Scopes::Rite),
     (Scopes::LandedTitle.union(Scopes::Province), "duchy", Scopes::LandedTitle),
     (Scopes::Dynasty, "dynasty_founder", Scopes::Character),
     (Scopes::None, "dummy_female", Scopes::Character),
@@ -104,12 +110,17 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
         Scopes::Character
             .union(Scopes::LandedTitle)
             .union(Scopes::Province)
-            .union(Scopes::GreatHolyWar),
+            .union(Scopes::GreatHolyWar)
+            .union(Scopes::Rite),
         "faith",
         Scopes::Faith,
     ),
+    (Scopes::Faith, "faith_theocratic_goverment_type", Scopes::GovernmentType),
+    (Scopes::Character, "fallback_succession_character", Scopes::Character),
+    (Scopes::Character, "fallback_succession_title", Scopes::LandedTitle),
     (Scopes::Character, "father", Scopes::Character),
     (Scopes::TravelPlan, "final_destination_province", Scopes::Province),
+    (Scopes::CouncilTask, "forced_next_councillor", Scopes::Character),
     (Scopes::Faith, "founder", Scopes::Character),
     (Scopes::Accolade, "founder_culture", Scopes::Culture),
     (Scopes::Accolade, "founder_dynasty", Scopes::Dynasty),
@@ -126,18 +137,23 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Faith, "great_holy_war", Scopes::GreatHolyWar),
     (Scopes::ProjectContribution, "great_project", Scopes::GreatProject),
     (Scopes::GreatProject, "great_project_founder", Scopes::Character),
+    (Scopes::GreatProject, "great_project_founder_heir", Scopes::Character),
     (Scopes::GreatProject, "great_project_location", Scopes::Province),
     (Scopes::GreatProject, "great_project_owner", Scopes::Character),
-    // Overridden by the trigger of the same name
-    // (Scopes::GreatProject, "great_project_type", Scopes::GreatProjectType),
+    // The trigger of the same name takes precedence when the name is not part of a chain
+    (Scopes::GreatProject, "great_project_type", Scopes::GreatProjectType),
+    (Scopes::Rite, "head_of_rite", Scopes::Character),
     (Scopes::LandedTitle.union(Scopes::Province), "hegemony", Scopes::LandedTitle),
     (Scopes::LandedTitle, "holder", Scopes::Character),
     (Scopes::Province, "holding_type", Scopes::HoldingType),
+    (Scopes::Character, "holy_order", Scopes::HolyOrder),
     (Scopes::HolyOrder, "holy_order_patron", Scopes::Character),
+    (Scopes::HolySite, "holy_site_barony", Scopes::LandedTitle),
+    (Scopes::HolySite, "holy_site_controller", Scopes::LandedTitle),
+    (Scopes::HolySite, "holy_site_county", Scopes::LandedTitle),
     (Scopes::Character, "home_court", Scopes::Character),
     (Scopes::Character, "host", Scopes::Character),
     (Scopes::Character, "house", Scopes::DynastyHouse),
-    (Scopes::DynastyHouse, "house_aspiration", Scopes::HouseAspiration),
     (Scopes::DynastyHouse, "house_confederation", Scopes::Confederation),
     (Scopes::DynastyHouse, "house_dynasty", Scopes::Dynasty),
     (Scopes::DynastyHouse, "house_founder", Scopes::Character),
@@ -165,7 +181,10 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::LandedTitle, "lessee_title", Scopes::LandedTitle),
     (Scopes::Character, "liege", Scopes::Character),
     (Scopes::Character, "liege_or_court_owner", Scopes::Character),
+    (Scopes::None, "local_player_open_court_event_court_owner", Scopes::Character),
     (Scopes::Character.union(Scopes::Combat).union(Scopes::Army), "location", Scopes::Province),
+    (Scopes::Religion, "main_holy_site", Scopes::LandedTitle),
+    (Scopes::Faith, "main_rite", Scopes::Rite),
     (Scopes::Character, "matchmaker", Scopes::Character),
     (Scopes::MercenaryCompany, "mercenary_company_leader", Scopes::Character),
     (Scopes::CharacterMemory, "memory_owner", Scopes::Character),
@@ -174,7 +193,15 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::TravelPlan, "next_destination_province", Scopes::Province),
     (Scopes::TravelPlan, "next_location", Scopes::Province),
     (Scopes::None, "no", Scopes::Bool),
+    (Scopes::DynastyHouse, "noble_family", Scopes::LandedTitle),
     (Scopes::Character, "obedience_target", Scopes::Character),
+    (Scopes::HolyOrder, "order_faith", Scopes::Faith),
+    (Scopes::HolyOrder, "order_founder", Scopes::Character),
+    (Scopes::HolyOrder, "order_rite", Scopes::Rite),
+    (Scopes::HolyOrder, "order_tenet", Scopes::Tenet),
+    (Scopes::Character.union(Scopes::Faith), "organization", Scopes::Organization),
+    (Scopes::Faith, "origin_faith", Scopes::Faith),
+    (Scopes::Rite, "origin_rite", Scopes::Rite),
     (Scopes::Epidemic, "outbreak_province", Scopes::Province),
     (Scopes::Character, "overlord", Scopes::Character),
     (Scopes::Domicile, "owner", Scopes::Character),
@@ -196,6 +223,7 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Character, "primary_title", Scopes::LandedTitle),
     (Scopes::Character, "promoted_legend", Scopes::Legend),
     (Scopes::Province, "province_owner", Scopes::Character),
+    (Scopes::Character, "puppeteer", Scopes::Character),
     (Scopes::Character, "real_father", Scopes::Character),
     (Scopes::Character, "real_mother", Scopes::Character),
     (Scopes::Character, "realm_priest", Scopes::Character),
@@ -204,11 +232,13 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
             .union(Scopes::LandedTitle)
             .union(Scopes::Province)
             .union(Scopes::Faith)
-            .union(Scopes::GreatHolyWar),
+            .union(Scopes::GreatHolyWar)
+            .union(Scopes::Rite),
         "religion",
         Scopes::Religion,
     ),
     (Scopes::Faith, "religious_head", Scopes::Character),
+    (Scopes::Character, "religious_head_or_challenger", Scopes::Character),
     (Scopes::Faith, "religious_head_title", Scopes::LandedTitle),
     (Scopes::Regiment, "regiment_controller", Scopes::Character),
     (Scopes::Regiment, "regiment_controlling_title", Scopes::LandedTitle),
@@ -216,6 +246,12 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Regiment, "regiment_owning_title", Scopes::LandedTitle),
     (Scopes::Regiment, "regiment_station", Scopes::Province),
     // "root" special
+    (Scopes::Character.union(Scopes::LandedTitle).union(Scopes::Province), "rite", Scopes::Rite),
+    (Scopes::Rite, "rite_faith", Scopes::Faith),
+    (Scopes::Rite, "rite_founder", Scopes::Character),
+    (Scopes::Rite, "rite_type", Scopes::RiteType),
+    (Scopes::Character, "saint_burial_location", Scopes::Province),
+    (Scopes::Province, "saint_in_province", Scopes::Character),
     (Scopes::TaskContract, "scheme", Scopes::Scheme),
     (Scopes::Scheme, "scheme_artifact", Scopes::Artifact),
     (Scopes::Scheme, "scheme_defender", Scopes::Character),
@@ -239,8 +275,10 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::Faction, "special_character", Scopes::Character),
     (Scopes::Faction, "special_title", Scopes::LandedTitle),
     (Scopes::LandedTitle, "state_faith", Scopes::Faith),
+    (Scopes::LandedTitle, "state_rite", Scopes::Rite),
     (Scopes::StoryCycle, "story_owner", Scopes::Character),
     (Scopes::VassalObligationLevel, "subject_contract_type", Scopes::VassalContract),
+    (Scopes::Character, "superior", Scopes::Character),
     (Scopes::Character, "suzerain", Scopes::Character),
     (Scopes::Scheme, "task_contract", Scopes::TaskContract),
     (Scopes::TaskContract, "task_contract_destination", Scopes::Province),
@@ -255,7 +293,9 @@ const SCOPE_TO_SCOPE: &[(Scopes, &str, Scopes)] = &[
     (Scopes::HolyOrder, "title", Scopes::LandedTitle),
     (Scopes::LandedTitle, "title_capital_county", Scopes::LandedTitle),
     (Scopes::LandedTitle, "title_domicile", Scopes::Domicile),
+    (Scopes::LandedTitle, "title_preferred_capital_county", Scopes::LandedTitle),
     (Scopes::LandedTitle, "title_province", Scopes::Province),
+    (Scopes::Character, "top_superior", Scopes::Character),
     (Scopes::TravelPlan, "travel_leader", Scopes::Character),
     (Scopes::TravelPlan, "travel_plan_activity", Scopes::Activity),
     (Scopes::TravelPlan, "travel_plan_owner", Scopes::Character),
@@ -284,7 +324,7 @@ static SCOPE_PREFIX_MAP: LazyLock<TigerHashMap<&'static str, (Scopes, Scopes, Ar
         hash
     });
 
-/// LAST UPDATED CK3 VERSION 1.18.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// See `event_targets.log` from the game data dumps
 /// These are absolute scopes (like character:100000) and scope transitions that require
 /// a key (like `root.cp:councillor_steward`)
@@ -293,6 +333,8 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
     use crate::scopes::ArgumentValue::*;
     &[
         (Scopes::None, "accolade_type", Scopes::AccoladeType, Item(Item::AccoladeType)),
+        (Scopes::Activity, "activity_doctrine", Scopes::Doctrine, Index),
+        (Scopes::Activity, "activity_tenet", Scopes::Tenet, Index),
         (Scopes::None, "activity_type", Scopes::ActivityType, Item(Item::ActivityType)),
         (Scopes::Character, "aptitude", Scopes::Value, Item(Item::CourtPosition)),
         (Scopes::Character, "aptitude_score", Scopes::Value, Item(Item::CourtPosition)),
@@ -346,20 +388,9 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Item(Item::GreatProjectType),
         ),
         (Scopes::None, "holding_type", Scopes::HoldingType, Item(Item::GovernmentType)),
+        (Scopes::None, "holy_site", Scopes::HolySite, Item(Item::HolySite)),
+        (Scopes::None, "holy_site_type", Scopes::HolySiteType, Item(Item::HolySite)),
         (Scopes::None, "house", Scopes::DynastyHouse, Item(Item::House)),
-        (Scopes::None, "house_aspiration", Scopes::HouseAspiration, Item(Item::HouseAspiration)),
-        (
-            Scopes::None,
-            "house_relation_level",
-            Scopes::HouseRelationLevel,
-            Item(Item::HouseRelationLevel),
-        ),
-        (
-            Scopes::None,
-            "house_relation_type",
-            Scopes::HouseRelationType,
-            Item(Item::HouseRelationType),
-        ),
         (Scopes::Legend, "legend_property", Scopes::all(), Item(Item::LegendProperty)),
         (Scopes::None, "legend_type", Scopes::LegendType, Item(Item::LegendType)),
         (Scopes::None, "list_size", Scopes::Value, UncheckedValue),
@@ -410,7 +441,12 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Item(Item::SubjectContractObligationLevel),
         ),
         (Scopes::None, "province", Scopes::Province, Item(Item::Province)),
+        (Scopes::Character, "puppet", Scopes::Character, Item(Item::PuppetType)),
         (Scopes::None, "religion", Scopes::Religion, Item(Item::Religion)),
+        // TODO: also accept faith keys: a faith without scripted rites gets a dynamic rite with
+        // the faith's key.
+        (Scopes::None, "rite", Scopes::Rite, Item(Item::RiteType)),
+        (Scopes::None, "rite_type", Scopes::RiteType, Item(Item::RiteType)),
         (Scopes::None, "scope", Scopes::all(), UncheckedValue),
         // TODO: "only available if the situation has is_unique = yes"
         (Scopes::None, "situation", Scopes::Situation, Item(Item::Situation)),
@@ -448,6 +484,7 @@ const SCOPE_PREFIX: &[(Scopes, &str, Scopes, ArgumentValue)] = {
             Item(Item::TaskContractType),
         ),
         (Scopes::Character, "tax_collector_aptitude", Scopes::Value, Item(Item::TaxSlotType)),
+        (Scopes::None, "tenet", Scopes::Tenet, Item(Item::Tenet)),
         (Scopes::None, "title", Scopes::LandedTitle, Item(Item::Title)),
         (
             Scopes::Character,
@@ -481,7 +518,8 @@ const SCOPE_TO_SCOPE_REMOVED: &[(&str, &str, &str)] = &[
     ("activity_owner", "1.9", "replaced by `activity_host`"),
     ("activity_province", "1.9", "replaced by `activity_location`"),
     ("scheme_target", "1.13", "replaced by `scheme_target_character`"),
-    ("house_power", "1.19", "replaced by `house_aspiration`"),
+    ("house_power", "1.19", "replaced by `house_aspiration`, which was removed in 1.20"),
     ("primary_type", "1.19", ""),
     ("secondary_type", "1.19", ""),
+    ("house_aspiration", "1.20", "scope type removed"),
 ];

@@ -212,7 +212,11 @@ impl MenAtArmsType {
         });
 
         vd.field_trigger_rooted("should_show_when_unavailable", Tooltipped::No, Scopes::Character);
-        vd.field_trigger_rooted("access_through_subject", Tooltipped::No, Scopes::Character);
+        vd.field_trigger_builder("access_through_subject", Tooltipped::No, |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("subject", Scopes::Character, key);
+            sc
+        });
 
         vd.field_integer("max");
         validate_maa_stats(&mut vd);
@@ -240,11 +244,7 @@ impl MenAtArmsType {
         vd.field_script_value_rooted("ai_quality", Scopes::Character);
         vd.field_bool("allowed_in_hired_troops");
         vd.field_bool("fallback_in_hired_troops_if_unlocked");
-        vd.field_bool("mercenary_fallback");
         vd.field_bool("holy_order_fallback");
-
-        // undocumented
-
         vd.field_integer("max_regiments");
     }
 }
@@ -270,7 +270,7 @@ pub fn validate_holding_bonus(block: &Block, data: &Everything) {
 pub fn validate_winter_bonus(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
     vd.unknown_block_fields(|key, block| {
-        if !(key.is("harsh_winter") || key.is("normal_winter")) {
+        if !["no_winter", "mild_winter", "normal_winter", "harsh_winter"].contains(&key.as_str()) {
             warn(ErrorKey::Validation).msg("unknown winter type").loc(key).push();
         }
         let mut vd = Validator::new(block, data);

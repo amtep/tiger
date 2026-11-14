@@ -1,5 +1,6 @@
 use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
+use crate::ck3::validate::validate_parameter_value;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
@@ -9,7 +10,7 @@ use crate::modif::validate_modifs;
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
-use crate::validator::{Validator, ValueValidator};
+use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
 pub struct ConfederationType {}
@@ -76,8 +77,7 @@ impl DbKind for ConfederationType {
                 vd.unknown_value_fields(|param, value| {
                     let loca = format!("{key}_level_parameter_{param}");
                     data.verify_exists_implied(Item::Localization, &loca, param);
-                    let mut vvd = ValueValidator::new(value, data);
-                    vvd.bool();
+                    validate_parameter_value(param, value);
                 });
             });
             validate_confederation_modifiers(&mut vd, house_based);
@@ -93,14 +93,11 @@ impl DbKind for ConfederationType {
         vd.field_trigger_rooted("is_valid_confederation", Tooltipped::No, Scopes::Confederation);
         vd.field_effect_rooted("on_confederation_destroyed", Tooltipped::No, Scopes::Confederation);
 
-        validate_confederation_modifiers(&mut vd, house_based);
-
         let sc_member_builder = |key: &Token| {
             let mut sc = ScopeContext::new(Scopes::Confederation, key);
             sc.define_name("character", Scopes::Character, key);
-            if house_based {
-                sc.define_name("house", Scopes::DynastyHouse, key);
-            }
+            sc.define_name("house", Scopes::DynastyHouse, key);
+            sc.define_name("confederation", Scopes::Confederation, key);
             sc
         };
         vd.field_trigger_builder("is_valid_member_character", Tooltipped::No, sc_member_builder);
@@ -121,12 +118,16 @@ impl DbKind for ConfederationType {
 fn validate_confederation_modifiers(vd: &mut Validator, house_based: bool) {
     for field in &[
         "leading_house_head",
+        "leading_house_member_not_head",
         "leading_house_member",
         "aligned_house_head",
+        "aligned_house_member_not_head",
         "aligned_house_member",
         "divergent_house_head",
+        "divergent_house_member_not_head",
         "divergent_house_member",
         "any_member_house_head",
+        "any_member_house_member_not_head",
         "any_member_house_member",
     ] {
         if house_based {

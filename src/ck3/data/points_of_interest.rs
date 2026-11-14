@@ -37,5 +37,7 @@ impl DbKind for PointOfInterest {
             sc.define_name("province", Scopes::Province, key);
             sc
         });
+        vd.field_effect_rooted("on_added", Tooltipped::No, Scopes::Province);
+        vd.field_effect_rooted("on_removed", Tooltipped::No, Scopes::Province);
     }
 }

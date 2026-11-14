@@ -32,7 +32,6 @@ impl DbKind for TraitPortraitModifier {
         vd.field_list_items("traits", Item::Trait);
         vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
         vd.field_item("base", Item::TraitPortraitModifier);
-        vd.advice_field("dna_modifier", "docs say `dna_modifier` but it's `dna_modifiers`");
         vd.field_validated_block("dna_modifiers", |block, data| {
             let mut vd = Validator::new(block, data);
             vd.unknown_block_fields(|key, block| {

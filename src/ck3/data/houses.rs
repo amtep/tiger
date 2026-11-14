@@ -43,7 +43,9 @@ impl DbKind for House {
         vd.field_item("prefix", Item::Localization);
         vd.field_item("motto", Item::Localization);
         vd.field_item("dynasty", Item::Dynasty);
-        vd.field_value("forced_coa_religiongroup"); // TODO
+        // The docs say these two are read but not used by the game
+        vd.advice_field("forced_coa_religiongroup", "not used by the game");
+        vd.advice_field("color", "not used by the game");
     }
 }
 
@@ -131,6 +133,7 @@ impl DbKind for HouseAspiration {
         });
 
         vd.field_item("illustration", Item::File);
+        vd.field_item("confederation_type", Item::ConfederationType);
 
         // TODO: figure out if this takes script values, and if so, what's the scope context.
         vd.field_validated_block("cooldown", |block, data| {
@@ -148,10 +151,6 @@ impl DbKind for HouseAspiration {
                 sc
             });
         }
-
-        // undocumented
-
-        vd.field_item("confederation_type", Item::ConfederationType);
     }
 }
 

@@ -93,13 +93,13 @@ impl GuestSystem {
 
 impl DbKind for GuestSystem {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
-        // TODO: the root scope is not documented here
         let mut sc = ScopeContext::new(Scopes::None, key);
         sc.define_name("mover", Scopes::Character, key);
 
         if key.is("destination_for_guest_entering_pool")
             || key.is("destination_for_courtier_entering_pool")
         {
+            // TODO: "only interface effects are allowed"
             validate_effect(block, data, &mut sc, Tooltipped::No);
         } else {
             let msg = "expected either `destination_for_guest_entering_pool` or `destination_for_courtier_entering_pool`";

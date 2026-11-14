@@ -8,6 +8,7 @@ use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
+use crate::report::{ErrorKey, err};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -61,7 +62,7 @@ impl DbKind for Government {
         data.verify_exists_implied(Item::Localization, &loca, key);
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
-        if block.has_key("vassal_contract") {
+        if block.has_key("vassal_contract_group") {
             let loca = format!("{key}_vassals_label");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
@@ -71,10 +72,18 @@ impl DbKind for Government {
             for field in GOVERNMENT_RULES {
                 vd.field_bool(field);
             }
+            // The 1.20 docs describe these under `mechanic_type`, and vanilla moved to it
+            vd.replaced_field("religious", "`mechanic_type = theocracy`");
+            vd.replaced_field("administrative", "`mechanic_type = administrative`");
         });
 
-        // deprecated
+        // The 1.19 docs called these deprecated outside `government_rules`, and the 1.20 docs
+        // no longer mention them there
         for field in GOVERNMENT_RULES {
+            if let Some(key) = block.get_key(field) {
+                let msg = format!("`{field}` must be inside `government_rules`");
+                err(ErrorKey::Validation).msg(msg).loc(key).push();
+            }
             vd.field_bool(field);
         }
 
@@ -108,10 +117,7 @@ impl DbKind for Government {
 
         vd.field_list_items("primary_heritages", Item::CultureHeritage);
         vd.field_list_items("preferred_religions", Item::Religion);
-        // TODO: test whether this was removed in 1.13
-        vd.field_list_items("primary_cultures", Item::Culture);
 
-        vd.field_bool("court_generate_spouses");
         if let Some(token) = vd.field_value("court_generate_commanders")
             && !token.is("yes")
             && !token.is("no")
@@ -127,33 +133,23 @@ impl DbKind for Government {
             }
         });
 
-        vd.field_choice("royal_court", &["none", "any", "top_liege"]);
+        vd.field_choice("royal_court", &["none", "any", "top_liege", "landed"]);
         vd.field_list_items("blocked_subject_courts", Item::GovernmentType);
         vd.field_choice("main_administrative_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("min_appointment_tier", &["county", "duchy", "kingdom"]);
         vd.field_choice("minimum_provincial_maa_tier", &["county", "duchy", "kingdom"]);
-        vd.advice_field(
-            "title_maa_setup",
-            "docs say `title_maa_setup` but vanilla uses `administrative_title_maa_setup`",
-        );
         vd.field_choice(
             "administrative_title_maa_setup",
-            &[
-                "main_administrative_tier_and_top_liege",
-                "vassals_and_top_liege",
-                "top_vassals_and_top_liege",
-            ],
+            &["main_tier_and_top_liege", "vassals_and_top_liege", "top_vassals_and_top_liege"],
         );
 
-        vd.field_integer("max_dread");
+        vd.field_numeric("max_dread");
 
-        vd.advice_field(
-            "vassal_contract",
-            "docs say vassal_contract but it's vassal_contract_group",
-        );
+        vd.replaced_field("vassal_contract", "vassal_contract_group");
         vd.field_item("vassal_contract_group", Item::SubjectContractGroup);
         vd.field_item("house_unity", Item::HouseUnity);
         vd.field_item("domicile_type", Item::DomicileType);
+        vd.field_item("tax_slot_type", Item::TaxSlotType);
 
         vd.field_script_value_builder("opinion_of_liege", |key| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
@@ -212,6 +208,8 @@ impl DbKind for Government {
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
         vd.field_validated_block("color", validate_color);
+        vd.field_list_numeric_exactly("realm_mask_offset", 2);
+        vd.field_list_numeric_exactly("realm_mask_scale", 2);
 
         vd.field_script_value_no_breakdown_rooted(
             "ai_ruler_desired_kingdom_titles",
@@ -226,15 +224,16 @@ impl DbKind for Government {
             Tooltipped::No,
             Scopes::Character,
         );
+        vd.field_list_items("possible_grant_vassal_governments", Item::GovernmentType);
+        vd.field_script_value_no_breakdown_builder("grant_vassal_ai_will_do", |key| {
+            let mut sc = ScopeContext::new(Scopes::Character, key);
+            sc.define_name("title", Scopes::LandedTitle, key);
+            sc.define_list("target_titles", Scopes::LandedTitle, key);
+            sc
+        });
 
         vd.replaced_field("flag", "`flags` list");
         vd.field_list("flags");
-
-        // undocumented
-
-        vd.field_item("tax_slot_type", Item::TaxSlotType);
-        vd.field_list_numeric_exactly("realm_mask_offset", 2);
-        vd.field_list_numeric_exactly("realm_mask_scale", 2);
     }
 }
 
@@ -247,9 +246,4 @@ fn validate_ai(block: &Block, data: &Everything) {
     vd.field_bool("use_scripted_guis");
     vd.field_bool("use_legends");
     vd.field_bool("perform_religious_reformation");
-    vd.field_bool("use_great_projects");
-    // TODO: test whether this was removed in 1.13
-    vd.field_bool("imprison");
-    // TODO: test whether this was removed in 1.13
-    vd.field_bool("start_murders");
 }

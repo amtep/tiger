@@ -180,6 +180,12 @@ impl TitleHistory {
         });
 
         vd.field_item("government", Item::GovernmentType);
+        // undocumented
+        if let Some(token) = vd.field_value("clerical_region")
+            && !token.is("none")
+        {
+            data.verify_exists(Item::Region, token);
+        }
 
         vd.field_block("succession_laws"); // TODO
         vd.field_bool("remove_succession_laws");

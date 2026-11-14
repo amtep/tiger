@@ -25,7 +25,7 @@ bitflags! {
     ///
     /// The available scope types depend on the game.
     /// They are listed in `event_scopes.log` from the game data dumps.
-    // LAST UPDATED CK3 VERSION 1.16.0
+    // LAST UPDATED CK3 VERSION 1.20.1
     // LAST UPDATED VIC3 VERSION 1.8.1
     // LAST UPDATED IR VERSION 2.0.4
     //
@@ -134,15 +134,19 @@ bitflags! {
         #[cfg(feature = "ck3")] const SituationSubRegion = 1<<66;
         #[cfg(feature = "ck3")] const Confederation = 1<<67;
         // CK3 1.18
-        #[cfg(feature = "ck3")] const HouseAspiration = 1<<68;
-        #[cfg(feature = "ck3")] const HouseRelation = 1<<69;
-        #[cfg(feature = "ck3")] const HouseRelationType = 1<<70;
-        #[cfg(feature = "ck3")] const HouseRelationLevel = 1<<71;
-        #[cfg(feature = "ck3")] const ConfederationType = 1<<72;
-        #[cfg(feature = "ck3")] const GreatProject = 1<<73;
-        #[cfg(feature = "ck3")] const ProjectContribution = 1<<74;
-        #[cfg(feature = "ck3")] const CultureInnovation = 1<<75;
-        #[cfg(feature = "ck3")] const GreatProjectType = 1<<76;
+        #[cfg(feature = "ck3")] const HouseRelation = 1<<68;
+        #[cfg(feature = "ck3")] const ConfederationType = 1<<69;
+        #[cfg(feature = "ck3")] const GreatProject = 1<<70;
+        #[cfg(feature = "ck3")] const ProjectContribution = 1<<71;
+        #[cfg(feature = "ck3")] const CultureInnovation = 1<<72;
+        #[cfg(feature = "ck3")] const GreatProjectType = 1<<73;
+        // CK3 1.20
+        #[cfg(feature = "ck3")] const HolySite = 1<<74;
+        #[cfg(feature = "ck3")] const HolySiteType = 1<<75;
+        #[cfg(feature = "ck3")] const Organization = 1<<76;
+        #[cfg(feature = "ck3")] const Rite = 1<<77;
+        #[cfg(feature = "ck3")] const RiteType = 1<<78;
+        #[cfg(feature = "ck3")] const Tenet = 1<<79;
 
         #[cfg(feature = "vic3")] const Battle = 1<<16;
         #[cfg(feature = "vic3")] const BattleSide = 1<<17;
@@ -466,6 +470,9 @@ pub enum ArgumentValue {
     /// The value must be a single word
     #[cfg(any(feature = "vic3", feature = "ck3", feature = "eu5"))]
     Identifier(&'static str),
+    /// The value must be a 1-based index
+    #[cfg(feature = "ck3")]
+    Index,
     /// The value consists of multiple arguments separated by `|`
     #[cfg(feature = "eu5")]
     Multiple(&'static [ArgumentValue]),
@@ -474,6 +481,25 @@ pub enum ArgumentValue {
     /// This trigger no longer exists. Arguments are version and explanation
     #[cfg(feature = "ck3")]
     Removed(&'static str, &'static str),
+}
+
+/// Look up a link that was removed from the game, by its lowercased name.
+///
+/// Returns the version it was removed in and an explanation.
+pub fn scope_to_scope_removed(name_lc: &str) -> Option<(&'static str, &'static str)> {
+    let scope_to_scope_removed = match Game::game() {
+        #[cfg(feature = "ck3")]
+        Game::Ck3 => crate::ck3::tables::targets::scope_to_scope_removed,
+        #[cfg(feature = "vic3")]
+        Game::Vic3 => crate::vic3::tables::targets::scope_to_scope_removed,
+        #[cfg(feature = "imperator")]
+        Game::Imperator => crate::imperator::tables::targets::scope_to_scope_removed,
+        #[cfg(feature = "eu5")]
+        Game::Eu5 => crate::eu5::tables::targets::scope_to_scope_removed,
+        #[cfg(feature = "hoi4")]
+        Game::Hoi4 => crate::hoi4::tables::targets::scope_to_scope_removed,
+    };
+    scope_to_scope_removed(name_lc)
 }
 
 /// Look up an "event link", which is a script token that looks up something related
@@ -498,18 +524,6 @@ pub fn scope_to_scope(name: &Token, inscopes: Scopes) -> Option<(Scopes, Scopes)
         Game::Eu5 => crate::eu5::tables::targets::scope_to_scope,
         #[cfg(feature = "hoi4")]
         Game::Hoi4 => crate::hoi4::tables::targets::scope_to_scope,
-    };
-    let scope_to_scope_removed = match Game::game() {
-        #[cfg(feature = "ck3")]
-        Game::Ck3 => crate::ck3::tables::targets::scope_to_scope_removed,
-        #[cfg(feature = "vic3")]
-        Game::Vic3 => crate::vic3::tables::targets::scope_to_scope_removed,
-        #[cfg(feature = "imperator")]
-        Game::Imperator => crate::imperator::tables::targets::scope_to_scope_removed,
-        #[cfg(feature = "eu5")]
-        Game::Eu5 => crate::eu5::tables::targets::scope_to_scope_removed,
-        #[cfg(feature = "hoi4")]
-        Game::Hoi4 => crate::hoi4::tables::targets::scope_to_scope_removed,
     };
 
     let name_lc = name.as_str().to_ascii_lowercase();

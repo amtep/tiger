@@ -49,6 +49,12 @@ pub fn needs_prefix(arg: &str, data: &Everything, scopes: Scopes) -> Option<&'st
     if scopes == Scopes::HoldingType && data.item_exists(Item::HoldingType, arg) {
         return Some("holding_type");
     }
+    if scopes == Scopes::HolySite && data.item_exists(Item::HolySite, arg) {
+        return Some("holy_site");
+    }
+    if scopes == Scopes::HolySiteType && data.item_exists(Item::HolySite, arg) {
+        return Some("holy_site_type");
+    }
     if scopes == Scopes::DynastyHouse && data.item_exists(Item::House, arg) {
         return Some("house");
     }
@@ -61,8 +67,17 @@ pub fn needs_prefix(arg: &str, data: &Everything, scopes: Scopes) -> Option<&'st
     if scopes == Scopes::Religion && data.item_exists(Item::Religion, arg) {
         return Some("religion");
     }
+    if scopes == Scopes::Rite && data.item_exists(Item::RiteType, arg) {
+        return Some("rite");
+    }
+    if scopes == Scopes::RiteType && data.item_exists(Item::RiteType, arg) {
+        return Some("rite_type");
+    }
     if scopes == Scopes::Struggle && data.item_exists(Item::Struggle, arg) {
         return Some("struggle");
+    }
+    if scopes == Scopes::Tenet && data.item_exists(Item::Tenet, arg) {
+        return Some("tenet");
     }
     if scopes == Scopes::LandedTitle && data.item_exists(Item::Title, arg) {
         return Some("title");

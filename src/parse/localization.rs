@@ -240,7 +240,7 @@ impl LocaParser {
         let start_offset = self.offset;
         let key = self.get_key();
         let end_offset = self.offset;
-        self.parse_format();
+        let format = self.parse_format();
         if self.chars.peek() != Some(&'$') {
             // TODO: check if there is a closing $, adapt warning text
             let msg = "didn't recognize a key between $";
@@ -249,7 +249,7 @@ impl LocaParser {
         }
         self.next_char();
         let s = &self.content[start_offset..end_offset];
-        Some(MacroValue::Keyword(Token::from_static_str(s, loc)))
+        Some(MacroValue::Keyword(Token::from_static_str(s, loc), format))
     }
 
     fn get_rest_of_line(&mut self) -> &str {

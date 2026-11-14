@@ -25,6 +25,8 @@ use crate::variables::Variables;
 #[allow(clippy::struct_field_names)]
 pub struct Events {
     events: TigerHashMap<(&'static str, u16), Event>,
+    /// CK3 event definitions that another one overrode, with their `id_override_priority`
+    overridden: TigerHashMap<(&'static str, u16), Vec<(i64, Token)>>,
     namespaces: TigerHashSet<Token>,
     triggers: TigerHashMap<(PathTableIndex, &'static str), Trigger>,
     effects: TigerHashMap<(PathTableIndex, &'static str), Effect>,
@@ -44,6 +46,28 @@ impl Events {
                         dup_error(&other.key, &key, "event");
                     }
                     return;
+                } else if Game::is_ck3() {
+                    // Definitions with a different `id_override_priority` override each other
+                    let priority = |block: &Block| {
+                        block.get_field_integer("id_override_priority").unwrap_or(0)
+                    };
+                    let new_priority = priority(&block);
+                    let other_priority = priority(&other.block);
+                    let other_key = other.key.clone();
+                    // Compare with every earlier definition, not only the one that won
+                    let overridden = self.overridden.entry((key_a, id)).or_default();
+                    if new_priority == other_priority {
+                        dup_error(&key, &other_key, "event");
+                    } else if let Some((_, lost)) =
+                        overridden.iter().find(|(priority, _)| *priority == new_priority)
+                    {
+                        dup_error(&key, lost, "event");
+                    }
+                    if new_priority < other_priority {
+                        overridden.push((new_priority, key));
+                        return;
+                    }
+                    overridden.push((other_priority, other_key));
                 } else {
                     // In the other games, overriding events is always an error.
                     dup_error(&key, &other.key, "event");

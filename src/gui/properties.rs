@@ -364,6 +364,7 @@ pub enum WidgetProperty {
     ontextedited,
     onvaluechanged,
     open_sound,
+    overflowed_items_visibility,
     overframe,
     oversound,
     page,
@@ -503,6 +504,7 @@ pub enum WidgetProperty {
     widgetanchor,
     widgetid,
     width,
+    wrap_basedon,
     wrap_count,
     wrap_length,
     zoom,
@@ -810,6 +812,7 @@ impl GuiValidation {
             ontextedited => DatatypeExpr,
             onvaluechanged => DatatypeExpr,
             open_sound => Item(Item::Sound),
+            overflowed_items_visibility => UncheckedValue, // TODO: only example is "hide"
             overframe => Integer,
             oversound => ItemOrBlank(Item::Sound),
             page => Integer,
@@ -949,6 +952,7 @@ impl GuiValidation {
             widgetanchor => Align,
             widgetid => UncheckedValue,
             width => Number,
+            wrap_basedon => UncheckedValue, // TODO: only example is "parent"
             wrap_count => Number,
             wrap_length => UncheckedValue, // TODO
             zoom => Number,
@@ -1071,11 +1075,15 @@ impl WidgetProperty {
             | track_range
             | use_for_loading_screen
             | use_global_input_instance
-            | wrap_length
             | zoom_speed => GameFlags::Eu5,
 
+            wrap_length => GameFlags::Ck3 | GameFlags::Eu5,
+
             tooltip_enabled => GameFlags::Vic3 | GameFlags::Imperator | GameFlags::Eu5,
-            tooltip_visible | tooltip_when_disabled => GameFlags::Ck3,
+            overflowed_items_visibility
+            | tooltip_visible
+            | tooltip_when_disabled
+            | wrap_basedon => GameFlags::Ck3,
             max_height | min_height | video | wrap_count => {
                 GameFlags::Ck3 | GameFlags::Vic3 | GameFlags::Eu5
             }

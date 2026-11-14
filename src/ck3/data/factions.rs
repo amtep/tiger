@@ -32,9 +32,7 @@ impl DbKind for Faction {
             data.verify_exists(Item::Localization, key);
         }
 
-        // TODO: docs say description but vanilla uses desc. Verify.
-        vd.field_validated_rooted("desc", Scopes::Faction, validate_desc);
-        if !vd.field_validated_rooted("description", Scopes::Faction, validate_desc) {
+        if !vd.field_validated_rooted("desc", Scopes::Faction, validate_desc) {
             let loca = format!("{key}_desc");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
@@ -50,7 +48,7 @@ impl DbKind for Faction {
 
         vd.field_effect_rooted("demand", Tooltipped::No, Scopes::Faction);
         vd.field_effect_rooted("update_effect", Tooltipped::No, Scopes::Faction);
-        // docs say "on_declaration"
+        vd.field_effect_rooted("on_declaration", Tooltipped::No, Scopes::Faction);
         vd.field_effect_rooted("on_war_start", Tooltipped::No, Scopes::Faction);
         vd.field_effect_builder("character_leaves", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Faction, key);
@@ -67,10 +65,11 @@ impl DbKind for Faction {
             sc.define_name("faction", Scopes::Faction, key);
             validate_modifiers_with_base(block, data, &mut sc);
         });
+        let claimant = block.get_field_bool("claimant") == Some(true);
         vd.field_validated_key_block("ai_create_score", |key, block, data| {
             let mut sc = ScopeContext::new(Scopes::Character, key);
             sc.define_name("target", Scopes::Character, key);
-            if block.get_field_bool("claimant") == Some(true) {
+            if claimant {
                 sc.define_name("claimant", Scopes::Character, key);
                 sc.define_name("title", Scopes::LandedTitle, key);
             }
@@ -86,7 +85,11 @@ impl DbKind for Faction {
             sc.define_name("target", Scopes::Character, key);
             validate_modifiers_with_base(block, data, &mut sc);
         });
-        vd.field_script_value_rooted("county_power", Scopes::LandedTitle);
+        vd.field_script_value_builder("county_power", |key| {
+            let mut sc = ScopeContext::new(Scopes::LandedTitle, key);
+            sc.define_name("faction", Scopes::Faction, key);
+            sc
+        });
         vd.field_validated_block_rooted(
             "ai_demand_chance",
             Scopes::Faction,

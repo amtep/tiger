@@ -9,7 +9,7 @@ use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validator::Validator;
 
-// LAST UPDATED CK3 VERSION 1.11.5
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from common/ai_war_stances/_ai_war_stances.info
 //
 // TODO: find a way to warn if any of these are missing.
@@ -24,7 +24,7 @@ const AI_WAR_STANCES: &[&str] = &[
     "great_holy_war_defender",
 ];
 
-// LAST UPDATED CK3 VERSION 1.11.5
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from common/ai_war_stances/_ai_war_stances.info
 const AI_WAR_OBJECTIVES: &[&str] = &[
     "wargoal_province",
@@ -37,7 +37,7 @@ const AI_WAR_OBJECTIVES: &[&str] = &[
     "defend_wargoal_province",
 ];
 
-// LAST UPDATED CK3 VERSION 1.11.5
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from common/ai_war_stances/_ai_war_stances.info
 const AI_WAR_AREAS: &[&str] = &[
     "wargoal",

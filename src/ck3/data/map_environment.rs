@@ -61,7 +61,8 @@ impl DbKind for MapEnvironment {
         vd.field_precise_numeric("fog_end");
         vd.field_precise_numeric("fog_max");
 
-        vd.field_validated_block("relative_fog_color", validate_camera_color);
+        // A color adjustment, not a color: the docs' example has a negative value
+        vd.field_list_precise_numeric_exactly("relative_fog_color", 3);
         vd.field_precise_numeric("relative_fog_begin");
         vd.field_precise_numeric("relative_fog_end");
         vd.field_precise_numeric("relative_fog_height_begin");
@@ -82,7 +83,7 @@ impl DbKind for MapEnvironment {
                 "Uncharted",
                 "Reinhard",
                 "ReinhardModified",
-                "Filmic",
+                "Filmic_Hable",
             ],
         );
         if block.get_field_value("tonemap_function").is_some_and(|v| v.is("Uncharted")) {
@@ -99,6 +100,7 @@ impl DbKind for MapEnvironment {
         vd.field_validated_block("levels_min", validate_camera_color);
         vd.field_validated_block("levels_max", validate_camera_color);
 
+        vd.field_bool("bloom_enabled");
         vd.field_precise_numeric("bloom_width");
         vd.field_precise_numeric("bloom_scale");
         vd.field_precise_numeric("bright_threshold");
@@ -163,4 +165,6 @@ fn validate_dof(block: &Block, data: &Everything) {
     vd.field_precise_numeric("dof_blurexponent");
     vd.field_precise_numeric("dof_heightmin");
     vd.field_precise_numeric("dof_heightmax");
+    vd.field_bool("dof_use_center_depth");
+    vd.field_precise_numeric("dof_focusdepth");
 }

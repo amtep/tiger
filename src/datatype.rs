@@ -162,6 +162,12 @@ fn validate_argument(
                                 let msg = format!("expected {expect_type}, got {dtype}");
                                 warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
                             }
+                        } else if Game::is_ck3() && dtype == "int_bool" {
+                            // A base type in the binary; vanilla uses it to cast an int to bool
+                            if expect_type != Datatype::Unknown && expect_type != Datatype::bool {
+                                let msg = format!("expected {expect_type}, got {dtype}");
+                                warn(ErrorKey::Datafunctions).msg(msg).loc(token).push();
+                            }
                         } else if let Ok(dtype) = Datatype::from_str(dtype) {
                             if expect_type != Datatype::Unknown && expect_type != dtype {
                                 let msg = format!("expected {expect_type}, got {dtype}");
@@ -688,6 +694,18 @@ pub fn validate_datatypes(
                     && chain.codes[0].arguments.is_empty()
                     && data.item_exists(Item::GameConcept, chain.codes[0].name.as_str())
                 {
+                    continue;
+                }
+                // A faith's Custom also takes a custom localization of type faith
+                #[cfg(feature = "ck3")]
+                if Game::is_ck3()
+                    && curtype == Datatype::Ck3(Ck3Datatype::Faith)
+                    && code.name.is("Custom")
+                    && let CodeArg::Literal(token) = &code.arguments[i]
+                    && !CUSTOM_RELIGION_LOCAS.contains(&token.as_str())
+                    && data.item_exists(Item::CustomLocalization, token.as_str())
+                {
+                    validate_custom(token, data, Scopes::Faith, lang);
                     continue;
                 }
                 validate_argument(&code.arguments[i], data, sc, dc, *arg, lang, format);

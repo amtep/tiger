@@ -28,6 +28,7 @@ use crate::modif::verify_modif_exists;
 use crate::report::{ErrorKey, Severity, err, fatal, tips, warn};
 use crate::scopes::{
     ArgumentValue, Scopes, needs_prefix, scope_iterator, scope_prefix, scope_to_scope,
+    scope_to_scope_removed,
 };
 #[cfg(feature = "jomini")]
 use crate::script_value::validate_script_value;
@@ -491,15 +492,23 @@ pub fn validate_trigger_key_bv(
                     #[cfg(feature = "jomini")]
                     data.script_values.validate_call(part, data, sc);
                     sc.replace(Scopes::Value, part.clone());
-                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data)) {
-                    #[cfg(feature = "imperator")]
+                } else if !(is_removed_link_last(part, part_flags) && is_live_trigger(part, data))
+                    && let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data))
+                {
+                    #[cfg(any(feature = "ck3", feature = "imperator"))]
                     if let Some((inscopes, trigger)) = scope_trigger(part, data) {
                         // If a trigger of the same name exists, and it's compatible with this
                         // location and scope context, then that trigger takes precedence.
-                        if part_flags.contains(PartFlags::Last)
-                            && (inscopes.contains(Scopes::None)
-                                || sc.scopes(data).intersects(inscopes))
-                        {
+                        // In CK3 (only `great_project_type`), that's only the bare name; in a
+                        // chain, it's the link.
+                        let precedence = if Game::is_ck3() {
+                            part_flags.contains(PartFlags::First | PartFlags::Last)
+                        } else {
+                            part_flags.contains(PartFlags::Last)
+                                && (inscopes.contains(Scopes::None)
+                                    || sc.scopes(data).intersects(inscopes))
+                        };
+                        if precedence {
                             validate_inscopes(part_flags, part, inscopes, sc, data);
                             sc.close();
                             side_effects |= match_trigger_bv(
@@ -833,7 +842,7 @@ fn match_trigger_bv(
                 warn(ErrorKey::Validation).msg(msg).loc(token).push();
             }
         }
-        #[cfg(any(feature = "vic3", feature = "eu5"))]
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
         Trigger::CompareChoiceOrNumber(choices) => {
             must_be_eq = false;
             if let Some(token) = bv.expect_value()
@@ -1098,6 +1107,31 @@ fn match_trigger_bv(
                         Gene::verify_has_template(category.as_str(), template, data);
                     }
                 }
+            } else if name.is("has_situation_top_phase_parameter")
+                || name.is("has_sub_region_phase_parameter")
+            {
+                // Vanilla checks both the phase's own parameters and those of its modifier sets
+                #[cfg(feature = "ck3")]
+                if let Some(token) = bv.expect_value()
+                    && !data.item_exists(Item::SituationPhaseParameter, token.as_str())
+                {
+                    let itype = Item::SituationParticipantGroupParameter;
+                    data.verify_exists_max_sev(itype, token, max_sev);
+                }
+            } else if name.is("is_puppet_action_valid") {
+                #[cfg(feature = "ck3")]
+                if let Some(token) = bv.expect_value() {
+                    data.verify_exists_max_sev(Item::PuppetAction, token, max_sev);
+                    // The docs say the game errors if the action is not `type = trigger`
+                    if let Some((_, block)) =
+                        data.database.get_key_block(Item::PuppetAction, token.as_str())
+                        && !block.field_value_is("type", "trigger")
+                    {
+                        let msg = "puppet action needs `type = trigger`";
+                        let sev = Severity::Error.at_most(max_sev);
+                        crate::report::report(ErrorKey::Validation, sev).msg(msg).loc(token).push();
+                    }
+                }
             } else if name.is("save_temporary_opinion_value_as") {
                 if let Some(block) = bv.expect_block() {
                     let mut vd = Validator::new(block, data);
@@ -1300,6 +1334,23 @@ fn match_trigger_bv(
     side_effects
 }
 
+/// Return true if `part` is the last part of a chain and names a link that was removed.
+/// A trigger of the same name then takes its place.
+fn is_removed_link_last(part: &Token, part_flags: PartFlags) -> bool {
+    part_flags.contains(PartFlags::Last)
+        && scope_to_scope_removed(&part.as_str().to_ascii_lowercase()).is_some()
+}
+
+/// Return true if `part` names a trigger that is not marked as removed.
+fn is_live_trigger(part: &Token, data: &Everything) -> bool {
+    match scope_trigger(part, data) {
+        #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
+        Some((_, Trigger::Removed(..))) => false,
+        Some(_) => true,
+        None => false,
+    }
+}
+
 /// Validate that `token` is valid as the right-hand side of a field.
 ///
 /// `outscopes` is the set of scope types that this target is allowed to produce.
@@ -1390,7 +1441,10 @@ pub fn validate_target_ok_this(
                     #[cfg(feature = "jomini")]
                     data.script_values.validate_call(part, data, sc);
                     sc.replace(Scopes::Value, part.clone());
-                } else if let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data)) {
+                } else if !(is_removed_link_last(part, part_flags)
+                    && trigger_comparevalue(part, data).is_some())
+                    && let Some((inscopes, outscope)) = scope_to_scope(part, sc.scopes(data))
+                {
                     #[cfg(feature = "imperator")]
                     if let Some(inscopes) = trigger_comparevalue(part, data) {
                         // If a trigger of the same name exists, and it's compatible with this
@@ -1746,6 +1800,12 @@ fn validate_argument_internal(
         ArgumentValue::Identifier(kind) => {
             validate_identifier(arg, kind, Severity::Error);
         }
+        #[cfg(feature = "ck3")]
+        ArgumentValue::Index => {
+            if arg.expect_integer().is_some_and(|i| i < 1) {
+                err(ErrorKey::Range).msg("index starts at 1").loc(arg).push();
+            }
+        }
         ArgumentValue::UncheckedValue => (),
         #[cfg(feature = "ck3")]
         ArgumentValue::Removed(version, info) => {
@@ -1925,7 +1985,7 @@ pub enum Trigger {
     #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     CompareChoice(&'static [&'static str]),
     /// like `CompareChoice` but value can also be just a number
-    #[cfg(any(feature = "vic3", feature = "eu5"))]
+    #[cfg(any(feature = "ck3", feature = "vic3", feature = "eu5"))]
     CompareChoiceOrNumber(&'static [&'static str]),
     /// For Block, if a field name in the array starts with ? it means that field is optional
     /// trigger takes a block with these fields
@@ -1990,7 +2050,8 @@ pub fn trigger_comparevalue(name: &Token, data: &Everything) -> Option<Scopes> {
                 | Trigger::CompareDate
                 | Trigger::SetValue
                 | Trigger::BlockOrCompareValue(_)
-                | Trigger::CompareChoice(_),
+                | Trigger::CompareChoice(_)
+                | Trigger::CompareChoiceOrNumber(_),
             )),
         ) => Some(s),
         #[cfg(feature = "vic3")]

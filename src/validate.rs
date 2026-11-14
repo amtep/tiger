@@ -204,6 +204,10 @@ pub fn validate_color(block: &Block, _data: &Everything) {
     let mut count = 0;
     // Get the color tag, as in color = hsv { 0.5 1.0 1.0 }
     let tag = block.tag.as_deref().map_or("rgb", Token::as_str);
+    if tag == "hex" {
+        validate_hex_color(block);
+        return;
+    }
     for item in block.iter_items() {
         if let Some(t) = item.get_value() {
             if tag == "hsv" {
@@ -253,6 +257,21 @@ pub fn validate_color(block: &Block, _data: &Everything) {
     }
     if count != 3 && count != 4 {
         warn(ErrorKey::Colors).msg("expected 3 or 4 color values").loc(block).push();
+    }
+}
+
+/// A `hex { rrggbb }` color
+fn validate_hex_color(block: &Block) {
+    let mut values = block.iter_items().filter_map(|item| item.get_value());
+    if let Some(t) = values.next()
+        && values.next().is_none()
+    {
+        let s = t.as_str();
+        if s.len() != 6 || !s.chars().all(|c| c.is_ascii_hexdigit()) {
+            warn(ErrorKey::Colors).msg("expected 6 hex digits").loc(t).push();
+        }
+    } else {
+        warn(ErrorKey::Colors).msg("expected one hex value").loc(block).push();
     }
 }
 
@@ -604,7 +623,7 @@ pub fn validate_inside_iterator(
         }
 
         if name == "court_position_holder" {
-            vd.field_item("type", Item::CourtPosition);
+            vd.field_item_or_target("type", sc, Item::CourtPosition, Scopes::CourtPositionType);
         }
 
         if name == "relation" {
@@ -629,6 +648,12 @@ pub fn validate_inside_iterator(
             vd.field_choice("tier", &["county", "duchy", "kingdom", "empire", "hegemony"]);
             vd.field_target("faith", sc, Scopes::Faith);
             vd.field_target("culture", sc, Scopes::Culture);
+            // The docs list these names in the filter descriptions but the plain ones above in
+            // their usage example. Vanilla 1.20 uses `faith_filter`.
+            vd.field_target("government_type_filter", sc, Scopes::GovernmentType);
+            vd.field_choice("tier_filter", &["county", "duchy", "kingdom", "empire", "hegemony"]);
+            vd.field_target("faith_filter", sc, Scopes::Faith);
+            vd.field_target("culture_filter", sc, Scopes::Culture);
         }
     }
 
@@ -672,6 +697,74 @@ pub fn validate_inside_iterator(
             vd.field_choice("involvement", &["involved", "interloper"]);
         } else {
             vd.ban_field("involvement", || format!("`{listtype}_character_struggle`"));
+        }
+    }
+
+    #[cfg(feature = "ck3")]
+    if Game::is_ck3() {
+        if name == "holy_site" {
+            vd.field_bool("is_eminent");
+        } else {
+            vd.ban_field("is_eminent", || format!("`{listtype}_holy_site`"));
+        }
+
+        if name == "available_rite" {
+            vd.field_bool("sort_by_spiritual_fulfillment");
+            vd.field_bool("only_better");
+            vd.field_bool("same_faith");
+        } else {
+            let only_for = || format!("`{listtype}_available_rite`");
+            vd.ban_field("sort_by_spiritual_fulfillment", only_for);
+            vd.ban_field("only_better", only_for);
+            vd.ban_field("same_faith", only_for);
+        }
+
+        if name == "character_doctrine" || name == "character_tenet" {
+            vd.field_choice("knowledge_filter", &["known", "unknown", "all"]);
+            vd.field_target("rite_filter", sc, Scopes::Rite);
+            vd.field_target("faith_filter", sc, Scopes::Faith);
+        } else {
+            let only_for =
+                || format!("`{listtype}_character_doctrine` or `{listtype}_character_tenet`");
+            vd.ban_field("knowledge_filter", only_for);
+            vd.ban_field("rite_filter", only_for);
+            if name != "ruler" {
+                vd.ban_field("faith_filter", only_for);
+            }
+        }
+
+        if name == "character_tenet" {
+            vd.field_choice("status", &["core", "permitted", "prohibited", "known", "unknown"]);
+        } else if name == "rite_tenet" {
+            vd.field_choice("status", &["core", "permitted", "prohibited", "known"]);
+        } else {
+            vd.ban_field("status", || {
+                format!("`{listtype}_character_tenet` or `{listtype}_rite_tenet`")
+            });
+        }
+
+        if name == "desired_tenet" || name == "undesired_tenet" {
+            vd.field_integer("selection_count");
+            vd.field_numeric("threshold");
+        } else {
+            let only_for = || format!("`{listtype}_desired_tenet` or `{listtype}_undesired_tenet`");
+            vd.ban_field("selection_count", only_for);
+            vd.ban_field("threshold", only_for);
+        }
+
+        if name == "desired_tenet" {
+            vd.field_bool("only_positive");
+        } else {
+            vd.ban_field("only_positive", || format!("`{listtype}_desired_tenet`"));
+        }
+
+        if name == "undesired_tenet" {
+            vd.field_bool("only_negative");
+            vd.field_bool("known_tenets");
+        } else {
+            let only_for = || format!("`{listtype}_undesired_tenet`");
+            vd.ban_field("only_negative", only_for);
+            vd.ban_field("known_tenets", only_for);
         }
     }
 
@@ -1069,6 +1162,10 @@ pub fn validate_camera_color(block: &Block, data: &Everything) {
     let mut count = 0;
     // Get the color tag, as in color = hsv { 0.5 1.0 1.0 }
     let tag = block.tag.as_deref().map_or("rgb", Token::as_str);
+    if tag == "hex" {
+        validate_hex_color(block);
+        return;
+    }
     if tag != "hsv" {
         let msg = "camera colors should be in hsv";
         warn(ErrorKey::Colors).msg(msg).loc(block).push();

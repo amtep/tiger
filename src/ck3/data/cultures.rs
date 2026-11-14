@@ -1,19 +1,20 @@
 use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
-use crate::ck3::validate::{validate_cost, validate_maa_stats};
+use crate::ck3::validate::{validate_cost, validate_maa_upgrade, validate_parameter_value};
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::desc::validate_desc;
 use crate::everything::Everything;
 use crate::game::GameFlags;
+use crate::helpers::TigerHashMap;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{ErrorKey, err};
+use crate::report::{ErrorKey, err, untidy, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::validate_possibly_named_color;
-use crate::validator::{Validator, ValueValidator};
+use crate::validator::Validator;
 
 #[derive(Clone, Debug)]
 pub struct CultureEra {}
@@ -39,16 +40,13 @@ impl DbKind for CultureEra {
         let loca = format!("{key}_desc");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        vd.field_item("invalid_for_government", Item::GovernmentType);
+        vd.multi_field_item("invalid_for_government", Item::GovernmentType);
         vd.multi_field_item("custom", Item::Localization);
 
         validate_modifiers(&mut vd);
 
-        vd.multi_field_validated_block("maa_upgrade", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_item("men_at_arms", Item::MenAtArms);
-            validate_maa_stats(&mut vd);
-        });
+        // The docs say this has the same format as in innovations
+        vd.multi_field_validated_block("maa_upgrade", validate_maa_upgrade);
 
         vd.multi_field_item("unlock_building", Item::Building);
         vd.multi_field_item("unlock_decision", Item::Decision);
@@ -104,14 +102,35 @@ impl DbKind for Culture {
         // let modif = format!("{key}_opinion");
         // data.verify_exists_implied(Item::ModifierFormat, &modif, key);
 
-        data.verify_exists(Item::Localization, key);
-        let loca = format!("{key}_prefix");
-        data.verify_exists_implied(Item::Localization, &loca, key);
-        let loca = format!("{key}_collective_noun");
-        data.verify_exists_implied(Item::Localization, &loca, key);
+        if !vd.field_item("name", Item::Localization) {
+            data.verify_exists(Item::Localization, key);
+        }
+        if !vd.field_item("collective_noun", Item::Localization) {
+            let loca = format!("{key}_collective_noun");
+            data.verify_exists_implied(Item::Localization, &loca, key);
+        }
+        if !vd.field_item("prefix", Item::Localization) {
+            let loca = format!("{key}_prefix");
+            data.verify_exists_implied(Item::Localization, &loca, key);
+        }
 
         vd.field_date("created");
-        vd.field_list_items("parents", Item::Culture);
+        if block.has_key("created") {
+            vd.field_validated_key_block("parents", |key, block, data| {
+                let mut vd = Validator::new(block, data);
+                let mut count = 0;
+                for token in vd.values() {
+                    count += 1;
+                    data.verify_exists(Item::Culture, token);
+                }
+                if count > 2 {
+                    let msg = "a culture can have at most 2 parent cultures";
+                    warn(ErrorKey::Validation).msg(msg).loc(key).push();
+                }
+            });
+        } else {
+            vd.ban_field("parents", || "cultures with `created`");
+        }
 
         vd.field_validated("color", validate_possibly_named_color);
 
@@ -140,6 +159,8 @@ impl DbKind for Culture {
         }
         vd.field_list_numeric_exactly("house_coa_mask_offset", 2);
         vd.field_list_numeric_exactly("house_coa_mask_scale", 2);
+        vd.field_list_numeric_exactly("dynasty_coa_mask_offset", 2);
+        vd.field_list_numeric_exactly("dynasty_coa_mask_scale", 2);
 
         vd.field_validated_block("ethnicities", |block, data| {
             let mut vd = Validator::new(block, data);
@@ -155,6 +176,13 @@ impl DbKind for Culture {
             vd.field_item("trait", Item::CultureTradition);
             vd.field_item("requires_dlc_flag", Item::DlcFeature);
             vd.field_item("fallback", Item::CultureTradition);
+        });
+        vd.field_validated_block("dlc_fallback_pillar", |block, data| {
+            let mut vd = Validator::new(block, data);
+            vd.req_field("fallback");
+            vd.req_field("requires_dlc_flag");
+            vd.field_item("fallback", Item::CulturePillar);
+            vd.field_item("requires_dlc_flag", Item::DlcFeature);
         });
 
         vd.field_item("history_loc_override", Item::Localization);
@@ -176,13 +204,7 @@ impl CulturePillar {
 
 impl DbKind for CulturePillar {
     fn add_subitems(&self, key: &Token, block: &Block, db: &mut Db) {
-        if let Some(block) = block.get_field_block("parameters") {
-            for (key, value) in block.iter_assignments() {
-                if value.is("yes") {
-                    db.add_flag(Item::CultureParameter, key.clone());
-                }
-            }
-        }
+        add_culture_trait_subitems(block, db);
         if let Some(pillar) = block.get_field_value("type") {
             if pillar.is("language") {
                 db.add_flag(Item::Language, key.clone());
@@ -200,34 +222,16 @@ impl DbKind for CulturePillar {
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
+        validate_culture_trait(key, block, data, &mut vd, CultureTraitKind::Pillar);
+
         vd.field_choice(
             "type",
             &["ethos", "heritage", "language", "martial_custom", "head_determination"],
         );
-        vd.field_item("name", Item::Localization);
-        if !block.has_key("name") {
-            let loca = format!("{key}_name");
-            data.verify_exists_implied(Item::Localization, &loca, key);
-        }
-        if block.field_value_is("type", "ethos") {
-            vd.field_item("desc", Item::Localization);
-            if !block.has_key("desc") {
-                let loca = format!("{key}_desc");
-                data.verify_exists_implied(Item::Localization, &loca, key);
-            }
-        } else if block.field_value_is("type", "heritage") {
+        if block.field_value_is("type", "heritage") {
             let loca = format!("{key}_collective_noun");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
-
-        validate_modifiers(&mut vd);
-
-        let mut sc = ScopeContext::new(Scopes::Culture, key);
-        sc.define_name("character", Scopes::Character, key);
-        sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key); // undocumented
-        vd.field_script_value("ai_will_do", &mut sc);
-        vd.field_trigger("is_shown", Tooltipped::No, &mut sc);
-        vd.field_trigger("can_pick", Tooltipped::Yes, &mut sc);
         if block.field_value_is("type", "language") {
             vd.field_validated("color", validate_possibly_named_color);
         } else {
@@ -239,11 +243,10 @@ impl DbKind for CulturePillar {
             vd.ban_field("audio_parameter", || "heritages");
         }
         if block.field_value_is("type", "head_determination") {
-            vd.field_value("head_determination_type");
+            vd.field_choice("head_determination_type", &["domain", "herd"]);
         } else {
             vd.ban_field("head_determination_type", || "head_determination");
         }
-        vd.field_validated_block("parameters", validate_parameters);
     }
 }
 
@@ -262,13 +265,7 @@ impl CultureTradition {
 
 impl DbKind for CultureTradition {
     fn add_subitems(&self, _key: &Token, block: &Block, db: &mut Db) {
-        if let Some(block) = block.get_field_block("parameters") {
-            for (key, value) in block.iter_assignments() {
-                if value.is("yes") {
-                    db.add_flag(Item::CultureParameter, key.clone());
-                }
-            }
-        }
+        add_culture_trait_subitems(block, db);
         if let Some(value) = block.get_field_value("category") {
             db.add_flag(Item::CultureTraditionCategory, value.clone());
         }
@@ -276,17 +273,9 @@ impl DbKind for CultureTradition {
 
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
-        vd.field_item("name", Item::Localization);
-        if !block.has_key("name") {
-            let loca = format!("{key}_name");
-            data.verify_exists_implied(Item::Localization, &loca, key);
-        }
-        vd.field_item("desc", Item::Localization);
-        if !block.has_key("desc") {
-            let loca = format!("{key}_desc");
-            data.verify_exists_implied(Item::Localization, &loca, key);
-        }
-        vd.field_validated_block("parameters", validate_parameters);
+        validate_culture_trait(key, block, data, &mut vd, CultureTraitKind::Tradition);
+
+        vd.req_field("category");
         vd.field_value("category");
         vd.field_validated_block("layers", |block, data| {
             let mut layer_path = Vec::new();
@@ -318,41 +307,104 @@ impl DbKind for CultureTradition {
                 }
             });
         });
+    }
+}
 
-        vd.field_trigger_builder("can_pick", Tooltipped::Yes, |key| {
-            let mut sc = ScopeContext::new(Scopes::Culture, key);
-            sc.define_name("replacing", Scopes::CultureTradition, key);
-            sc.define_name("character", Scopes::Character, key);
-            sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key); // undocumented
-            sc
-        });
-        vd.field_trigger_builder("can_pick_for_hybridization", Tooltipped::Yes, |key| {
-            let mut sc = ScopeContext::new(Scopes::Culture, key);
-            sc.define_name("character", Scopes::Character, key);
-            sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key); // undocumented
-            sc
-        });
-        validate_modifiers(&mut vd);
-        vd.multi_field_validated_block("doctrine_character_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_item("doctrine", Item::Doctrine);
-            vd.field_item("name", Item::Localization);
-            validate_modifs(block, data, ModifKinds::Character, vd);
-        });
-        vd.field_validated_key_block("cost", |key, block, data| {
-            let mut sc = ScopeContext::new(Scopes::Culture, key);
-            sc.define_name("replacing", Scopes::CultureTradition, key);
-            sc.define_name("character", Scopes::Character, key);
-            sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key); // undocumented
-            validate_cost(block, data, &mut sc);
-        });
+/// Culture pillars and traditions are both culture traits, documented in `_cultural_traits.info`
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CultureTraitKind {
+    Pillar,
+    Tradition,
+}
+
+fn add_culture_trait_subitems(block: &Block, db: &mut Db) {
+    if let Some(block) = block.get_field_block("parameters") {
+        for token in block.iter_values() {
+            db.add_flag(Item::CultureParameter, token.clone());
+        }
+        for (key, value) in block.iter_assignments() {
+            if value.is("yes") {
+                db.add_flag(Item::CultureParameter, key.clone());
+            }
+        }
+    }
+}
+
+/// Validate the fields that culture pillars and traditions have in common
+fn validate_culture_trait(
+    key: &Token,
+    block: &Block,
+    data: &Everything,
+    vd: &mut Validator,
+    kind: CultureTraitKind,
+) {
+    // The docs say the name always comes from `<key>_name`
+    vd.advice_field("name", "removed in 1.20");
+    let loca = format!("{key}_name");
+    data.verify_exists_implied(Item::Localization, &loca, key);
+
+    // The docs say this is a dynamic desc with the culture as root
+    let mut sc = ScopeContext::new(Scopes::Culture, key);
+    if !vd.field_validated_sc("desc", &mut sc, validate_desc) {
+        let loca = format!("{key}_desc");
+        // The docs say pillars fall back to `<type>_generic_label_desc`
+        let fallback = block
+            .get_field_value("type")
+            .filter(|_| kind == CultureTraitKind::Pillar)
+            .map(|pillar| format!("{pillar}_generic_label_desc"));
+        if data.item_exists(Item::Localization, &loca) {
+            data.mark_used(Item::Localization, &loca);
+        } else if let Some(fallback) = fallback
+            && data.item_exists(Item::Localization, &fallback)
+        {
+            data.mark_used(Item::Localization, &fallback);
+        } else {
+            data.verify_exists_implied(Item::Localization, &loca, key);
+        }
+    }
+    // TODO: verify the icon path. The docs say it defaults to the key, but not where it is.
+    vd.field_value("icon");
+
+    let sc_builder = |key: &Token| {
         let mut sc = ScopeContext::new(Scopes::Culture, key);
         sc.define_name("character", Scopes::Character, key);
-        sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key); // undocumented
-        vd.field_trigger("is_shown", Tooltipped::No, &mut sc);
-        sc.define_name("replacing", Scopes::CultureTradition, key);
-        vd.field_script_value_no_breakdown("ai_will_do", &mut sc);
+        sc.define_list("traits", Scopes::CulturePillar | Scopes::CultureTradition, key);
+        sc
+    };
+
+    if kind == CultureTraitKind::Tradition {
+        vd.field_validated_key_block("cost", |key, block, data| {
+            let mut sc = sc_builder(key);
+            sc.define_name("replacing", Scopes::Bool, key);
+            validate_cost(block, data, &mut sc);
+        });
+    } else {
+        vd.ban_field("cost", || "traditions");
     }
+
+    validate_modifiers(vd);
+    vd.replaced_field("doctrine_character_modifier", "faith_character_modifier");
+    vd.multi_field_validated_block("faith_character_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        vd.field_item("doctrine", Item::Doctrine);
+        vd.field_item("name", Item::Localization);
+        validate_modifs(block, data, ModifKinds::Character, vd);
+    });
+
+    vd.field_trigger_builder("can_pick", Tooltipped::Yes, |key| {
+        let mut sc = sc_builder(key);
+        // The docs say it never exists for pillars
+        if kind == CultureTraitKind::Tradition {
+            sc.define_name("replacing", Scopes::CultureTradition, key);
+        }
+        sc
+    });
+    vd.field_trigger_builder("is_shown", Tooltipped::No, sc_builder);
+    vd.field_trigger_builder("can_pick_for_hybridization", Tooltipped::Yes, sc_builder);
+
+    vd.field_validated_block("parameters", validate_parameters);
+    vd.field_validated_block("partners", validate_partners);
+    vd.field_script_value_no_breakdown_builder("ai_will_do", sc_builder);
 }
 
 const INTEGER_PARAMETERS: &[&str] = &[
@@ -366,14 +418,38 @@ const INTEGER_PARAMETERS: &[&str] = &[
     "number_of_consorts_hegemony",
 ];
 
+/// The number of spouses and consorts, which overrides the faith's
+fn validate_partners(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.field_integer_range("number_of_spouses", -1..);
+    vd.field_integer_range("number_of_consorts", -1..);
+    vd.field_validated_block("number_of_consorts_by_tier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        for tier in ["barony", "county", "duchy", "kingdom", "empire", "hegemony"] {
+            vd.field_integer_range(tier, 0..);
+        }
+    });
+}
+
 fn validate_parameters(block: &Block, data: &Everything) {
     let mut vd = Validator::new(block, data);
+    for token in vd.values() {
+        // culture parameter loca are lowercased, verified in 1.11
+        let loca = format!("culture_parameter_{}", token.as_str().to_ascii_lowercase());
+        data.verify_exists_implied(Item::Localization, &loca, token);
+    }
     vd.unknown_value_fields(|key, value| {
         if INTEGER_PARAMETERS.contains(&key.as_str()) {
-            ValueValidator::new(value, data).integer_range(0..);
-        } else {
-            ValueValidator::new(value, data).bool();
+            let replacement = if key.is("number_of_spouses") || key.is("number_of_consorts") {
+                format!("`{key}` in `partners`")
+            } else {
+                "`number_of_consorts_by_tier` in `partners`".to_string()
+            };
+            let msg = format!("`{key}` has been replaced by {replacement}");
+            err(ErrorKey::Validation).msg(msg).loc(key).push();
+            return;
         }
+        validate_parameter_value(key, value);
         // culture parameter loca are lowercased, verified in 1.11
         let loca = format!("culture_parameter_{}", key.as_str().to_ascii_lowercase());
         data.verify_exists_implied(Item::Localization, &loca, key);
@@ -418,16 +494,24 @@ impl DbKind for CultureAesthetic {
         let loca = format!("{key}_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
 
-        vd.field_item("name_list", Item::NameList);
-        vd.field_list_items("building_gfx", Item::BuildingGfx);
-        vd.field_list_items("clothing_gfx", Item::ClothingGfx);
-        vd.field_list_items("unit_gfx", Item::UnitGfx);
-        vd.field_list_items("coa_gfx", Item::CoaGfx);
+        vd.req_field("name_list");
+        vd.multi_field_item("name_list", Item::NameList);
+        for (field, itype) in [
+            ("building_gfx", Item::BuildingGfx),
+            ("clothing_gfx", Item::ClothingGfx),
+            ("unit_gfx", Item::UnitGfx),
+            ("coa_gfx", Item::CoaGfx),
+        ] {
+            vd.req_field(field);
+            vd.field_validated_list(field, |token, data| {
+                data.verify_exists(itype, token);
+                data.verify_exists(Item::Localization, token);
+            });
+        }
 
         vd.field_trigger_builder("is_shown", Tooltipped::No, |key| {
             let mut sc = ScopeContext::new(Scopes::Culture, key);
             sc.define_name("character", Scopes::Character, key);
-            sc.define_list("trait", Scopes::CultureTradition | Scopes::CulturePillar, key);
             sc
         });
     }
@@ -466,10 +550,16 @@ impl DbKind for CultureCreationName {
         }
 
         if !vd.field_validated_sc("prefix", &mut sc, validate_desc) {
-            let loca = format!("{key}_prefix"); // docs say {key}_trigger
+            let loca = format!("{key}_prefix");
             data.verify_exists_implied(Item::Localization, &loca, key);
         }
 
+        vd.req_field("trigger");
+        if let Some(key) = block.get_key("trigger")
+            && block.get_field_block("trigger").is_some_and(|block| block.num_items() == 0)
+        {
+            err(ErrorKey::Validation).msg("`trigger` must not be empty").loc(key).push();
+        }
         vd.field_trigger("trigger", Tooltipped::No, &mut sc);
 
         vd.field_bool("hybrid");
@@ -487,10 +577,51 @@ impl NameEquivalency {
     pub fn add(db: &mut Db, key: Token, block: Block) {
         db.add(Item::NameEquivalency, key, block, Box::new(Self {}));
     }
+
+    /// Check that no name is in two lists of the same gender. The docs say the game logs an error.
+    pub fn validate_all(db: &Db, _data: &Everything) {
+        // Each name with its list
+        let mut seen: TigerHashMap<(bool, &str), (&Token, &Token)> = TigerHashMap::default();
+        // Go in load order, so that reports point at the later list
+        let mut lists: Vec<_> = db.iter_key_block(Item::NameEquivalency).collect();
+        lists.sort_by_key(|(key, _)| key.loc);
+        for (key, block) in lists {
+            let female = key.as_str().ends_with("_female");
+            for name in block.iter_values() {
+                match seen.get(&(female, name.as_str())) {
+                    Some(&(other_list, other)) if other_list == key => {
+                        let msg = format!("name {name} is listed twice");
+                        untidy(ErrorKey::DuplicateItem)
+                            .msg(msg)
+                            .loc(name)
+                            .loc_msg(other, "earlier listing")
+                            .push();
+                    }
+                    Some(&(_, other)) => {
+                        let msg = format!("name {name} is in two name equivalency lists");
+                        err(ErrorKey::Conflict)
+                            .msg(msg)
+                            .loc(name)
+                            .loc_msg(other, "other list")
+                            .push();
+                    }
+                    None => {
+                        seen.insert((female, name.as_str()), (key, name));
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl DbKind for NameEquivalency {
-    fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
+    fn validate(&self, key: &Token, block: &Block, data: &Everything) {
+        if !key.as_str().ends_with("_male") && !key.as_str().ends_with("_female") {
+            let msg = "name equivalency key should end in `_male` or `_female`";
+            let info = "the game logs an error and treats the list as male";
+            err(ErrorKey::Validation).msg(msg).info(info).loc(key).push();
+        }
+
         let mut vd = Validator::new(block, data);
         for name in vd.values() {
             data.verify_exists(Item::Localization, name);

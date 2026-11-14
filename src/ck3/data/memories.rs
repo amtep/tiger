@@ -38,7 +38,6 @@ impl DbKind for MemoryType {
         let mut sc = ScopeContext::new(Scopes::CharacterMemory, key);
         sc.define_name("owner", Scopes::Character, key);
 
-        // undocumented
         if let Some(icon) = vd.field_value("icon") {
             let pathname = format!("gfx/interface/icons/memory_types/{icon}");
             data.verify_exists_implied(Item::File, &pathname, icon);
@@ -56,7 +55,7 @@ impl DbKind for MemoryType {
 
         if !block.has_key("duration") {
             let msg = "field `duration` missing";
-            let info = "without a duration field, the duration is only 1 day";
+            let info = "the game logs an error and defaults to 10 years";
             err(ErrorKey::FieldMissing).msg(msg).info(info).loc(block).push();
         }
         vd.field_validated_block_rooted("duration", Scopes::Character, validate_duration);

@@ -9,7 +9,7 @@ use crate::modif::validate_modifs;
 use crate::pdxfile::PdxEncoding;
 use crate::report::{ErrorKey, err, warn};
 use crate::scopes::Scopes;
-use crate::script_value::validate_non_dynamic_script_value;
+use crate::script_value::validate_script_value_no_breakdown;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
 use crate::validate::{validate_duration, validate_possibly_named_color};
@@ -119,7 +119,7 @@ impl DbKind for Situation {
 
         vd.field_choice(
             "window",
-            &["situation", "the_great_steppe", "silk_road", "dynastic_cycle"],
+            &["situation", "the_great_steppe", "silk_road", "dynastic_cycle", "christian_church"],
         );
         if let Some(token) = vd.field_value("gui_window_name") {
             let pathname = format!("gui/{token}.gui");
@@ -138,6 +138,8 @@ impl DbKind for Situation {
             vd.field_item("reference", Item::File);
         });
         vd.field_item("situation_group_type", Item::SituationGroupType);
+        vd.field_list_items("ending_decisions", Item::Decision);
+        vd.field_list_items("situation_decisions", Item::Decision);
         vd.field_integer("sort_order");
 
         vd.field_validated_value("map_mode", |_, mut vvd| {
@@ -194,8 +196,13 @@ impl DbKind for Situation {
         vd.field_effect_rooted("on_end", Tooltipped::No, Scopes::Situation);
         vd.field_effect_rooted("on_monthly", Tooltipped::No, Scopes::Situation);
         vd.field_effect_rooted("on_yearly", Tooltipped::No, Scopes::Situation);
-        vd.field_effect_rooted("on_join", Tooltipped::Yes, Scopes::Situation);
-        vd.field_effect_rooted("on_leave", Tooltipped::Yes, Scopes::Situation);
+        for field in &["on_join", "on_leave"] {
+            vd.field_effect_builder(field, Tooltipped::Yes, |key| {
+                let mut sc = ScopeContext::new(Scopes::Character, key);
+                sc.define_name("situation", Scopes::Situation, key);
+                sc
+            });
+        }
 
         vd.field_bool("is_unique");
         vd.field_bool("keep_full_history");
@@ -256,6 +263,7 @@ fn validate_participant_group(key: &Token, block: &Block, data: &Everything, sit
     vd.field_bool("auto_add_rulers");
     vd.field_bool("auto_add_landless_rulers");
     vd.field_validated("map_color", validate_possibly_named_color);
+    vd.field_list("gui_tags");
     vd.field_bool("require_capital_in_sub_region");
     vd.field_bool("require_domain_in_sub_region");
     vd.field_bool("require_realm_in_sub_region");
@@ -290,6 +298,7 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, situation: &Tok
     vd.field_effect_builder("on_start", Tooltipped::No, sc_builder);
     vd.field_effect_builder("on_end", Tooltipped::No, sc_builder);
     vd.field_item("illustration", Item::File);
+    vd.field_item("texture", Item::File);
     vd.field_item("icon", Item::File);
     vd.field_item("map_province_effect", Item::ProvinceEffect);
     vd.field_numeric_range("map_province_effect_intensity", 0.0..=1.0);
@@ -300,7 +309,8 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, situation: &Tok
             "highest_points",
             "weighted_random_points",
             "random_non_takeover",
-            "weighted_non_takeover",
+            // sic, in the docs and the binary
+            "weighted_non_takover",
         ],
     );
 
@@ -310,9 +320,25 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, situation: &Tok
         vd.validate_item_key_blocks(Item::SituationPhase, |_, block, data| {
             let mut vd = Validator::new(block, data);
 
-            vd.field_choice("takeover_type", &["none", "points", "duration"]);
-            vd.field_script_value_no_breakdown_builder("takeover_points", sc_builder2);
-            vd.field_script_value_no_breakdown_builder("weight", sc_builder2);
+            // The docs say `none` is the default but not a valid value
+            vd.field_choice("takeover_type", &["points", "duration"]);
+            // The game logs errors for these
+            if let Some(points) = block.get_key("takeover_points") {
+                if let Some(duration) = block.get_key("takeover_duration") {
+                    let msg = "`takeover_points` and `takeover_duration` can't be used together";
+                    err(ErrorKey::Validation).msg(msg).loc(points).loc_msg(duration, "here").push();
+                } else if !block.field_value_is("takeover_type", "points") {
+                    let msg = "`takeover_points` needs `takeover_type = points`";
+                    err(ErrorKey::Validation).msg(msg).loc(points).push();
+                }
+            } else if let Some(duration) = block.get_key("takeover_duration")
+                && !block.field_value_is("takeover_type", "duration")
+            {
+                let msg = "`takeover_duration` needs `takeover_type = duration`";
+                err(ErrorKey::Validation).msg(msg).loc(duration).push();
+            }
+            vd.field_integer("takeover_points");
+            vd.field_integer("weight");
             vd.field_validated_block_sc(
                 "takeover_duration",
                 &mut sc_builder2(key),
@@ -323,13 +349,13 @@ fn validate_phase(key: &Token, block: &Block, data: &Everything, situation: &Tok
 
                 vd.unknown_fields(|key, bv| {
                     data.verify_exists(Item::SituationCatalyst, key);
-                    validate_non_dynamic_script_value(bv, data);
+                    let mut sc = ScopeContext::new(Scopes::Situation, key);
+                    validate_script_value_no_breakdown(bv, data, &mut sc);
                 });
             });
         });
     });
 
-    vd.advice_field("modifier_named_sets", "docs say modifier_named_sets but it's modifier_sets");
     vd.field_validated_block("modifier_sets", |block, data| {
         let mut vd = Validator::new(block, data);
 
@@ -357,9 +383,15 @@ fn validate_sub_region(key: &Token, block: &Block, data: &Everything, situation:
     vd.field_item("icon", Item::File);
     vd.field_validated("map_color", validate_possibly_named_color);
     vd.field_list_items("geographical_regions", Item::Region);
-
-    // undocumented
-
+    vd.field_list_items("landed_titles", Item::Title);
+    // TODO: check that the start phase is part of this situation's phases
+    vd.field_item("start_phase", Item::SituationPhase);
+    vd.field_item("center_province", Item::Province);
+    // The docs say this is a legacy alias of `center_province`
+    if let Some(key) = block.get_key("capital_province") {
+        let msg = "should use `center_province` instead of `capital_province`";
+        warn(ErrorKey::Deprecated).msg(msg).loc(key).push();
+    }
     vd.field_item("capital_province", Item::Province);
 }
 
@@ -374,7 +406,8 @@ fn validate_modifier_set(block: &Block, data: &Everything) {
         let vd = Validator::new(block, data);
         validate_modifs(block, data, ModifKinds::Character, vd);
     });
-    vd.multi_field_validated_block("doctrine_character_modifier", |block, data| {
+    vd.replaced_field("doctrine_character_modifier", "faith_character_modifier");
+    vd.multi_field_validated_block("faith_character_modifier", |block, data| {
         let mut vd = Validator::new(block, data);
         vd.field_item("name", Item::Localization);
         vd.field_item("doctrine", Item::Doctrine);

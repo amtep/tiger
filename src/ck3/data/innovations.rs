@@ -1,13 +1,13 @@
 use crate::block::Block;
 use crate::ck3::modif::ModifKinds;
-use crate::ck3::validate::validate_maa_stats;
+use crate::ck3::validate::validate_maa_upgrade;
 use crate::context::ScopeContext;
 use crate::db::{Db, DbKind};
 use crate::everything::Everything;
 use crate::game::GameFlags;
 use crate::item::{Item, ItemLoader};
 use crate::modif::validate_modifs;
-use crate::report::{ErrorKey, err, warn};
+use crate::report::{ErrorKey, warn};
 use crate::scopes::Scopes;
 use crate::token::Token;
 use crate::tooltipped::Tooltipped;
@@ -76,8 +76,7 @@ impl DbKind for Innovation {
         vd.field_trigger("potential", Tooltipped::No, &mut sc);
         vd.field_trigger("can_progress", Tooltipped::Yes, &mut sc);
 
-        // TODO: everything after this duplicates CultureEra validation,
-        // except the `type` field in `maa_upgrade`
+        // TODO: everything after this duplicates CultureEra validation
         vd.field_validated_block("character_modifier", |block, data| {
             let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
@@ -115,16 +114,6 @@ impl DbKind for Innovation {
 
         vd.multi_field_item("custom", Item::Localization);
 
-        vd.multi_field_validated_block("maa_upgrade", |block, data| {
-            let mut vd = Validator::new(block, data);
-            if let Some(token) = vd.field_value("type")
-                && !data.item_exists(Item::MenAtArms, token.as_str())
-                && !data.item_exists(Item::MenAtArmsBase, token.as_str())
-            {
-                let msg = format!("{token} is not a men-at-arms type or base type");
-                err(ErrorKey::MissingItem).msg(msg).loc(token).push();
-            }
-            validate_maa_stats(&mut vd);
-        });
+        vd.multi_field_validated_block("maa_upgrade", validate_maa_upgrade);
     }
 }

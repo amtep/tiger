@@ -1,6 +1,8 @@
 //! Miscellaneous tables used to back `Item` variants.
 
-// LAST UPDATED CK3 VERSION 1.16
+pub use tiger_tables::ck3::misc::CUSTOM_RELIGION_LOCAS;
+
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from common/character_interactions/_character_interactions.info
 pub const AI_TARGETS: &[&str] = &[
     "known_secrets",
@@ -45,19 +47,114 @@ pub const AI_TARGETS: &[&str] = &[
     "sub_realm_domicile_owners",
     "nearby_domicile_owners",
     "situation_participant_group",
-    // undocumented
     "diarch",
+    "other_faith_heads",
+    "head_of_rite",
+    "subordinates",
+    "superior",
+    "top_superior",
+    "realm_priest_superior",
+    "realm_priest_top_superior",
+    "faith_holy_order_leaders",
+    "rulers_in_clerical_region",
+    "clerical_region_rulers_in_realm",
+    "puppets",
+    "religious_head_challenger",
+    "religious_head_challengers",
+    "papabile",
 ];
 
-// LAST UPDATED CK3 VERSION 1.11.3
+// LAST UPDATED CK3 VERSION 1.20.1
+// Taken from common/character_interactions/_character_interactions.info
+pub const TARGET_FILTERS: &[&str] = &[
+    "clerical_region",
+    "realm_clerical_regions",
+    "domain_clerical_regions",
+    "faith_clerical_regions",
+    "religious_head_titles",
+    "clerical_region_adjacent_duchies",
+    "adjacent_clerical_regions",
+    "clerical_elector_titles",
+    "domain_titles",
+    "domain_titles_including_leases",
+    "domain_titles_all_baronies",
+    "dejure_titles",
+    "realm_titles",
+    "realm_counties",
+    "counties_of_faith",
+    "artifacts",
+    "artifacts_claimable",
+    "lessee_titles",
+    "top_liege_de_jure_titles",
+    "faith_holy_order_titles",
+    "papabile",
+    "claimed_titles",
+    "men_at_arms",
+    "personal_maa",
+    "title_maa",
+];
+
+// LAST UPDATED CK3 VERSION 1.20.1
+// The docs say these old types still work, but should no longer be used.
+// Each is equivalent to a new `target_filter` with a `target_source`.
+pub const OLD_TARGET_FILTERS: &[(&str, &str, &str)] = &[
+    ("actor_domain_titles", "domain_titles", "actor"),
+    ("recipient_domain_titles", "domain_titles", "recipient"),
+    ("secondary_actor_domain_titles", "domain_titles", "secondary_actor"),
+    ("secondary_recipient_domain_titles", "domain_titles", "secondary_recipient"),
+    ("actor_domain_titles_including_leases", "domain_titles_including_leases", "actor"),
+    ("recipient_domain_titles_including_leases", "domain_titles_including_leases", "recipient"),
+    (
+        "secondary_actor_domain_titles_including_leases",
+        "domain_titles_including_leases",
+        "secondary_actor",
+    ),
+    (
+        "secondary_recipient_domain_titles_including_leases",
+        "domain_titles_including_leases",
+        "secondary_recipient",
+    ),
+    ("actor_de_jure_titles", "dejure_titles", "actor"),
+    ("recipient_de_jure_titles", "dejure_titles", "recipient"),
+    ("secondary_actor_de_jure_titles", "dejure_titles", "secondary_actor"),
+    ("secondary_recipient_de_jure_titles", "dejure_titles", "secondary_recipient"),
+    ("actor_realm_titles", "realm_counties", "actor"),
+    ("recipient_realm_titles", "realm_counties", "recipient"),
+    ("secondary_actor_realm_titles", "realm_counties", "secondary_actor"),
+    ("secondary_recipient_realm_titles", "realm_counties", "secondary_recipient"),
+    ("actor_lessee_titles", "lessee_titles", "actor"),
+    ("recipient_lessee_titles", "lessee_titles", "recipient"),
+    ("secondary_actor_lessee_titles", "lessee_titles", "secondary_actor"),
+    ("secondary_recipient_lessee_titles", "lessee_titles", "secondary_recipient"),
+    ("actor_top_liege_de_jure_titles", "top_liege_de_jure_titles", "actor"),
+    ("recipient_top_liege_de_jure_titles", "top_liege_de_jure_titles", "recipient"),
+    ("secondary_actor_top_liege_de_jure_titles", "top_liege_de_jure_titles", "secondary_actor"),
+    (
+        "secondary_recipient_top_liege_de_jure_titles",
+        "top_liege_de_jure_titles",
+        "secondary_recipient",
+    ),
+    ("actor_artifacts", "artifacts", "actor"),
+    ("recipient_artifacts", "artifacts", "recipient"),
+    ("actor_artifacts_claimable", "artifacts_claimable", "actor"),
+    ("recipient_artifacts_claimable", "artifacts_claimable", "recipient"),
+    ("actor_maa", "men_at_arms", "actor"),
+    ("recipient_maa", "men_at_arms", "recipient"),
+    ("actor_personal_maa", "personal_maa", "actor"),
+    ("recipient_personal_maa", "personal_maa", "recipient"),
+    ("actor_title_maa", "title_maa", "actor"),
+    ("recipient_title_maa", "title_maa", "recipient"),
+];
+
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const ACTIVITY_STATES: &[&str] = &["passive", "travel", "active"];
 
-// LAST UPDATED CK3 VERSION 1.13.0.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from the agent_slot_has_contribution_type trigger doc
 pub const AGENT_SLOT_CONTRIBUTION_TYPE: &[&str] =
     &["secrecy", "success_chance", "success_chance_growth", "success_chance_max", "speed"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from the create_artifact description in effects.log
 pub const ARTIFACT_HISTORY: &[&str] = &[
     "created_before_history",
@@ -77,9 +174,11 @@ pub const ARTIFACT_HISTORY: &[&str] = &[
     "prize_awarded",
     "ransomed",
     "reforged",
+    "enshrined",
+    "removed_from_holy_site",
 ];
 
-/// LAST UPDATED CK3 VERSION 1.18.3
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// Taken from `AccessBreakdownTooltip` usage in `gui/shared/value_breakdown.gui`
 pub const CURRENCIES_CK3: &[&str] = &[
     "piety",
@@ -93,140 +192,7 @@ pub const CURRENCIES_CK3: &[&str] = &[
     "barter_goods",
 ];
 
-// LAST UPDATED CK3 VERSION 1.18.3
-// Taken from the Faith.random_ values in `data_types_uncategorized.txt`
-pub const CUSTOM_RELIGION_LOCAS: &[&str] = &[
-    "AltPriestTermPlural",
-    "BishopFemale",
-    "BishopFemalePlural",
-    "BishopMale",
-    "BishopMalePlural",
-    "BishopNeuter",
-    "BishopNeuterPlural",
-    "CreatorHerHim",
-    "CreatorHerHis",
-    "CreatorName",
-    "CreatorNamePossessive",
-    "CreatorSheHe",
-    "DeathDeityHerHim",
-    "DeathDeityHerHis",
-    "DeathDeityName",
-    "DeathDeityNamePossessive",
-    "DeathDeitySheHe",
-    "DevilHerHis",
-    "DevilHerselfHimself",
-    "DevilName",
-    "DevilNamePossessive",
-    "DevilSheHe",
-    "DevoteeFemale",
-    "DevoteeFemalePlural",
-    "DevoteeMale",
-    "DevoteeMalePlural",
-    "DevoteeNeuter",
-    "DevoteeNeuterPlural",
-    "DivineRealm",
-    "DivineRealm2",
-    "DivineRealm3",
-    "EvilGodNames",
-    "FateGodHerHim",
-    "FateGodHerHis",
-    "FateGodName",
-    "FateGodNamePossessive",
-    "FateGodSheHe",
-    "FertilityGodHerHim",
-    "FertilityGodHerHis",
-    "FertilityGodName",
-    "FertilityGodNamePossessive",
-    "FertilityGodSheHe",
-    "GHWName",
-    "GHWNamePlural",
-    "GoodGodNames",
-    "HealthGodHerHim",
-    "HealthGodHerHis",
-    "HealthGodName",
-    "HealthGodNamePossessive",
-    "HealthGodSheHe",
-    "HighGodHerHis",
-    "HighGodHerselfHimself",
-    "HighGodName",
-    "HighGodName2",
-    "HighGodNameAlternate",
-    "HighGodNameAlternatePossessive",
-    "HighGodNamePossessive",
-    "HighGodNameSheHe",
-    "HouseOfWorship",
-    "HouseOfWorship2",
-    "HouseOfWorship3",
-    "HouseOfWorshipPlural",
-    "HouseholdGodHerHim",
-    "HouseholdGodHerHis",
-    "HouseholdGodName",
-    "HouseholdGodNamePossessive",
-    "HouseholdGodSheHe",
-    "KnowledgeGodHerHim",
-    "KnowledgeGodHerHis",
-    "KnowledgeGodName",
-    "KnowledgeGodNamePossessive",
-    "KnowledgeGodSheHe",
-    "NegativeAfterLife",
-    "NegativeAfterLife2",
-    "NegativeAfterLife3",
-    "NightGodHerHim",
-    "NightGodHerHis",
-    "NightGodName",
-    "NightGodNamePossessive",
-    "NightGodSheHe",
-    "PantheonTerm",
-    "PantheonTerm2",
-    "PantheonTerm3",
-    "PantheonTermHasHave",
-    "PositiveAfterLife",
-    "PositiveAfterLife2",
-    "PositiveAfterLife3",
-    "PriestFemale",
-    "PriestFemalePlural",
-    "PriestMale",
-    "PriestMalePlural",
-    "PriestNeuter",
-    "PriestNeuterPlural",
-    "ReligiousHeadName",
-    "ReligiousHeadTitleName",
-    "ReligiousSymbol",
-    "ReligiousSymbol2",
-    "ReligiousSymbol3",
-    "ReligiousText",
-    "ReligiousText2",
-    "ReligiousText3",
-    "TricksterGodHerHim",
-    "TricksterGodHerHis",
-    "TricksterGodName",
-    "TricksterGodNamePossessive",
-    "TricksterGodSheHe",
-    "WarGodHerHim",
-    "WarGodHerHis",
-    "WarGodName",
-    "WarGodNamePossessive",
-    "WarGodSheHe",
-    "WaterGodHerHim",
-    "WaterGodHerHis",
-    "WaterGodName",
-    "WaterGodNamePossessive",
-    "WaterGodSheHe",
-    "WealthGodHerHim",
-    "WealthGodHerHis",
-    "WealthGodName",
-    "WealthGodNamePossessive",
-    "WealthGodSheHe",
-    "WitchGodHerHim",
-    "WitchGodHerHis",
-    "WitchGodMistressMaster",
-    "WitchGodMotherFather",
-    "WitchGodName",
-    "WitchGodNamePossessive",
-    "WitchGodSheHe",
-];
-
-/// LAST UPDATED CK3 VERSION 1.19.0
+/// LAST UPDATED CK3 VERSION 1.20.1
 /// Taken from `has_dlc_feature` in triggers.log
 pub const DLC_FEATURES_CK3: &[&str] = &[
     "garments_of_the_hre",
@@ -265,7 +231,6 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "all_under_heaven",
     "merit_admin",
     "advanced_aspirations",
-    "barter_troops",
     "high_medieval_warfare_attire",
     "holy_buildings",
     "north_pacific_attire",
@@ -273,16 +238,18 @@ pub const DLC_FEATURES_CK3: &[&str] = &[
     "celestial_court_attire",
     "symbols_of_authority",
     "songs_of_the_realm",
+    "by_god_alone",
 ];
 
 /// A list of music provided by DLCs, for people who don't have them
-/// LAST UPDATED CK3 VERSION 1.12.1
+/// LAST UPDATED CK3 VERSION 1.20.1
 pub const DLC_MUSIC: &[&str] = &[
     // FP1
     "mx_raid",
     "mx_drakkar",
     "mx_scandinavia",
     "mx_thefeast",
+    "group_fp1",
     // EP1
     "middleeasterncourt_cue",
     "europeancourt_cue",
@@ -293,6 +260,7 @@ pub const DLC_MUSIC: &[&str] = &[
     "mep1_mood_03",
     "mep1_mood_04",
     "group_roco",
+    "main_theme_track_001_roco",
     // FP2
     "mx_IberiaWar",
     "mx_Struggle_ending_compromise",
@@ -354,6 +322,7 @@ pub const DLC_MUSIC: &[&str] = &[
     "mx_cue_tavern",
     "mx_cue_temple",
     "mx_cue_weaponsmith",
+    "main_theme_track_002_toto",
     // BP2
     "mbp2_mood_01",
     "mbp2_mood_02",
@@ -381,20 +350,110 @@ pub const DLC_MUSIC: &[&str] = &[
     "mfp4_mood_legends_02",
     "group_fp4_cuetrack",
     "group_fp4_moodtrack",
+    "mfp4_mood_who_shall_vigil_stand",
+    // EP3
+    "adventure_begin_cue",
+    "byzantium_war_cue",
+    "mep3_mood_01",
+    "mep3_mood_02",
+    "mep3_mood_03",
+    "mep3_mood_04",
+    "mep3_mood_05",
+    "mep3_mood_06",
+    "mep3_mood_07",
+    "mep3_mood_08",
+    "group_ep3_cuetrack",
+    "group_ep3_moodtrack",
+    "group_ep3_adventurer_moodtrack",
+    "main_theme_track_003_rtp",
+    // CP4
+    "mx_mood_cp4_01",
+    "group_cp4_moodtrack",
+    // CE2
+    "mx_cue_conquest_of_the_golden_horde",
+    "mx_cue_the_khans_glory",
+    "mx_mood_call_of_the_gobi",
+    "mx_mood_dance_of_the_yurt",
+    "mx_mood_nomads_journey",
+    "mx_mood_on_the_road_to_karakorum",
+    "mx_mood_nomad_batzorig",
+    "group_ce2_cuetrack",
+    "group_ce2_moodtrack",
+    // EP4
+    "mx_mood_alliance_in_jeopardy",
+    "mx_mood_celebration_parade",
+    "mx_mood_conflict_escalation",
+    "mx_mood_divided_in_court",
+    "mx_mood_echoes_of_the_steppe",
+    "mx_mood_emperor_of_heaven",
+    "mx_mood_first_strike",
+    "mx_mood_flower_gardens",
+    "mx_mood_grand_procession",
+    "mx_mood_heaven_of_meditation",
+    "mx_mood_in_the_ashes",
+    "mx_mood_silk_and_spices",
+    "mx_mood_survival_of_dragons",
+    "mx_mood_three_six_melody",
+    "mx_mood_songs_of_the_frontier",
+    "mx_mood_generals_command",
+    "mx_mood_thunder_in_drought",
+    "mx_mood_spring_river_scene",
+    "mx_mood_the_moon_on_high",
+    "mx_mood_three_variations_on_the_plum_blossom",
+    "mx_mood_prince_of_qins_victorious_battle_array",
+    "mx_mood_drunken_ecstasy",
+    "mx_mood_the_way_of_the_dragon",
+    "mx_mood_green_valley",
+    "mx_mood_a_venerable_dynasty",
+    "mx_mood_bisho",
+    "mx_mood_cloud_feather_dance",
+    "mx_mood_peace_with_the_dawn",
+    "mx_cue_tgp_dynastic_cycle_start",
+    "mx_cue_tgp_dynastic_cycle_end",
+    "mx_cue_tgp_asian_tournament",
+    "group_ep4_moodtrack",
+    "group_ep4_moodtrack_free",
+    "group_ep4_moodtrack_chinese",
+    "group_ep4_cuetrack",
+    "main_theme_track_004_tgp",
+    // MP1
+    "mx_england_anno_1066",
+    "mx_florence",
+    "mx_in_taberna",
+    "mx_lament_of_the_minstrel",
+    "mx_menuette",
+    "mx_merriment_and_melancholy",
+    "mx_polonas",
+    "mx_sanctus",
+    "mx_shadows_of_yore_shadows_over_constantinople",
+    "mx_slangpolska",
+    "mx_the_bards_farewell_the_last_song_of_ethelred",
+    "mx_the_bards_secret_tune",
+    "mx_visa_fran_venjan",
+    "group_mp1_christian_moodtrack",
+    "group_mp1_european_moodtrack",
+    "group_mp1_generic_moodtrack",
+    // CE3
+    "mx_cue_councils_judgement",
+    "mx_cue_deus_hoc_vult",
+    "mx_cue_the_shepherds_flock",
+    "mx_mood_anathema",
+    "mx_mood_sanctos",
+    "mx_mood_the_conclave",
+    "group_ce3_cue",
+    "group_ce3_mood",
 ];
 
-// LAST UPDATED CK3 VERSION 1.13.0.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // taken from the governments .info file
 pub const GOVERNMENT_RULES: &[&str] = &[
     "create_cadet_branches",
-    "religious",
     "court_generate_spouses",
     "council",
     "rulers_should_have_dynasty",
     "regiments_prestige_as_gold",
     "dynasty_named_realms",
     "legitimacy",
-    "administrative",
     "admin_allows_holding_multiple_primary_tier_titles",
     "landless_playable",
     "allow_out_of_realm_inheritance",
@@ -404,6 +463,8 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "mercenary",
     "state_faith",
     "treasury",
+    "treasury_vassal_development",
+    "add_religious_subordinates_for_treasury",
     "merit",
     "uses_county_fertility",
     "replenishes_county_fertility",
@@ -413,7 +474,6 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "subject_men_at_arms",
     "use_title_tier_modifiers",
     "inherit_from_dynastic_government",
-    "dynasty_named_realms",
     "deny_powerful_vassal",
     "use_maa_maintenance",
     "no_capital_movement_cooldown",
@@ -432,7 +492,6 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "count_tributaries_for_title_requirements",
     "radiance",
     "disable_regnal_numbers",
-    // undocumented
     "gain_legitimacy_becoming_tributary",
     "regiments_use_barter_goods_as_gold",
     "government_ignores_rightful_liege_penalties",
@@ -441,18 +500,22 @@ pub const GOVERNMENT_RULES: &[&str] = &[
     "allow_as_base_for_baronies",
 ];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const LEGEND_QUALITY: &[&str] = &["famed", "illustrious", "mythical"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Gathered from vanilla game files
 pub const REWARD_ITEMS: &[&str] = &["newsletter_crown"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Gathered from vanilla game files
 pub const PRISON_TYPES: &[&str] = &["dungeon", "house_arrest"];
 
+// LAST UPDATED CK3 VERSION 1.20.1
 // Gathered from common/activities/activity_types/_activity_type.info
+/// Old province filters and the ones that replace them
+pub const OLD_PROVINCE_FILTERS: &[(&str, &str)] = &[("holy_sites_realm", "anointment_candidates")];
+
 pub const PROVINCE_FILTERS: &[&str] = &[
     "capital",
     "domain",
@@ -461,6 +524,8 @@ pub const PROVINCE_FILTERS: &[&str] = &[
     "holy_sites",
     "holy_sites_domain",
     "holy_sites_realm",
+    "anointment_candidates",
+    "same_faith",
     "domicile",
     "domicile_domain",
     "domicile_realm",
@@ -468,22 +533,23 @@ pub const PROVINCE_FILTERS: &[&str] = &[
     "top_liege_border_outer",
     "landed_title",
     "geographical_region",
+    "clerical_region_theocracy_capitals",
     "all",
 ];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const SKILLS: &[&str] =
     &["diplomacy", "intrigue", "learning", "martial", "prowess", "stewardship"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const SEXUALITIES: &[&str] = &["heterosexual", "homosexual", "bisexual", "asexual", "none"];
 
-// LAST UPDATED CK3 VERSION 1.15
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from gfx/court_scene/scene_settings/scene_settings_indian_1_g1.txt
 pub const SUPPORT_TYPES: &[&str] =
     &["lectern", "tall", "short_pillow", "tall_pillow", "armorstand", "short"];
 
-// LAST UPDATED CK3 VERSION 1.13.0.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Taken from recent_history description in triggers.log
 pub const TITLE_HISTORY_TYPES: &[&str] = &[
     "conquest",
@@ -507,17 +573,18 @@ pub const TITLE_HISTORY_TYPES: &[&str] = &[
     "stepped_down",
     "appointment",
     "appointment_succession",
-    // undocumented
     "migration",
+    "confederation",
 ];
 
-// LAST UPDATED CK3 VERSION 1.16
+// LAST UPDATED CK3 VERSION 1.20.1
 // These are the types that can't be used in `create_title_and_vassal_change`.
-// Taken from an error.log message.
+// Taken from an error.log message, except `destroyed`,
+// which is not in the list of types that can be used according to the (binary) docs.
 pub const BANNED_TITLE_HISTORY_TYPES: &[&str] =
-    &["inheritance", "abdication", "appointment_succession"];
+    &["inheritance", "abdication", "appointment_succession", "destroyed"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Gathered from vanilla common/traits/
 pub const TRAIT_CATEGORIES: &[&str] = &[
     "childhood",
@@ -531,7 +598,7 @@ pub const TRAIT_CATEGORIES: &[&str] = &[
     "winter_commander",
 ];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 // Gathered from vanilla game files, both the use of the `travel_danger_type` trigger and what's in
 // the localization files for `travel_danger_type_*`
 pub const DANGER_TYPES: &[&str] = &[
@@ -547,13 +614,13 @@ pub const DANGER_TYPES: &[&str] = &[
     "epidemic",
 ];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const ARTIFACT_RARITIES: &[&str] = &["common", "masterwork", "famed", "illustrious"];
 
-// LAST UPDATED CK3 VERSION 1.12.1
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const OUTBREAK_INTENSITIES: &[&str] = &["minor", "major", "apocalyptic"];
 
-// LAST UPDATED CK3 VERSION 1.19.0
+// LAST UPDATED CK3 VERSION 1.20.1
 pub const COMMON_DIRS: &[&str] = &[
     "common/accolade_icons",
     "common/accolade_names",
@@ -644,6 +711,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/great_projects/types",
     "common/guest_system",
     "common/holdings",
+    "common/holy_orders",
     "common/hook_types",
     "common/house_aspirations",
     "common/house_relation_types",
@@ -651,6 +719,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/important_actions",
     "common/inspirations",
     "common/landed_titles",
+    "common/law_groups",
     "common/laws",
     "common/lease_contracts",
     "common/legends/chronicles",
@@ -660,12 +729,14 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/lifestyle_perks",
     "common/lifestyles",
     "common/men_at_arms_types",
+    "common/menu_scenes",
     "common/message_filter_types",
     "common/message_group_types",
     "common/messages",
     "common/modifier_definition_formats",
     "common/modifier_icons",
     "common/modifiers",
+    "common/morpheme_strip_rules",
     "common/named_colors",
     "common/nicknames",
     "common/on_action",
@@ -674,12 +745,20 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/pool_character_selectors",
     "common/portrait_types",
     "common/province_terrain",
+    "common/puppets/actions",
+    "common/puppets/types",
     "common/raids/intents",
+    "common/religion/doctrine_category_types",
     "common/religion/doctrine_group_types",
     "common/religion/doctrine_types",
+    "common/religion/faith_types",
     "common/religion/holy_site_types",
     "common/religion/religion_family_types",
     "common/religion/religion_types",
+    "common/religion/rite_icons",
+    "common/religion/rite_names",
+    "common/religion/rite_types",
+    "common/religion/tenet_types",
     "common/ruler_objective_advice_types",
     "common/schemes/agent_types",
     "common/schemes/pulse_actions",
@@ -700,6 +779,7 @@ pub const COMMON_DIRS: &[&str] = &[
     "common/situation/catalysts",
     "common/situation/situation_group_types",
     "common/situation/situations",
+    "common/spiritual_fulfillment",
     "common/story_cycles",
     "common/struggle/catalysts",
     "common/struggle/struggles",

@@ -23,14 +23,14 @@ impl DbKind for Message {
     fn validate(&self, _key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
-        vd.field_choice("display", &["feed", "toast", "popup"]);
+        vd.field_choice("display", &["feed", "toast", "popup", "hidden"]);
         vd.field_item("message_filter_type", Item::MessageFilterType);
-        vd.field_item("title", Item::Localization); // docs say text
+        vd.field_item("title", Item::Localization);
         vd.field_item("desc", Item::Localization);
         vd.field_item("tooltip", Item::Localization);
         vd.field_item("soundeffect", Item::Sound);
         vd.field_icon("icon", "NGameIcons|MESSAGE_ICON_PATH", ".dds");
-        vd.field_choice("style", &["good", "bad", "neutral"]);
+        vd.field_choice("style", &["good", "bad", "neutral", "none"]);
 
         vd.advice_field("flags", "removed in 1.12");
         vd.multi_field_value("flag");

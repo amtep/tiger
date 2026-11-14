@@ -30,23 +30,28 @@ impl DbKind for PortraitModifierGroup {
     fn validate(&self, key: &Token, block: &Block, data: &Everything) {
         let mut vd = Validator::new(block, data);
 
-        // TODO: could the root be Scopes::None here?
-        let mut sc = ScopeContext::new(Scopes::Character, key);
-        sc.define_name("age", Scopes::Value, key);
-        sc.define_name("culture", Scopes::Culture, key);
-        sc.define_name("current_weight", Scopes::Value, key);
+        let mut sc = portrait_sc(key);
+
         #[cfg(feature = "ck3")]
         if Game::is_ck3() {
-            sc.define_name("highest_held_title_tier", Scopes::Value, key);
-            sc.define_name("faith", Scopes::Faith, key);
-            sc.define_name("government", Scopes::GovernmentType, key);
-            sc.define_name("prowess", Scopes::Value, key);
-            sc.define_name("ruler_designer", Scopes::Bool, key);
+            vd.field_item("portrait_group", Item::PortraitType);
+            // The docs say it must come before the modifiers, because they are read using it
+            if let Some(group) = block.get_field_value("portrait_group")
+                && let Some(modifier) = block
+                    .iter_fields()
+                    .take_while(|field| !field.key().is("portrait_group"))
+                    .find(|field| matches!(field.bv(), BV::Block(_)))
+            {
+                let msg = "`portrait_group` must come before the modifiers";
+                let info = "the docs say the modifiers are read using it";
+                warn(ErrorKey::Validation)
+                    .msg(msg)
+                    .info(info)
+                    .loc(group)
+                    .loc_msg(modifier.key(), "modifier")
+                    .push();
+            }
         }
-        sc.define_name("female", Scopes::Bool, key);
-        sc.define_name("weight_for_portrait", Scopes::Value, key);
-        sc.define_name("year_of_birth", Scopes::Value, key);
-
         vd.field_choice("usage", &["customization", "game", "both", "none"]);
         vd.field_integer("interface_position");
         vd.field_integer("priority");
@@ -103,6 +108,38 @@ impl DbKind for PortraitModifierGroup {
             }
             false
         }
+    }
+}
+
+/// The scopes of portrait modifier triggers and weights
+fn portrait_sc(key: &Token) -> ScopeContext {
+    // TODO: could the root be Scopes::None here?
+    let mut sc = ScopeContext::new(Scopes::Character, key);
+    sc.define_name("age", Scopes::Value, key);
+    sc.define_name("culture", Scopes::Culture, key);
+    sc.define_name("current_weight", Scopes::Value, key);
+    #[cfg(feature = "ck3")]
+    if Game::is_ck3() {
+        sc.define_name("highest_held_title_tier", Scopes::Value, key);
+        sc.define_name("faith", Scopes::Faith, key);
+        sc.define_name("government", Scopes::GovernmentType, key);
+        sc.define_name("prowess", Scopes::Value, key);
+        sc.define_name("ruler_designer", Scopes::Bool, key);
+    }
+    sc.define_name("female", Scopes::Bool, key);
+    sc.define_name("weight_for_portrait", Scopes::Value, key);
+    sc.define_name("year_of_birth", Scopes::Value, key);
+    sc
+}
+
+/// The trigger of a `portrait_modifier` in an animation, a modifier set or a modifier pack
+fn validate_portrait_modifier_trigger(vd: &mut Validator) {
+    if Game::is_ck3() {
+        // TODO: verify; vanilla uses the same triggers here as in portrait modifier groups,
+        // and they need these scopes
+        vd.field_trigger_builder("trigger", Tooltipped::No, portrait_sc);
+    } else {
+        vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
     }
 }
 
@@ -240,13 +277,17 @@ fn validate_animation(block: &Block, data: &Everything) {
 
     if Game::is_ck3() {
         vd.field_bool("force");
+        vd.field_item("portrait_modifier_pack", Item::PortraitModifierPack);
     }
 
     vd.multi_field_validated_block("portrait_modifier", |block, data| {
         let mut vd = Validator::new(block, data);
-        vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
+        validate_portrait_modifier_trigger(&mut vd);
         validate_portrait_modifiers(block, data, vd);
     });
+    if Game::is_ck3() {
+        vd.multi_field_validated_block("portrait_modifier_set", validate_portrait_modifier_set);
+    }
 
     vd.unknown_block_fields(|_, block| {
         let mut vd = Validator::new(block, data);
@@ -269,12 +310,35 @@ fn validate_animation(block: &Block, data: &Everything) {
             sc.define_name("ai_zeal", Scopes::Value, key);
             validate_modifiers_with_base(block, data, &mut sc);
         });
-        vd.field_validated_block("portrait_modifier", |block, data| {
-            let vd = Validator::new(block, data);
-            validate_portrait_modifiers(block, data, vd);
-        });
+        if Game::is_ck3() {
+            // The docs say they have the same syntax as for the default animation
+            vd.multi_field_validated_block("portrait_modifier", |block, data| {
+                let mut vd = Validator::new(block, data);
+                validate_portrait_modifier_trigger(&mut vd);
+                validate_portrait_modifiers(block, data, vd);
+            });
+        } else {
+            vd.field_validated_block("portrait_modifier", |block, data| {
+                let vd = Validator::new(block, data);
+                validate_portrait_modifiers(block, data, vd);
+            });
+        }
         vd.field_item("portrait_modifier_pack", Item::PortraitModifierPack);
+        if Game::is_ck3() {
+            vd.multi_field_validated_block("portrait_modifier_set", validate_portrait_modifier_set);
+        }
     });
+}
+
+/// A set of portrait modifiers, of which the first valid one is applied
+fn validate_portrait_modifier_set(block: &Block, data: &Everything) {
+    let mut vd = Validator::new(block, data);
+    vd.multi_field_validated_block("portrait_modifier", |block, data| {
+        let mut vd = Validator::new(block, data);
+        validate_portrait_modifier_trigger(&mut vd);
+        validate_portrait_modifiers(block, data, vd);
+    });
+    vd.multi_field_item("portrait_modifier_pack", Item::PortraitModifierPack);
 }
 
 #[derive(Clone, Debug)]
@@ -296,7 +360,7 @@ impl DbKind for PortraitModifierPack {
 
         vd.multi_field_validated_block("portrait_modifier", |block, data| {
             let mut vd = Validator::new(block, data);
-            vd.field_trigger_rooted("trigger", Tooltipped::No, Scopes::Character);
+            validate_portrait_modifier_trigger(&mut vd);
             validate_portrait_modifiers(block, data, vd);
         });
     }
