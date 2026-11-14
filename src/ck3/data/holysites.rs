@@ -42,6 +42,7 @@ impl DbKind for HolySite {
 
         let loca = format!("holy_site_{key}_name");
         data.verify_exists_implied(Item::Localization, &loca, key);
+        // The docs say this is only used if it exists
         let loca = format!("holy_site_{key}_effects");
         data.mark_used(Item::Localization, &loca);
 
@@ -84,10 +85,8 @@ impl DbKind for HolySite {
         });
 
         vd.replaced_field("character_modifier", "faith_character_modifier");
-        // The docs say `holy_site_<key>_effects` is only used if it exists
         vd.field_validated_block("faith_character_modifier", |block, data| {
-            let mut vd = Validator::new(block, data);
-            vd.field_item("name", Item::Localization);
+            let vd = Validator::new(block, data);
             validate_modifs(block, data, ModifKinds::Character, vd);
         });
         vd.multi_field_validated_block("faith_character_modifier_scaled", |block, data| {
